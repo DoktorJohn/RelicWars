@@ -4,9 +4,9 @@ This repository contains both the C# Backend (ASP.NET Core) and the Unity Game C
 🛠 1. Prerequisites (Install these first)
 Before touching the code, ensure you have the following tools installed:
 
-Git for Windows: Download here.
+Git for Windows: Download here. https://git-scm.com/install/windows
 
-Git LFS (Large File Storage): CRITICAL! Download here. Unity's 3D models and high-res textures require this.
+Git LFS (Large File Storage): CRITICAL! Download here. https://git-lfs.com/ Unity's 3D models and high-res textures require this.
 
 Unity Hub & Unity 2022.3+: Ensure you have the correct version installed.
 
