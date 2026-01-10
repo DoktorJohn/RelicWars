@@ -64,7 +64,7 @@ builder.Services.AddSingleton(researchReader);
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection")
     ?? throw new Exception("ConnectionString 'DefaultConnection' mangler!");
 
-builder.Services.AddDbContext<GameContext>(options => options.UseSqlServer(connectionString));
+builder.Services.AddDbContext<GameContext>(options => options.UseSqlite(connectionString));
 
 builder.Services.AddScoped<ICityRepository, CityRepository>();
 builder.Services.AddScoped<IJobRepository, JobRepository>();
