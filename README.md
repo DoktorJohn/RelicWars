@@ -19,59 +19,49 @@ Right-click in the folder where you want the project and select Git Bash Here (o
 
 Enable LFS on your machine:
 
-Bash
+Open commando prompt in the folder
 
-git lfs install
+write git lfs install
+
 Clone the repository:
-
-Bash
-
 git clone https://github.com/DoktorJohn/RelicWars.git
 Enter the project folder:
-
-Bash
-
 cd RelicWars
+
 🌿 3. Choosing Your Branch
 We never work directly on the main branch. You have your own dedicated branch for development:
 
 Download all the latest branch names:
 
-Bash
-
 git fetch
+
 Switch to your own branch (Replace name with your actual branch name):
 
-Bash
-
 git checkout development/feature-implementation-name
+
 🔄 4. Daily Workflow (Follow this strictly)
 To avoid "Merge Conflicts" and losing work, always follow this sequence:
 
 Start of the Day:
 Get your partner's latest merged changes into your branch:
 
-Bash
-
 git pull origin main
+
 During / End of the Day:
 When you have made changes, save them and send them to GitHub:
-
 Stage your changes:
 
-Bash
-
 git add .
+
 Create a "Save Point" (Commit):
 
-Bash
-
 git commit -m "Describe what you did (e.g., Added Warehouse model and logic)"
+
 Send to GitHub:
 
-Bash
-
 git push
+
+
 ⚠️ 5. Golden Rules for Unity & Git
 NEVER delete .meta files: Unity uses these to track your assets. If you delete them, the project will break for everyone else.
 
