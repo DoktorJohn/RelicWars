@@ -1,0 +1,16 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace Application.DTOs
+{
+    public record WorldPlayerJoinDTO(Guid PlayerProfileId, Guid WorldId);
+
+    public record WorldPlayerJoinResponse(
+        bool ConnectionSuccessful,
+        string Message,
+        Guid? ActiveCityId
+    );
+}

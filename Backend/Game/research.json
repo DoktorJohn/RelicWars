@@ -1,0 +1,109 @@
+[
+  {
+    "Id": "ECON_PROD_1",
+    "Name": "Effektiv Minedrift I",
+    "Description": "\u00D8ger produktionen af alle r\u00E5materialer med 1%",
+    "ParentId": null,
+    "RequiredAcademyLevel": 1,
+    "WoodCost": 500,
+    "StoneCost": 500,
+    "MetalCost": 500,
+    "ResearchTimeInSeconds": 300,
+    "Modifiers": [
+      {
+        "Tag": "ResourceProduction",
+        "Type": "Increased",
+        "Value": 0.01,
+        "Source": "Research: Minedrift I"
+      }
+    ]
+  },
+  {
+    "Id": "ECON_SILVER_1",
+    "Name": "Handelsaftaler",
+    "Description": "\u002B3% bonus til markedspladsens s\u00F8lv-generering",
+    "ParentId": "ECON_PROD_1",
+    "RequiredAcademyLevel": 5,
+    "WoodCost": 1000,
+    "StoneCost": 1000,
+    "MetalCost": 1000,
+    "ResearchTimeInSeconds": 1200,
+    "Modifiers": [
+      {
+        "Tag": "Silver",
+        "Type": "Increased",
+        "Value": 0.03,
+        "Source": "Research: Handelsaftaler"
+      }
+    ]
+  },
+  {
+    "Id": "MIL_SIEGE_UPKEEP_1",
+    "Name": "Logistik for Belejring",
+    "Description": "Neds\u00E6tter upkeep af belejringsenheder med 5%",
+    "ParentId": null,
+    "RequiredAcademyLevel": 10,
+    "WoodCost": 2000,
+    "StoneCost": 500,
+    "MetalCost": 2000,
+    "ResearchTimeInSeconds": 3600,
+    "Modifiers": [
+      {
+        "Tag": "Siege",
+        "Type": "Decreased",
+        "Value": 0.05,
+        "Source": "Research: Belejringslogistik"
+      },
+      {
+        "Tag": "Upkeep",
+        "Type": "Decreased",
+        "Value": 0.05,
+        "Source": "Research: Belejringslogistik"
+      }
+    ]
+  },
+  {
+    "Id": "MIL_SIEGE_POWER_1",
+    "Name": "Tung Ammunition",
+    "Description": "Belejringsv\u00E5ben giver 5% mere skade",
+    "ParentId": "MIL_SIEGE_UPKEEP_1",
+    "RequiredAcademyLevel": 15,
+    "WoodCost": 5000,
+    "StoneCost": 1000,
+    "MetalCost": 5000,
+    "ResearchTimeInSeconds": 7200,
+    "Modifiers": [
+      {
+        "Tag": "Siege",
+        "Type": "Increased",
+        "Value": 0.05,
+        "Source": "Research: Tung Ammunition"
+      },
+      {
+        "Tag": "Power",
+        "Type": "Increased",
+        "Value": 0.05,
+        "Source": "Research: Tung Ammunition"
+      }
+    ]
+  },
+  {
+    "Id": "LOG_ROADS_1",
+    "Name": "Vejbygning I",
+    "Description": "Bygning og reparation af veje er 10% hurtigere",
+    "ParentId": null,
+    "RequiredAcademyLevel": 4,
+    "WoodCost": 300,
+    "StoneCost": 800,
+    "MetalCost": 100,
+    "ResearchTimeInSeconds": 600,
+    "Modifiers": [
+      {
+        "Tag": "Construction",
+        "Type": "Increased",
+        "Value": 0.1,
+        "Source": "Research: Vejbygning I"
+      }
+    ]
+  }
+]
