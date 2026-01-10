@@ -72,6 +72,6 @@ Fixing Pink Models / Missing Files: If 3D models look wrong or are missing, run 
 Mono-repo Care: Remember that your changes might affect the /game (Backend) and /gameUnity (Client) folders. Keep them synchronized!
 
 📂 Folder Structure
-/game: C# WebApi, Application, and Domain logic (Backend).
+/Backend: C# WebApi, Application, and Domain logic (Backend).
 
-/gameUnity: The actual Unity project files (Client).
+/Unity: The actual Unity project files (Client).
