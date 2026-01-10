@@ -15,8 +15,8 @@ namespace Infrastructure.Context
         {
             var optionsBuilder = new DbContextOptionsBuilder<GameContext>();
 
-            optionsBuilder.UseSqlServer(
-                "Server=(localdb)\\mssqllocaldb;Database=GameDb;Trusted_Connection=True;MultipleActiveResultSets=true");
+            optionsBuilder.UseSqlite(
+                "Data Source=RelicWars_LocalDatabase.db");
 
             return new GameContext(optionsBuilder.Options);
         }
