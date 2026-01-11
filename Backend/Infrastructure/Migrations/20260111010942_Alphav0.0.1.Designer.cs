@@ -11,7 +11,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Infrastructure.Migrations
 {
     [DbContext(typeof(GameContext))]
-    [Migration("20260110233525_Alphav0.0.1")]
+    [Migration("20260111010942_Alphav0.0.1")]
     partial class Alphav001
     {
         /// <inheritdoc />

@@ -105,7 +105,9 @@ using (var scope = app.Services.CreateScope())
 {
     var context = scope.ServiceProvider.GetRequiredService<GameContext>();
     var spawner = scope.ServiceProvider.GetRequiredService<NPCSpawnerService>();
-    await context.Database.EnsureCreatedAsync();
+
+    await context.Database.MigrateAsync();
+
     await DbSeeder.SeedAsync(context, spawner);
 }
 

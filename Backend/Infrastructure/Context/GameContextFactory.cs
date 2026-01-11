@@ -15,8 +15,9 @@ namespace Infrastructure.Context
         {
             var optionsBuilder = new DbContextOptionsBuilder<GameContext>();
 
-            optionsBuilder.UseSqlite(
-                "Data Source=RelicWars_LocalDatabase.db");
+            string databasePathForDesignDiagnostics = Path.Combine(Directory.GetCurrentDirectory(), "..", "game", "RelicWars_LocalDatabase.db");
+
+            optionsBuilder.UseSqlite($"Data Source={databasePathForDesignDiagnostics}");
 
             return new GameContext(optionsBuilder.Options);
         }
