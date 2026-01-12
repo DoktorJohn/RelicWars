@@ -1,4 +1,5 @@
-﻿using Domain.Enums;
+﻿using Domain.Entities;
+using Domain.Enums;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -19,7 +20,7 @@ namespace Domain.StaticData.Data
         public TimeSpan BuildTime { get; set; }
 
         public List<BuildingRequirement> Prerequisites { get; set; } = new();
-        public List<ModifierData> ModifiersInternal { get; set; } = new();
+        public List<Modifier> ModifiersInternal { get; set; } = new();
         public List<ModifierTagEnum> ModifiersThatAffects { get; set; } = new();
     }
 

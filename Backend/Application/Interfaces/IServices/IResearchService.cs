@@ -1,5 +1,5 @@
 ﻿using Application.DTOs;
-using Domain.StaticData.Data;
+using Domain.Entities;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -14,6 +14,6 @@ namespace Application.Interfaces.IServices
 
         Task<BuildingResult> CancelResearchAsync(Guid userId, Guid jobId);
 
-        Task<List<ModifierData>> GetUserResearchModifiersAsync(Guid userId);
+        Task<List<Modifier>> GetUserResearchModifiersAsync(Guid userId);
     }
 }

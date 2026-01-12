@@ -14,25 +14,29 @@ namespace Infrastructure.Repositories
             _context = context;
         }
 
-        public async Task<City?> GetByIdAsync(Guid cityId)
+        public async Task<City?> GetByIdAsync(Guid cityIdentifier)
         {
             return await _context.Cities
-                .Include(c => c.Buildings)
-                .Include(c => c.UnitStacks)
-                .FirstOrDefaultAsync(c => c.Id == cityId);
+                .Include(city => city.Buildings)
+                .Include(city => city.UnitStacks)
+                .Include(city => city.WorldPlayer)
+                    .ThenInclude(player => player.ModifiersAppliedToWorldPlayer)
+                .FirstOrDefaultAsync(city => city.Id == cityIdentifier);
         }
 
         public async Task<List<City>> GetAllAsync()
         {
             return await _context.Cities
-                .Include(c => c.UnitStacks)
+                .Include(city => city.Buildings)
+                .Include(city => city.UnitStacks)
+                .Include(city => city.WorldPlayer)
+                    .ThenInclude(player => player.ModifiersAppliedToWorldPlayer)
                 .ToListAsync();
         }
 
         public async Task UpdateAsync(City city)
         {
             _context.Cities.Update(city);
-            // Dette er den vigtigste linje for at din 'skip' kommando virker!
             await _context.SaveChangesAsync();
         }
 
@@ -44,13 +48,16 @@ namespace Infrastructure.Repositories
 
         public async Task UpdateRangeAsync(List<City> cities)
         {
+            _context.Cities.UpdateRange(cities);
             await _context.SaveChangesAsync();
         }
 
-        public async Task<City> GetCityWithBuildingsByCityIdentifierAsync(Guid cityIdentifier)
+        public async Task<City?> GetCityWithBuildingsByCityIdentifierAsync(Guid cityIdentifier)
         {
             return await _context.Cities
                 .Include(city => city.Buildings)
+                .Include(city => city.WorldPlayer)
+                    .ThenInclude(player => player.ModifiersAppliedToWorldPlayer)
                 .FirstOrDefaultAsync(city => city.Id == cityIdentifier);
         }
 

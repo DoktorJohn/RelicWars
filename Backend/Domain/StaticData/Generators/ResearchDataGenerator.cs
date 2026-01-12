@@ -7,6 +7,7 @@ using System.Text;
 using System.Text.Json.Serialization;
 using System.Text.Json;
 using System.Threading.Tasks;
+using Domain.Entities;
 
 namespace Domain.StaticData.Generators
 {
@@ -28,7 +29,7 @@ namespace Domain.StaticData.Generators
                 MetalCost = 500,
                 ResearchTimeInSeconds = 300,
                 Modifiers = {
-                new ModifierData { Tag = ModifierTagEnum.ResourceProduction, Type = ModifierTypeEnum.Increased, Value = 0.01, Source = "Research: Minedrift I" }
+                new Modifier { Tag = ModifierTagEnum.ResourceProduction, Type = ModifierTypeEnum.Increased, Value = 0.01, Source = "Research: Minedrift I" }
             }
             });
 
@@ -44,7 +45,7 @@ namespace Domain.StaticData.Generators
                 MetalCost = 1000,
                 ResearchTimeInSeconds = 1200,
                 Modifiers = {
-                new ModifierData { Tag = ModifierTagEnum.Silver, Type = ModifierTypeEnum.Increased, Value = 0.03, Source = "Research: Handelsaftaler" }
+                new Modifier { Tag = ModifierTagEnum.Silver, Type = ModifierTypeEnum.Increased, Value = 0.03, Source = "Research: Handelsaftaler" }
             }
             });
 
@@ -60,8 +61,8 @@ namespace Domain.StaticData.Generators
                 MetalCost = 2000,
                 ResearchTimeInSeconds = 3600,
                 Modifiers = {
-                new ModifierData { Tag = ModifierTagEnum.Siege, Type = ModifierTypeEnum.Decreased, Value = 0.05, Source = "Research: Belejringslogistik" },
-                new ModifierData { Tag = ModifierTagEnum.Upkeep, Type = ModifierTypeEnum.Decreased, Value = 0.05, Source = "Research: Belejringslogistik" }
+                new Modifier { Tag = ModifierTagEnum.Siege, Type = ModifierTypeEnum.Decreased, Value = 0.05, Source = "Research: Belejringslogistik" },
+                new Modifier { Tag = ModifierTagEnum.Upkeep, Type = ModifierTypeEnum.Decreased, Value = 0.05, Source = "Research: Belejringslogistik" }
             }
             });
 
@@ -77,8 +78,8 @@ namespace Domain.StaticData.Generators
                 MetalCost = 5000,
                 ResearchTimeInSeconds = 7200,
                 Modifiers = {
-                new ModifierData { Tag = ModifierTagEnum.Siege, Type = ModifierTypeEnum.Increased, Value = 0.05, Source = "Research: Tung Ammunition" },
-                new ModifierData { Tag = ModifierTagEnum.Power, Type = ModifierTypeEnum.Increased, Value = 0.05, Source = "Research: Tung Ammunition" }
+                new Modifier { Tag = ModifierTagEnum.Siege, Type = ModifierTypeEnum.Increased, Value = 0.05, Source = "Research: Tung Ammunition" },
+                new Modifier { Tag = ModifierTagEnum.Power, Type = ModifierTypeEnum.Increased, Value = 0.05, Source = "Research: Tung Ammunition" }
             }
             });
 
@@ -94,7 +95,7 @@ namespace Domain.StaticData.Generators
                 MetalCost = 100,
                 ResearchTimeInSeconds = 600,
                 Modifiers = {
-                new ModifierData { Tag = ModifierTagEnum.Construction, Type = ModifierTypeEnum.Increased, Value = 0.10, Source = "Research: Vejbygning I" }
+                new Modifier { Tag = ModifierTagEnum.Construction, Type = ModifierTypeEnum.Increased, Value = 0.10, Source = "Research: Vejbygning I" }
             }
             });
 

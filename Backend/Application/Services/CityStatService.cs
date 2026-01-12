@@ -5,6 +5,7 @@ using Domain.StaticData.Data;
 using Domain.StaticData.Readers;
 using Domain.Workers.Abstraction;
 using Domain.Workers;
+using Application.Utility;
 
 namespace Application.Services
 {
@@ -22,7 +23,7 @@ namespace Application.Services
         public double GetWarehouseCapacity(City city)
         {
             var warehouse = city.Buildings.FirstOrDefault(b => b.Type == BuildingTypeEnum.Warehouse);
-            if (warehouse == null || warehouse.Level == 0) return 500.0; // Basis start-kapacitet
+            if (warehouse == null || warehouse.Level == 0) return 500.0;
 
             var config = _buildingData.GetConfig<WarehouseLevelData>(BuildingTypeEnum.Warehouse, warehouse.Level);
             return config?.Capacity ?? 500.0;
@@ -30,11 +31,29 @@ namespace Application.Services
 
         public int GetMaxPopulation(City city)
         {
-            var housing = city.Buildings.FirstOrDefault(b => b.Type == BuildingTypeEnum.Housing);
-            if (housing == null || housing.Level == 0) return 100; // Basis start-population
+            var housingBuilding = city.Buildings.FirstOrDefault(building => building.Type == BuildingTypeEnum.Housing);
 
-            var config = _buildingData.GetConfig<HousingLevelData>(BuildingTypeEnum.Housing, housing.Level);
-            return config?.Population ?? 100;
+            // Hvis bygningen ikke findes, returnerer vi basis-værdien (100)
+            if (housingBuilding == null || housingBuilding.Level == 0)
+            {
+                return 100;
+            }
+
+            var housingLevelConfig = _buildingData.GetConfig<HousingLevelData>(BuildingTypeEnum.Housing, housingBuilding.Level);
+            var activePlayerModifiers = city.WorldPlayer?.ModifiersAppliedToWorldPlayer;
+
+            // 1. Vi bruger null-coalescing (??) til at give en fallback værdi på 0.0
+            // 2. Vi caster den resulterende int til en double med (double)
+            // 3. Da ApplyModifiers returnerer en double, caster vi hele resultatet tilbage til int til slut
+            double basePopulationValue = (double)(housingLevelConfig?.Population ?? 0);
+
+            double modifiedPopulationValue = StatCalculator.ApplyModifiers(
+                basePopulationValue,
+                housingLevelConfig?.ModifiersThatAffects,
+                activePlayerModifiers
+            );
+
+            return (int)modifiedPopulationValue;
         }
 
         public int GetCurrentPopulationUsage(City city)

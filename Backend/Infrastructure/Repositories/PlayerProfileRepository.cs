@@ -22,12 +22,17 @@ namespace Infrastructure.Repositories
         public async Task<PlayerProfile?> GetByEmailAsync(string email)
         {
             return await _context.PlayerProfiles
+                .Include(profile => profile.WorldPlayers)
+                    .ThenInclude(worldPlayer => worldPlayer.Cities)
                 .FirstOrDefaultAsync(u => u.Email == email);
         }
 
         public async Task<PlayerProfile?> GetByIdAsync(Guid id)
         {
-            return await _context.PlayerProfiles.FindAsync(id);
+            return await _context.PlayerProfiles
+                .Include(profile => profile.WorldPlayers)
+                    .ThenInclude(worldPlayer => worldPlayer.Cities)
+                .FirstOrDefaultAsync(profile => profile.Id == id);
         }
 
         public async Task AddAsync(PlayerProfile playerProfile)

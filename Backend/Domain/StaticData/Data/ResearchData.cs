@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Domain.Entities;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -25,6 +26,6 @@ namespace Domain.StaticData.Data
         public int ResearchTimeInSeconds { get; set; }
 
         // Bonussen (Dette skal din motor læse når den beregner produktion/kamp)
-        public List<ModifierData> Modifiers { get; set; } = new();
+        public List<Modifier> Modifiers { get; set; } = new();
     }
 }

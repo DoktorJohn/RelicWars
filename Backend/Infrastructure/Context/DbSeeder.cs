@@ -26,9 +26,9 @@ namespace Infrastructure.Context
             // Gem grunddata først, så spawneren kan se at pladsen (50,50) er optaget
             await context.SaveChangesAsync();
 
-            // 4. Spawn NPC byer omkring spilleren
-            Console.WriteLine("--- Spawning NPC Cities ---");
-            await spawner.SpawnInitialNPCsAsync(30, 40); // 30 byer inden for en radius af 40
+            //// 4. Spawn NPC byer omkring spilleren
+            //Console.WriteLine("--- Spawning NPC Cities ---");
+            //await spawner.SpawnInitialNPCsAsync(30, 40); // 30 byer inden for en radius af 40
 
         }
     }

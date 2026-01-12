@@ -206,6 +206,44 @@ namespace Infrastructure.Migrations
                     b.ToTable("Cities");
                 });
 
+            modelBuilder.Entity("Domain.Entities.Modifier", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("DateCreated")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("DateLastModified")
+                        .HasColumnType("TEXT");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Source")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("Tag")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("Type")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<double>("Value")
+                        .HasColumnType("REAL");
+
+                    b.Property<Guid?>("WorldPlayerId")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("WorldPlayerId");
+
+                    b.ToTable("Modifier");
+                });
+
             modelBuilder.Entity("Domain.Entities.Research", b =>
                 {
                     b.Property<Guid>("Id")
@@ -567,6 +605,13 @@ namespace Infrastructure.Migrations
                     b.Navigation("WorldPlayer");
                 });
 
+            modelBuilder.Entity("Domain.Entities.Modifier", b =>
+                {
+                    b.HasOne("Domain.User.WorldPlayer", null)
+                        .WithMany("ModifiersAppliedToWorldPlayer")
+                        .HasForeignKey("WorldPlayerId");
+                });
+
             modelBuilder.Entity("Domain.Entities.Research", b =>
                 {
                     b.HasOne("Domain.User.WorldPlayer", null)
@@ -636,6 +681,8 @@ namespace Infrastructure.Migrations
                     b.Navigation("Cities");
 
                     b.Navigation("CompletedResearches");
+
+                    b.Navigation("ModifiersAppliedToWorldPlayer");
                 });
 #pragma warning restore 612, 618
         }

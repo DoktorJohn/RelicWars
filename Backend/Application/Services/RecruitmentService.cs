@@ -83,7 +83,7 @@ namespace Application.Services
                 tags.Add(ModifierTagEnum.Recruitment);
             }
 
-            var allModifiers = new List<ModifierData>();
+            var allModifiers = new List<Modifier>();
 
             BuildingTypeEnum buildingType = unit.Category switch
             {

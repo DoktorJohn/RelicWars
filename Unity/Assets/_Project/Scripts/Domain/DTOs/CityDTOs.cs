@@ -9,9 +9,25 @@ namespace Project.Network.Models
     {
         public Guid CityId;
         public string CityName;
+
+        // Ressourcer
         public double CurrentWoodAmount;
         public double CurrentStoneAmount;
         public double CurrentMetalAmount;
+        public double CurrentSilverAmount; // Tilføjet
+
+        // Kapaciteter til bue-indikatorer
+        public double MaxWoodCapacity; // Tilføjet
+        public double MaxStoneCapacity; // Tilføjet
+        public double MaxMetalCapacity; // Tilføjet
+
+        public double WoodProductionPerHour;
+        public double StoneProductionPerHour;
+        public double MetalProductionPerHour;
+
+        public int CurrentPopulationUsage;
+        public int MaxPopulationCapacity;
+
         public List<CityControllerGetDetailedCityInformationBuildingDTO> BuildingList = new();
     }
 

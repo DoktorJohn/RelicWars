@@ -26,45 +26,72 @@ namespace Application.Services.Workers
 
             while (!stoppingToken.IsCancellationRequested)
             {
-                using (var scope = _services.CreateScope())
+                // OBJEKTIV RETTELSE: Vi opretter et scope her.
+                using (IServiceScope serviceScope = _services.CreateScope())
                 {
-                    // 1. By-logik (Bygninger, rekruttering)
-                    var cityWorker = scope.ServiceProvider.GetRequiredService<CityWorker>();
-                    await cityWorker.ProcessCityJobsAsync();
+                    // Vi bruger scope.ServiceProvider til at løse scoped services.
+                    IServiceProvider scopedProvider = serviceScope.ServiceProvider;
 
-                    // 2. Militær-logik (Bevægelser, kamp, loot)
-                    var unitDeploymentWorker = scope.ServiceProvider.GetRequiredService<UnitDeploymentWorker>();
-                    await unitDeploymentWorker.ProcessMilitaryMovementsAsync();
-
-                    // 3. Database Sync (Hvert 5. minut)
-                    if ((DateTime.UtcNow - _lastGlobalSave).TotalMinutes >= 5)
+                    try
                     {
-                        await SyncWorldState(scope.ServiceProvider);
-                        _lastGlobalSave = DateTime.UtcNow;
+                        // 1. By-logik (Bygninger, rekruttering)
+                        var cityJobProcessingWorker = scopedProvider.GetRequiredService<CityWorker>();
+                        await cityJobProcessingWorker.ProcessCityJobsAsync();
+
+                        // 2. Militær-logik (Bevægelser, kamp, loot)
+                        var unitDeploymentWorker = scopedProvider.GetRequiredService<UnitDeploymentWorker>();
+                        await unitDeploymentWorker.ProcessMilitaryMovementsAsync();
+
+                        // 3. Database Sync (Kør kun hvis intervallet er overskredet)
+                        if ((DateTime.UtcNow - _lastGlobalSave).TotalMinutes >= 0.5)
+                        {
+                            // VIGTIGT: Vi sender scopedProvider videre, IKKE _rootServiceProvider.
+                            await SynchronizeAllPlayerCitiesResourceStatesAsync(scopedProvider);
+                            _lastGlobalSave = DateTime.UtcNow;
+                        }
+                    }
+                    catch (Exception exception)
+                    {
+                        _logger.LogError(exception, "En fejl opstod under kørsel af GameEngine-løkken.");
                     }
                 }
 
+                // Vent 1 sekund før næste iteration
                 await Task.Delay(1000, stoppingToken);
             }
         }
 
-        private async Task SyncWorldState(IServiceProvider sp)
+        private async Task SynchronizeAllPlayerCitiesResourceStatesAsync(IServiceProvider scopedProvider)
         {
-            var cityRepo = sp.GetRequiredService<ICityRepository>();
-            var resService = sp.GetRequiredService<IResourceService>();
-            var cities = await cityRepo.GetAllAsync();
-            var now = DateTime.UtcNow;
+            // Nu kan vi sikkert løse ICityRepository, da det sker via et scope.
+            var cityDataRepository = scopedProvider.GetRequiredService<ICityRepository>();
+            var resourceCalculationService = scopedProvider.GetRequiredService<IResourceService>();
 
-            foreach (var city in cities)
+            var allCitiesInWorld = await cityDataRepository.GetAllAsync();
+            var currentSystemTime = DateTime.UtcNow;
+
+            _logger.LogInformation($"[Sync] Starter synkronisering for {allCitiesInWorld.Count} entiteter.");
+
+            foreach (var cityEntity in allCitiesInWorld)
             {
-                var snapshot = resService.CalculateCurrent(city, now);
-                city.Wood = snapshot.Wood;
-                city.Stone = snapshot.Stone;
-                city.Metal = snapshot.Metal;
-                city.LastResourceUpdate = now;
+                // Vi logger kun for spillere for at undgå NPC-støj
+                bool isPlayerOwnedCity = cityEntity.WorldPlayer != null;
+
+                var calculatedResourceSnapshot = resourceCalculationService.CalculateCurrent(cityEntity, currentSystemTime);
+
+                if (isPlayerOwnedCity)
+                {
+                    _logger.LogInformation($"[Sync-PLAYER] By: {cityEntity.Name} | Wood: {cityEntity.Wood:F2} -> {calculatedResourceSnapshot.Wood:F2} | Rate: {calculatedResourceSnapshot.WoodProductionPerHour}/t");
+                }
+
+                cityEntity.Wood = calculatedResourceSnapshot.Wood;
+                cityEntity.Stone = calculatedResourceSnapshot.Stone;
+                cityEntity.Metal = calculatedResourceSnapshot.Metal;
+                cityEntity.LastResourceUpdate = currentSystemTime;
             }
-            await cityRepo.UpdateRangeAsync(cities);
-            _logger.LogInformation("World State synchronized.");
+
+            await cityDataRepository.UpdateRangeAsync(allCitiesInWorld);
+            _logger.LogInformation("[Sync] Database synkronisering fuldført.");
         }
     }
 }

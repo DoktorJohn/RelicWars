@@ -54,7 +54,6 @@ namespace Application.Services
                     break;
             }
 
-            // FÆLLES AFSLUTNING: Gem ændringer i byen (tropper/bygnings-levels)
             await _cityRepo.UpdateAsync(city);
 
         }

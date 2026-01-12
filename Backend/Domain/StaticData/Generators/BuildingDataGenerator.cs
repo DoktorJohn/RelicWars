@@ -1,4 +1,5 @@
-﻿using Domain.Enums;
+﻿using Domain.Entities;
+using Domain.Enums;
 using Domain.StaticData.Data;
 using System;
 using System.Collections.Generic;
@@ -64,7 +65,7 @@ namespace Domain.StaticData.Generators
 
                 // Modifer: Senate giver Increased Construction speed
                 // Vi omregner (100 + lvl * 10) til en procent-stigning (f.eks. 0.10, 0.20...)
-                entry.ModifiersInternal.Add(new ModifierData
+                entry.ModifiersInternal.Add(new Modifier
                 {
                     Tag = ModifierTagEnum.Construction,
                     Type = ModifierTypeEnum.Increased,
@@ -199,7 +200,7 @@ namespace Domain.StaticData.Generators
 
                 // Modifier: Recruitment speed bonus
                 double modValue = Math.Pow(lvl / 30.0, 1.7);
-                entry.ModifiersInternal.Add(new ModifierData
+                entry.ModifiersInternal.Add(new Modifier
                 {
                     Tag = ModifierTagEnum.Recruitment,
                     Type = ModifierTypeEnum.Increased,
@@ -234,7 +235,7 @@ namespace Domain.StaticData.Generators
                 };
 
                 // Modifier: Research speed
-                entry.ModifiersInternal.Add(new ModifierData
+                entry.ModifiersInternal.Add(new Modifier
                 {
                     Tag = ModifierTagEnum.Research,
                     Type = ModifierTypeEnum.Increased,
@@ -282,7 +283,7 @@ namespace Domain.StaticData.Generators
                 };
 
                 // Modifier: Armor bonus til alle enheder i byen
-                entry.ModifiersInternal.Add(new ModifierData
+                entry.ModifiersInternal.Add(new Modifier
                 {
                     Tag = ModifierTagEnum.Armor,
                     Type = ModifierTypeEnum.Increased,

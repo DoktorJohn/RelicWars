@@ -28,51 +28,71 @@ namespace Application.Services
 
         public async Task<WorldPlayerJoinResponse> AssignPlayerToGameWorldAsync(Guid profileIdentifier, Guid targetWorldIdentifier)
         {
-            // 1. Guard: Find profilen for at sikre, at spilleren eksisterer
+            // 1. Guard: Find profilen. 
+            // VIGTIGT: Sørg for at dit repository bruger .Include(p => p.WorldPlayers).ThenInclude(wp => wp.Cities)
+            // ellers vil listen herunder altid være tom, og fejlen vil fortsætte.
             var activeProfile = await _playerProfileRepository.GetByIdAsync(profileIdentifier);
+
             if (activeProfile == null)
             {
                 return new WorldPlayerJoinResponse(false, "Spillerprofil kunne ikke identificeres.", null);
             }
 
-            // 2. Tjek om spilleren allerede eksisterer i den specifikke verden
+            // 2. Objektivt tjek: Har denne profil allerede en WorldPlayer-entitet i den valgte verden?
             var existingCharacterInWorld = activeProfile.WorldPlayers
-                .FirstOrDefault(profileInWorld => profileInWorld.WorldId == targetWorldIdentifier);
+                .FirstOrDefault(relationship => relationship.WorldId == targetWorldIdentifier);
 
             if (existingCharacterInWorld != null)
             {
-                Guid? lastActiveCity = existingCharacterInWorld.Cities.FirstOrDefault()?.Id;
-                return new WorldPlayerJoinResponse(true, "Velkommen tilbage.", lastActiveCity);
+                // Spilleren er allerede medlem. Vi finder deres hovedby (Capital).
+                // Vi antager her, at den første by i listen er deres startby.
+                var primaryCity = existingCharacterInWorld.Cities.FirstOrDefault();
+
+                Guid? existingCityId = primaryCity?.Id;
+
+                return new WorldPlayerJoinResponse(
+                    true,
+                    "Velkommen tilbage. Henter din eksisterende bydata.",
+                    existingCityId
+                );
             }
 
-            // 3. Initialisering af ny karakter (WorldPlayer) i den valgte verden
-            var newWorldCharacter = new WorldPlayer
+            // 3. Hvis vi når hertil, er spilleren ny i denne verden.
+            // Vi påbegynder initialisering af en ny karakter og startby.
+            var newlyCreatedWorldCharacter = new WorldPlayer
             {
                 PlayerProfileId = profileIdentifier,
                 WorldId = targetWorldIdentifier,
-                Silver = 1000
+                Silver = 1000,
+                Cities = new List<City>()
             };
 
-            await _worldPlayerRepository.AddAsync(newWorldCharacter);
+            // Gem karakteren først for at generere et ID (afhængigt af din Unit of Work / DB setup)
+            await _worldPlayerRepository.AddAsync(newlyCreatedWorldCharacter);
 
-            // 4. Automatisk generering af startby med start-ressourcer
+            // 4. Generering af startby
             var startingCapitalCity = new City
             {
                 Name = $"{activeProfile.UserName}'s Capital",
-                WorldPlayerId = newWorldCharacter.Id,
+                WorldPlayerId = newlyCreatedWorldCharacter.Id,
                 Wood = 500,
                 Stone = 500,
                 Metal = 500,
-                Buildings = new List<Building>() // Initialiser listen
+                LastResourceUpdate = DateTime.UtcNow, // Vigtigt for din ResourceService!
+                Buildings = new List<Building>()
             };
 
-            // 5. Tildeling af startbygninger (Senate, Warehouse, Housing i Level 1)
+            // 5. Tildeling af startbygninger via hjælper-metoden
             InitializeStartingBuildingsForNewCity(startingCapitalCity);
 
-            // Gem byen inklusiv de tilknyttede bygninger
+            // Gem byen i databasen
             await _cityRepository.AddAsync(startingCapitalCity);
 
-            return new WorldPlayerJoinResponse(true, "Karakter oprettet og by tildelt med startbygninger.", startingCapitalCity.Id);
+            return new WorldPlayerJoinResponse(
+                true,
+                "Ny karakter oprettet og startby er succesfuldt tildelt.",
+                startingCapitalCity.Id
+            );
         }
 
         private void InitializeStartingBuildingsForNewCity(City targetCity)
@@ -95,6 +115,24 @@ namespace Application.Services
             targetCity.Buildings.Add(new Building
             {
                 Type = BuildingTypeEnum.Housing,
+                Level = 1
+            });
+
+            targetCity.Buildings.Add(new Building
+            {
+                Type = BuildingTypeEnum.TimberCamp,
+                Level = 1
+            });
+
+            targetCity.Buildings.Add(new Building
+            {
+                Type = BuildingTypeEnum.StoneQuarry,
+                Level = 1
+            });
+
+            targetCity.Buildings.Add(new Building
+            {
+                Type = BuildingTypeEnum.MetalMine,
                 Level = 1
             });
         }

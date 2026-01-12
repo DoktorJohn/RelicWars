@@ -15,6 +15,7 @@ namespace Domain.User
         //Navprops
         public List<City> Cities { get; set; } = new();
         public List<Research> CompletedResearches { get; set; } = new();
+        public List<Modifier> ModifiersAppliedToWorldPlayer { get; set; } = new();
 
         //Foreign keys
         public Guid? AllianceId { get; set; }

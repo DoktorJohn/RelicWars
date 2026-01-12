@@ -1,8 +1,8 @@
 ﻿using Application.DTOs;
 using Application.Interfaces.IRepositories;
 using Application.Interfaces.IServices;
+using Domain.Entities;
 using Domain.Enums;
-using Domain.StaticData.Data;
 using Domain.StaticData.Readers;
 using Domain.Workers;
 using System;
@@ -94,10 +94,10 @@ namespace Application.Services
             return new BuildingResult(true, $"Forskning af {node.Name} er startet!");
         }
 
-        public async Task<List<ModifierData>> GetUserResearchModifiersAsync(Guid userId)
+        public async Task<List<Modifier>> GetUserResearchModifiersAsync(Guid userId)
         {
             var user = await _userRepo.GetByIdWithResearchAsync(userId);
-            if (user == null) return new List<ModifierData>();
+            if (user == null) return new List<Modifier>();
 
             // Samler alle modifiers fra alle de noder, brugeren har låst op
             return user.CompletedResearches

@@ -1,0 +1,84 @@
+/* ============================================================
+   CITY-TOPBAR-MAIN-CONTAINER
+   ============================================================ */
+.city-top-bar-main-container {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 65px;
+    flex-direction: row;
+    align-items: flex-start;
+    padding-left: 25px;
+    padding-right: 25px;
+    
+    background-image: url('project://database/Assets/UI/Coal_Surface_2_Albedo.png');
+    -unity-background-image-tint-color: rgba(160, 120, 90, 1.0);
+    -unity-background-scale-mode: scale-and-crop;
+
+    border-bottom-width: 2px;
+    border-bottom-color: rgba(80, 50, 30, 0.8);
+    justify-content: flex-end;
+    overflow: visible;
+}
+
+.city-top-bar-resource-section-right {
+    flex-direction: row;
+    align-items: flex-start;
+    height: 100%;
+    flex-grow: 1;
+    justify-content: flex-end;
+    overflow: visible;
+}
+
+.city-resource-group {
+    flex-direction: row;
+    align-items: center;
+    margin-left: 20px;
+    margin-top: 15px; /* Luften til toppen */
+    overflow: visible;
+}
+
+/* ============================================================
+   IKONER OG BUE-CONTAINER */
+.city-resource-icon-container {
+    width: 54px;
+    height: 54px;
+    justify-content: center;
+    align-items: center;
+    overflow: visible;
+}
+
+.city-resource-icon-base {
+    width: 54px; 
+    height: 54px;
+    min-width: 54px;
+    min-height: 54px;
+    -unity-background-scale-mode: scale-to-fit;
+    flex-shrink: 0;
+}
+
+/* Lærredet til halvcirklen - placeret absolut over ikonet */
+.city-warehouse-capacity-bar {
+    position: absolute;
+    width: 64px; /* Lidt bredere end ikonet for at omfavne det */
+    height: 64px;
+    top: -5px;
+    left: -5px;
+}
+
+.icon-wood { background-image: url('project://database/Assets/UI/wood.png'); }
+.icon-stone { background-image: url('project://database/Assets/UI/stone.png'); }
+.icon-metal { background-image: url('project://database/Assets/UI/metal.png'); }
+.icon-silver { background-image: url('project://database/Assets/UI/silver.png'); }
+.icon-population { background-image: url('project://database/Assets/UI/population.png'); }
+
+/* ============================================================
+   TEKST / LABELS */
+.city-resource-label-amount {
+    color: white;
+    -unity-font-style: bold;
+    font-size: 18px; 
+    text-shadow: 1px 1px 1px rgba(0, 0, 0, 0.8);
+    margin-left: 8px;
+}
