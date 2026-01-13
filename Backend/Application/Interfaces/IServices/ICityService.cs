@@ -11,6 +11,7 @@ namespace Application.Interfaces.IServices
     {
         Task<CityDetailsDTO> GetCityOverviewAsync(Guid cityId);
         Task UpdateCityPointsAsync(Guid cityId);
-        Task<CityControllerGetDetailedCityInformationDTO> GetDetailedCityInformationByCityIdentifierAsync(Guid cityIdentifier);
+        Task<CityControllerGetDetailedCityInformationDTO> GetDetailedCityInformationByCityIdentifierAsync(Guid cityId);
+        Task<List<AvailableBuildingDTO>> GetAvailableBuildingsForSenateAsync(Guid cityId);
     }
 }

@@ -59,40 +59,20 @@ namespace Project.Modules.City
                         Debug.Log($"[CityManager] Modtog data for '{cityInformation.CityName}'. Sender {cityInformation.BuildingList.Count} bygninger til population.");
                         ExecuteRealWorldBuildingPopulationProcess(cityInformation.BuildingList);
                     }
-                    else
-                    {
-                        Debug.LogError("[CityManager] Modtog null fra ApiService. Tjek netværksloggen.");
-                    }
                 }));
-            }
-            else
-            {
-                Debug.LogWarning("[CityManager] Kunne ikke påbegynde instansiering: Intet aktivt CityId i ApiService.");
             }
         }
 
         private void ExecuteRealWorldBuildingPopulationProcess(List<CityControllerGetDetailedCityInformationBuildingDTO> buildingDataList)
         {
-            // 1. Destruktion af eksisterende bygninger
-            int existingChildCount = buildingParentContainer.childCount;
             foreach (Transform child in buildingParentContainer)
             {
                 Destroy(child.gameObject);
             }
-            Debug.Log($"[CityManager] Rensede {existingChildCount} gamle bygningsobjekter.");
 
-            if (buildingDataList == null || buildingDataList.Count == 0)
-            {
-                Debug.LogWarning("[CityManager] Bygningslisten er tom. Ingen bygninger at spawne.");
-                return;
-            }
-
-            // 2. Instansierings-loop med debugging
             for (int i = 0; i < buildingDataList.Count; i++)
             {
                 CityControllerGetDetailedCityInformationBuildingDTO currentBuildingData = buildingDataList[i];
-                Debug.Log($"[CityManager] Behandler bygning {i + 1}/{buildingDataList.Count}: {currentBuildingData.BuildingType} (Lvl {currentBuildingData.CurrentLevel})");
-
                 GameObject prefabToInstantiate = GetPrefabForSpecificBuildingType(currentBuildingData.BuildingType);
 
                 if (prefabToInstantiate != null)
@@ -107,17 +87,37 @@ namespace Project.Modules.City
                     );
 
                     buildingInstance.name = $"{currentBuildingData.BuildingType}_Level_{currentBuildingData.CurrentLevel}";
-                    Debug.Log($"[CityManager] Succes: Instansieret {buildingInstance.name} på position {spawnPosition}");
 
+                    // Vi konfigurerer nu metadataen på det objekt, der har collideren
                     ConfigureInstantiatedBuildingMetadata(buildingInstance, currentBuildingData);
                 }
-                else
-                {
-                    Debug.LogError($"[CityManager] FEJL: Kunne ikke finde en Prefab til typen '{currentBuildingData.BuildingType}'. Tjek Inspectoren!");
-                }
+            }
+        }
+
+        private void ConfigureInstantiatedBuildingMetadata(GameObject instance, CityControllerGetDetailedCityInformationBuildingDTO data)
+        {
+            // OBJEKTIV FIX: Vi leder efter den collider, som musen rent faktisk skal ramme
+            Collider buildingCollider = instance.GetComponentInChildren<Collider>();
+
+            if (buildingCollider == null)
+            {
+                Debug.LogWarning($"[CityManager] Advarsel: Ingen Collider fundet på {instance.name} eller dens børn. Interaktion vil ikke virke!");
+                return;
             }
 
-            Debug.Log($"[CityManager] Population proces færdig. {buildingParentContainer.childCount} bygninger aktive i containeren.");
+            // Vi tager fat i det specifikke GameObject, hvor collideren bor
+            GameObject targetGameObject = buildingCollider.gameObject;
+
+            CityBuildingInteractionController interactionController = targetGameObject.GetComponent<CityBuildingInteractionController>();
+
+            if (interactionController == null)
+            {
+                // Vi tilføjer scriptet til SAMME objekt som collideren
+                interactionController = targetGameObject.AddComponent<CityBuildingInteractionController>();
+            }
+
+            interactionController.InitializeBuildingInteractionData(data);
+            Debug.Log($"[CityManager] Initialiserede {data.BuildingType} på {targetGameObject.name} (Hvor collideren findes).");
         }
 
         private GameObject GetPrefabForSpecificBuildingType(BuildingTypeEnum type)
@@ -136,18 +136,6 @@ namespace Project.Modules.City
                 BuildingTypeEnum.Academy => academyPrefab,
                 _ => null
             };
-        }
-
-        private void ConfigureInstantiatedBuildingMetadata(GameObject instance, CityControllerGetDetailedCityInformationBuildingDTO data)
-        {
-            CityBuildingInteractionController interactionController = instance.GetComponent<CityBuildingInteractionController>();
-
-            if (interactionController == null)
-            {
-                interactionController = instance.AddComponent<CityBuildingInteractionController>();
-            }
-
-            interactionController.InitializeBuildingInteractionData(data);
         }
     }
 }

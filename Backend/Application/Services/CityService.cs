@@ -3,6 +3,9 @@ using Application.Interfaces.IRepositories;
 using Application.Interfaces.IServices;
 using Domain.Entities;
 using Domain.Enums;
+using Domain.StaticData.Data;
+using Domain.StaticData.Readers;
+using Domain.Workers.Abstraction;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -15,15 +18,18 @@ namespace Application.Services
         private readonly ICityRepository _cityRepo;
         private readonly IResourceService _resService;
         private readonly ICityStatService _statService;
+        private readonly BuildingDataReader _buildingData;
 
         public CityService(
             ICityRepository cityRepo,
             IResourceService resService,
-            ICityStatService statService)
+            ICityStatService statService,
+            BuildingDataReader buildingData)
         {
             _cityRepo = cityRepo;
             _resService = resService;
             _statService = statService;
+            _buildingData = buildingData;
         }
 
         public async Task<CityControllerGetDetailedCityInformationDTO> GetDetailedCityInformationByCityIdentifierAsync(Guid cityIdentifier)
@@ -114,6 +120,50 @@ namespace Application.Services
                 unitStackDataTransferObjects,
                 new List<UnitDeploymentDTO>() // Placeholder til fremtidig militær logik
             );
+        }
+
+        public async Task<List<AvailableBuildingDTO>> GetAvailableBuildingsForSenateAsync(Guid cityIdentifier)
+        {
+            var cityEntity = await _cityRepo.GetCityWithBuildingsByCityIdentifierAsync(cityIdentifier);
+            if (cityEntity == null) return new List<AvailableBuildingDTO>();
+
+            var responseList = new List<AvailableBuildingDTO>();
+            var allBuildingTypes = Enum.GetValues(typeof(BuildingTypeEnum)).Cast<BuildingTypeEnum>();
+
+            foreach (var buildingType in allBuildingTypes)
+            {
+                var existingBuilding = cityEntity.Buildings.FirstOrDefault(b => b.Type == buildingType);
+                int currentLevel = existingBuilding?.Level ?? 0;
+                int nextLevel = currentLevel + 1;
+
+                // Hent statisk data for det næste niveau
+                var nextLevelConfig = _buildingData.GetConfig<BuildingLevelData>(buildingType, nextLevel);
+                if (nextLevelConfig == null) continue; // Bygningen har måske ikke flere levels
+
+                // Tjek ressourcer og population (Brug din CityStatService)
+                double warehouseCapacity = _statService.GetWarehouseCapacity(cityEntity);
+
+                int availablePop = _statService.GetAvailablePopulation(cityEntity, new List<BaseJob>());
+
+                responseList.Add(new AvailableBuildingDTO
+                {
+                    BuildingType = buildingType,
+                    BuildingName = buildingType.ToString(),
+                    CurrentLevel = currentLevel,
+                    WoodCost = nextLevelConfig.WoodCost,
+                    StoneCost = nextLevelConfig.StoneCost,
+                    MetalCost = nextLevelConfig.MetalCost,
+                    PopulationCost = nextLevelConfig.PopulationCost,
+                    ConstructionTimeInSeconds = nextLevelConfig.BuildTime.Seconds,
+                    IsCurrentlyUpgrading = existingBuilding?.IsUpgrading ?? false,
+                    CanAfford = cityEntity.Wood >= nextLevelConfig.WoodCost &&
+                                cityEntity.Stone >= nextLevelConfig.StoneCost &&
+                                cityEntity.Metal >= nextLevelConfig.MetalCost,
+                    HasPopulationRoom = availablePop >= nextLevelConfig.PopulationCost
+                });
+            }
+
+            return responseList;
         }
 
         /// <summary>

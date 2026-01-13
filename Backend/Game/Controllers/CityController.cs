@@ -42,5 +42,12 @@ namespace WebApi.Controllers
 
             return Ok(detailedCityInformationResult);
         }
+
+        [HttpGet("{cityIdentifier}/senate/available-buildings")]
+        public async Task<ActionResult<List<AvailableBuildingDTO>>> GetSenateBuildingData(Guid cityIdentifier)
+        {
+            var buildings = await _cityService.GetAvailableBuildingsForSenateAsync(cityIdentifier);
+            return Ok(buildings);
+        }
     }
 }
