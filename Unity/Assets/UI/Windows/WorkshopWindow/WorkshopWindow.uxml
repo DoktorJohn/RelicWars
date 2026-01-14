@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ui:UXML xmlns:ui="UnityEngine.UIElements" editor-extension-mode="False">
+    <ui:Style src="WorkshopWindow.uss" />
+
+    <ui:VisualElement name="Workshop-Window-Overlay" picking-mode="Ignore" class="window-overlay">
+        <ui:VisualElement name="Workshop-Window-MainContainer" class="window-container">
+            
+            <ui:VisualElement name="Workshop-Window-Header" class="window-header">
+                <ui:Label name="Lbl-Title" class="window-title" text="WORKSHOP" />
+            </ui:VisualElement>
+            
+            <ui:Label name="Lbl-Level" class="level-subtitle" text="Level ..." />
+            
+            <ui:Label class="flavor-text" text="Here your engineers construct powerful siege engines capable of bringing down the strongest fortifications." />
+            
+            <ui:VisualElement class="divider" />
+
+            <ui:VisualElement class="table-container">
+                <ui:VisualElement class="table-header-row">
+                    <ui:Label text="LEVEL" class="table-header-label" />
+                    <ui:Label text="STATUS" class="table-header-label" />
+                </ui:VisualElement>
+
+                <ui:ScrollView name="Workshop-Stats-List" />
+            </ui:VisualElement>
+
+            <ui:Button name="Common-Close-Button" class="close-button" text="CLOSE" />
+            
+        </ui:VisualElement>
+    </ui:VisualElement>
+</ui:UXML>

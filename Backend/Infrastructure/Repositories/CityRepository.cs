@@ -24,6 +24,15 @@ namespace Infrastructure.Repositories
                 .FirstOrDefaultAsync(city => city.Id == cityIdentifier);
         }
 
+        public async Task<City?> GetCityWithBuildingsByCityIdentifierAsync(Guid cityIdentifier)
+        {
+            return await _context.Cities
+                .Include(city => city.Buildings) // Needed for Senate
+                .Include(city => city.WorldPlayer) // Needed for modifiers
+                    .ThenInclude(player => player.ModifiersAppliedToWorldPlayer)
+                .FirstOrDefaultAsync(city => city.Id == cityIdentifier);
+        }
+
         public async Task<List<City>> GetAllAsync()
         {
             return await _context.Cities
@@ -50,15 +59,6 @@ namespace Infrastructure.Repositories
         {
             _context.Cities.UpdateRange(cities);
             await _context.SaveChangesAsync();
-        }
-
-        public async Task<City?> GetCityWithBuildingsByCityIdentifierAsync(Guid cityIdentifier)
-        {
-            return await _context.Cities
-                .Include(city => city.Buildings)
-                .Include(city => city.WorldPlayer)
-                    .ThenInclude(player => player.ModifiersAppliedToWorldPlayer)
-                .FirstOrDefaultAsync(city => city.Id == cityIdentifier);
         }
 
     }

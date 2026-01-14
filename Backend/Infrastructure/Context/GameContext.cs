@@ -37,6 +37,21 @@ namespace Infrastructure.Context
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
+            modelBuilder.Entity<WorldPlayer>(player =>
+            {
+                // Fortæller EF at Modifiers hører uløseligt sammen med spilleren
+                player.OwnsMany(p => p.ModifiersAppliedToWorldPlayer, a =>
+                {
+                    // Valgfrit: Du kan fortælle EF hvad tabellen skal hedde
+                    a.ToTable("PlayerModifiers");
+
+                    // EF Core laver automatisk en "Shadow Key" (et skjult ID) 
+                    // i databasen for at få det til at virke, men du skal ikke
+                    // bekymre dig om det i din C# kode.
+                    a.WithOwner().HasForeignKey("WorldPlayerId");
+                });
+            });
+
             // Fortæl EF eksplicit om dit hierarki
             modelBuilder.Entity<BaseJob>()
                 .HasDiscriminator<string>("JobType") // EF opretter denne kolonne automatisk

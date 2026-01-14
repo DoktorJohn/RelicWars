@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ui:UXML xmlns:ui="UnityEngine.UIElements" editor-extension-mode="False">
+    <ui:Style src="MetalMineWindow.uss" />
+
+    <ui:VisualElement name="Metal-Window-Overlay" picking-mode="Ignore" class="window-overlay">
+        <ui:VisualElement name="Metal-Window-MainContainer" class="window-container">
+            
+            <ui:VisualElement name="Metal-Window-Header" class="window-header">
+                <ui:Label name="Lbl-Title" class="window-title" text="METAL MINE" />
+            </ui:VisualElement>
+            
+            <ui:Label name="Lbl-Level" class="level-subtitle" text="Level ..." />
+            
+            <ui:Label class="flavor-text" text="Deep within the earth lies the iron needed for war and industry. Upgrade the Mine to increase metal production." />
+            
+            <ui:VisualElement class="divider" />
+
+            <ui:VisualElement class="table-container">
+                <ui:VisualElement class="table-header-row">
+                    <ui:Label text="LEVEL" class="table-header-label" />
+                    <ui:Label text="METAL / HOUR" class="table-header-label" />
+                </ui:VisualElement>
+
+                <ui:ScrollView name="Metal-Stats-List" />
+            </ui:VisualElement>
+
+            <ui:Button name="Common-Close-Button" class="close-button" text="CLOSE" />
+            
+        </ui:VisualElement>
+    </ui:VisualElement>
+</ui:UXML>

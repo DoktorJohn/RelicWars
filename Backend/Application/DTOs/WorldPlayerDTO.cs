@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace Application.DTOs
 {
-    public record WorldPlayerJoinDTO(Guid PlayerProfileId, Guid WorldId);
+    public record WorldPlayerDTO(Guid PlayerProfileId, Guid WorldId);
 
     public record WorldPlayerJoinResponse(
         bool ConnectionSuccessful,

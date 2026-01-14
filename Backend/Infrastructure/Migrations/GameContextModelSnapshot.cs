@@ -206,44 +206,6 @@ namespace Infrastructure.Migrations
                     b.ToTable("Cities");
                 });
 
-            modelBuilder.Entity("Domain.Entities.Modifier", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("TEXT");
-
-                    b.Property<DateTime>("DateCreated")
-                        .HasColumnType("TEXT");
-
-                    b.Property<DateTime>("DateLastModified")
-                        .HasColumnType("TEXT");
-
-                    b.Property<bool>("IsDeleted")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<string>("Source")
-                        .IsRequired()
-                        .HasColumnType("TEXT");
-
-                    b.Property<int>("Tag")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<int>("Type")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<double>("Value")
-                        .HasColumnType("REAL");
-
-                    b.Property<Guid?>("WorldPlayerId")
-                        .HasColumnType("TEXT");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("WorldPlayerId");
-
-                    b.ToTable("Modifier");
-                });
-
             modelBuilder.Entity("Domain.Entities.Research", b =>
                 {
                     b.Property<Guid>("Id")
@@ -605,13 +567,6 @@ namespace Infrastructure.Migrations
                     b.Navigation("WorldPlayer");
                 });
 
-            modelBuilder.Entity("Domain.Entities.Modifier", b =>
-                {
-                    b.HasOne("Domain.User.WorldPlayer", null)
-                        .WithMany("ModifiersAppliedToWorldPlayer")
-                        .HasForeignKey("WorldPlayerId");
-                });
-
             modelBuilder.Entity("Domain.Entities.Research", b =>
                 {
                     b.HasOne("Domain.User.WorldPlayer", null)
@@ -646,7 +601,39 @@ namespace Infrastructure.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.OwnsMany("Domain.Entities.Modifier", "ModifiersAppliedToWorldPlayer", b1 =>
+                        {
+                            b1.Property<Guid>("WorldPlayerId")
+                                .HasColumnType("TEXT");
+
+                            b1.Property<int>("Id")
+                                .ValueGeneratedOnAdd()
+                                .HasColumnType("INTEGER");
+
+                            b1.Property<string>("Source")
+                                .IsRequired()
+                                .HasColumnType("TEXT");
+
+                            b1.Property<int>("Tag")
+                                .HasColumnType("INTEGER");
+
+                            b1.Property<int>("Type")
+                                .HasColumnType("INTEGER");
+
+                            b1.Property<double>("Value")
+                                .HasColumnType("REAL");
+
+                            b1.HasKey("WorldPlayerId", "Id");
+
+                            b1.ToTable("PlayerModifiers", (string)null);
+
+                            b1.WithOwner()
+                                .HasForeignKey("WorldPlayerId");
+                        });
+
                     b.Navigation("Alliance");
+
+                    b.Navigation("ModifiersAppliedToWorldPlayer");
 
                     b.Navigation("PlayerProfile");
 
@@ -681,8 +668,6 @@ namespace Infrastructure.Migrations
                     b.Navigation("Cities");
 
                     b.Navigation("CompletedResearches");
-
-                    b.Navigation("ModifiersAppliedToWorldPlayer");
                 });
 #pragma warning restore 612, 618
         }

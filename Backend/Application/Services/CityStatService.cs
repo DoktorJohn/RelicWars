@@ -33,7 +33,6 @@ namespace Application.Services
         {
             var housingBuilding = city.Buildings.FirstOrDefault(building => building.Type == BuildingTypeEnum.Housing);
 
-            // Hvis bygningen ikke findes, returnerer vi basis-værdien (100)
             if (housingBuilding == null || housingBuilding.Level == 0)
             {
                 return 100;
@@ -42,9 +41,6 @@ namespace Application.Services
             var housingLevelConfig = _buildingData.GetConfig<HousingLevelData>(BuildingTypeEnum.Housing, housingBuilding.Level);
             var activePlayerModifiers = city.WorldPlayer?.ModifiersAppliedToWorldPlayer;
 
-            // 1. Vi bruger null-coalescing (??) til at give en fallback værdi på 0.0
-            // 2. Vi caster den resulterende int til en double med (double)
-            // 3. Da ApplyModifiers returnerer en double, caster vi hele resultatet tilbage til int til slut
             double basePopulationValue = (double)(housingLevelConfig?.Population ?? 0);
 
             double modifiedPopulationValue = StatCalculator.ApplyModifiers(
@@ -58,29 +54,17 @@ namespace Application.Services
 
         public int GetCurrentPopulationUsage(City city)
         {
-            int totalUsage = 0;
+            int buildingUsage = city.Buildings
+                .Select(b => _buildingData.GetConfig<BuildingLevelData>(b.Type, b.Level))
+                .Where(c => c != null)
+                .Sum(c => c!.PopulationCost);
 
-            // 1. Population brugt af bygninger
-            foreach (var b in city.Buildings)
-            {
-                var config = _buildingData.GetConfig<BuildingLevelData>(b.Type, b.Level);
-                if (config != null)
-                {
-                    totalUsage += config.PopulationCost;
-                }
-            }
+            int unitUsage = city.UnitStacks
+                .Select(s => new { Stack = s, Def = _unitData.GetUnit(s.Type) })
+                .Where(x => x.Def != null)
+                .Sum(x => x.Stack.Quantity * x.Def!.PopulationCost);
 
-            // 2. Population brugt af enheder (Garrison)
-            foreach (var s in city.UnitStacks)
-            {
-                var unitDef = _unitData.GetUnit(s.Type);
-                if (unitDef != null)
-                {
-                    totalUsage += (s.Quantity * unitDef.PopulationCost);
-                }
-            }
-
-            return totalUsage;
+            return buildingUsage + unitUsage;
         }
 
         public int GetAvailablePopulation(City city, IEnumerable<BaseJob> activeJobs)

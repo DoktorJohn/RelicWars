@@ -18,16 +18,70 @@ namespace Game.Controllers
         [HttpPost("{cityId}/upgrade/{type}")]
         public async Task<IActionResult> Upgrade(Guid cityId, BuildingTypeEnum type)
         {
-            // Vi omdøber variablen til 'result', da den indeholder både Success og Message
             var result = await _buildingService.QueueUpgradeAsync(cityId, type);
 
-            // Tjek 'result.Success' i stedet for blot 'result'
             if (result.Success)
             {
                 return Ok(result.Message);
             }
 
             return BadRequest(result.Message);
+        }
+
+        [HttpGet("{cityId}/warehouse")]
+        public async Task<IActionResult> GetWarehouseInfo(Guid cityId)
+        {
+            var data = await _buildingService.GetWarehouseProjectionAsync(cityId);
+            return Ok(data);
+        }
+
+        [HttpGet("{cityId}/resource/{buildingType}")]
+        public async Task<IActionResult> GetResourceBuildingInfo(Guid cityId, BuildingTypeEnum buildingType)
+        {
+            var data = await _buildingService.GetResourceBuildingInfoAsync(cityId, buildingType);
+            return Ok(data);
+        }
+
+        [HttpGet("{cityId}/housing")]
+        public async Task<IActionResult> GetHousingInfo(Guid cityId)
+        {
+            var data = await _buildingService.GetHousingInfoAsync(cityId);
+            return Ok(data);
+        }
+
+        [HttpGet("{cityId}/wall")]
+        public async Task<IActionResult> GetWallInfo(Guid cityId)
+        {
+            var data = await _buildingService.GetWallInfoAsync(cityId);
+            return Ok(data);
+        }
+
+        [HttpGet("{cityId}/barracks")]
+        public async Task<IActionResult> GetBarracksInfo(Guid cityId)
+        {
+            var data = await _buildingService.GetBarracksInfoAsync(cityId);
+            return Ok(data);
+        }
+
+        [HttpGet("{cityId}/stable")]
+        public async Task<IActionResult> GetStableInfo(Guid cityId)
+        {
+            var data = await _buildingService.GetStableInfoAsync(cityId);
+            return Ok(data);
+        }
+
+        [HttpGet("{cityId}/workshop")]
+        public async Task<IActionResult> GetWorkshopInfo(Guid cityId)
+        {
+            var data = await _buildingService.GetWorkshopInfoAsync(cityId);
+            return Ok(data);
+        }
+
+        [HttpGet("{cityId}/academy")]
+        public async Task<IActionResult> GetAcademyInfo(Guid cityId)
+        {
+            var data = await _buildingService.GetAcademyInfoAsync(cityId);
+            return Ok(data);
         }
     }
 }

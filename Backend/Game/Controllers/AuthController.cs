@@ -1,5 +1,6 @@
 ﻿using Application.DTOs;
 using Application.Interfaces.IServices;
+using Application.Services.Authentication;
 using Microsoft.AspNetCore.Mvc;
 using System.Threading.Tasks;
 
@@ -9,46 +10,48 @@ namespace Game.Controllers
     [Route("api/[controller]")]
     public class AuthController : ControllerBase
     {
-        private readonly IAuthService _playerAuthenticationService;
+        private readonly IAuthService _authService;
+        private readonly ILogger<AuthController> _logger;
 
-        public AuthController(IAuthService playerAuthenticationService)
+        public AuthController(IAuthService authService, ILogger<AuthController> logger)
         {
-            _playerAuthenticationService = playerAuthenticationService;
+            _authService = authService;
+            _logger = logger;
         }
 
         /// <summary>
-        /// Behandler anmodninger om oprettelse af nye globale spillerprofiler.
+        /// Handles requests to register new player profiles.
         /// </summary>
         [HttpPost("register")]
-        public async Task<ActionResult<AuthenticationResponse>> ProcessPlayerRegistrationRequest([FromBody] RegisterRequest registrationRequest)
+        public async Task<ActionResult<AuthenticationResponse>> Register([FromBody] RegisterRequest request)
         {
-            var registrationResult = await _playerAuthenticationService.RegisterAsync(registrationRequest);
+            var result = await _authService.RegisterAsync(request);
 
-            // RETTELSE: Vi tjekker nu på 'IsAuthenticated' i stedet for 'Success'
-            if (!registrationResult.IsAuthenticated)
+            if (!result.IsAuthenticated)
             {
-                return BadRequest(registrationResult);
+                _logger.LogWarning("Registration failed for email: {Email}. Reason: {Reason}", request.Email, result.FeedbackMessage);
+                return BadRequest(result);
             }
 
-            return Ok(registrationResult);
+            _logger.LogInformation("User registered successfully: {Email}", request.Email);
+            return Ok(result);
         }
 
         /// <summary>
-        /// Validerer spillerens legitimationsoplysninger og udsteder et JWT token ved succes.
+        /// Validates credentials and returns JWT token + WorldPlayer references.
         /// </summary>
         [HttpPost("login")]
-        public async Task<ActionResult<AuthenticationResponse>> ProcessPlayerLoginRequest([FromBody] LoginRequest loginRequest)
+        public async Task<ActionResult<AuthenticationResponse>> Login([FromBody] LoginRequest request)
         {
-            var loginResult = await _playerAuthenticationService.LoginAsync(loginRequest);
+            var result = await _authService.LoginAsync(request);
 
-            // RETTELSE: Vi tjekker nu på 'IsAuthenticated' i stedet for 'Success'
-            if (!loginResult.IsAuthenticated)
+            if (!result.IsAuthenticated)
             {
-                // Vi returnerer Unauthorized (401) ved forkert login
-                return Unauthorized(loginResult);
+                _logger.LogWarning("Failed login attempt for email: {Email}", request.Email);
+                return Unauthorized(result);
             }
 
-            return Ok(loginResult);
+            return Ok(result);
         }
     }
 }

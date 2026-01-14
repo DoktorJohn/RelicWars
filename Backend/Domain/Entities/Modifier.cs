@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace Domain.Entities
 {
-    public class Modifier : BaseEntity
+    public class Modifier
     {
         public ModifierTagEnum Tag { get; set; }
         public ModifierTypeEnum Type { get; set; }

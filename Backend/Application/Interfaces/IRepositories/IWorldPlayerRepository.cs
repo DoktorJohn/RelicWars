@@ -17,6 +17,8 @@ namespace Application.Interfaces.IRepositories
         Task UpdateAsync(WorldPlayer user);
         Task DeleteAsync(Guid id);
         Task<List<WorldPlayer>>? GetAllAsync();
-        
+        Task<WorldPlayer?> GetByProfileAndWorldAsync(Guid profileId, Guid worldId);
+
+
     }
 }

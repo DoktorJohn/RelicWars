@@ -1,3 +1,4 @@
+using Project.Network.Manager;
 using System.Collections;
 using UnityEngine;
 using UnityEngine.SceneManagement;
@@ -19,10 +20,16 @@ public class BootstrapLoader : MonoBehaviour
     {
         Debug.Log("[Bootstrap] Påbegynder initialisering af globale systemer...");
 
-        // Her kan vi validere om ApiService er klar
-        if (ApiService.Instance == null)
+        // RETTELSE: Vi tjekker nu om NetworkManager er til stede i scenen.
+        // Det er vigtigt, at du har trukket dit 'NetworkManager' prefab ind i Bootstrap scenen.
+        if (NetworkManager.Instance == null)
         {
-            Debug.LogWarning("[Bootstrap] Advarsel: ApiService blev ikke fundet i Bootstrap scenen.");
+            Debug.LogError("[Bootstrap] KRITISK: NetworkManager blev ikke fundet! " +
+                           "Husk at tilføje NetworkManager prefab til Bootstrap scenen.");
+        }
+        else
+        {
+            Debug.Log("[Bootstrap] NetworkManager fundet og klar.");
         }
 
         StartCoroutine(PerformSceneTransitionAfterValidation());
@@ -30,7 +37,7 @@ public class BootstrapLoader : MonoBehaviour
 
     private IEnumerator PerformSceneTransitionAfterValidation()
     {
-        // Giv systemet et øjeblik til at vågne helt op
+        // Giv systemet et øjeblik til at vågne helt op (og vise splash screen)
         yield return new WaitForSeconds(minimalBootstrapDisplayDuration);
 
         if (ApplicationCanPathToTargetScene(targetInitialLoginSceneName))

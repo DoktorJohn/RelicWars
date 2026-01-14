@@ -286,75 +286,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5ddf173032fb4e941acaa9bd094699de, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Project.Modules.DebugTools.DiagnosticCityInputInterceptionDebugger
---- !u!1 &565341659
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 565341662}
-  - component: {fileID: 565341661}
-  - component: {fileID: 565341660}
-  m_Layer: 0
-  m_Name: SenateUIManager
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!114 &565341660
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 565341659}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 323f7959ad15ac34db2b8edb496a7830, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::Project.Modules.CityView.UI.SenateWindowController
-  _buildingRowTemplateAsset: {fileID: 9197481963319205126, guid: 200da06fa8b920f4783e9e3cc16231ba, type: 3}
---- !u!114 &565341661
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 565341659}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 19102, guid: 0000000000000000e000000000000000, type: 0}
-  m_Name: 
-  m_EditorClassIdentifier: UnityEngine.dll::UnityEngine.UIElements.UIDocument
-  m_PanelSettings: {fileID: 11400000, guid: d66cd6eb5f3a03a4eac1e694d461a253, type: 2}
-  m_ParentUI: {fileID: 0}
-  sourceAsset: {fileID: 9197481963319205126, guid: 7b22eceec21439946b9ada03004eaa83, type: 3}
-  m_SortingOrder: 0
-  m_Position: 0
-  m_WorldSpaceSizeMode: 1
-  m_WorldSpaceWidth: 1920
-  m_WorldSpaceHeight: 1080
-  m_PivotReferenceSize: 0
-  m_Pivot: 0
-  m_WorldSpaceCollider: {fileID: 0}
---- !u!4 &565341662
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 565341659}
-  serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 224.95526, y: 0.00002, z: -102.31983}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 0}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &794797060
 GameObject:
   m_ObjectHideFlags: 0
@@ -619,7 +550,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f180ad174430ae740afddbcc954db063, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Project.Modules.City.CityResourceService
-  _apiBaseUrl: https://127.0.0.1:55286/api/City
   _networkSynchronizationIntervalInSeconds: 30
 --- !u!1 &1729628126
 GameObject:
@@ -658,9 +588,10 @@ MonoBehaviour:
   metalMinePrefab: {fileID: 6281116155709797544, guid: 3cd52980f23dc434b9aabcdf3b540ada, type: 3}
   warehousePrefab: {fileID: 5344484190985560661, guid: 6ec79e9db3f8868418c412bda638eb47, type: 3}
   housingPrefab: {fileID: 5344484190985560661, guid: 35718aef47f921b40ace4415e20d2504, type: 3}
-  wallPrefab: {fileID: 0}
-  workshopPrefab: {fileID: 0}
-  academyPrefab: {fileID: 0}
+  wallPrefab: {fileID: 6192041381389265602, guid: 0d8c81b521a300a40ba27954d668cede, type: 3}
+  workshopPrefab: {fileID: 6192041381389265602, guid: 4120bbe67aa3d2b489d12b9feeb70f4f, type: 3}
+  academyPrefab: {fileID: 6192041381389265602, guid: cff1024dc6e44084f9a6a4c9d36af37c, type: 3}
+  stablePrefab: {fileID: 6192041381389265602, guid: f77b271dd62733e44a213a3c19dd2f51, type: 3}
   horizontalSpacingBetweenBuildingInstances: 5
   buildingParentContainer: {fileID: 2015809361}
 --- !u!4 &1729628128
@@ -844,5 +775,4 @@ SceneRoots:
   - {fileID: 1945775101}
   - {fileID: 1729628128}
   - {fileID: 1421114565}
-  - {fileID: 565341662}
   - {fileID: 794797063}

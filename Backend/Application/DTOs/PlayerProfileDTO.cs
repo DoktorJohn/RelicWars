@@ -9,7 +9,8 @@ namespace Application.DTOs
     public record PlayerProfileDTO(
         Guid PlayerId,
         string UserName,
-        string Email
+        string Email,
+        List<WorldPlayerDTO> WorldPlayers
     );
 
 }

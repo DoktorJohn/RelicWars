@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 namespace Application.DTOs
 {
 
-    // Bruges KUN til Login og Register
+    //Used for authentication
     public record AuthenticationResponse(
         bool IsAuthenticated,
         string FeedbackMessage,

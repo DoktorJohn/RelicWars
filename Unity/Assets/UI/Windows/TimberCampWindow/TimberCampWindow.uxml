@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ui:UXML xmlns:ui="UnityEngine.UIElements" editor-extension-mode="False">
+    <ui:Style src="TimberCampWindow.uss" />
+
+    <ui:VisualElement name="Timber-Window-Overlay" picking-mode="Ignore" class="window-overlay">
+        <ui:VisualElement name="Timber-Window-MainContainer" class="window-container">
+            
+            <ui:VisualElement name="Timber-Window-Header" class="window-header">
+                <ui:Label name="Lbl-Title" class="window-title" text="TIMBER CAMP" />
+            </ui:VisualElement>
+            
+            <ui:Label name="Lbl-Level" class="level-subtitle" text="Level ..." />
+            
+            <ui:Label class="flavor-text" text="Wood is the backbone of your city. Expand the Timber Camp to increase your hourly wood production." />
+            
+            <ui:VisualElement class="divider" />
+
+            <ui:VisualElement class="table-container">
+                <ui:VisualElement class="table-header-row">
+                    <ui:Label text="LEVEL" class="table-header-label" />
+                    <ui:Label text="WOOD / HOUR" class="table-header-label" />
+                </ui:VisualElement>
+
+                <ui:ScrollView name="Timber-Stats-List" />
+            </ui:VisualElement>
+
+            <ui:Button name="Common-Close-Button" class="close-button" text="CLOSE" />
+            
+        </ui:VisualElement>
+    </ui:VisualElement>
+</ui:UXML>

@@ -3,6 +3,7 @@ using TMPro;
 using UnityEngine.UI;
 using UnityEngine.SceneManagement;
 using System;
+using Project.Network.Manager;
 
 namespace Project.Modules.Auth
 {
@@ -28,6 +29,15 @@ namespace Project.Modules.Auth
 
         private void InitializeLoginUserInterface()
         {
+            // Tjekker om NetworkManager findes (Vigtigt i den nye arkitektur)
+            if (NetworkManager.Instance == null)
+            {
+                Debug.LogError("[LoginUI] NetworkManager mangler! Start fra Bootstrap scenen.");
+                UpdateStatusFeedback("System fejl: Netværk mangler.");
+                SetUserInterfaceInteractivity(false);
+                return;
+            }
+
             if (loginExecutionButton != null)
                 loginExecutionButton.onClick.AddListener(HandleLoginButtonClick);
 
@@ -40,7 +50,7 @@ namespace Project.Modules.Auth
 
         private void HandleLoginButtonClick()
         {
-            if (ApiService.Instance == null) return;
+            if (NetworkManager.Instance == null) return;
 
             string playerEmail = emailAddressInputField.text;
             string playerPassword = passwordInputField.text;
@@ -54,19 +64,25 @@ namespace Project.Modules.Auth
             SetUserInterfaceInteractivity(false);
             UpdateStatusFeedback("Godkender profiloplysninger...");
 
-            StartCoroutine(ApiService.Instance.ExecutePlayerAuthenticationRequest(playerEmail, playerPassword, (authenticationResponse) =>
+            // RETTELSE: Vi bruger nu NetworkManager.Instance.AuthenticateUser.
+            // Vi fjerner 'StartCoroutine', da Manageren håndterer det internt.
+            NetworkManager.Instance.AuthenticateUser(playerEmail, playerPassword, (success) =>
             {
+                // UI logik skal køre uanset udfaldet
                 SetUserInterfaceInteractivity(true);
 
-                if (authenticationResponse != null && authenticationResponse.IsAuthenticated)
+                if (success)
                 {
+                    Debug.Log("[LoginUI] Login godkendt. Skifter scene.");
                     SceneManager.LoadScene(worldSelectionSceneName);
                 }
                 else
                 {
-                    UpdateStatusFeedback(authenticationResponse?.FeedbackMessage ?? "Forbindelsen fejlede.");
+                    // Da NetworkManager returnerer bool, giver vi en generisk fejlbesked her.
+                    // (Tjek Unity konsollen for den specifikke fejl fra ClientAuthService)
+                    UpdateStatusFeedback("Login fejlede. Tjek email og kodeord.");
                 }
-            }));
+            });
         }
 
         private void HandleNavigateToRegistrationClick()

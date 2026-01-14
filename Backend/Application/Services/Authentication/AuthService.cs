@@ -22,46 +22,54 @@ namespace Application.Services.Authentication
             _jwtService = jwtService;
         }
 
-        public async Task<AuthenticationResponse> RegisterAsync(RegisterRequest registrationRequest)
+        public async Task<AuthenticationResponse> RegisterAsync(RegisterRequest request)
         {
-            var existingProfile = await _playerProfileRepository.GetByEmailAsync(registrationRequest.Email);
-            if (existingProfile != null)
-                return new AuthenticationResponse(false, "Emailen er allerede i brug.", null, null);
+            if (await _playerProfileRepository.ExistsByEmailAsync(request.Email))
+                return new AuthenticationResponse(false, "Email is already in use.", null, null);
 
-            string passwordSalt = BCrypt.Net.BCrypt.GenerateSalt(12);
-            string hashedPassword = BCrypt.Net.BCrypt.HashPassword(registrationRequest.Password, passwordSalt);
+            string passwordSalt = BCrypt.Net.BCrypt.GenerateSalt(11);
+            string hashedPassword = BCrypt.Net.BCrypt.HashPassword(request.Password, passwordSalt);
 
-            var newPlayerProfile = new PlayerProfile
+            var newProfile = new PlayerProfile
             {
-                UserName = registrationRequest.UserName,
-                Email = registrationRequest.Email,
+                UserName = request.UserName,
+                Email = request.Email,
                 PasswordHash = hashedPassword
             };
 
-            await _playerProfileRepository.AddAsync(newPlayerProfile);
+            await _playerProfileRepository.AddAsync(newProfile);
 
-            var authToken = _jwtService.GenerateToken(newPlayerProfile);
-            var profileData = MapToProfileDto(newPlayerProfile);
+            var token = _jwtService.GenerateToken(newProfile);
 
-            return new AuthenticationResponse(true, "Brugerprofil oprettet korrekt.", authToken, profileData);
+            var profileDto = new PlayerProfileDTO(newProfile.Id, newProfile.UserName, newProfile.Email, new List<WorldPlayerDTO>());
+
+            return new AuthenticationResponse(true, "Profile created successfully.", token, profileDto);
         }
 
-        public async Task<AuthenticationResponse> LoginAsync(LoginRequest loginRequest)
+        public async Task<AuthenticationResponse> LoginAsync(LoginRequest request)
         {
-            var existingProfile = await _playerProfileRepository.GetByEmailAsync(loginRequest.Email);
+            var profile = await _playerProfileRepository.GetByEmailAsync(request.Email);
 
-            if (existingProfile == null || !BCrypt.Net.BCrypt.Verify(loginRequest.Password, existingProfile.PasswordHash))
-                return new AuthenticationResponse(false, "Ugyldig email eller adgangskode.", null, null);
+            if (profile == null || !BCrypt.Net.BCrypt.Verify(request.Password, profile.PasswordHash))
+            {
+                return new AuthenticationResponse(false, "Invalid email or password.", null, null);
+            }
 
-            var authToken = _jwtService.GenerateToken(existingProfile);
-            var profileData = MapToProfileDto(existingProfile);
+            var token = _jwtService.GenerateToken(profile);
 
-            return new AuthenticationResponse(true, "Login gennemført.", authToken, profileData);
-        }
+            // MAP DATA: Convert the Entity WorldPlayers to DTOs so the client receives them
+            var worldDtos = profile.WorldPlayers
+                .Select(wp => new WorldPlayerDTO(wp.Id, wp.WorldId))
+                .ToList();
 
-        private PlayerProfileDTO MapToProfileDto(PlayerProfile profile)
-        {
-            return new PlayerProfileDTO(profile.Id, profile.UserName, profile.Email);
+            var profileDto = new PlayerProfileDTO(
+                profile.Id,
+                profile.UserName ?? string.Empty,
+                profile.Email ?? string.Empty,
+                worldDtos
+            );
+
+            return new AuthenticationResponse(true, "Login successful.", token, profileDto);
         }
     }
 }

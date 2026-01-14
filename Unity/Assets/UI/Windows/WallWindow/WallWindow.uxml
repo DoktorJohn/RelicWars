@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ui:UXML xmlns:ui="UnityEngine.UIElements" editor-extension-mode="False">
+    <ui:Style src="WallWindow.uss" />
+
+    <ui:VisualElement name="Wall-Window-Overlay" picking-mode="Ignore" class="window-overlay">
+        <ui:VisualElement name="Wall-Window-MainContainer" class="window-container">
+            
+            <ui:VisualElement name="Wall-Window-Header" class="window-header">
+                <ui:Label name="Lbl-Title" class="window-title" text="CITY WALL" />
+            </ui:VisualElement>
+            
+            <ui:Label name="Lbl-Level" class="level-subtitle" text="Level ..." />
+            
+            <ui:Label class="flavor-text" text="A massive fortification that protects your troops. The Wall grants a significant defense bonus to all units defending the city." />
+            
+            <ui:VisualElement class="divider" />
+
+            <ui:VisualElement class="table-container">
+                <ui:VisualElement class="table-header-row">
+                    <ui:Label text="LEVEL" class="table-header-label" />
+                    <ui:Label text="DEFENSE BONUS" class="table-header-label" />
+                </ui:VisualElement>
+
+                <ui:ScrollView name="Wall-Stats-List" />
+            </ui:VisualElement>
+
+            <ui:Button name="Common-Close-Button" class="close-button" text="CLOSE" />
+            
+        </ui:VisualElement>
+    </ui:VisualElement>
+</ui:UXML>

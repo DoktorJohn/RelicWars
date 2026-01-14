@@ -1,4 +1,5 @@
-﻿using Domain.Enums;
+﻿using Domain.Entities;
+using Domain.Enums;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -14,6 +15,57 @@ namespace Application.DTOs
     DateTime? UpgradeFinished,
     bool IsUpgrading
 );
+    public class WarehouseProjectionDTO
+    {
+        public int Level { get; set; }
+        public int Capacity { get; set; }
+        public bool IsCurrentLevel { get; set; }
+    }
+
+    public class StableInfoDTO
+    {
+        public int Level { get; set; }
+        public bool IsCurrentLevel { get; set; }
+    }
+
+    public class AcademyInfoDTO
+    {
+        public int Level { get; set; }
+        public bool IsCurrentLevel { get; set; }
+    }
+
+    public class BarracksInfoDTO
+    {
+        public int Level { get; set; }
+        public bool IsCurrentLevel { get; set; }
+    }
+
+    public class WorkshopInfoDTO
+    {
+        public int Level { get; set; }
+        public bool IsCurrentLevel { get; set; }
+    }
+
+    public class ResourceBuildingInfoDTO
+    {
+        public int Level { get; set; }
+        public int ProductionPrHour { get; set; }
+        public bool IsCurrentLevel { get; set; }
+    }
+
+    public class HousingInfoDTO
+    {
+        public int Level { get; set; }
+        public int Population { get; set; }
+        public bool IsCurrentLevel { get; set; }
+    }
+
+    public class WallInfoDTO
+    {
+        public int Level { get; set; }
+        public ModifierDTO DefensiveModifier { get; set; } = new();
+        public bool IsCurrentLevel { get; set; }
+    }
 
     public record BuildingResult(bool Success, string Message);
 

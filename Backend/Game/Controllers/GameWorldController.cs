@@ -10,46 +10,44 @@ namespace Game.Controllers
     [Route("api/[controller]")]
     public class GameWorldController : ControllerBase
     {
-        private readonly IGameWorldService _gameWorldService;
+        private readonly IWorldService _worldService;
+        private readonly IWorldPlayerService _worldPlayerService;
+        private readonly ILogger<GameWorldController> _logger;
 
-        public GameWorldController(IGameWorldService gameWorldService)
+        public GameWorldController(IWorldService worldService, IWorldPlayerService worldPlayerService, ILogger<GameWorldController> logger)
         {
-            _gameWorldService = gameWorldService;
+            _worldService = worldService;
+            _worldPlayerService = worldPlayerService;
+            _logger = logger;
         }
 
         /// <summary>
-        /// Henter en liste over alle aktive spilverdener, som spillere kan tilslutte sig.
+        /// Retrieves a list of all active game worlds available for players to join.
         /// </summary>
         [HttpGet("available-worlds")]
-        public async Task<ActionResult<List<GameWorldAvailableResponseDTO>>> RequestAvailableGameWorldList()
+        public async Task<ActionResult<List<WorldAvailableResponseDTO>>> RequestAvailableGameWorldList()
         {
-            var activeGameWorlds = await _gameWorldService.ObtainAllActiveGameWorldsAsync();
-
+            var activeGameWorlds = await _worldService.ObtainAllActiveGameWorldsAsync();
             return Ok(activeGameWorlds);
         }
 
         /// <summary>
-        /// Behandler en anmodning fra en spiller om at træde ind i en specifik spilverden.
-        /// Hvis spilleren ikke har en karakter i verdenen, initialiseres en ny.
+        /// Processes a player's request to join a specific game world, initializing character and city if necessary.
         /// </summary>
         [HttpPost("join")]
-        public async Task<ActionResult<WorldPlayerJoinResponse>> ProcessPlayerWorldJoinRequest([FromBody] WorldPlayerJoinDTO worldPlayerJoinRequest)
+        public async Task<ActionResult<WorldPlayerJoinResponse>> ProcessPlayerWorldJoinRequest([FromBody] WorldPlayerDTO request)
         {
-            // Vi kalder servicen med spillerens profil-ID og den valgte verdens ID
-            var worldJoinResult = await _gameWorldService.AssignPlayerToGameWorldAsync(
-                worldPlayerJoinRequest.PlayerProfileId,
-                worldPlayerJoinRequest.WorldId
-            );
+            var result = await _worldPlayerService.AssignPlayerToGameWorldAsync(request.PlayerProfileId, request.WorldId);
 
-            // Vi tjekker nu på 'ConnectionSuccessful' fra den nye PlayerWorldJoinResponse DTO
-            if (!worldJoinResult.ConnectionSuccessful)
+            if (!result.ConnectionSuccessful)
             {
-                // Returnerer 400 Bad Request med fejlbeskrivelsen, hvis noget gik galt (f.eks. profil ikke fundet)
-                return BadRequest(worldJoinResult);
+                _logger.LogWarning("Join World failed for Player {PlayerId} on World {WorldId}. Reason: {Reason}",
+                    request.PlayerProfileId, request.WorldId, result.Message);
+                return BadRequest(result);
             }
 
-            // Returnerer 200 OK med data om spillerens landingpage-by
-            return Ok(worldJoinResult);
+            _logger.LogInformation("Player {PlayerId} successfully accessed World {WorldId}.", request.PlayerProfileId, request.WorldId);
+            return Ok(result);
         }
     }
 }

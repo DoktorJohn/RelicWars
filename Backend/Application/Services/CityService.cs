@@ -6,6 +6,7 @@ using Domain.Enums;
 using Domain.StaticData.Data;
 using Domain.StaticData.Readers;
 using Domain.Workers.Abstraction;
+using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -19,106 +20,100 @@ namespace Application.Services
         private readonly IResourceService _resService;
         private readonly ICityStatService _statService;
         private readonly BuildingDataReader _buildingData;
+        private readonly ILogger<CityService> _logger;
 
         public CityService(
             ICityRepository cityRepo,
             IResourceService resService,
             ICityStatService statService,
-            BuildingDataReader buildingData)
+            BuildingDataReader buildingData,
+            ILogger<CityService> logger)
         {
             _cityRepo = cityRepo;
             _resService = resService;
             _statService = statService;
             _buildingData = buildingData;
+            _logger = logger;
         }
 
-        public async Task<CityControllerGetDetailedCityInformationDTO> GetDetailedCityInformationByCityIdentifierAsync(Guid cityIdentifier)
+        public async Task<CityControllerGetDetailedCityInformationDTO?> GetDetailedCityInformationByCityIdentifierAsync(Guid cityIdentifier)
         {
-            // 1. Hent entiteten med bygninger og modifiers
             var cityEntity = await _cityRepo.GetCityWithBuildingsByCityIdentifierAsync(cityIdentifier);
             if (cityEntity == null) return null;
 
-            // 2. Beregn live ressource-tals (ResourceService)
-            var currentResourceSnapshot = _resService.CalculateCurrent(cityEntity, DateTime.UtcNow);
+            // Recalculate resources to get live values
+            var currentResources = _resService.CalculateCurrent(cityEntity, DateTime.UtcNow);
 
-            // 3. Beregn populations-statistikker (CityStatService)
-            int maxPopulation = _statService.GetMaxPopulation(cityEntity);
-            int currentUsage = _statService.GetCurrentPopulationUsage(cityEntity);
+            int maxPop = _statService.GetMaxPopulation(cityEntity);
+            int currentPopUsage = _statService.GetCurrentPopulationUsage(cityEntity);
+            double warehouseCap = _statService.GetWarehouseCapacity(cityEntity);
 
-            // 4. Map til DTO
             return new CityControllerGetDetailedCityInformationDTO
             {
                 CityId = cityEntity.Id,
                 CityName = cityEntity.Name,
 
-                CurrentWoodAmount = currentResourceSnapshot.Wood,
-                CurrentStoneAmount = currentResourceSnapshot.Stone,
-                CurrentMetalAmount = currentResourceSnapshot.Metal,
+                CurrentWoodAmount = currentResources.Wood,
+                CurrentStoneAmount = currentResources.Stone,
+                CurrentMetalAmount = currentResources.Metal,
                 CurrentSilverAmount = cityEntity.WorldPlayer?.Silver ?? 0,
 
-                MaxWoodCapacity = _statService.GetWarehouseCapacity(cityEntity),
-                MaxStoneCapacity = _statService.GetWarehouseCapacity(cityEntity),
-                MaxMetalCapacity = _statService.GetWarehouseCapacity(cityEntity),
+                MaxWoodCapacity = warehouseCap,
+                MaxStoneCapacity = warehouseCap,
+                MaxMetalCapacity = warehouseCap,
 
-                WoodProductionPerHour = currentResourceSnapshot.WoodProductionPerHour,
-                StoneProductionPerHour = currentResourceSnapshot.StoneProductionPerHour,
-                MetalProductionPerHour = currentResourceSnapshot.MetalProductionPerHour,
+                WoodProductionPerHour = currentResources.WoodProductionPerHour,
+                StoneProductionPerHour = currentResources.StoneProductionPerHour,
+                MetalProductionPerHour = currentResources.MetalProductionPerHour,
 
-                // TILDELING AF POPULATION
-                CurrentPopulationUsage = currentUsage,
-                MaxPopulationCapacity = maxPopulation,
+                CurrentPopulationUsage = currentPopUsage,
+                MaxPopulationCapacity = maxPop,
 
                 BuildingList = cityEntity.Buildings.Select(b => new CityControllerGetDetailedCityInformationBuildingDTO
                 {
                     BuildingId = b.Id,
                     BuildingType = b.Type,
                     CurrentLevel = b.Level,
-                    IsCurrentlyUpgrading = b.IsUpgrading
+                    IsCurrentlyUpgrading = b.IsUpgrading,
+                    UpgradeFinishedAt = b.TimeOfUpgradeFinished,
+                    UpgradeStartedAt = b.TimeOfUpgradeStarted
                 }).ToList()
             };
         }
 
-        public async Task<CityDetailsDTO> GetCityOverviewAsync(Guid cityId)
+        public async Task<CityDetailsDTO?> GetCityOverviewAsync(Guid cityId)
         {
             var cityEntity = await _cityRepo.GetByIdAsync(cityId);
             if (cityEntity == null) return null;
 
-            // 1. Hent live ressource-snapshot
-            var currentResourceSnapshot = _resService.CalculateCurrent(cityEntity, DateTime.UtcNow);
+            var currentResources = _resService.CalculateCurrent(cityEntity, DateTime.UtcNow);
 
-            // 2. Hent populations-statistikker via StatService
-            int maximumPopulationCapacity = _statService.GetMaxPopulation(cityEntity);
-            int currentPopulationUsage = _statService.GetCurrentPopulationUsage(cityEntity);
-            int totalAvailablePopulation = maximumPopulationCapacity - currentPopulationUsage;
+            int maxPop = _statService.GetMaxPopulation(cityEntity);
+            int currentUsage = _statService.GetCurrentPopulationUsage(cityEntity);
+            int availablePop = maxPop - currentUsage;
 
-            // 3. Mapping af bygnings-data
-            var buildingDataTransferObjects = cityEntity.Buildings.Select(building => new BuildingDTO(
-                building.Id,
-                building.Type.ToString(),
-                building.Level,
-                building.TimeOfUpgradeFinished,
-                building.IsUpgrading
+            var buildingsDto = cityEntity.Buildings.Select(b => new BuildingDTO(
+                b.Id, b.Type.ToString(), b.Level, b.TimeOfUpgradeFinished, b.IsUpgrading
             )).ToList();
 
-            // 4. Mapping af militære enheder
-            var unitStackDataTransferObjects = cityEntity.UnitStacks
-                .Where(stack => stack.Quantity > 0)
-                .Select(stack => new UnitStackDTO(stack.Type.ToString(), stack.Quantity))
+            var unitsDto = cityEntity.UnitStacks
+                .Where(s => s.Quantity > 0)
+                .Select(s => new UnitStackDTO(s.Type.ToString(), s.Quantity))
                 .ToList();
 
             return new CityDetailsDTO(
                 cityEntity.Id,
                 cityEntity.Name,
                 cityEntity.Points,
-                Math.Floor(currentResourceSnapshot.Wood),
-                Math.Floor(currentResourceSnapshot.Stone),
-                Math.Floor(currentResourceSnapshot.Metal),
+                Math.Floor(currentResources.Wood),
+                Math.Floor(currentResources.Stone),
+                Math.Floor(currentResources.Metal),
                 cityEntity.X,
                 cityEntity.Y,
-                new PopulationDTO(maximumPopulationCapacity, currentPopulationUsage, totalAvailablePopulation),
-                buildingDataTransferObjects,
-                unitStackDataTransferObjects,
-                new List<UnitDeploymentDTO>() // Placeholder til fremtidig militær logik
+                new PopulationDTO(maxPop, currentUsage, availablePop),
+                buildingsDto,
+                unitsDto,
+                new List<UnitDeploymentDTO>()
             );
         }
 
@@ -127,8 +122,11 @@ namespace Application.Services
             var cityEntity = await _cityRepo.GetCityWithBuildingsByCityIdentifierAsync(cityIdentifier);
             if (cityEntity == null) return new List<AvailableBuildingDTO>();
 
+            int availablePop = _statService.GetAvailablePopulation(cityEntity, new List<BaseJob>());
+            var currentResources = _resService.CalculateCurrent(cityEntity, DateTime.UtcNow);
+
             var responseList = new List<AvailableBuildingDTO>();
-            var allBuildingTypes = Enum.GetValues(typeof(BuildingTypeEnum)).Cast<BuildingTypeEnum>();
+            var allBuildingTypes = Enum.GetValues<BuildingTypeEnum>();
 
             foreach (var buildingType in allBuildingTypes)
             {
@@ -136,14 +134,12 @@ namespace Application.Services
                 int currentLevel = existingBuilding?.Level ?? 0;
                 int nextLevel = currentLevel + 1;
 
-                // Hent statisk data for det næste niveau
                 var nextLevelConfig = _buildingData.GetConfig<BuildingLevelData>(buildingType, nextLevel);
-                if (nextLevelConfig == null) continue; // Bygningen har måske ikke flere levels
+                if (nextLevelConfig == null) continue;
 
-                // Tjek ressourcer og population (Brug din CityStatService)
-                double warehouseCapacity = _statService.GetWarehouseCapacity(cityEntity);
-
-                int availablePop = _statService.GetAvailablePopulation(cityEntity, new List<BaseJob>());
+                bool canAfford = currentResources.Wood >= nextLevelConfig.WoodCost &&
+                                 currentResources.Stone >= nextLevelConfig.StoneCost &&
+                                 currentResources.Metal >= nextLevelConfig.MetalCost;
 
                 responseList.Add(new AvailableBuildingDTO
                 {
@@ -154,11 +150,9 @@ namespace Application.Services
                     StoneCost = nextLevelConfig.StoneCost,
                     MetalCost = nextLevelConfig.MetalCost,
                     PopulationCost = nextLevelConfig.PopulationCost,
-                    ConstructionTimeInSeconds = nextLevelConfig.BuildTime.Seconds,
+                    ConstructionTimeInSeconds = (int)nextLevelConfig.BuildTime.TotalSeconds,
                     IsCurrentlyUpgrading = existingBuilding?.IsUpgrading ?? false,
-                    CanAfford = cityEntity.Wood >= nextLevelConfig.WoodCost &&
-                                cityEntity.Stone >= nextLevelConfig.StoneCost &&
-                                cityEntity.Metal >= nextLevelConfig.MetalCost,
+                    CanAfford = canAfford,
                     HasPopulationRoom = availablePop >= nextLevelConfig.PopulationCost
                 });
             }
@@ -174,10 +168,13 @@ namespace Application.Services
             var cityEntity = await _cityRepo.GetByIdAsync(cityId);
             if (cityEntity == null) return;
 
-            // Forretningslogik: 10 point pr. level pr. bygning
-            cityEntity.Points = cityEntity.Buildings.Sum(building => building.Level * 10);
+            int calculatedPoints = cityEntity.Buildings.Sum(b => b.Level * 10);
 
-            await _cityRepo.UpdateAsync(cityEntity);
+            if (cityEntity.Points != calculatedPoints)
+            {
+                cityEntity.Points = calculatedPoints;
+                await _cityRepo.UpdateAsync(cityEntity);
+            }
         }
     }
 }

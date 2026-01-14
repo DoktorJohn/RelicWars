@@ -31,10 +31,10 @@ namespace Application.Utility
                 return baseValue;
             }
 
-            // 3. Beregn flade tillæg (Additive)
+            // 3. Beregn flade tillæg (Flat)
             // Summerer værdier som f.eks. +10 træ produktion.
             double totalFlatBonusValue = relevantModifiersList
-                .Where(modifier => modifier.Type == ModifierTypeEnum.Additive)
+                .Where(modifier => modifier.Type == ModifierTypeEnum.Flat)
                 .Sum(modifier => modifier.Value);
 
             // 4. Beregn procentvise ændringer (Increased og Decreased)

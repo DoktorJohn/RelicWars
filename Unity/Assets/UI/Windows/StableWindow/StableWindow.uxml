@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ui:UXML xmlns:ui="UnityEngine.UIElements" editor-extension-mode="False">
+    <ui:Style src="StableWindow.uss" />
+
+    <ui:VisualElement name="Stable-Window-Overlay" picking-mode="Ignore" class="window-overlay">
+        <ui:VisualElement name="Stable-Window-MainContainer" class="window-container">
+            
+            <ui:VisualElement name="Stable-Window-Header" class="window-header">
+                <ui:Label name="Lbl-Title" class="window-title" text="STABLE" />
+            </ui:VisualElement>
+            
+            <ui:Label name="Lbl-Level" class="level-subtitle" text="Level ..." />
+            
+            <ui:Label class="flavor-text" text="Home of your cavalry. Breed strong horses and train riders to strike swiftly at your enemies." />
+            
+            <ui:VisualElement class="divider" />
+
+            <ui:VisualElement class="table-container">
+                <ui:VisualElement class="table-header-row">
+                    <ui:Label text="LEVEL" class="table-header-label" />
+                    <ui:Label text="STATUS" class="table-header-label" />
+                </ui:VisualElement>
+
+                <ui:ScrollView name="Stable-Stats-List" />
+            </ui:VisualElement>
+
+            <ui:Button name="Common-Close-Button" class="close-button" text="CLOSE" />
+            
+        </ui:VisualElement>
+    </ui:VisualElement>
+</ui:UXML>

@@ -3,6 +3,7 @@ using TMPro;
 using UnityEngine.UI;
 using UnityEngine.SceneManagement;
 using System;
+using Project.Network.Manager;
 
 namespace Project.Modules.Auth
 {
@@ -29,6 +30,15 @@ namespace Project.Modules.Auth
 
         private void InitializeRegistrationUserInterface()
         {
+            // Validering af NetworkManager
+            if (NetworkManager.Instance == null)
+            {
+                Debug.LogError("[RegisterUI] NetworkManager mangler! Start fra Bootstrap scenen.");
+                UpdateStatusFeedback("Systemfejl: Netværk ikke klar.");
+                SetUserInterfaceInteractivity(false);
+                return;
+            }
+
             if (registerExecutionButton != null)
                 registerExecutionButton.onClick.AddListener(HandleRegisterButtonClick);
 
@@ -41,7 +51,7 @@ namespace Project.Modules.Auth
 
         private void HandleRegisterButtonClick()
         {
-            if (ApiService.Instance == null) return;
+            if (NetworkManager.Instance == null) return;
 
             string userName = userNameInputField.text;
             string email = emailAddressInputField.text;
@@ -56,26 +66,35 @@ namespace Project.Modules.Auth
             SetUserInterfaceInteractivity(false);
             UpdateStatusFeedback("Opretter profil...");
 
-            StartCoroutine(ApiService.Instance.ExecutePlayerRegistrationRequest(email, userName, password, (success, message) =>
+            // RETTELSE: Vi bruger nu NetworkManager.RegisterUser.
+            // Vi fjerner StartCoroutine, da Manageren klarer det.
+            NetworkManager.Instance.RegisterUser(email, userName, password, (success) =>
             {
                 SetUserInterfaceInteractivity(true);
-                UpdateStatusFeedback(message);
 
                 if (success)
                 {
                     Debug.Log("[RegisterUI] Registrering succesfuld. Navigerer videre.");
+                    UpdateStatusFeedback("Succes! Logger ind...");
                     SceneManager.LoadScene(worldSelectionSceneName);
                 }
-            }));
+                else
+                {
+                    // Da bool success kun er true/false, giver vi en generisk fejl her.
+                    // Tjek Unity Console for den specifikke API fejl.
+                    UpdateStatusFeedback("Registrering fejlede. Emailen kan være i brug.");
+                    Debug.LogError("[RegisterUI] Registrering fejlede i backend.");
+                }
+            });
         }
 
         private void SetUserInterfaceInteractivity(bool isInteractable)
         {
             if (registerExecutionButton != null) registerExecutionButton.interactable = isInteractable;
             if (backToLoginButton != null) backToLoginButton.interactable = isInteractable;
-            userNameInputField.interactable = isInteractable;
-            emailAddressInputField.interactable = isInteractable;
-            passwordInputField.interactable = isInteractable;
+            if (userNameInputField != null) userNameInputField.interactable = isInteractable;
+            if (emailAddressInputField != null) emailAddressInputField.interactable = isInteractable;
+            if (passwordInputField != null) passwordInputField.interactable = isInteractable;
         }
 
         private void UpdateStatusFeedback(string message)

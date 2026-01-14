@@ -208,9 +208,9 @@ namespace Domain.StaticData.Generators
                     Source = $"{type} Level {lvl}"
                 });
 
-                if (lvl == 1) entry.Prerequisites.Add(new(BuildingTypeEnum.Senate, 3));
-                if (lvl == 20) entry.Prerequisites.Add(new(BuildingTypeEnum.Senate, 20));
-                if (type == BuildingTypeEnum.Workshop && lvl == 1) entry.Prerequisites.Add(new(BuildingTypeEnum.Barracks, 10));
+                //if (lvl == 1) entry.Prerequisites.Add(new(BuildingTypeEnum.Senate, 3));
+                //if (lvl == 20) entry.Prerequisites.Add(new(BuildingTypeEnum.Senate, 20));
+                //if (type == BuildingTypeEnum.Workshop && lvl == 1) entry.Prerequisites.Add(new(BuildingTypeEnum.Barracks, 10));
 
                 levels.Add(entry);
             }
@@ -279,13 +279,13 @@ namespace Domain.StaticData.Generators
                     Level = lvl,
                     BuildTime = TimeSpan.FromMinutes(lvl * 2),
                     PopulationCost = lvl * 2,
-                    ModifiersThatAffects = { ModifierTagEnum.Armor }
+                    ModifiersThatAffects = { ModifierTagEnum.Wall }
                 };
 
                 // Modifier: Armor bonus til alle enheder i byen
                 entry.ModifiersInternal.Add(new Modifier
                 {
-                    Tag = ModifierTagEnum.Armor,
+                    Tag = ModifierTagEnum.Wall,
                     Type = ModifierTypeEnum.Increased,
                     Value = (lvl / 30.0) * 0.55,
                     Source = $"Wall Level {lvl}"

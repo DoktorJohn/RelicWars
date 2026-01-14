@@ -5,24 +5,31 @@ using System.Collections;
 using System.Collections.Generic;
 using Project.Network.Models;
 using Assets.Scripts.Domain.State;
+using Newtonsoft.Json;
+using Project.Network.Manager;
+using Assets._Project.Scripts.Domain.DTOs; // VIGTIGT: Husk dette namespace for at kunne bruge BuildingDTO
 
 namespace Project.Modules.City
 {
     /// <summary>
     /// Service ansvarlig for at synkronisere byens ressource-data mellem Backend API og Unity UI.
-    /// Denne service håndterer både periodisk polling fra serveren og lokal fremskrivning (ticking) af værdier.
+    /// Denne service fungerer nu også som 'Data Provider' for CityManager.
     /// </summary>
     public class CityResourceService : MonoBehaviour
     {
         public static CityResourceService Instance { get; private set; }
 
+        // Event til UI (Ressourcer)
         public event Action<CityResourceState> OnResourceStateChanged;
 
-        [Header("API Netværks Konfiguration")]
-        [SerializeField] private string _apiBaseUrl = "https://127.0.0.1:55286/api/City";
+        // NYT EVENT: Event til CityManager (Bygninger)
+        // CityManager lytter på dette for at vide, hvornår den skal opdatere 3D byen.
+        public event Action<List<CityControllerGetDetailedCityInformationBuildingDTO>> OnBuildingStateReceived;
+
+        [Header("Konfiguration")]
         [SerializeField] private float _networkSynchronizationIntervalInSeconds = 30f;
 
-        private CityResourceState _currentResourceState;
+        private CityResourceState _currentResourceState = new CityResourceState(); // Initialiseret for at undgå null ref
         private bool _isRequestInProgress = false;
         private bool _isDataInitialized = false;
         private Coroutine _activePollingCoroutine;
@@ -55,7 +62,6 @@ namespace Project.Modules.City
 
         /// <summary>
         /// Beregner den visuelle vækst i ressourcer lokalt på klienten for at give en flydende oplevelse.
-        /// Formlen for vækst pr. frame er: $$ \Delta R = \left( \frac{\text{Produktion pr. time}}{3600} \right) \times \text{Time.deltaTime} $$
         /// </summary>
         private void ExecuteLocalResourceExtrapolationPerFrame()
         {
@@ -79,6 +85,7 @@ namespace Project.Modules.City
 
         /// <summary>
         /// Starter den automatiske synkroniserings-cyklus for en specifik by.
+        /// Kan også kaldes manuelt for at tvinge en opdatering (Force Refresh).
         /// </summary>
         public void InitiateResourceRefresh(Guid cityIdentifier)
         {
@@ -95,6 +102,7 @@ namespace Project.Modules.City
         /// </summary>
         private IEnumerator ExecuteResourcePollingCycleCoroutine(Guid cityIdentifier)
         {
+            // Vi kører loopet uendeligt
             while (true)
             {
                 yield return StartCoroutine(PerformDetailedCityInformationNetworkRequestCoroutine(cityIdentifier));
@@ -106,48 +114,37 @@ namespace Project.Modules.City
         {
             if (_isRequestInProgress) yield break;
 
-            _isRequestInProgress = true;
-            string requestUrl = $"{_apiBaseUrl}/GetDetailedCityInformation/{cityIdentifier}";
-
-            using (UnityWebRequest webRequest = UnityWebRequest.Get(requestUrl))
+            // Validering af NetworkManager
+            if (NetworkManager.Instance == null)
             {
-                // Inkludering af JWT token fra ApiService
-                if (ApiService.Instance != null && !string.IsNullOrEmpty(ApiService.Instance.AuthenticationJwtToken))
+                Debug.LogError("[CityResourceService] NetworkManager mangler!");
+                yield break;
+            }
+
+            _isRequestInProgress = true;
+            string token = NetworkManager.Instance.JwtToken;
+
+            // Kald serveren
+            yield return StartCoroutine(NetworkManager.Instance.City.GetDetailedCityInfo(cityIdentifier, token, (cityInfo) =>
+            {
+                if (cityInfo != null)
                 {
-                    webRequest.SetRequestHeader("Authorization", $"Bearer {ApiService.Instance.AuthenticationJwtToken}");
-                }
-
-                webRequest.certificateHandler = new BypassCertificate();
-
-                yield return webRequest.SendWebRequest();
-
-                if (webRequest.result != UnityWebRequest.Result.Success)
-                {
-                    Debug.LogError($"[CityResourceService] Netværksfejl: {webRequest.error} (Status: {webRequest.responseCode})");
+                    HandleDetailedCityInformationResponseAndMapToState(cityInfo);
                 }
                 else
                 {
-                    HandleDetailedCityInformationResponseAndMapToState(webRequest.downloadHandler.text);
+                    Debug.LogWarning("[CityResourceService] Kunne ikke hente by-data (NULL response).");
                 }
-            }
+            }));
 
             _isRequestInProgress = false;
         }
 
-        private void HandleDetailedCityInformationResponseAndMapToState(string jsonResponse)
+        private void HandleDetailedCityInformationResponseAndMapToState(CityControllerGetDetailedCityInformationDTO detailedInformationDto)
         {
             try
             {
-                var detailedInformationDto = Newtonsoft.Json.JsonConvert.DeserializeObject<CityControllerGetDetailedCityInformationDTO>(jsonResponse);
-
-                if (detailedInformationDto == null)
-                {
-                    Debug.LogError("[CityResourceService] Deserialisering fejlede. Svaret fra serveren var tomt eller ugyldigt.");
-                    return;
-                }
-
-                // Mapping af data til den lokale state. 
-                // Dette nulstiller eventuel 'drift' opstået ved lokal ekstrapolering.
+                // 1. Mapping af data til den lokale Resource State
                 _currentResourceState.WoodAmount = detailedInformationDto.CurrentWoodAmount;
                 _currentResourceState.WoodMaxCapacity = detailedInformationDto.MaxWoodCapacity;
                 _currentResourceState.WoodProductionPerHour = detailedInformationDto.WoodProductionPerHour;
@@ -165,15 +162,22 @@ namespace Project.Modules.City
                 _currentResourceState.CurrentPopulationUsage = detailedInformationDto.CurrentPopulationUsage;
                 _currentResourceState.MaxPopulationCapacity = detailedInformationDto.MaxPopulationCapacity;
 
-
                 _isDataInitialized = true;
 
-                // Notify lyttere om at vi har modtaget friske data fra ankeret (Serveren)
+                // 2. Notify UI lyttere (TopBar)
                 OnResourceStateChanged?.Invoke(_currentResourceState);
+
+                // 3. Notify CityManager lyttere (Bygninger) [VIGTIGT NYT TRIN]
+                // Vi sender listen af bygninger videre, så CityManager kan opdatere 3D verdenen
+                // uden selv at skulle lave et netværkskald.
+                if (detailedInformationDto.BuildingList != null)
+                {
+                    OnBuildingStateReceived?.Invoke(detailedInformationDto.BuildingList);
+                }
             }
             catch (Exception exception)
             {
-                Debug.LogError($"[CityResourceService] Kritisk fejl ved mapping af JSON: {exception.Message}");
+                Debug.LogError($"[CityResourceService] Kritisk fejl ved mapping af data: {exception.Message}");
             }
         }
 

@@ -13,6 +13,6 @@ namespace Domain.Enums
         Recruitment, Construction, Research, Population, Storage,
 
         Infantry, Cavalry, Siege,
-        Upkeep, Speed, Power, Armor
+        Upkeep, Speed, Power, Wall
     }
 }

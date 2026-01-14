@@ -14,7 +14,7 @@ namespace Application.DTOs
     int YAxis
 );
 
-    public record GameWorldAvailableResponseDTO(
+    public record WorldAvailableResponseDTO(
         Guid WorldId,
         string WorldName,
         int CurrentPlayerCount,

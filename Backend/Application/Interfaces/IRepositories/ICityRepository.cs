@@ -15,6 +15,6 @@ namespace Application.Interfaces.IRepositories
         Task<List<City>> GetAllAsync();
         Task UpdateRangeAsync(List<City> cities);
         Task AddAsync(City city);
-        Task<City> GetCityWithBuildingsByCityIdentifierAsync(Guid cityId);
+        Task<City?> GetCityWithBuildingsByCityIdentifierAsync(Guid cityId);
     }
 }

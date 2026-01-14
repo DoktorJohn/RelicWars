@@ -1,0 +1,30 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" editor-extension-mode="False">
+    <ui:Style src="WarehouseWindow.uss" />
+
+    <ui:VisualElement name="Warehouse-Window-Overlay" picking-mode="Ignore" class="warehouse-overlay">
+        <ui:VisualElement name="Warehouse-Window-MainContainer" class="warehouse-container">
+            
+            <ui:VisualElement name="Warehouse-Window-Header" class="window-header">
+                <ui:Label name="Lbl-Title" class="window-title" text="WAREHOUSE" />
+            </ui:VisualElement>
+            
+            <ui:Label name="Lbl-Level" class="level-subtitle" text="Level 5" />
+            
+            <ui:Label class="flavor-text" text="The Warehouse protects your resources from looting and weather. Upgrade it to increase the maximum amount of resources you can store." />
+            
+            <ui:VisualElement class="divider" />
+
+            <ui:VisualElement class="table-container">
+                <ui:VisualElement class="table-header-row">
+                    <ui:Label text="LEVEL" class="table-header-label" />
+                    <ui:Label text="CAPACITY" class="table-header-label" />
+                </ui:VisualElement>
+
+                <ui:ScrollView name="Warehouse-Stats-List" />
+            </ui:VisualElement>
+
+            <ui:Button name="Common-Close-Button" class="close-button" text="CLOSE" />
+            
+        </ui:VisualElement>
+    </ui:VisualElement>
+</ui:UXML>

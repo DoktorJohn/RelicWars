@@ -84,7 +84,8 @@ builder.Services.AddScoped<IResearchService, ResearchService>();
 builder.Services.AddScoped<ICityService, CityService>();
 builder.Services.AddScoped<NPCSpawnerService>();
 builder.Services.AddScoped<IAuthService, AuthService>();
-builder.Services.AddScoped<IGameWorldService, GameWorldService>();
+builder.Services.AddScoped<IWorldService, WorldService>();
+builder.Services.AddScoped<IWorldPlayerService, WorldPlayerService>();
 builder.Services.AddScoped<IJwtService, JwtService>();
 
 

@@ -3,11 +3,16 @@ using System.Collections.Generic;
 using System;
 using Project.Network.Models;
 using Assets.Scripts.Domain.Enums;
+using Assets._Project.Scripts.Domain.DTOs;
+using Project.Network.Manager;
 
 namespace Project.Modules.City
 {
     public class CityManager : MonoBehaviour
     {
+        // Singleton Instance
+        public static CityManager Instance { get; private set; }
+
         [Header("Bygnings Præfab Referencer")]
         [SerializeField] private GameObject barracksPrefab;
         [SerializeField] private GameObject senatePrefab;
@@ -19,22 +24,80 @@ namespace Project.Modules.City
         [SerializeField] private GameObject wallPrefab;
         [SerializeField] private GameObject workshopPrefab;
         [SerializeField] private GameObject academyPrefab;
+        [SerializeField] private GameObject stablePrefab;
 
         [Header("Layout Konfiguration")]
         [SerializeField] private float horizontalSpacingBetweenBuildingInstances = 5.0f;
         [SerializeField] private Transform buildingParentContainer;
 
+        private void Awake()
+        {
+            // Singleton setup
+            if (Instance == null)
+            {
+                Instance = this;
+            }
+            else
+            {
+                Destroy(gameObject);
+            }
+        }
+
         private void Start()
         {
             ValidateInitializationRequirements();
-            InitiateCityBuildingInstantiationSequence();
+
+            // VIGTIGT: Vi abonnerer på eventet fra CityResourceService.
+            // Når servicen henter nye data (hvert 30. sek eller ved force refresh), kører HandleBuildingUpdate.
+            if (CityResourceService.Instance != null)
+            {
+                CityResourceService.Instance.OnBuildingStateReceived += HandleBuildingUpdateFromService;
+            }
+            else
+            {
+                Debug.LogError("[CityManager] CityResourceService ikke fundet i Start! Sørg for eksekveringsrækkefølge.");
+            }
+        }
+
+        private void OnDestroy()
+        {
+            // Husk altid at afmelde events for at undgå memory leaks
+            if (CityResourceService.Instance != null)
+            {
+                CityResourceService.Instance.OnBuildingStateReceived -= HandleBuildingUpdateFromService;
+            }
+        }
+
+        /// <summary>
+        /// Denne metode kaldes automatisk via Event, når CityResourceService har hentet data.
+        /// </summary>
+        private void HandleBuildingUpdateFromService(List<CityControllerGetDetailedCityInformationBuildingDTO> buildings)
+        {
+            Debug.Log($"[CityManager] Modtog opdateret bygningsliste ({buildings.Count} bygninger) fra Service. Opdaterer 3D verden.");
+            ExecuteRealWorldBuildingPopulationProcess(buildings);
+        }
+
+        /// <summary>
+        /// Kan kaldes udefra (f.eks. fra Senatet eller en Timer) for at tvinge en opdatering af hele byen.
+        /// </summary>
+        public void RefreshCityArchitecture()
+        {
+            if (NetworkManager.Instance != null && NetworkManager.Instance.ActiveCityId.HasValue)
+            {
+                Debug.Log("[CityManager] Anmoder om Force Refresh via CityResourceService.");
+                // Vi beder servicen om at polle nu, hvilket vil trigge eventet når det er færdigt
+                if (CityResourceService.Instance != null)
+                {
+                    CityResourceService.Instance.InitiateResourceRefresh(NetworkManager.Instance.ActiveCityId.Value);
+                }
+            }
         }
 
         private void ValidateInitializationRequirements()
         {
-            if (ApiService.Instance == null)
+            if (NetworkManager.Instance == null)
             {
-                Debug.LogError("[CityManager] Kritisk fejl: ApiService Instance blev ikke fundet i scenen.");
+                Debug.LogError("[CityManager] Kritisk fejl: NetworkManager blev ikke fundet i scenen.");
                 return;
             }
 
@@ -44,35 +107,19 @@ namespace Project.Modules.City
             }
         }
 
-        private void InitiateCityBuildingInstantiationSequence()
-        {
-            Guid? activeCityId = ApiService.Instance.CurrentlySelectedActiveCityId;
-
-            if (activeCityId.HasValue)
-            {
-                Debug.Log($"[CityManager] Påbegynder hentning af bygnings-data for CityId: {activeCityId.Value}");
-
-                StartCoroutine(ApiService.Instance.RetrieveDetailedCityInformationByCityIdentifier(activeCityId.Value, (cityInformation) =>
-                {
-                    if (cityInformation != null)
-                    {
-                        Debug.Log($"[CityManager] Modtog data for '{cityInformation.CityName}'. Sender {cityInformation.BuildingList.Count} bygninger til population.");
-                        ExecuteRealWorldBuildingPopulationProcess(cityInformation.BuildingList);
-                    }
-                }));
-            }
-        }
-
         private void ExecuteRealWorldBuildingPopulationProcess(List<CityControllerGetDetailedCityInformationBuildingDTO> buildingDataList)
         {
+            // 1. Slet eksisterende bygninger
             foreach (Transform child in buildingParentContainer)
             {
                 Destroy(child.gameObject);
             }
 
+            // 2. Spawn nye bygninger baseret på listen
             for (int i = 0; i < buildingDataList.Count; i++)
             {
                 CityControllerGetDetailedCityInformationBuildingDTO currentBuildingData = buildingDataList[i];
+
                 GameObject prefabToInstantiate = GetPrefabForSpecificBuildingType(currentBuildingData.BuildingType);
 
                 if (prefabToInstantiate != null)
@@ -88,7 +135,6 @@ namespace Project.Modules.City
 
                     buildingInstance.name = $"{currentBuildingData.BuildingType}_Level_{currentBuildingData.CurrentLevel}";
 
-                    // Vi konfigurerer nu metadataen på det objekt, der har collideren
                     ConfigureInstantiatedBuildingMetadata(buildingInstance, currentBuildingData);
                 }
             }
@@ -96,28 +142,23 @@ namespace Project.Modules.City
 
         private void ConfigureInstantiatedBuildingMetadata(GameObject instance, CityControllerGetDetailedCityInformationBuildingDTO data)
         {
-            // OBJEKTIV FIX: Vi leder efter den collider, som musen rent faktisk skal ramme
             Collider buildingCollider = instance.GetComponentInChildren<Collider>();
 
             if (buildingCollider == null)
             {
-                Debug.LogWarning($"[CityManager] Advarsel: Ingen Collider fundet på {instance.name} eller dens børn. Interaktion vil ikke virke!");
+                Debug.LogWarning($"[CityManager] Advarsel: Ingen Collider fundet på {instance.name}.");
                 return;
             }
 
-            // Vi tager fat i det specifikke GameObject, hvor collideren bor
             GameObject targetGameObject = buildingCollider.gameObject;
-
             CityBuildingInteractionController interactionController = targetGameObject.GetComponent<CityBuildingInteractionController>();
 
             if (interactionController == null)
             {
-                // Vi tilføjer scriptet til SAMME objekt som collideren
                 interactionController = targetGameObject.AddComponent<CityBuildingInteractionController>();
             }
 
             interactionController.InitializeBuildingInteractionData(data);
-            Debug.Log($"[CityManager] Initialiserede {data.BuildingType} på {targetGameObject.name} (Hvor collideren findes).");
         }
 
         private GameObject GetPrefabForSpecificBuildingType(BuildingTypeEnum type)
@@ -134,6 +175,7 @@ namespace Project.Modules.City
                 BuildingTypeEnum.Wall => wallPrefab,
                 BuildingTypeEnum.Workshop => workshopPrefab,
                 BuildingTypeEnum.Academy => academyPrefab,
+                BuildingTypeEnum.Stable => stablePrefab,
                 _ => null
             };
         }

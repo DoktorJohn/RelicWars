@@ -19,6 +19,14 @@ namespace Infrastructure.Repositories
             _context = context;
         }
 
+        public async Task<WorldPlayer?> GetByProfileAndWorldAsync(Guid profileId, Guid worldId)
+        {
+            return await _context.WorldPlayers
+                .AsNoTracking()
+                .Include(wp => wp.Cities)
+                .FirstOrDefaultAsync(wp => wp.PlayerProfileId == profileId && wp.WorldId == worldId);
+        }
+
         public async Task<WorldPlayer?> GetByIdAsync(Guid id)
         {
             return await _context.WorldPlayers.FindAsync(id);
@@ -26,7 +34,6 @@ namespace Infrastructure.Repositories
 
         public async Task<WorldPlayer?> GetByIdWithResearchAsync(Guid id)
         {
-            // Vi bruger .Include for at trække alle UserResearch rækkerne med i én SQL forespørgsel
             return await _context.WorldPlayers
                 .Include(u => u.CompletedResearches)
                 .FirstOrDefaultAsync(u => u.Id == id);

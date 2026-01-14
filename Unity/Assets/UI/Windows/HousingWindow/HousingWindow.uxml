@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ui:UXML xmlns:ui="UnityEngine.UIElements" editor-extension-mode="False">
+    <ui:Style src="HousingWindow.uss" />
+
+    <ui:VisualElement name="Housing-Window-Overlay" picking-mode="Ignore" class="window-overlay">
+        <ui:VisualElement name="Housing-Window-MainContainer" class="window-container">
+            
+            <ui:VisualElement name="Housing-Window-Header" class="window-header">
+                <ui:Label name="Lbl-Title" class="window-title" text="HOUSING" />
+            </ui:VisualElement>
+            
+            <ui:Label name="Lbl-Level" class="level-subtitle" text="Level ..." />
+            
+            <ui:Label class="flavor-text" text="Your citizens need a place to live. Expanding your Housing increases your maximum population capacity." />
+            
+            <ui:VisualElement class="divider" />
+
+            <ui:VisualElement class="table-container">
+                <ui:VisualElement class="table-header-row">
+                    <ui:Label text="LEVEL" class="table-header-label" />
+                    <ui:Label text="POPULATION" class="table-header-label" />
+                </ui:VisualElement>
+
+                <ui:ScrollView name="Housing-Stats-List" />
+            </ui:VisualElement>
+
+            <ui:Button name="Common-Close-Button" class="close-button" text="CLOSE" />
+            
+        </ui:VisualElement>
+    </ui:VisualElement>
+</ui:UXML>

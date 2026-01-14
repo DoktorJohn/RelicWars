@@ -1,14 +1,16 @@
 using UnityEngine;
-using UnityEngine.EventSystems; // Påkrævet for IPointer interfaces
-using Project.Network.Models;
-using Project.Modules.CityView.UI;
+using UnityEngine.EventSystems; // Required for IPointer interfaces
 using Assets.Scripts.Domain.Enums;
+using Assets._Project.Scripts.Domain.DTOs; // Ensure DTO namespace is correct
+using Project.Modules.UI;
+using Project.Network.Models; // Required for GlobalWindowManager & WindowTypeEnum
 
 namespace Project.Modules.City
 {
     /// <summary>
-    /// Styrer den visuelle interaktion for bygningsobjekter i CityView.
-    /// Implementerer New Input System kompatible interfaces for klik og hover-effekter.
+    /// Controls visual interaction for building objects in CityView.
+    /// Implements New Input System compatible interfaces for click and hover effects.
+    /// NOW INTEGRATED WITH: Global Window Manager Architecture.
     /// </summary>
     [RequireComponent(typeof(BoxCollider))]
     public class CityBuildingInteractionController : MonoBehaviour, IPointerClickHandler, IPointerEnterHandler, IPointerExitHandler
@@ -19,55 +21,41 @@ namespace Project.Modules.City
         private bool _isControllerSuccessfullyInitialized = false;
 
         /// <summary>
-        /// Forbinder DTO-data med objektet og lokaliserer renderen i hierarkiet.
+        /// Links DTO data to the object and locates the renderer in hierarchy.
         /// </summary>
         public void InitializeBuildingInteractionData(CityControllerGetDetailedCityInformationBuildingDTO buildingData)
         {
             _associatedBuildingData = buildingData;
 
-            // Finder renderen i barnet (f.eks. House_1)
+            // Find renderer in children (e.g., House_1)
             _visualModelRenderer = GetComponentInChildren<Renderer>();
 
             if (_visualModelRenderer != null)
             {
-                // Vi bruger .material for at skabe en instans, så vi ikke ændrer selve asset-filen permanent
+                // Create material instance to avoid modifying asset file
                 _initialMaterialColor = _visualModelRenderer.material.color;
                 _isControllerSuccessfullyInitialized = true;
 
-                Debug.Log($"<color=cyan>[CityInteraction]</color> Initialiseret korrekt for {gameObject.name} ({_associatedBuildingData.BuildingType}).");
+                Debug.Log($"<color=cyan>[CityInteraction]</color> Initialized correctly for {gameObject.name} ({_associatedBuildingData.BuildingType}).");
             }
             else
             {
-                Debug.LogWarning($"<color=yellow>[CityInteraction]</color> Advarsel: Ingen Renderer fundet på {gameObject.name} eller dens børn.");
+                Debug.LogWarning($"<color=yellow>[CityInteraction]</color> Warning: No Renderer found on {gameObject.name} or children.");
             }
         }
 
-        /// <summary>
-        /// New Input System: Kaldes når musen bevæger sig ind over objektets collider.
-        /// </summary>
         public void OnPointerEnter(PointerEventData eventData)
         {
             if (!_isControllerSuccessfullyInitialized || _visualModelRenderer == null) return;
-
-            // Highlight effekt
-            _visualModelRenderer.material.color = Color.yellow;
+            _visualModelRenderer.material.color = Color.yellow; // Highlight
         }
 
-        /// <summary>
-        /// New Input System: Kaldes når musen forlader objektets collider.
-        /// </summary>
         public void OnPointerExit(PointerEventData eventData)
         {
             if (!_isControllerSuccessfullyInitialized || _visualModelRenderer == null) return;
-
-            // Gendan farve
-            _visualModelRenderer.material.color = _initialMaterialColor;
+            _visualModelRenderer.material.color = _initialMaterialColor; // Restore
         }
 
-        /// <summary>
-        /// New Input System: Kaldes ved klik på objektets collider.
-        /// Erstatter OnMouseDown i projekter med New Input System.
-        /// </summary>
         public void OnPointerClick(PointerEventData eventData)
         {
             ExecuteInteractionLogic();
@@ -75,40 +63,82 @@ namespace Project.Modules.City
 
         private void ExecuteInteractionLogic()
         {
-            // LOG: Bekræftelse på at input-systemet har fanget klikket
-            Debug.Log($"<color=magenta><b>[5. INTERACTION TRIGGER]</b></color> Input System fangede klik på: {gameObject.name}");
+            Debug.Log($"<color=magenta><b>[INTERACTION TRIGGER]</b></color> Clicked on: {gameObject.name}");
 
-            if (!_isControllerSuccessfullyInitialized)
+            if (!_isControllerSuccessfullyInitialized || _associatedBuildingData == null)
             {
-                Debug.LogError($"<color=red><b>[6. INIT ERROR]</b></color> Klik på {gameObject.name} ignoreret: Ikke initialiseret.");
+                Debug.LogError($"<color=red><b>[INTERACTION ERROR]</b></color> Click ignored: Not initialized or missing data.");
                 return;
             }
 
-            if (_associatedBuildingData == null)
-            {
-                Debug.LogError($"<color=red><b>[6. DATA ERROR]</b></color> Klik på {gameObject.name} ignoreret: Data mangler.");
-                return;
-            }
+            // --- NEW ARCHITECTURE INTEGRATION START ---
 
-            Debug.Log($"<color=white><b>[7. DATA CHECK]</b></color> Bygningstype: {_associatedBuildingData.BuildingType}. Er det Senate? " +
-                      (_associatedBuildingData.BuildingType == BuildingTypeEnum.Senate ? "JA" : "NEJ"));
+            // Map the specific building enum to a generic WindowTypeEnum
+            WindowTypeEnum windowType = MapBuildingTypeToWindowType(_associatedBuildingData.BuildingType);
 
-            if (_associatedBuildingData.BuildingType == BuildingTypeEnum.Senate)
+            if (windowType != WindowTypeEnum.None)
             {
-                ExecuteSenateWindowOpenRequest();
-            }
-        }
+                Debug.Log($"<color=green><b>[UI REQUEST]</b></color> Requesting GlobalWindowManager to open {windowType}.");
 
-        private void ExecuteSenateWindowOpenRequest()
-        {
-            if (SenateWindowController.Instance != null)
-            {
-                Debug.Log("<color=green><b>[8. UI CALL]</b></color> Forsøger at åbne Senat-vinduet via Singleton.");
-                SenateWindowController.Instance.OpenWindow();
+                // We pass the CityID if available, otherwise Manager uses active city
+                // Assuming we want to open it for the CURRENT active city
+                GlobalWindowManager.Instance.OpenWindow(windowType, null);
             }
             else
             {
-                Debug.LogError("<color=red><b>[8. SINGLETON ERROR]</b></color> SenateWindowController.Instance er NULL! Er scriptet i scenen?");
+                Debug.LogWarning($"<color=orange>[UI WARNING]</color> No window type defined for building: {_associatedBuildingData.BuildingType}");
+            }
+
+            // --- NEW ARCHITECTURE INTEGRATION END ---
+        }
+
+        /// <summary>
+        /// Helper method to map the Domain Building Enum to the UI Window Enum.
+        /// This decouples the game logic from the UI logic.
+        /// </summary>
+        private WindowTypeEnum MapBuildingTypeToWindowType(BuildingTypeEnum buildingType)
+        {
+            switch (buildingType)
+            {
+                case BuildingTypeEnum.Senate:
+                    return WindowTypeEnum.Senate;
+
+                case BuildingTypeEnum.Barracks:
+                    return WindowTypeEnum.Barracks;
+
+                case BuildingTypeEnum.Warehouse:
+                    return WindowTypeEnum.Warehouse;
+
+                case BuildingTypeEnum.TimberCamp:
+                    return WindowTypeEnum.TimberCamp;
+
+                case BuildingTypeEnum.StoneQuarry:
+                    return WindowTypeEnum.StoneQuarry;
+
+                case BuildingTypeEnum.MetalMine:
+                    return WindowTypeEnum.MetalMine;
+
+                case BuildingTypeEnum.Housing:
+                    return WindowTypeEnum.Housing;
+
+                case BuildingTypeEnum.Wall:
+                    return WindowTypeEnum.Wall;
+
+                case BuildingTypeEnum.Academy:
+                    return WindowTypeEnum.Academy;
+
+                case BuildingTypeEnum.Stable:
+                    return WindowTypeEnum.Stable;
+
+                case BuildingTypeEnum.Workshop:
+                    return WindowTypeEnum.Workshop;
+
+                // Add other mappings here as you create windows for them
+                // case BuildingTypeEnum.TimberCamp: return WindowTypeEnum.ProductionBuilding;
+
+                default:
+                    // Return None if we don't have a window for this building yet
+                    return WindowTypeEnum.None;
             }
         }
     }

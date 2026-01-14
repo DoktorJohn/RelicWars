@@ -12,19 +12,23 @@ namespace WebApi.Controllers
     public class CityController : ControllerBase
     {
         private readonly ICityService _cityService;
-        private readonly IResourceService _resourceService;
+        private readonly ILogger<CityController> _logger;
 
-        public CityController(ICityService cityService, IResourceService resourceService)
+        public CityController(ICityService cityService, ILogger<CityController> logger)
         {
             _cityService = cityService;
-            _resourceService = resourceService;
+            _logger = logger;
         }
 
         [HttpGet("{id}")]
-        public async Task<IActionResult> GetCity(Guid id)
+        public async Task<IActionResult> GetCityOverview(Guid id)
         {
             var city = await _cityService.GetCityOverviewAsync(id);
-            if (city == null) return NotFound("Byen blev ikke fundet.");
+            if (city == null)
+            {
+                _logger.LogWarning("City Overview not found for ID: {CityId}", id);
+                return NotFound("City not found.");
+            }
 
             return Ok(city);
         }
@@ -32,15 +36,15 @@ namespace WebApi.Controllers
         [HttpGet("GetDetailedCityInformation/{cityIdentifier}")]
         public async Task<ActionResult<CityControllerGetDetailedCityInformationDTO>> GetDetailedCityInformation(Guid cityIdentifier)
         {
-            // Eager loading af bygninger via Repository
-            var detailedCityInformationResult = await _cityService.GetDetailedCityInformationByCityIdentifierAsync(cityIdentifier);
+            var detailedInfo = await _cityService.GetDetailedCityInformationByCityIdentifierAsync(cityIdentifier);
 
-            if (detailedCityInformationResult == null)
+            if (detailedInfo == null)
             {
-                return NotFound(new { Message = $"Byen med ID {cityIdentifier} blev ikke fundet." });
+                _logger.LogWarning("Detailed info request failed. City ID {CityId} not found.", cityIdentifier);
+                return NotFound(new { Message = $"City with ID {cityIdentifier} was not found." });
             }
 
-            return Ok(detailedCityInformationResult);
+            return Ok(detailedInfo);
         }
 
         [HttpGet("{cityIdentifier}/senate/available-buildings")]
