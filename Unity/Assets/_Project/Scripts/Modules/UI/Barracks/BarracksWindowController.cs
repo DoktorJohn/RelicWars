@@ -1,11 +1,10 @@
-using Project.Modules.UI;
 using UnityEngine;
 using UnityEngine.UIElements;
 using System;
 using System.Collections.Generic;
-using Assets.Scripts.Domain.Enums;
-using Assets._Project.Scripts.Domain.DTOs;
 using Project.Network.Manager;
+using Assets.Scripts.Domain.Enums;
+using Project.Scripts.Domain.DTOs;
 
 namespace Project.Modules.UI.Windows.Implementations
 {
@@ -17,6 +16,7 @@ namespace Project.Modules.UI.Windows.Implementations
 
         private Label _levelLabel;
         private ScrollView _statsContainer;
+        private Guid _currentCityId;
 
         public override void OnOpen(object dataPayload)
         {
@@ -26,74 +26,159 @@ namespace Project.Modules.UI.Windows.Implementations
             _levelLabel = Root.Q<Label>("Lbl-Level");
             _statsContainer = Root.Q<ScrollView>("Barracks-Stats-List");
 
-            Guid cityId = (dataPayload is Guid id) ? id : NetworkManager.Instance.ActiveCityId ?? Guid.Empty;
-            if (cityId == Guid.Empty) return;
+            _currentCityId = (dataPayload is Guid id) ? id : NetworkManager.Instance.ActiveCityId ?? Guid.Empty;
+            if (_currentCityId == Guid.Empty) return;
 
-            RefreshData(cityId);
+            RefreshData();
         }
 
-        private void RefreshData(Guid cityId)
+        // Denne metode hedder nu RefreshData men bruger den NYE service-metode
+        private void RefreshData()
         {
             if (_statsContainer != null) _statsContainer.Clear();
             string token = NetworkManager.Instance.JwtToken;
 
-            StartCoroutine(NetworkManager.Instance.Building.GetBarracksInfo(cityId, token, (dataList) =>
+            // HER ER ÆNDRINGEN: Vi kalder GetBarracksOverviewInformation i stedet for GetBarracksInfo
+            StartCoroutine(NetworkManager.Instance.Barracks.GetBarracksOverviewInformation(_currentCityId, token, (barracksData) =>
             {
-                if (dataList != null && dataList.Count > 0)
+                if (barracksData != null)
                 {
-                    var current = dataList.Find(x => x.IsCurrentLevel);
-                    if (current != null && _levelLabel != null)
-                        _levelLabel.text = $"Level {current.Level}";
-                    else if (_levelLabel != null)
-                        _levelLabel.text = "Not Constructed";
-
-                    PopulateTable(dataList);
+                    UpdateUI(barracksData);
                 }
             }));
         }
 
-        private void PopulateTable(List<BarracksInfoDTO> dataList)
+        private void UpdateUI(BarracksFullViewDTO data)
         {
+            // Opdater Level
+            if (_levelLabel != null)
+                _levelLabel.text = data.BuildingLevel > 0 ? $"Level {data.BuildingLevel}" : "Not Constructed";
+
             if (_statsContainer == null) return;
             _statsContainer.Clear();
 
-            foreach (var item in dataList)
+            // 1. Vis Køen (Hvis der er enheder i træning)
+            if (data.RecruitmentQueue != null && data.RecruitmentQueue.Count > 0)
             {
-                CreateTableRow(item);
+                Label queueHeader = new Label("TRAINING QUEUE");
+                queueHeader.style.unityFontStyleAndWeight = FontStyle.Bold;
+                queueHeader.style.color = Color.yellow;
+                _statsContainer.Add(queueHeader);
+
+                foreach (var queueItem in data.RecruitmentQueue)
+                {
+                    CreateQueueRow(queueItem);
+                }
+
+                // Afstand
+                VisualElement spacer = new VisualElement();
+                spacer.style.height = 20;
+                _statsContainer.Add(spacer);
+            }
+
+            // 2. Vis Rekrutteringsmuligheder
+            Label recruitHeader = new Label("RECRUIT UNITS");
+            recruitHeader.style.unityFontStyleAndWeight = FontStyle.Bold;
+            _statsContainer.Add(recruitHeader);
+
+            if (data.AvailableUnits != null)
+            {
+                foreach (var unit in data.AvailableUnits)
+                {
+                    CreateRecruitRow(unit);
+                }
             }
         }
 
-        private void CreateTableRow(BarracksInfoDTO item)
+        private void CreateQueueRow(RecruitmentQueueItemDTO item)
+        {
+            VisualElement row = new VisualElement();
+            row.style.flexDirection = FlexDirection.Row;
+            row.style.justifyContent = Justify.SpaceBetween;
+            row.AddToClassList("table-row"); // Genbruger din CSS klasse
+
+            Label infoLabel = new Label($"{item.Amount}x {item.UnitType}");
+            infoLabel.style.color = Color.white;
+            row.Add(infoLabel);
+
+            TimeSpan t = TimeSpan.FromSeconds(item.TimeRemainingSeconds);
+            Label timeLabel = new Label($"{t.Hours:D2}:{t.Minutes:D2}:{t.Seconds:D2}");
+            timeLabel.style.color = Color.yellow;
+            row.Add(timeLabel);
+
+            _statsContainer.Add(row);
+        }
+
+        private void CreateRecruitRow(BarracksUnitInfoDTO unit)
         {
             VisualElement row = new VisualElement();
             row.AddToClassList("table-row");
+            row.style.height = 80; // Gør plads til knapper
+            row.style.flexDirection = FlexDirection.Column; // Vi stabler info og knapper
 
-            if (item.IsCurrentLevel)
+            // Info Linje
+            Label nameLabel = new Label($"{unit.UnitName} (Owned: {unit.CurrentInventoryCount})");
+            nameLabel.style.unityFontStyleAndWeight = FontStyle.Bold;
+            row.Add(nameLabel);
+
+            Label costLabel = new Label($"Wood: {unit.CostWood} | Stone: {unit.CostStone} | Metal: {unit.CostMetal} | Time: {unit.RecruitmentTimeInSeconds}s");
+            costLabel.style.fontSize = 12;
+            row.Add(costLabel);
+
+            if (unit.IsUnlocked)
             {
-                row.AddToClassList("table-row-current");
+                // Action Linje
+                VisualElement actionContainer = new VisualElement();
+                actionContainer.style.flexDirection = FlexDirection.Row;
+                actionContainer.style.marginTop = 5;
+
+                // Input felt (Simuleret med knapper for simpelthed i UI Toolkit uden styles)
+                Button trainOneBtn = new Button(() => PerformRecruitment(unit.UnitType, 1));
+                trainOneBtn.text = "Train 1";
+                trainOneBtn.style.flexGrow = 1;
+
+                Button trainFiveBtn = new Button(() => PerformRecruitment(unit.UnitType, 5));
+                trainFiveBtn.text = "Train 5";
+                trainFiveBtn.style.flexGrow = 1;
+
+                actionContainer.Add(trainOneBtn);
+                actionContainer.Add(trainFiveBtn);
+                row.Add(actionContainer);
             }
-
-            // Level Cell
-            Label lvlLabel = new Label(item.Level.ToString());
-            lvlLabel.AddToClassList("row-label");
-            row.Add(lvlLabel);
-
-            // Status Cell
-            string statusText = item.IsCurrentLevel ? "Recruitment Active" : "Upgrade Available";
-            if (item.Level < 1) statusText = "Not Built";
-
-            Label statusLabel = new Label(statusText);
-            statusLabel.AddToClassList("row-label");
-
-            if (item.IsCurrentLevel)
+            else
             {
-                // Rødlig / Military farve (#FF6E6E)
-                statusLabel.style.color = new StyleColor(new Color(1f, 0.43f, 0.43f));
+                Label lockLabel = new Label("LOCKED");
+                lockLabel.style.color = Color.red;
+                row.Add(lockLabel);
             }
-
-            row.Add(statusLabel);
 
             _statsContainer.Add(row);
+        }
+
+        // HER ER DEN METODE JEG SNAKKEDE OM (Den manglede i din gamle kode)
+        private void PerformRecruitment(UnitTypeEnum type, int amount)
+        {
+            string token = NetworkManager.Instance.JwtToken;
+
+            // Her bruger vi Action<bool, string> signaturen
+            StartCoroutine(NetworkManager.Instance.Barracks.RecruitUnits(_currentCityId, type, amount, token, (success, message) =>
+            {
+                if (success)
+                {
+                    Debug.Log($"<color=green>SUCCESS:</color> {message}");
+                    // Genindlæs data for at opdatere køen
+                    RefreshData();
+
+                    // Opdater ressourcer globalt (hvis du har CityResourceService)
+                    if (Project.Modules.City.CityResourceService.Instance != null)
+                        Project.Modules.City.CityResourceService.Instance.InitiateResourceRefresh(_currentCityId);
+                }
+                else
+                {
+                    Debug.LogError($"<color=red>FAILED:</color> {message}");
+                    // Her kan du evt. vise en popup i fremtiden
+                }
+            }));
         }
     }
 }

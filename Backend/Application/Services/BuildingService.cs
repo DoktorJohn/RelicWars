@@ -273,41 +273,6 @@ namespace Application.Services
 
             return resultList;
         }
-
-        public async Task<List<BarracksInfoDTO>> GetBarracksInfoAsync(Guid cityId)
-        {
-            var city = await _cityRepo.GetByIdAsync(cityId);
-            if (city == null) throw new Exception("City not found");
-
-            var building = city.Buildings.FirstOrDefault(b => b.Type == BuildingTypeEnum.Barracks);
-            int currentLevel = building?.Level ?? 0;
-
-            var result = new List<BarracksInfoDTO>();
-
-            // Vis nuværende level + de næste 5
-            for (int i = 0; i <= 5; i++)
-            {
-                int levelToCheck = currentLevel + i;
-                if (levelToCheck == 0) levelToCheck = 1; // Vis mindst level 1 hvis ikke bygget
-
-                // Tjek om level findes i statisk data (så vi stopper ved max level)
-                var config = _dataReader.GetConfig<BarracksLevelData>(BuildingTypeEnum.Barracks, levelToCheck);
-
-                // Hvis level ikke findes i config (og det ikke er level 1 som vi måske vil vise "preview" af), så stop
-                if (config == null && levelToCheck > 1) break;
-
-                // Vi tilføjer til listen, selvom vi ikke viser stats endnu
-                // Det sikrer at tabellen i UI kan tegnes
-                result.Add(new BarracksInfoDTO
-                {
-                    Level = levelToCheck,
-                    IsCurrentLevel = (levelToCheck == currentLevel)
-                });
-            }
-
-            return result;
-        }
-
         public async Task<List<StableInfoDTO>> GetStableInfoAsync(Guid cityId)
         {
             var city = await _cityRepo.GetByIdAsync(cityId);

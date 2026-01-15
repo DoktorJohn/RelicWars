@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using UnityEngine;
 
 namespace Project.Network.Manager
@@ -23,6 +22,9 @@ namespace Project.Network.Manager
         public ClientGameWorldService GameWorld { get; private set; }
         public ClientCityService City { get; private set; }
         public ClientBuildingService Building { get; private set; }
+        public ClientBarracksService Barracks { get; private set; }
+        public ClientStableService Stable { get; private set; }
+        public ClientWorkshopService Workshop { get; private set; }
 
         private void Awake()
         {
@@ -45,6 +47,9 @@ namespace Project.Network.Manager
             GameWorld = new ClientGameWorldService(_backendBaseUrl);
             City = new ClientCityService(_backendBaseUrl);
             Building = new ClientBuildingService(_backendBaseUrl);
+            Barracks = new ClientBarracksService(_backendBaseUrl);
+            Stable = new ClientStableService(_backendBaseUrl);
+            Workshop = new ClientWorkshopService(_backendBaseUrl);
 
             Debug.Log("[NetworkManager] Services Initialized.");
         }

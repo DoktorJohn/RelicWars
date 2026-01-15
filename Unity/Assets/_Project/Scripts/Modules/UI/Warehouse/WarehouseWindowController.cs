@@ -4,8 +4,8 @@ using System;
 using System.Collections.Generic;
 using System.Linq; // Vigtig for at finde Warehouse i listen
 using Assets.Scripts.Domain.Enums;
-using Assets._Project.Scripts.Domain.DTOs;
 using Project.Network.Manager;
+using Project.Scripts.Domain.DTOs;
 
 namespace Project.Modules.UI.Warehouse
 {

@@ -17,5 +17,6 @@ namespace Application.Interfaces.IRepositories
         Task UpdateAsync(BaseJob job); // Til Recruitment fremskridt
         Task DeleteAsync(Guid jobId);
         Task<BaseJob?> GetActiveResearchJobForUserAsync(Guid userId);
+        Task<List<RecruitmentJob>> GetRecruitmentJobsByCityAsync(Guid cityId);
     }
 }

@@ -3,11 +3,11 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Networking;
-using Assets._Project.Scripts.Domain.DTOs;
 using Assets.Scripts.Domain.Enums;
 using Newtonsoft.Json;
+using Project.Scripts.Domain.DTOs;
 
-namespace Project.Network.Manager
+namespace Project.Network
 {
     public class ClientBuildingService
     {
@@ -46,40 +46,6 @@ namespace Project.Network.Manager
             }
         }
 
-        public IEnumerator GetBarracksInfo(Guid cityId, string token, Action<List<BarracksInfoDTO>> callback)
-        {
-            // Antager endpoint: /api/building/{cityId}/barracks
-            string url = $"{_baseUrl}/building/{cityId}/barracks";
-
-            using (UnityWebRequest request = UnityWebRequest.Get(url))
-            {
-                request.certificateHandler = new BypassCertificateHandler();
-                request.SetRequestHeader("Authorization", "Bearer " + token);
-                request.SetRequestHeader("Content-Type", "application/json");
-
-                yield return request.SendWebRequest();
-
-                if (request.result == UnityWebRequest.Result.Success)
-                {
-                    string json = request.downloadHandler.text;
-                    try
-                    {
-                        var data = JsonConvert.DeserializeObject<List<BarracksInfoDTO>>(json);
-                        callback?.Invoke(data);
-                    }
-                    catch (Exception e)
-                    {
-                        Debug.LogError($"[ClientBuildingService] JSON Parse Error: {e.Message}");
-                        callback?.Invoke(null);
-                    }
-                }
-                else
-                {
-                    Debug.LogError($"[ClientBuildingService] Network Error: {request.error} | {request.downloadHandler.text}");
-                    callback?.Invoke(null);
-                }
-            }
-        }
 
         public IEnumerator GetStableInfo(Guid cityId, string token, Action<List<StableInfoDTO>> callback)
         {
@@ -326,16 +292,5 @@ namespace Project.Network.Manager
             }
         }
 
-    }
-
-    // Læg denne klasse her i bunden af filen
-    public class BypassCertificateHandler : CertificateHandler
-    {
-        protected override bool ValidateCertificate(byte[] certificateData)
-        {
-            // VIGTIGT: Dette må kun bruges i development! 
-            // Det gør forbindelsen usikker overfor hackere, men er nødvendigt for localhost.
-            return true;
-        }
     }
 }

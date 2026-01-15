@@ -5,8 +5,8 @@ using UnityEngine;
 using UnityEngine.Networking;
 using Newtonsoft.Json;
 using Project.Network.Models;
-using Assets._Project.Scripts.Domain.DTOs;
 using Project.Network.Helper;
+using Project.Scripts.Domain.DTOs;
 
 namespace Project.Network
 {

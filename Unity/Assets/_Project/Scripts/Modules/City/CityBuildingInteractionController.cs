@@ -1,7 +1,6 @@
 using UnityEngine;
 using UnityEngine.EventSystems; // Required for IPointer interfaces
 using Assets.Scripts.Domain.Enums;
-using Assets._Project.Scripts.Domain.DTOs; // Ensure DTO namespace is correct
 using Project.Modules.UI;
 using Project.Network.Models; // Required for GlobalWindowManager & WindowTypeEnum
 

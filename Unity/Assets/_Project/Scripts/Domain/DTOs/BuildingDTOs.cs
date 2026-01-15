@@ -5,7 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Assets._Project.Scripts.Domain.DTOs
+namespace Project.Scripts.Domain.DTOs
 {
     [Serializable]
     public class WorkshopInfoDTO
@@ -16,13 +16,6 @@ namespace Assets._Project.Scripts.Domain.DTOs
 
     [Serializable]
     public class AcademyInfoDTO
-    {
-        public int Level;
-        public bool IsCurrentLevel;
-    }
-
-    [Serializable]
-    public class BarracksInfoDTO
     {
         public int Level;
         public bool IsCurrentLevel;

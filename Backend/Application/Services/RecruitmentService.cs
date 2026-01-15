@@ -16,60 +16,279 @@ namespace Application.Services
 {
     public class RecruitmentService : IRecruitmentService
     {
-        private readonly ICityRepository _cityRepo;
-        private readonly IJobRepository _jobRepo;
-        private readonly IResourceService _resService;
+        private readonly ICityRepository _cityRepository;
+        private readonly IJobRepository _jobRepository;
+        private readonly IResourceService _resourceService;
         private readonly IResearchService _researchService;
-        private readonly ICityStatService _statService;
-        private readonly UnitDataReader _unitData;
-        private readonly BuildingDataReader _buildingData;
+        private readonly ICityStatService _cityStatService;
+        private readonly UnitDataReader _unitDataReader;
+        private readonly BuildingDataReader _buildingDataReader;
 
-        public RecruitmentService(ICityRepository cityRepo, IJobRepository jobRepo, IResourceService resService,
-            IResearchService researchService, UnitDataReader unitData, BuildingDataReader buildingData, ICityStatService statService)
+        public RecruitmentService(
+            ICityRepository cityRepository,
+            IJobRepository jobRepository,
+            IResourceService resourceService,
+            IResearchService researchService,
+            UnitDataReader unitDataReader,
+            BuildingDataReader buildingDataReader,
+            ICityStatService cityStatService)
         {
-            _cityRepo = cityRepo; _jobRepo = jobRepo; _resService = resService;
-            _researchService = researchService; _unitData = unitData; _buildingData = buildingData;
-            _statService = statService;
+            _cityRepository = cityRepository;
+            _jobRepository = jobRepository;
+            _resourceService = resourceService;
+            _researchService = researchService;
+            _unitDataReader = unitDataReader;
+            _buildingDataReader = buildingDataReader;
+            _cityStatService = cityStatService;
+        }
+
+        public async Task<StableFullViewDTO> GetStableOverviewAsync(Guid userId, Guid cityId)
+        {
+            var cityEntity = await _cityRepository.GetByIdAsync(cityId);
+            if (cityEntity == null) throw new Exception("City not found");
+
+            var stableBuilding = cityEntity.Buildings.FirstOrDefault(b => b.Type == BuildingTypeEnum.Stable);
+            int currentBuildingLevel = stableBuilding?.Level ?? 0;
+
+            var stableResponse = new StableFullViewDTO
+            {
+                BuildingLevel = currentBuildingLevel
+            };
+
+            // 1. Hent og filtrer Jobs til Køen (Kun Cavalry)
+            var allActiveJobs = await _jobRepository.GetJobsByCityAsync(cityId);
+            var recruitmentJobsForStable = allActiveJobs.OfType<RecruitmentJob>()
+                .OrderBy(job => job.ExecutionTime)
+                .ToList();
+
+            foreach (var recruitmentJob in recruitmentJobsForStable)
+            {
+                if (recruitmentJob.UnitType == UnitTypeEnum.None) continue;
+
+                var unitInformation = _unitDataReader.GetUnit(recruitmentJob.UnitType);
+
+                // FILTER: Vis kun kavaleri i staldens kø
+                if (unitInformation.Category != UnitCategoryEnum.Cavalry) continue;
+
+                int remainingUnitsInJob = recruitmentJob.TotalQuantity - recruitmentJob.CompletedQuantity;
+                double timeUntilNextUnitCalculatedInSeconds = Math.Max(0, (recruitmentJob.ExecutionTime - DateTime.UtcNow).TotalSeconds);
+                double totalRemainingTimeInSeconds = timeUntilNextUnitCalculatedInSeconds + ((remainingUnitsInJob - 1) * recruitmentJob.SecondsPerUnit);
+
+                stableResponse.RecruitmentQueue.Add(new RecruitmentQueueItemDTO
+                {
+                    QueueId = recruitmentJob.Id,
+                    UnitType = recruitmentJob.UnitType,
+                    Amount = remainingUnitsInJob,
+                    TimeRemainingSeconds = totalRemainingTimeInSeconds,
+                    TotalDurationSeconds = (int)(recruitmentJob.TotalQuantity * recruitmentJob.SecondsPerUnit)
+                });
+            }
+
+            // 2. Hent tilgængelige enheder til rekruttering (Kun Cavalry)
+            foreach (UnitTypeEnum unitTypeCandidate in Enum.GetValues(typeof(UnitTypeEnum)))
+            {
+                if (unitTypeCandidate == UnitTypeEnum.None) continue;
+
+                var unitStaticData = _unitDataReader.GetUnit(unitTypeCandidate);
+                if (unitStaticData == null || unitStaticData.Category != UnitCategoryEnum.Cavalry) continue;
+
+                double calculatedRecruitmentTimePerUnit = await CalculateFinalTime(userId, cityEntity, unitStaticData);
+                int currentUnitInventoryCount = cityEntity.UnitStacks.FirstOrDefault(stack => stack.Type == unitTypeCandidate)?.Quantity ?? 0;
+                bool isUnitTypeUnlocked = currentBuildingLevel > 0;
+
+                stableResponse.AvailableUnits.Add(new StableUnitInfoDTO
+                {
+                    UnitType = unitTypeCandidate,
+                    UnitName = unitStaticData.Type.ToString(),
+                    CurrentInventoryCount = currentUnitInventoryCount,
+                    CostWood = unitStaticData.WoodCost,
+                    CostStone = unitStaticData.StoneCost,
+                    CostMetal = unitStaticData.MetalCost,
+                    RecruitmentTimeInSeconds = (int)calculatedRecruitmentTimePerUnit,
+                    IsUnlocked = isUnitTypeUnlocked
+                });
+            }
+
+            return stableResponse;
+        }
+
+        public async Task<WorkshopFullViewDTO> GetWorkshopOverviewAsync(Guid userId, Guid cityId)
+        {
+            var cityEntity = await _cityRepository.GetByIdAsync(cityId);
+            if (cityEntity == null) throw new Exception("City not found");
+
+            var workshopBuilding = cityEntity.Buildings.FirstOrDefault(b => b.Type == BuildingTypeEnum.Workshop);
+            int currentBuildingLevel = workshopBuilding?.Level ?? 0;
+
+            var workshopResponse = new WorkshopFullViewDTO { BuildingLevel = currentBuildingLevel };
+
+            // 1. Hent og filtrer Jobs til Køen (Kun Siege)
+            var allActiveJobs = await _jobRepository.GetJobsByCityAsync(cityId);
+            var recruitmentJobsForWorkshop = allActiveJobs.OfType<RecruitmentJob>()
+                .OrderBy(job => job.ExecutionTime)
+                .ToList();
+
+            foreach (var recruitmentJob in recruitmentJobsForWorkshop)
+            {
+                if (recruitmentJob.UnitType == UnitTypeEnum.None) continue;
+
+                var unitInformation = _unitDataReader.GetUnit(recruitmentJob.UnitType);
+
+                // FILTER: Vis kun belejringsvåben i værkstedets kø
+                if (unitInformation.Category != UnitCategoryEnum.Siege) continue;
+
+                int remainingUnitsInJob = recruitmentJob.TotalQuantity - recruitmentJob.CompletedQuantity;
+                double timeUntilNextUnitCalculatedInSeconds = Math.Max(0, (recruitmentJob.ExecutionTime - DateTime.UtcNow).TotalSeconds);
+                double totalRemainingTimeInSeconds = timeUntilNextUnitCalculatedInSeconds + ((remainingUnitsInJob - 1) * recruitmentJob.SecondsPerUnit);
+
+                workshopResponse.RecruitmentQueue.Add(new RecruitmentQueueItemDTO
+                {
+                    QueueId = recruitmentJob.Id,
+                    UnitType = recruitmentJob.UnitType,
+                    Amount = remainingUnitsInJob,
+                    TimeRemainingSeconds = totalRemainingTimeInSeconds,
+                    TotalDurationSeconds = (int)(recruitmentJob.TotalQuantity * recruitmentJob.SecondsPerUnit)
+                });
+            }
+
+            // 2. Hent tilgængelige enheder (Siege)
+            foreach (UnitTypeEnum unitTypeCandidate in Enum.GetValues(typeof(UnitTypeEnum)))
+            {
+                if (unitTypeCandidate == UnitTypeEnum.None) continue;
+
+                var unitStaticData = _unitDataReader.GetUnit(unitTypeCandidate);
+                if (unitStaticData == null || unitStaticData.Category != UnitCategoryEnum.Siege) continue;
+
+                double calculatedRecruitmentTimePerUnit = await CalculateFinalTime(userId, cityEntity, unitStaticData);
+                int currentUnitInventoryCount = cityEntity.UnitStacks.FirstOrDefault(stack => stack.Type == unitTypeCandidate)?.Quantity ?? 0;
+
+                workshopResponse.AvailableUnits.Add(new WorkshopUnitInfoDTO
+                {
+                    UnitType = unitTypeCandidate,
+                    UnitName = unitStaticData.Type.ToString(),
+                    CurrentInventoryCount = currentUnitInventoryCount,
+                    CostWood = unitStaticData.WoodCost,
+                    CostStone = unitStaticData.StoneCost,
+                    CostMetal = unitStaticData.MetalCost,
+                    RecruitmentTimeInSeconds = (int)calculatedRecruitmentTimePerUnit,
+                    IsUnlocked = currentBuildingLevel > 0
+                });
+            }
+
+            return workshopResponse;
+        }
+
+        public async Task<BarracksFullViewDTO> GetBarracksOverviewAsync(Guid userId, Guid cityId)
+        {
+            var cityEntity = await _cityRepository.GetByIdAsync(cityId);
+            if (cityEntity == null) throw new Exception("City not found");
+
+            var barracksBuilding = cityEntity.Buildings.FirstOrDefault(b => b.Type == BuildingTypeEnum.Barracks);
+            int currentBuildingLevel = barracksBuilding?.Level ?? 0;
+
+            var barracksResponse = new BarracksFullViewDTO
+            {
+                BuildingLevel = currentBuildingLevel
+            };
+
+            // 1. Hent og filtrer Jobs til Køen (Kun Infantry)
+            var allActiveJobs = await _jobRepository.GetRecruitmentJobsByCityAsync(cityId);
+
+            foreach (var recruitmentJob in allActiveJobs)
+            {
+                if (recruitmentJob.UnitType == UnitTypeEnum.None) continue;
+
+                var unitInformation = _unitDataReader.GetUnit(recruitmentJob.UnitType);
+
+                // FILTER: Vis kun infanteri i kasernens kø
+                if (unitInformation.Category != UnitCategoryEnum.Infantry) continue;
+
+                int remainingUnitsInJob = recruitmentJob.TotalQuantity - recruitmentJob.CompletedQuantity;
+                double timeUntilNextUnitCalculatedInSeconds = Math.Max(0, (recruitmentJob.ExecutionTime - DateTime.UtcNow).TotalSeconds);
+                double totalRemainingTimeInSeconds = timeUntilNextUnitCalculatedInSeconds + ((remainingUnitsInJob - 1) * recruitmentJob.SecondsPerUnit);
+
+                barracksResponse.RecruitmentQueue.Add(new RecruitmentQueueItemDTO
+                {
+                    QueueId = recruitmentJob.Id,
+                    UnitType = recruitmentJob.UnitType,
+                    Amount = remainingUnitsInJob,
+                    TimeRemainingSeconds = totalRemainingTimeInSeconds,
+                    TotalDurationSeconds = (int)(recruitmentJob.TotalQuantity * recruitmentJob.SecondsPerUnit)
+                });
+            }
+
+            // 2. Hent tilgængelige enheder (Infantry)
+            foreach (UnitTypeEnum unitTypeCandidate in Enum.GetValues(typeof(UnitTypeEnum)))
+            {
+                if (unitTypeCandidate == UnitTypeEnum.None) continue;
+
+                var unitStaticData = _unitDataReader.GetUnit(unitTypeCandidate);
+                if (unitStaticData == null || unitStaticData.Category != UnitCategoryEnum.Infantry) continue;
+
+                double calculatedRecruitmentTimePerUnit = await CalculateFinalTime(userId, cityEntity, unitStaticData);
+                int currentUnitInventoryCount = cityEntity.UnitStacks.FirstOrDefault(stack => stack.Type == unitTypeCandidate)?.Quantity ?? 0;
+                bool isUnitTypeUnlocked = currentBuildingLevel > 0;
+
+                barracksResponse.AvailableUnits.Add(new BarracksUnitInfoDTO
+                {
+                    UnitType = unitTypeCandidate,
+                    UnitName = unitStaticData.Type.ToString(),
+                    CurrentInventoryCount = currentUnitInventoryCount,
+                    CostWood = unitStaticData.WoodCost,
+                    CostStone = unitStaticData.StoneCost,
+                    CostMetal = unitStaticData.MetalCost,
+                    RecruitmentTimeInSeconds = (int)calculatedRecruitmentTimePerUnit,
+                    IsUnlocked = isUnitTypeUnlocked
+                });
+            }
+
+            return barracksResponse;
         }
 
         public async Task<BuildingResult> QueueRecruitmentAsync(Guid userId, Guid cityId, UnitTypeEnum type, int quantity)
         {
-            var city = await _cityRepo.GetByIdAsync(cityId);
-            var unitStats = _unitData.GetUnit(type);
-            var activeJobs = await _jobRepo.GetJobsByCityAsync(cityId);
+            if (quantity <= 0) return new BuildingResult(false, "Antal skal være større end 0.");
+
+            var cityEntity = await _cityRepository.GetByIdAsync(cityId);
+            var unitStaticData = _unitDataReader.GetUnit(type);
+
+            var activeJobsInCity = await _jobRepository.GetJobsByCityAsync(cityId);
 
             // --- POPULATION CHECK ---
-            int availablePop = _statService.GetAvailablePopulation(city, activeJobs);
-            int totalPopNeeded = quantity * unitStats.PopulationCost;
+            int availablePopulationCalculated = _cityStatService.GetAvailablePopulation(cityEntity, activeJobsInCity);
+            int totalPopulationRequired = quantity * unitStaticData.PopulationCost;
 
-            if (totalPopNeeded > availablePop)
-                return new BuildingResult(false, $"Ikke nok boliger. Kræver {totalPopNeeded} pladser, men kun {availablePop} er ledige.");
+            if (totalPopulationRequired > availablePopulationCalculated)
+                return new BuildingResult(false, $"Ikke nok boliger. Kræver {totalPopulationRequired}, har {availablePopulationCalculated}.");
 
-            // --- RESOURCES & PREREQUISITES ---
-            var snapshot = _resService.CalculateCurrent(city, DateTime.UtcNow);
-            if (snapshot.Wood < (unitStats.WoodCost * quantity) || snapshot.Stone < (unitStats.StoneCost * quantity) || snapshot.Metal < (unitStats.MetalCost * quantity))
+            // --- RESOURCES ---
+            var resourceSnapshot = _resourceService.CalculateCurrent(cityEntity, DateTime.UtcNow);
+
+            if (resourceSnapshot.Wood < (unitStaticData.WoodCost * quantity) ||
+                resourceSnapshot.Stone < (unitStaticData.StoneCost * quantity) ||
+                resourceSnapshot.Metal < (unitStaticData.MetalCost * quantity))
                 return new BuildingResult(false, "Ikke nok ressourcer.");
 
-            // (Prerequisites tjek udeladt for korthed, men bør forblive her)
+            // --- EXECUTION TIME ---
+            double calculatedSecondsPerUnit = await CalculateFinalTime(userId, cityEntity, unitStaticData);
 
-            // --- EXECUTION ---
-            double secondsPerUnit = await CalculateFinalTime(userId, city, unitStats);
+            cityEntity.Wood = resourceSnapshot.Wood - (unitStaticData.WoodCost * quantity);
+            cityEntity.Stone = resourceSnapshot.Stone - (unitStaticData.StoneCost * quantity);
+            cityEntity.Metal = resourceSnapshot.Metal - (unitStaticData.MetalCost * quantity);
+            cityEntity.LastResourceUpdate = DateTime.UtcNow;
 
-            city.Wood -= (unitStats.WoodCost * quantity);
-            city.Stone -= (unitStats.StoneCost * quantity);
-            city.Metal -= (unitStats.MetalCost * quantity);
-            city.LastResourceUpdate = DateTime.UtcNow;
+            await _cityRepository.UpdateAsync(cityEntity);
 
-            await _cityRepo.UpdateAsync(city);
-            await _jobRepo.AddAsync(new RecruitmentJob
+            await _jobRepository.AddAsync(new RecruitmentJob
             {
                 UserId = userId,
                 CityId = cityId,
                 UnitType = type,
                 TotalQuantity = quantity,
-                SecondsPerUnit = secondsPerUnit,
+                SecondsPerUnit = calculatedSecondsPerUnit,
                 LastTickTime = DateTime.UtcNow,
-                ExecutionTime = DateTime.UtcNow.AddSeconds(secondsPerUnit)
+                ExecutionTime = DateTime.UtcNow.AddSeconds(calculatedSecondsPerUnit),
+                CompletedQuantity = 0
             });
 
             return new BuildingResult(true, $"Træning af {quantity}x {type} startet.");
@@ -77,15 +296,12 @@ namespace Application.Services
 
         private async Task<double> CalculateFinalTime(Guid userId, City city, UnitData unit)
         {
-            var tags = new List<ModifierTagEnum>(unit.ModifiersThatAffects);
-            if (!tags.Contains(ModifierTagEnum.Recruitment))
-            {
-                tags.Add(ModifierTagEnum.Recruitment);
-            }
+            var modifierTags = new List<ModifierTagEnum>(unit.ModifiersThatAffects);
+            if (!modifierTags.Contains(ModifierTagEnum.Recruitment)) modifierTags.Add(ModifierTagEnum.Recruitment);
 
-            var allModifiers = new List<Modifier>();
+            var applicableModifiers = new List<Modifier>();
 
-            BuildingTypeEnum buildingType = unit.Category switch
+            BuildingTypeEnum productionBuildingType = unit.Category switch
             {
                 UnitCategoryEnum.Infantry => BuildingTypeEnum.Barracks,
                 UnitCategoryEnum.Cavalry => BuildingTypeEnum.Stable,
@@ -93,23 +309,20 @@ namespace Application.Services
                 _ => BuildingTypeEnum.Barracks
             };
 
-            var building = city.Buildings.FirstOrDefault(b => b.Type == buildingType);
-            if (building != null && building.Level > 0)
+            var buildingEntity = city.Buildings.FirstOrDefault(b => b.Type == productionBuildingType);
+            if (buildingEntity != null && buildingEntity.Level > 0)
             {
-                var config = _buildingData.GetConfig<BuildingLevelData>(buildingType, building.Level);
-                if (config != null)
-                {
-                    allModifiers.AddRange(config.ModifiersInternal);
-                }
+                var buildingLevelConfiguration = _buildingDataReader.GetConfig<BuildingLevelData>(productionBuildingType, buildingEntity.Level);
+                if (buildingLevelConfiguration != null) applicableModifiers.AddRange(buildingLevelConfiguration.ModifiersInternal);
             }
 
-            var researchModifiers = await _researchService.GetUserResearchModifiersAsync(userId);
-            allModifiers.AddRange(researchModifiers);
+            var userResearchModifiers = await _researchService.GetUserResearchModifiersAsync(userId);
+            applicableModifiers.AddRange(userResearchModifiers);
 
-            double speedMultiplier = StatCalculator.ApplyModifiers(1.0, tags, allModifiers);
-            double finalTime = unit.RecruitmentTimeInSeconds / Math.Max(0.1, speedMultiplier);
+            double finalRecruitmentSpeedMultiplier = StatCalculator.ApplyModifiers(1.0, modifierTags, applicableModifiers);
+            double calculatedFinalRecruitmentTime = unit.RecruitmentTimeInSeconds / Math.Max(0.1, finalRecruitmentSpeedMultiplier);
 
-            return Math.Max(finalTime, 1.0);
+            return Math.Max(calculatedFinalRecruitmentTime, 1.0);
         }
     }
 }

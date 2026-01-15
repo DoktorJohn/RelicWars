@@ -23,6 +23,15 @@ namespace Infrastructure.Repositories
             _logger = logger;
         }
 
+        public async Task<List<RecruitmentJob>> GetRecruitmentJobsByCityAsync(Guid cityId)
+        {
+            // Vi filtrerer på typen RecruitmentJob og sorterer efter hvornår næste unit er færdig
+            return await _context.Jobs
+                .OfType<RecruitmentJob>()
+                .Where(j => j.CityId == cityId && !j.IsCompleted)
+                .OrderBy(j => j.ExecutionTime)
+                .ToListAsync();
+        }
         // 1. Helper til at undgå redundans i queries
         // Alle queries starter herfra, så vi altid kun ser ikke-færdige jobs sorteret efter tid
         private IQueryable<BaseJob> ActiveJobs => _context.Jobs

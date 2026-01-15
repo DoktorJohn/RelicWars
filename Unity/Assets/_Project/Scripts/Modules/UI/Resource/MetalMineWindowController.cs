@@ -5,7 +5,7 @@ using UnityEngine.UIElements;
 using Project.Modules.UI; // For BaseWindow
 using Project.Network.Manager;
 using Assets.Scripts.Domain.Enums;
-using Assets._Project.Scripts.Domain.DTOs;
+using Project.Scripts.Domain.DTOs;
 
 namespace Assets._Project.Scripts.Modules.UI.Resource
 {

@@ -7,7 +7,6 @@ using Project.Network.Models;
 using Assets.Scripts.Domain.State;
 using Newtonsoft.Json;
 using Project.Network.Manager;
-using Assets._Project.Scripts.Domain.DTOs; // VIGTIGT: Husk dette namespace for at kunne bruge BuildingDTO
 
 namespace Project.Modules.City
 {

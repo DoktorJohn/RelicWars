@@ -30,6 +30,7 @@ namespace Infrastructure.Repositories
                 .Include(city => city.Buildings) // Needed for Senate
                 .Include(city => city.WorldPlayer) // Needed for modifiers
                     .ThenInclude(player => player.ModifiersAppliedToWorldPlayer)
+                .Include(city => city.UnitStacks)
                 .FirstOrDefaultAsync(city => city.Id == cityIdentifier);
         }
 

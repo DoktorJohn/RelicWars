@@ -56,13 +56,6 @@ namespace Game.Controllers
             return Ok(data);
         }
 
-        [HttpGet("{cityId}/barracks")]
-        public async Task<IActionResult> GetBarracksInfo(Guid cityId)
-        {
-            var data = await _buildingService.GetBarracksInfoAsync(cityId);
-            return Ok(data);
-        }
-
         [HttpGet("{cityId}/stable")]
         public async Task<IActionResult> GetStableInfo(Guid cityId)
         {

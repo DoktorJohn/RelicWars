@@ -8,6 +8,7 @@ namespace Domain.Enums
 {
     public enum UnitTypeEnum
     {
+        None,
         Militia,
         MenAtArms,
         Spearmen,

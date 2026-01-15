@@ -4,8 +4,8 @@ using UnityEngine.UIElements;
 using System;
 using System.Collections.Generic;
 using Assets.Scripts.Domain.Enums;
-using Assets._Project.Scripts.Domain.DTOs;
 using Project.Network.Manager;
+using Project.Scripts.Domain.DTOs;
 
 namespace Project.Modules.UI.Windows.Implementations
 {

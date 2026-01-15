@@ -51,7 +51,7 @@
     margin-bottom: 20px; width: 95%; align-self: center;
 }
 
-/* --- DATA TABLE --- */
+/* --- DATA TABLE / CONTENT --- */
 .table-container {
     flex-grow: 1;
     background-color: rgba(0, 0, 0, 0.2);
@@ -59,31 +59,19 @@
     padding: 10px;
 }
 
-.table-header-row {
-    flex-direction: row;
-    height: 40px;
-    background-color: rgba(40, 30, 20, 0.9);
-    border-bottom-width: 2px;
-    border-bottom-color: rgb(255, 215, 100);
-    margin-bottom: 5px;
-    align-items: center;
-}
+/* Slettet .table-header-row styles da vi ikke bruger dem her */
 
-.table-header-label {
-    -unity-font-definition: url('/Assets/TextMesh Pro/Fonts/Cinzel.asset');
-    color: rgb(255, 215, 100);
-    font-size: 16px; -unity-font-style: bold;
-    -unity-text-align: middle-center;
-    flex-grow: 1; width: 50%;
-}
-
-/* Dynamic Rows */
+/* Dynamic Rows - Updated for flexibility */
 .table-row {
     flex-direction: row;
-    height: 50px;
+    /* VIGTIGT: Auto height tillader rækker at vokse (til recruit knapper) */
+    height: auto; 
+    min-height: 40px;
     align-items: center;
     border-bottom-width: 1px;
     border-bottom-color: rgba(255, 255, 255, 0.1);
+    padding: 5px;
+    margin-bottom: 5px;
 }
 
 .table-row-current {
@@ -97,10 +85,45 @@
     color: white;
     font-size: 16px;
     -unity-text-align: middle-center;
-    flex-grow: 1; width: 50%;
+    flex-grow: 1; 
 }
 
-/* --- CLOSE BUTTON --- */
+/* --- UI ELEMENTS (INPUTS & BUTTONS INSIDE LIST) --- */
+
+/* TextField Styling (for at undgå kridhvide inputs) */
+.unity-text-field {
+    margin: 0; padding: 0;
+}
+
+.unity-text-field__input {
+    background-color: rgba(0, 0, 0, 0.5);
+    color: rgb(255, 215, 100);
+    border-width: 1px;
+    border-color: rgba(255, 255, 255, 0.3);
+    border-radius: 4px;
+    -unity-text-align: middle-center;
+}
+
+/* Standard Buttons inside the list */
+.unity-button {
+    border-radius: 4px;
+    border-width: 1px;
+    border-color: rgba(0,0,0,0.5);
+    margin-left: 5px;
+    margin-right: 5px;
+    -unity-font-style: bold;
+}
+
+.unity-button:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+}
+
+.unity-button:active {
+    background-color: rgba(0, 0, 0, 0.5);
+}
+
+
+/* --- CLOSE BUTTON (FOOTER) --- */
 .close-button {
     height: 40px; width: 150px; align-self: center; margin-top: 15px;
     background-color: rgb(160, 30, 20); color: white; border-radius: 5px;
