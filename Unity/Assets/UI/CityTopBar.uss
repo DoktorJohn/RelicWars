@@ -82,3 +82,40 @@
     text-shadow: 1px 1px 1px rgba(0, 0, 0, 0.8);
     margin-left: 8px;
 }
+
+.city-top-bar-map-button {
+    /* Absolut positionering for at bryde ud af flowet */
+    position: absolute;
+    top: -5px;  /* Trækker den lidt op over kanten */
+    left: -5px; /* Trækker den lidt ud til venstre */
+    
+    /* Størrelse - større end selve baren (som er 65px høj) */
+    width: 160px;
+    height: 160px;
+
+    /* Ikonet */
+    background-image: url('project://database/Assets/UI/MapIcon.png');
+    -unity-background-scale-mode: scale-to-fit;
+
+    /* Nulstil standard knap-styling */
+    background-color: rgba(0,0,0,0); /* Gennemsigtig baggrund */
+    border-width: 0;
+    border-radius: 0;
+    
+    /* Animationer */
+    transition-property: scale, -unity-background-image-tint-color;
+    transition-duration: 0.1s;
+}
+
+/* Hover effekt */
+.city-top-bar-map-button:hover {
+    scale: 1.05;
+    -unity-background-image-tint-color: rgb(230, 230, 230); /* Lidt lysere */
+    cursor: link; /* Viser en hånd-cursor */
+}
+
+/* Klik effekt */
+.city-top-bar-map-button:active {
+    scale: 0.95;
+    -unity-background-image-tint-color: rgb(180, 180, 180); /* Lidt mørkere */
+}

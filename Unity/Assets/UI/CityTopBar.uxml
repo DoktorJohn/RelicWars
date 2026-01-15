@@ -4,6 +4,9 @@
     <ui:Style src="project://database/Assets/UI/CityTopBar.uss" />
 
     <ui:VisualElement name="City-TopBar-MainContainer" class="city-top-bar-main-container">
+        
+        <ui:Button name="City-TopBar-MapButton" class="city-top-bar-map-button" />
+
         <ui:VisualElement name="City-TopBar-ResourceSection-Right" class="city-top-bar-resource-section-right">
             
             <ui:VisualElement name="City-ResourceGroup-Population" class="city-resource-group">

@@ -4,25 +4,47 @@ using UnityEngine.SceneManagement;
 namespace Project.Modules.UI
 {
     /// <summary>
-    /// Ansvarlig for at indlæse HUD og UI scener additivt ovenpå spilscener.
+    /// Denne manager er ansvarlig for at indlæse de nødvendige HUD-scener additivt ovenpå CityViewScene.
+    /// Den sikrer, at UI-komponenter som TopBar og SideBar altid er tilgængelige uden at dublere dem.
     /// </summary>
-    public class CityUserInterfaceSceneLoader : MonoBehaviour
+    public class CityUserInterfaceAdditiveSceneManager : MonoBehaviour
     {
-        [SerializeField] private string _hudSceneName = "TopBarHUD";
+        [Header("Scene Navngivning")]
+        [SerializeField] private string _topHorizontalNavigationHudSceneName = "TopBarHUD";
+        [SerializeField] private string _leftVerticalNavigationHudSceneName = "LeftSideBarHUD";
 
         private void Start()
         {
-            LoadUserInterfaceAdditive();
+            ExecuteAdditiveUserInterfaceSceneLoadingProcess();
         }
 
-        public void LoadUserInterfaceAdditive()
+        /// <summary>
+        /// Kontrollerer om HUD-scenerne er aktive, og indlæser dem hvis de mangler.
+        /// </summary>
+        public void ExecuteAdditiveUserInterfaceSceneLoadingProcess()
         {
-            // Tjek om scenen allerede er indlæst for at undgå dubletter
-            if (!SceneManager.GetSceneByName(_hudSceneName).isLoaded)
+            // Vi tjekker hver scene uafhængigt for at sikre maksimal robusthed.
+
+            if (!IsSpecificSceneAlreadyLoaded(_topHorizontalNavigationHudSceneName))
             {
-                // LoadSceneMode.Additive sikrer, at CityViewScene IKKE lukkes
-                SceneManager.LoadScene(_hudSceneName, LoadSceneMode.Additive);
+                Debug.Log($"[UI-Loader] Indlæser additiv HUD scene: {_topHorizontalNavigationHudSceneName}");
+                SceneManager.LoadScene(_topHorizontalNavigationHudSceneName, LoadSceneMode.Additive);
             }
+
+            if (!IsSpecificSceneAlreadyLoaded(_leftVerticalNavigationHudSceneName))
+            {
+                Debug.Log($"[UI-Loader] Indlæser additiv HUD scene: {_leftVerticalNavigationHudSceneName}");
+                SceneManager.LoadScene(_leftVerticalNavigationHudSceneName, LoadSceneMode.Additive);
+            }
+        }
+
+        /// <summary>
+        /// Hjælpemetode der tjekker om en scene med et specifikt navn findes i den nuværende session.
+        /// </summary>
+        private bool IsSpecificSceneAlreadyLoaded(string sceneNameIdentifier)
+        {
+            Scene specificScene = SceneManager.GetSceneByName(sceneNameIdentifier);
+            return specificScene.isLoaded;
         }
     }
 }

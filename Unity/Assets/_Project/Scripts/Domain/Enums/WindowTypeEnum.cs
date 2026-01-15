@@ -2,7 +2,7 @@
 {
     public enum WindowTypeEnum
     {
-        // Buildings
+        None,
         Senate,
         Barracks,
         Warehouse,
@@ -15,16 +15,8 @@
         Workshop,
         Academy,
 
-        // Map Entities
-        EnemyCityDetails,
-        AllianceInfo,
-
-        // System
-        PlayerProfile,
-        Settings,
-        Messages,
-
-        // Fallback
-        None
+        Profile,
+        Alliance,
+        Rankings
     }
 }

@@ -46,45 +46,10 @@ namespace Project.Network
             }
         }
 
-
-        public IEnumerator GetStableInfo(Guid cityId, string token, Action<List<StableInfoDTO>> callback)
-        {
-            // Antager endpoint: /api/building/{cityId}/stable
-            string url = $"{_baseUrl}/building/{cityId}/stable";
-
-            using (UnityWebRequest request = UnityWebRequest.Get(url))
-            {
-                request.certificateHandler = new BypassCertificateHandler();
-                request.SetRequestHeader("Authorization", "Bearer " + token);
-                request.SetRequestHeader("Content-Type", "application/json");
-
-                yield return request.SendWebRequest();
-
-                if (request.result == UnityWebRequest.Result.Success)
-                {
-                    string json = request.downloadHandler.text;
-                    try
-                    {
-                        var data = JsonConvert.DeserializeObject<List<StableInfoDTO>>(json);
-                        callback?.Invoke(data);
-                    }
-                    catch (Exception e)
-                    {
-                        Debug.LogError($"[ClientBuildingService] JSON Parse Error: {e.Message}");
-                        callback?.Invoke(null);
-                    }
-                }
-                else
-                {
-                    Debug.LogError($"[ClientBuildingService] Network Error: {request.error} | {request.downloadHandler.text}");
-                    callback?.Invoke(null);
-                }
-            }
-        }
         public IEnumerator GetAcademyInfo(Guid cityId, string token, Action<List<AcademyInfoDTO>> callback)
         {
             // Antager endpoint: /api/building/{cityId}/academy
-            string url = $"{_baseUrl}/building/{cityId}/academy";
+            string url = $"{_baseUrl}/miscbuilding/{cityId}/academy";
 
             using (UnityWebRequest request = UnityWebRequest.Get(url))
             {
@@ -118,7 +83,7 @@ namespace Project.Network
 
         public IEnumerator GetWallInfo(Guid cityId, string token, Action<List<WallInfoDTO>> callback)
         {
-            string url = $"{_baseUrl}/building/{cityId}/wall";
+            string url = $"{_baseUrl}/miscbuilding/{cityId}/wall";
 
             using (UnityWebRequest request = UnityWebRequest.Get(url))
             {
@@ -152,7 +117,7 @@ namespace Project.Network
         }
         public IEnumerator GetHousingProjection(Guid cityId, string token, Action<List<HousingProjectionDTO>> callback)
         {
-            string url = $"{_baseUrl}/building/{cityId}/housing";
+            string url = $"{_baseUrl}/economybuilding/{cityId}/housing";
 
             using (UnityWebRequest request = UnityWebRequest.Get(url))
             {
@@ -186,7 +151,7 @@ namespace Project.Network
         public IEnumerator GetResourceProductionInfo(Guid cityId, BuildingTypeEnum type, string token, Action<List<ResourceBuildingInfoDTO>> callback)
         {
             // URL matcher din backend controller: [HttpGet("{cityId}/resource/{buildingType}")]
-            string url = $"{_baseUrl}/building/{cityId}/resource/{type}";
+            string url = $"{_baseUrl}/economybuilding/{cityId}/resource/{type}";
 
             using (UnityWebRequest request = UnityWebRequest.Get(url))
             {
@@ -221,45 +186,9 @@ namespace Project.Network
             }
         }
 
-        public IEnumerator GetWorkshopInfo(Guid cityId, string token, Action<List<WorkshopInfoDTO>> callback)
-        {
-            // Antager at endpointet er /api/building/{cityId}/workshop
-            // Husk at lave controller-metoden i backend hvis den mangler, 
-            // men du bad specifikt om client-siden her.
-            string url = $"{_baseUrl}/building/{cityId}/workshop";
-
-            using (UnityWebRequest request = UnityWebRequest.Get(url))
-            {
-                request.certificateHandler = new BypassCertificateHandler();
-                request.SetRequestHeader("Authorization", "Bearer " + token);
-                request.SetRequestHeader("Content-Type", "application/json");
-
-                yield return request.SendWebRequest();
-
-                if (request.result == UnityWebRequest.Result.Success)
-                {
-                    string json = request.downloadHandler.text;
-                    try
-                    {
-                        var data = JsonConvert.DeserializeObject<List<WorkshopInfoDTO>>(json);
-                        callback?.Invoke(data);
-                    }
-                    catch (Exception e)
-                    {
-                        Debug.LogError($"[ClientBuildingService] JSON Parse Error: {e.Message}");
-                        callback?.Invoke(null);
-                    }
-                }
-                else
-                {
-                    Debug.LogError($"[ClientBuildingService] Network Error: {request.error} | {request.downloadHandler.text}");
-                    callback?.Invoke(null);
-                }
-            }
-        }
         public IEnumerator GetWarehouseProjection(Guid cityId, string token, Action<List<WarehouseProjectionDTO>> callback)
         {
-            string url = $"{_baseUrl}/building/{cityId}/warehouse";
+            string url = $"{_baseUrl}/economybuilding/{cityId}/warehouse";
 
             using (UnityWebRequest request = UnityWebRequest.Get(url))
             {

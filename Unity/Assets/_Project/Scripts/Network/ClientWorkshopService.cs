@@ -20,7 +20,7 @@ namespace Project.Network.Manager
 
         public IEnumerator GetWorkshopOverviewInformation(Guid cityId, string token, Action<WorkshopFullViewDTO> callback)
         {
-            string url = $"{_baseUrl}/workshop/{cityId}/overview";
+            string url = $"{_baseUrl}/militarybuilding/{cityId}/workshopOverview";
 
             using (UnityWebRequest request = UnityWebRequest.Get(url))
             {
@@ -54,7 +54,7 @@ namespace Project.Network.Manager
 
         public IEnumerator RecruitUnits(Guid cityId, UnitTypeEnum unitType, int amount, string token, Action<bool, string> callback)
         {
-            string url = $"{_baseUrl}/workshop/{cityId}/recruit";
+            string url = $"{_baseUrl}/militarybuilding/{cityId}/workshopRecruit";
 
             var requestBody = new RecruitUnitRequestDTO
             {

@@ -20,7 +20,7 @@ namespace Project.Network
 
         public IEnumerator GetStableOverviewInformation(Guid cityId, string token, Action<StableFullViewDTO> callback)
         {
-            string url = $"{_baseUrl}/stable/{cityId}/overview";
+            string url = $"{_baseUrl}/militarybuilding/{cityId}/stableOverview";
 
             using (UnityWebRequest request = UnityWebRequest.Get(url))
             {
@@ -54,7 +54,7 @@ namespace Project.Network
 
         public IEnumerator RecruitUnits(Guid cityId, UnitTypeEnum unitType, int amount, string token, Action<bool, string> callback)
         {
-            string url = $"{_baseUrl}/stable/{cityId}/recruit";
+            string url = $"{_baseUrl}/militarybuilding/{cityId}/stableRecruit";
 
             var requestBody = new RecruitUnitRequestDTO
             {

@@ -7,7 +7,7 @@ using Newtonsoft.Json;
 using Project.Scripts.Domain.DTOs;
 using Assets.Scripts.Domain.Enums;
 
-namespace Project.Network // Matchede namespace med NetworkManager
+namespace Project.Network
 {
     public class ClientBarracksService
     {
@@ -20,7 +20,7 @@ namespace Project.Network // Matchede namespace med NetworkManager
 
         public IEnumerator GetBarracksOverviewInformation(Guid cityId, string token, Action<BarracksFullViewDTO> callback)
         {
-            string url = $"{_baseUrl}/barracks/{cityId}/overview";
+            string url = $"{_baseUrl}/militarybuilding/{cityId}/barracksOverview";
 
             using (UnityWebRequest request = UnityWebRequest.Get(url))
             {
@@ -54,7 +54,7 @@ namespace Project.Network // Matchede namespace med NetworkManager
         // ÆNDRING: Callback tager nu også en string 'message' med
         public IEnumerator RecruitUnits(Guid cityId, UnitTypeEnum unitType, int amount, string token, Action<bool, string> callback)
         {
-            string url = $"{_baseUrl}/barracks/{cityId}/recruit";
+            string url = $"{_baseUrl}/militarybuilding/{cityId}/barracksRecruit";
 
             var requestBody = new RecruitUnitRequestDTO
             {

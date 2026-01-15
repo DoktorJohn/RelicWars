@@ -20,7 +20,10 @@ namespace Project.Modules.UI
         private Label _stoneResourceAmountLabel;
         private Label _metalResourceAmountLabel;
         private Label _silverResourceAmountLabel;
-        private Label _populationAmountLabel; // Reference til population
+        private Label _populationAmountLabel;
+
+        // NY REFERENCE: Kort Knappen
+        private Button _mapButton;
 
         // Referencer til bue-tegnere (Painters)
         private WarehouseCapacityProgressPainter _woodWarehousePainter;
@@ -37,8 +40,10 @@ namespace Project.Modules.UI
             _rootVisualElement = uiDocumentComponent.rootVisualElement;
 
             InitializeResourceLabels();
+            InitializeButtons(); // NY INIT METODE
             InitializeWarehouseCapacityPainters();
             ValidateUserInterfaceReferences();
+            RegisterButtonCallbacks(); // NY CALLBACK REGISTRERING
 
             if (CityResourceService.Instance != null)
             {
@@ -48,6 +53,8 @@ namespace Project.Modules.UI
 
         private void OnDisable()
         {
+            UnregisterButtonCallbacks(); // NY CALLBACK AFREGISTRERING
+
             if (CityResourceService.Instance != null)
             {
                 CityResourceService.Instance.OnResourceStateChanged -= HandleResourceStateChanged;
@@ -61,6 +68,12 @@ namespace Project.Modules.UI
             _metalResourceAmountLabel = _rootVisualElement.Q<Label>("City-ResourceLabel-MetalAmount");
             _silverResourceAmountLabel = _rootVisualElement.Q<Label>("City-ResourceLabel-SilverAmount");
             _populationAmountLabel = _rootVisualElement.Q<Label>("City-ResourceLabel-PopulationAmount");
+        }
+
+        // NY METODE TIL AT FINDE KNAPPER
+        private void InitializeButtons()
+        {
+            _mapButton = _rootVisualElement.Q<Button>("City-TopBar-MapButton");
         }
 
         private void InitializeWarehouseCapacityPainters()
@@ -77,21 +90,42 @@ namespace Project.Modules.UI
             if (_metalResourceAmountLabel == null) Debug.LogError("[CityTopBar] MetalAmount Label ikke fundet.");
             if (_silverResourceAmountLabel == null) Debug.LogError("[CityTopBar] SilverAmount Label ikke fundet.");
             if (_populationAmountLabel == null) Debug.LogError("[CityTopBar] Population Label ikke fundet.");
+            // NY VALIDERING
+            if (_mapButton == null) Debug.LogError("[CityTopBar] MapButton ikke fundet.");
         }
+
+        // NYE METODER TIL EVENTS
+        private void RegisterButtonCallbacks()
+        {
+            _mapButton?.RegisterCallback<ClickEvent>(OnMapButtonClicked);
+        }
+
+        private void UnregisterButtonCallbacks()
+        {
+            _mapButton?.UnregisterCallback<ClickEvent>(OnMapButtonClicked);
+        }
+
+        // NY KLIK-HÅNDTERING
+        private void OnMapButtonClicked(ClickEvent clickEvent)
+        {
+            Debug.Log("<color=green>[CityTopBar]</color> Kort-knap klikket! Skifter til verdenskort...");
+            // Her vil du typisk kalde en SceneManager for at skifte scene:
+            // UnityEngine.SceneManagement.SceneManager.LoadScene("WorldMapScene");
+        }
+
 
         /// <summary>
         /// Modtager den opdaterede state og sender data videre til UI-logikken.
         /// </summary>
         private void HandleResourceStateChanged(CityResourceState resourceState)
         {
-            // OBJEKTIV FIX: Vi sender nu også population data videre
             UpdateUserInterface(
                 resourceState.WoodAmount, resourceState.WoodFillPercentage,
                 resourceState.StoneAmount, resourceState.StoneFillPercentage,
                 resourceState.MetalAmount, resourceState.MetalFillPercentage,
                 resourceState.SilverAmount,
-                resourceState.CurrentPopulationUsage, // TILFØJET
-                resourceState.MaxPopulationCapacity    // TILFØJET
+                resourceState.CurrentPopulationUsage,
+                resourceState.MaxPopulationCapacity
             );
         }
 
@@ -103,7 +137,7 @@ namespace Project.Modules.UI
             double stone, float stoneFill,
             double metal, float metalFill,
             double silver,
-            int currentPop, int maxPop) // TILFØJET POPULATION PARAMETRE
+            int currentPop, int maxPop)
         {
             // Ressource labels
             if (_woodResourceAmountLabel != null) _woodResourceAmountLabel.text = Math.Floor(wood).ToString("N0");
@@ -111,12 +145,10 @@ namespace Project.Modules.UI
             if (_metalResourceAmountLabel != null) _metalResourceAmountLabel.text = Math.Floor(metal).ToString("N0");
             if (_silverResourceAmountLabel != null) _silverResourceAmountLabel.text = Math.Floor(silver).ToString("N0");
 
-            // OBJEKTIV FIX: Opdaterer det faktiske label i UI'et
+            // Population label
             if (_populationAmountLabel != null)
             {
                 _populationAmountLabel.text = $"{currentPop} / {maxPop}";
-
-                // Valgfrit: Gør teksten rød hvis man er løbet tør for plads
                 bool isHousingFull = currentPop >= maxPop;
                 _populationAmountLabel.style.color = isHousingFull ? Color.red : Color.white;
             }
@@ -127,6 +159,7 @@ namespace Project.Modules.UI
             _metalWarehousePainter?.UpdateFillAmount(metalFill);
         }
 
+        // (Din WarehouseCapacityProgressPainter klasse er uændret herunder...)
         private class WarehouseCapacityProgressPainter
         {
             private readonly VisualElement _targetVisualElement;

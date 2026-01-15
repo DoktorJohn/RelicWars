@@ -12,6 +12,9 @@ using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using Application.Generators;
 using Application.Services.Authentication;
+using Application.Utility;
+using Application.Interfaces.IServices.IBuildings;
+using Application.Services.Buildings;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -73,7 +76,6 @@ builder.Services.AddScoped<IUnitDeploymentRepository, UnitDeploymentRepository>(
 builder.Services.AddScoped<IBattleReportRepository, BattleReportRepository>();
 builder.Services.AddScoped<IPlayerProfileRepository, PlayerProfileRepository>();
 builder.Services.AddScoped<IWorldRepository, WorldRepository>();
-
 builder.Services.AddScoped<IResourceService, ResourceService>();
 builder.Services.AddScoped<CombatService>();
 builder.Services.AddScoped<ICityStatService, CityStatService>();
@@ -87,14 +89,20 @@ builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IWorldService, WorldService>();
 builder.Services.AddScoped<IWorldPlayerService, WorldPlayerService>();
 builder.Services.AddScoped<IJwtService, JwtService>();
-
-
 builder.Services.AddScoped<IResourceService, ResourceService>();
-
 builder.Services.AddScoped<CityWorker>();
 builder.Services.AddScoped<UnitDeploymentWorker>();
-
+builder.Services.AddScoped<RecruitmentTimeCalculationService>();
 builder.Services.AddHostedService<GameEngineWorker>();
+builder.Services.AddScoped<IBuildingService, BuildingService>();
+builder.Services.AddScoped<IWarehouseService, WarehouseService>();
+builder.Services.AddScoped<IResourceBuildingService, ResourceBuildingService>();
+builder.Services.AddScoped<IHousingService, HousingService>();
+builder.Services.AddScoped<IBarracksService, BarracksService>();
+builder.Services.AddScoped<IStableService, StableService>();
+builder.Services.AddScoped<IWorkshopService, WorkshopService>();
+builder.Services.AddScoped<IWallService, WallService>();
+builder.Services.AddScoped<IAcademyService, AcademyService>();
 
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();

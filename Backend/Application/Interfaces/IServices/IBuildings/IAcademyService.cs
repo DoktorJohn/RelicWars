@@ -6,11 +6,11 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Application.Interfaces.IServices
+namespace Application.Interfaces.IServices.IBuildings
 {
-    public interface IBuildingService
+    public interface IAcademyService
     {
-        Task<BuildingResult> QueueUpgradeAsync(Guid cityId, BuildingTypeEnum type);
-
+        Task<List<AcademyInfoDTO>> GetAcademyInfoAsync(Guid cityId);
+        
     }
 }
