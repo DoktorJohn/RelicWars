@@ -48,6 +48,7 @@ builder.Services.AddCors(options =>
 string buildingPath = "buildings.json";
 string unitPath = "units.json";
 string researchPath = "research.json";
+string rankingPath = "rankings.json";
 
 if (!File.Exists(buildingPath)) BuildingDataGenerator.GenerateDefaultJson(buildingPath);
 if (!File.Exists(unitPath)) UnitDataGenerator.GenerateDefaultJson(unitPath);
@@ -59,10 +60,13 @@ var unitReader = new UnitDataReader();
 unitReader.Load(unitPath);
 var researchReader = new ResearchDataReader();
 researchReader.Load(researchPath);
+var rankingReader = new RankingDataReader();
+rankingReader.Load(rankingPath);
 
 builder.Services.AddSingleton(buildingReader);
 builder.Services.AddSingleton(unitReader);
 builder.Services.AddSingleton(researchReader);
+builder.Services.AddSingleton(rankingReader);
 
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection")
     ?? throw new Exception("ConnectionString 'DefaultConnection' mangler!");
@@ -103,6 +107,9 @@ builder.Services.AddScoped<IStableService, StableService>();
 builder.Services.AddScoped<IWorkshopService, WorkshopService>();
 builder.Services.AddScoped<IWallService, WallService>();
 builder.Services.AddScoped<IAcademyService, AcademyService>();
+builder.Services.AddScoped<IRankingService, RankingService>();
+builder.Services.AddScoped<IAllianceService, AllianceService>();
+builder.Services.AddScoped<IAllianceRepository, AllianceRepository>();
 
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();

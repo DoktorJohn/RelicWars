@@ -10,5 +10,6 @@ namespace Application.Interfaces.IServices
     public interface IWorldPlayerService
     {
         Task<WorldPlayerJoinResponse> AssignPlayerToGameWorldAsync(Guid profileId, Guid worldId);
+        Task<WorldPlayerProfileDTO> GetWorldPlayerProfileAsync(Guid worldPlayerId);
     }
 }

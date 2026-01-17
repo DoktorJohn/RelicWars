@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" editor-extension-mode="False">
+    
+    <ui:Style src="project://database/Assets/UI/Windows/RankingWindow/RankingWindow.uss" />
+
+    <ui:VisualElement name="RankingWindow-ScreenOverlay" picking-mode="Ignore" class="ranking-window-screen-overlay">
+        
+        <ui:VisualElement name="RankingWindow-Frame" class="ranking-window-frame">
+            
+            <ui:VisualElement name="RankingWindow-TitleBar" class="ranking-window-title-bar">
+                <ui:Label name="RankingWindow-TitleLabel" class="ranking-window-title-label" text="GLOBAL RANKINGS" />
+                <ui:Button name="RankingWindow-Close-Button" class="ranking-window-close-button" text="×" />
+            </ui:VisualElement>
+
+            <ui:VisualElement name="RankingWindow-TableHeader" class="ranking-window-table-header">
+                <ui:Label name="Header-Rank" class="ranking-row-label-base ranking-column-rank-width" text="#" />
+                <ui:Label name="Header-PlayerName" class="ranking-row-label-base ranking-column-player-name-width" text="SPILLERNAVN" />
+                <ui:Label name="Header-Points" class="ranking-row-label-base ranking-column-points-amount-width" text="TOTAL POINT" />
+            </ui:VisualElement>
+
+            <ui:ListView name="Ranking-ListView" class="ranking-window-list-view" fixed-item-height="45" selection-type="None" />
+
+        </ui:VisualElement>
+
+    </ui:VisualElement>
+</ui:UXML>

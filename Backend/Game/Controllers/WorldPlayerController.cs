@@ -1,39 +1,41 @@
 ﻿using Application.DTOs;
 using Application.Interfaces.IServices;
+using Application.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using System.Collections.Generic;
-using System.Threading.Tasks;
 
 namespace Game.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
-    public class GameWorldController : ControllerBase
+    [Authorize]
+    public class WorldPlayerController : ControllerBase
     {
-        private readonly IWorldService _worldService;
+        private readonly ILogger<WorldPlayerController> _logger;
         private readonly IWorldPlayerService _worldPlayerService;
-        private readonly ILogger<GameWorldController> _logger;
 
-        public GameWorldController(IWorldService worldService, IWorldPlayerService worldPlayerService, ILogger<GameWorldController> logger)
+        public WorldPlayerController(ILogger<WorldPlayerController> logger, IWorldPlayerService worldPlayerService)
         {
-            _worldService = worldService;
-            _worldPlayerService = worldPlayerService;
             _logger = logger;
+            _worldPlayerService = worldPlayerService;
         }
 
-        /// <summary>
-        /// Retrieves a list of all active game worlds available for players to join.
-        /// </summary>
-        [HttpGet("available-worlds")]
-        public async Task<ActionResult<List<WorldAvailableResponseDTO>>> RequestAvailableGameWorldList()
+        [HttpGet("{worldPlayerId}/getWorldPlayerProfile")]
+        public async Task<IActionResult> GetWorldPlayerProfile(Guid worldPlayerId)
         {
-            var activeGameWorlds = await _worldService.ObtainAllActiveGameWorldsAsync();
-            return Ok(activeGameWorlds);
+            try
+            {
+                var result = await _worldPlayerService.GetWorldPlayerProfileAsync(worldPlayerId);
+                return Ok(result);
+            }
+            catch (Exception exception)
+            {
+                _logger.LogError(exception, "Fejl ved hentning af worldPlayerProfile");
+                return BadRequest("Kunne ikke hente data for worldPlayerProfile.");
+            }
         }
 
-        /// <summary>
-        /// Processes a player's request to join a specific game world, initializing character and city if necessary.
-        /// </summary>
+        
         [HttpPost("join")]
         public async Task<ActionResult<WorldPlayerJoinResponse>> ProcessPlayerWorldJoinRequest([FromBody] WorldPlayerDTO request)
         {

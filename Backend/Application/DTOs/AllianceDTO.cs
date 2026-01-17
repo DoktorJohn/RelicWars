@@ -16,4 +16,9 @@ namespace Application.DTOs
     int MemberCount,
     int MaxPlayers
 );
+
+    public record InviteToAllianceDTO(Guid WorldPlayerIdInviter, Guid WorldPlayerIdInvited);
+    public record DisbandAllianceDTO(Guid WorldPlayerId, Guid AllianceId);
+    public record CreateAllianceDTO(Guid WorldPlayerIdFounder, string Name, string Tag);
+    public record KickPlayerFromAllianceDTO(Guid WorldPlayerIdKicker, Guid WorldPlayerIdKicked);
 }

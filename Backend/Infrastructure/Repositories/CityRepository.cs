@@ -37,10 +37,16 @@ namespace Infrastructure.Repositories
         public async Task<List<City>> GetAllAsync()
         {
             return await _context.Cities
-                .Include(city => city.Buildings)
-                .Include(city => city.UnitStacks)
-                .Include(city => city.WorldPlayer)
-                    .ThenInclude(player => player.ModifiersAppliedToWorldPlayer)
+                .Include(cityEntity => cityEntity.Buildings)
+
+                .Include(cityEntity => cityEntity.UnitStacks)
+
+                .Include(cityEntity => cityEntity.WorldPlayer)
+                    .ThenInclude(playerEntity => playerEntity!.PlayerProfile)
+
+                .Include(cityEntity => cityEntity.WorldPlayer)
+                    .ThenInclude(playerEntity => playerEntity!.ModifiersAppliedToWorldPlayer)
+
                 .ToListAsync();
         }
 

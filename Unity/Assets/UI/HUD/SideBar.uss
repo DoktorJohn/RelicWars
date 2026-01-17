@@ -1,0 +1,96 @@
+/* ============================================================
+   SIDEBAR-MAIN-CONTAINER
+   ============================================================ */
+.side-bar-main-container {
+    position: absolute;
+    
+    /* Centrerings-logik: */
+    top: 50%;
+    transform: translate(0, -50%);
+    left: 0;
+    
+    /* ÆNDRET: Bredere container for at gøre plads til tekst */
+    width: 100px; 
+    height: auto;
+    
+    padding-top: 20px;
+    padding-bottom: 20px;
+    align-items: center; /* Centrerer knapperne horisontalt i baren */
+
+    /* Visuel stil */
+    background-image: url('project://database/Assets/UI/Coal_Surface_2_Albedo.png');
+    -unity-background-image-tint-color: rgba(160, 120, 90, 1.0);
+    -unity-background-scale-mode: scale-and-crop;
+
+    /* Rammer */
+    border-right-width: 2px;
+    border-top-right-radius: 8px;
+    border-bottom-right-radius: 8px;
+    border-right-color: rgba(80, 50, 30, 0.8);
+    border-top-width: 2px;
+    border-top-color: rgba(80, 50, 30, 0.8);
+    border-bottom-width: 2px;
+    border-bottom-color: rgba(80, 50, 30, 0.8);
+}
+
+/* ============================================================
+   KNAP CONTAINERE (Nu som rækker)
+   ============================================================ */
+.side-bar-button-container {
+    /* ÆNDRET: Bredde fylder næsten hele baren */
+    width: 90%; 
+    height: 50px; /* Lidt lavere højde end før */
+    
+    margin-bottom: 10px;
+    
+    /* ÆNDRET: Flex-direction row sætter ikon og tekst ved siden af hinanden */
+    flex-direction: row; 
+    justify-content: flex-start; /* Start fra venstre */
+    align-items: center;
+    padding-left: 15px; /* Luft til venstre for ikonet */
+    
+    border-radius: 8px;
+    background-color: rgba(0, 0, 0, 0.2);
+    transition-property: background-color, scale;
+    transition-duration: 0.1s;
+}
+
+.side-bar-button-container:last-child {
+    margin-bottom: 0;
+}
+
+.side-bar-button-container:hover {
+    background-color: rgba(200, 150, 50, 0.4);
+    scale: 1.02; /* Lidt mindre scale da knappen nu er bred */
+}
+
+.side-bar-button-container:active {
+    scale: 0.98;
+    background-color: rgba(200, 150, 50, 0.6);
+}
+
+/* ============================================================
+   IKONER (Gjort mindre)
+   ============================================================ */
+.side-bar-icon-base {
+    /* ÆNDRET: Mindre ikoner */
+    width: 32px;
+    height: 32px;
+    -unity-background-scale-mode: scale-to-fit;
+    flex-shrink: 0; /* Sikrer at ikonet ikke bliver mast */
+}
+
+.icon-profile { background-image: url('project://database/Assets/UI/Icons/PlayerIcon.png'); }
+.icon-alliance { background-image: url('project://database/Assets/UI/Icons/AllianceIcon.png'); }
+.icon-rankings { background-image: url('project://database/Assets/UI/Icons/RankingIcon.png'); }
+
+/* ============================================================
+   NYT: TEKST LABEL
+   ============================================================ */
+.side-bar-label {
+    color: rgb(220, 220, 220);
+    font-size: 14px;
+    -unity-font-style: bold;
+    margin-left: 12px; /* Afstand mellem ikon og tekst */
+    -unity-text-align: middle-left;
+}

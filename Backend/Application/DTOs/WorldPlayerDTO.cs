@@ -11,6 +11,17 @@ namespace Application.DTOs
     public record WorldPlayerJoinResponse(
         bool ConnectionSuccessful,
         string Message,
-        Guid? ActiveCityId
+        Guid? ActiveCityId,
+        Guid? WorldPlayerId
+    );
+
+    public record WorldPlayerProfileDTO(
+        Guid worldPlayerId,
+        string UserName,
+        int TotalPoints,
+        int Ranking,
+        int CityCount,
+        string AllianceName,
+        Guid AllianceId
     );
 }

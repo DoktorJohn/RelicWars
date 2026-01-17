@@ -2,6 +2,8 @@
 using Application.Interfaces.IServices;
 using Domain.Entities;
 using Domain.Enums;
+using Domain.StaticData.Generators;
+using Domain.StaticData.Readers;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
@@ -12,7 +14,9 @@ namespace Application.Services.Workers
     {
         private readonly IServiceProvider _services;
         private readonly ILogger<GameEngineWorker> _logger;
-        private DateTime _lastGlobalSave = DateTime.UtcNow;
+        private DateTime _lastResourceSave = DateTime.UtcNow;
+        private DateTime _lastRankingGeneration = DateTime.UtcNow;
+        private DateTime _lastDailySave = DateTime.UtcNow;
 
         public GameEngineWorker(IServiceProvider services, ILogger<GameEngineWorker> logger)
         {
@@ -26,28 +30,34 @@ namespace Application.Services.Workers
 
             while (!stoppingToken.IsCancellationRequested)
             {
-                // OBJEKTIV RETTELSE: Vi opretter et scope her.
                 using (IServiceScope serviceScope = _services.CreateScope())
                 {
-                    // Vi bruger scope.ServiceProvider til at løse scoped services.
                     IServiceProvider scopedProvider = serviceScope.ServiceProvider;
 
                     try
                     {
-                        // 1. By-logik (Bygninger, rekruttering)
                         var cityJobProcessingWorker = scopedProvider.GetRequiredService<CityWorker>();
                         await cityJobProcessingWorker.ProcessCityJobsAsync();
 
-                        // 2. Militær-logik (Bevægelser, kamp, loot)
                         var unitDeploymentWorker = scopedProvider.GetRequiredService<UnitDeploymentWorker>();
                         await unitDeploymentWorker.ProcessMilitaryMovementsAsync();
 
-                        // 3. Database Sync (Kør kun hvis intervallet er overskredet)
-                        if ((DateTime.UtcNow - _lastGlobalSave).TotalMinutes >= 0.5)
+                        if ((DateTime.UtcNow - _lastResourceSave).TotalMinutes >= 0.5)
                         {
-                            // VIGTIGT: Vi sender scopedProvider videre, IKKE _rootServiceProvider.
                             await SynchronizeAllPlayerCitiesResourceStatesAsync(scopedProvider);
-                            _lastGlobalSave = DateTime.UtcNow;
+                            _lastResourceSave = DateTime.UtcNow;
+                        }
+
+                        if ((DateTime.UtcNow - _lastRankingGeneration).TotalMinutes >= 0.1)
+                        {
+                            await SynchronizeAllPlayerPointsAndRankings(scopedProvider);
+                            _lastRankingGeneration = DateTime.UtcNow;
+                        }
+
+                        if ((DateTime.UtcNow.Date != _lastDailySave.Date))
+                        {
+                            // await SynchroinzeAllPlayerMedalsAndDailyAwards
+                            _lastDailySave = DateTime.UtcNow;
                         }
                     }
                     catch (Exception exception)
@@ -56,7 +66,6 @@ namespace Application.Services.Workers
                     }
                 }
 
-                // Vent 1 sekund før næste iteration
                 await Task.Delay(1000, stoppingToken);
             }
         }
@@ -92,6 +101,21 @@ namespace Application.Services.Workers
 
             await cityDataRepository.UpdateRangeAsync(allCitiesInWorld);
             _logger.LogInformation("[Sync] Database synkronisering fuldført.");
+        }
+
+        private async Task SynchronizeAllPlayerPointsAndRankings(IServiceProvider scopedProvider)
+        {
+            _logger.LogInformation("[Ranking] Starter generering af globale rankings...");
+
+            var cityDataRepository = scopedProvider.GetRequiredService<ICityRepository>();
+            var buildingDataReader = scopedProvider.GetRequiredService<BuildingDataReader>();
+
+            var allCities = await cityDataRepository.GetAllAsync();
+            string rankingPath = "rankings.json";
+
+            RankingGenerator.GenerateRankingSnapshot(rankingPath, allCities, buildingDataReader);
+
+            _logger.LogInformation("[Ranking] Rankings snapshot er blevet gemt succesfuldt.");
         }
     }
 }

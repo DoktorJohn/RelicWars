@@ -13,6 +13,7 @@ namespace Domain.StaticData.Data
     public class BuildingLevelData
     {
         public int Level { get; set; }
+        public int Points { get; set; }
         public int WoodCost { get; set; }
         public int StoneCost { get; set; }
         public int MetalCost { get; set; }

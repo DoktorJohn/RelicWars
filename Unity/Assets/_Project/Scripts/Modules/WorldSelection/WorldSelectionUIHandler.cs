@@ -61,10 +61,10 @@ namespace Project.Modules.WorldSelection
         {
             if (NetworkManager.Instance == null) return;
 
-            // RETTELSE: Vi kalder GameWorld servicen direkte. 
+            // RETTELSE: Vi kalder World servicen direkte. 
             // Da servicen returnerer en IEnumerator, skal vi stadig bruge StartCoroutine her i UI'en 
             // for at hente dataen asynkront.
-            StartCoroutine(NetworkManager.Instance.GameWorld.GetAvailableWorlds((receivedWorldsList) =>
+            StartCoroutine(NetworkManager.Instance.World.GetAvailableWorlds((receivedWorldsList) =>
             {
                 if (receivedWorldsList != null)
                 {

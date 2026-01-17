@@ -17,18 +17,25 @@ namespace Infrastructure.Migrations
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "8.0.0");
 
+            modelBuilder.Entity("AllianceAlliance", b =>
+                {
+                    b.Property<Guid>("AlliancesAtWarId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("AlliancesPactedId")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("AlliancesAtWarId", "AlliancesPactedId");
+
+                    b.HasIndex("AlliancesPactedId");
+
+                    b.ToTable("AllianceAlliance");
+                });
+
             modelBuilder.Entity("Domain.Entities.Alliance", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("AlliancesAtWar")
-                        .IsRequired()
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("AlliancesPacted")
-                        .IsRequired()
                         .HasColumnType("TEXT");
 
                     b.Property<string>("BannerImageUrl")
@@ -51,10 +58,6 @@ namespace Infrastructure.Migrations
                     b.Property<int>("MaxPlayers")
                         .HasColumnType("INTEGER");
 
-                    b.Property<string>("MemberIds")
-                        .IsRequired()
-                        .HasColumnType("TEXT");
-
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasColumnType("TEXT");
@@ -62,9 +65,6 @@ namespace Infrastructure.Migrations
                     b.Property<string>("Tag")
                         .IsRequired()
                         .HasColumnType("TEXT");
-
-                    b.Property<long>("TotalPoints")
-                        .HasColumnType("INTEGER");
 
                     b.HasKey("Id");
 
@@ -427,6 +427,9 @@ namespace Infrastructure.Migrations
                     b.Property<Guid?>("AllianceId")
                         .HasColumnType("TEXT");
 
+                    b.Property<int>("AllianceRole")
+                        .HasColumnType("INTEGER");
+
                     b.Property<DateTime>("DateCreated")
                         .HasColumnType("TEXT");
 
@@ -545,6 +548,21 @@ namespace Infrastructure.Migrations
                     b.HasDiscriminator().HasValue("Research");
                 });
 
+            modelBuilder.Entity("AllianceAlliance", b =>
+                {
+                    b.HasOne("Domain.Entities.Alliance", null)
+                        .WithMany()
+                        .HasForeignKey("AlliancesAtWarId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Domain.Entities.Alliance", null)
+                        .WithMany()
+                        .HasForeignKey("AlliancesPactedId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("Domain.Entities.Building", b =>
                 {
                     b.HasOne("Domain.Entities.City", null)
@@ -586,7 +604,7 @@ namespace Infrastructure.Migrations
             modelBuilder.Entity("Domain.User.WorldPlayer", b =>
                 {
                     b.HasOne("Domain.Entities.Alliance", "Alliance")
-                        .WithMany()
+                        .WithMany("Members")
                         .HasForeignKey("AllianceId");
 
                     b.HasOne("Domain.User.PlayerProfile", "PlayerProfile")
@@ -647,6 +665,11 @@ namespace Infrastructure.Migrations
                         .HasForeignKey("CityId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+                });
+
+            modelBuilder.Entity("Domain.Entities.Alliance", b =>
+                {
+                    b.Navigation("Members");
                 });
 
             modelBuilder.Entity("Domain.Entities.City", b =>

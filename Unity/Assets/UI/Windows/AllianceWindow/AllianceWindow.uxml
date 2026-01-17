@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" editor-extension-mode="False">
+    
+    <ui:Style src="project://database/Assets/UI/Windows/AllianceWindow/AllianceWindow.uss" />
+
+    <ui:VisualElement name="AllianceWindow-ScreenOverlay" picking-mode="Ignore" class="window-screen-overlay">
+        
+        <ui:VisualElement name="AllianceWindow-Frame" class="window-frame">
+            
+            <ui:VisualElement name="AllianceWindow-TitleBar" class="window-title-bar">
+                <ui:Label name="AllianceWindow-TitleLabel" class="window-title-label" text="ALLIANCE" />
+                <ui:Button name="AllianceWindow-Close-Button" class="window-close-button" text="×" />
+            </ui:VisualElement>
+
+            <ui:VisualElement name="View-CreateAlliance" class="view-container" style="display: none;">
+                <ui:Label text="FORGE YOUR LEGACY" class="flavor-header" />
+                <ui:Label text="Unite players under one banner. Conquer territories and rule the world together." class="flavor-text" />
+                
+                <ui:VisualElement class="input-group">
+                    <ui:Label text="ALLIANCE NAME" class="input-label" />
+                    <ui:TextField name="Input-AllianceName" maxLength="20" class="game-input-field" />
+                </ui:VisualElement>
+
+                <ui:VisualElement class="input-group">
+                    <ui:Label text="TAG (3-4 CHARS)" class="input-label" />
+                    <ui:TextField name="Input-AllianceTag" maxLength="4" class="game-input-field" />
+                </ui:VisualElement>
+
+                <ui:Button name="Btn-CreateAlliance" text="CREATE ALLIANCE" class="action-button create-button" />
+                <ui:Label name="Lbl-ErrorStatus" class="error-text" text="" />
+            </ui:VisualElement>
+
+            <ui:VisualElement name="View-AllianceInfo" class="view-container" style="display: none;">
+                
+                <ui:VisualElement class="alliance-header-info">
+                    <ui:VisualElement class="alliance-banner-placeholder" />
+                    <ui:VisualElement>
+                        <ui:Label name="Lbl-AllianceName" class="info-alliance-name" text="Loading..." />
+                        <ui:Label name="Lbl-AllianceTag" class="info-alliance-tag" text="[TAG]" />
+                    </ui:VisualElement>
+                </ui:VisualElement>
+
+                <ui:Label name="Lbl-AllianceDescription" class="info-description" text="Loading description..." />
+
+                <ui:VisualElement class="stats-grid">
+                    <ui:VisualElement class="stat-box">
+                        <ui:Label text="MEMBERS" class="stat-label" />
+                        <ui:Label name="Lbl-MemberCount" class="stat-value" text="0 / 50" />
+                    </ui:VisualElement>
+                    <ui:VisualElement class="stat-box">
+                        <ui:Label text="POINTS" class="stat-label" />
+                        <ui:Label name="Lbl-TotalPoints" class="stat-value" text="0" />
+                    </ui:VisualElement>
+                </ui:VisualElement>
+
+                <ui:VisualElement class="alliance-actions-footer">
+                    <ui:Button name="Btn-LeaveAlliance" text="LEAVE ALLIANCE" class="action-button danger-button" />
+                </ui:VisualElement>
+
+            </ui:VisualElement>
+
+        </ui:VisualElement>
+    </ui:VisualElement>
+</ui:UXML>

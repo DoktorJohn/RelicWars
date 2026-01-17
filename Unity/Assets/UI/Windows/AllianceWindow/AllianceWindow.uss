@@ -1,0 +1,109 @@
+/* ======================== STANDARD WINDOW SETUP ======================== */
+.window-screen-overlay {
+    position: absolute;
+    width: 100%; height: 100%;
+    background-color: rgba(0, 0, 0, 0.6);
+    justify-content: center; align-items: center;
+}
+
+.window-frame {
+    position: absolute; /* VIGTIGT FOR DRAG N DROP */
+    width: 500px; height: 550px;
+    background-color: rgba(35, 35, 35, 0.98);
+    border-width: 2px; border-color: rgba(80, 50, 30, 0.9);
+    border-radius: 8px; overflow: hidden;
+}
+
+.window-title-bar {
+    flex-direction: row; height: 50px;
+    background-color: rgba(20, 20, 20, 1.0);
+    align-items: center; padding-left: 20px; padding-right: 10px;
+    justify-content: space-between;
+    border-bottom-width: 2px; border-bottom-color: rgba(80, 50, 30, 0.8);
+    cursor: move-arrow;
+}
+
+.window-title-label {
+    color: rgba(200, 150, 50, 1.0); -unity-font-style: bold; font-size: 20px; letter-spacing: 2px;
+}
+
+.window-close-button {
+    width: 35px; height: 35px; background-color: transparent; border-width: 0;
+    color: rgb(150, 150, 150); font-size: 24px; -unity-text-align: middle-center;
+}
+.window-close-button:hover { color: white; background-color: rgba(255, 0, 0, 0.2); }
+
+/* ======================== SHARED VIEW STYLES ======================== */
+.view-container {
+    padding: 20px; flex-grow: 1;
+}
+
+.flavor-header {
+    color: white; font-size: 22px; -unity-font-style: bold; 
+    margin-bottom: 5px; -unity-text-align: middle-center;
+}
+
+.flavor-text {
+    color: rgb(180, 180, 180); font-size: 14px; white-space: normal;
+    margin-bottom: 20px; -unity-text-align: middle-center; -unity-font-style: italic;
+}
+
+/* ======================== CREATE VIEW STYLES ======================== */
+.input-group { margin-bottom: 15px; }
+
+.input-label {
+    color: rgb(200, 150, 50); font-size: 12px; margin-bottom: 5px; -unity-font-style: bold;
+}
+
+/* Styling af Unitys standard TextField til at ligne spil-UI */
+.game-input-field > .unity-base-text-field__input {
+    background-color: rgba(0, 0, 0, 0.4);
+    border-width: 1px; border-color: rgba(255, 255, 255, 0.2);
+    border-radius: 4px; color: white; -unity-text-align: middle-left;
+    padding: 8px; font-size: 16px;
+}
+
+.error-text {
+    color: rgb(255, 80, 80); font-size: 14px; margin-top: 10px; 
+    -unity-text-align: middle-center; height: 20px;
+}
+
+/* ======================== INFO VIEW STYLES ======================== */
+.alliance-header-info {
+    flex-direction: row; align-items: center; margin-bottom: 20px;
+}
+
+.alliance-banner-placeholder {
+    width: 60px; height: 60px; background-color: rgba(0,0,0,0.5);
+    border-width: 1px; border-color: rgb(200, 150, 50); margin-right: 15px;
+}
+
+.info-alliance-name { color: white; font-size: 24px; -unity-font-style: bold; }
+.info-alliance-tag { color: rgb(200, 150, 50); font-size: 18px; }
+.info-description { color: rgb(180, 180, 180); font-size: 14px; margin-bottom: 20px; white-space: normal; }
+
+.stats-grid {
+    flex-direction: row; justify-content: space-around; 
+    background-color: rgba(0, 0, 0, 0.3); padding: 15px; border-radius: 8px;
+    margin-bottom: 40px;
+}
+
+.stat-box { align-items: center; }
+.stat-label { color: rgb(150, 150, 150); font-size: 12px; }
+.stat-value { color: white; font-size: 18px; -unity-font-style: bold; }
+
+/* ======================== BUTTONS ======================== */
+.action-button {
+    height: 45px; border-radius: 4px; border-width: 1px; -unity-font-style: bold; font-size: 16px;
+}
+
+.create-button {
+    background-color: rgb(40, 100, 40); border-color: rgb(60, 140, 60); color: white;
+}
+.create-button:hover { background-color: rgb(50, 120, 50); }
+
+.danger-button {
+    background-color: rgb(100, 40, 40); border-color: rgb(140, 60, 60); color: white;
+    margin-top: auto; /* Skubber knappen ned i bunden */
+}
+.danger-button:hover { background-color: rgb(120, 50, 50); }

@@ -8,7 +8,6 @@ using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace Application.Services
@@ -17,41 +16,92 @@ namespace Application.Services
     {
         private readonly IWorldPlayerRepository _worldPlayerRepository;
         private readonly IPlayerProfileRepository _profileRepository;
+        private readonly IRankingService _rankingService; // NY: Injekteret til stats
         private readonly ILogger<WorldPlayerService> _logger;
 
         public WorldPlayerService(
             IWorldPlayerRepository worldPlayerRepository,
             IPlayerProfileRepository profileRepository,
+            IRankingService rankingService, // NY parameter
             ILogger<WorldPlayerService> logger)
         {
             _worldPlayerRepository = worldPlayerRepository;
             _profileRepository = profileRepository;
+            _rankingService = rankingService;
             _logger = logger;
         }
 
+        public async Task<WorldPlayerProfileDTO> GetWorldPlayerProfileAsync(Guid worldPlayerId)
+        {
+            // 1. Hent entitets-data (Navn, Alliance) fra databasen
+            // Vi har brug for en repo metode der Includer PlayerProfile og Alliance
+            var worldPlayer = await _worldPlayerRepository.GetByIdAsync(worldPlayerId);
+
+            if (worldPlayer == null)
+            {
+                throw new KeyNotFoundException($"WorldPlayer med ID {worldPlayerId} blev ikke fundet.");
+            }
+
+            // Hent profilnavnet (hvis det ikke var inkluderet i GetByIdAsync)
+            // Ideelt set bør _worldPlayerRepository.GetByIdAsync inkludere PlayerProfile.
+            string userName = worldPlayer.PlayerProfile?.UserName
+                              ?? await _profileRepository.GetUserNameByIdAsync(worldPlayer.PlayerProfileId);
+
+            // 2. Hent statistik (Point, Rank, CityCount) fra RankingService (Snapshot)
+            // Dette er meget hurtigere end at beregne det live.
+            int rank = 0;
+            int totalPoints = 0;
+            int cityCount = 0;
+
+            try
+            {
+                // Vi forsøger at slå op i det cachede snapshot
+                var rankingData = await _rankingService.GetRankingById(worldPlayerId);
+                rank = rankingData.Rank;
+                totalPoints = rankingData.TotalPoints;
+                cityCount = rankingData.CityCount;
+            }
+            catch (KeyNotFoundException)
+            {
+                // Hvis spilleren er helt ny og ikke kommet med i snapshot endnu (går op til 1 min),
+                // så defaulter vi bare til 0 eller henter data manuelt.
+                // Her defaulter vi til 0/1 for at holde det simpelt og hurtigt.
+                cityCount = 1;
+                _logger.LogWarning($"Spiller {worldPlayerId} fandtes ikke i Ranking Snapshot (sandsynligvis nyoprettet).");
+            }
+
+            // 3. Map til DTO
+            return new WorldPlayerProfileDTO(
+                worldPlayerId,
+                userName ?? "Unknown",
+                totalPoints,
+                rank,
+                cityCount,
+                worldPlayer.Alliance?.Name ?? "Ingen Alliance",
+                worldPlayer.Alliance?.Id ?? Guid.Empty
+            );
+        }
+
+        // ... Din eksisterende AssignPlayerToGameWorldAsync metode forbliver uændret ...
         public async Task<WorldPlayerJoinResponse> AssignPlayerToGameWorldAsync(Guid profileId, Guid worldId)
         {
-            // 1. Efficiency: Check if relationship exists WITHOUT loading the Profile or Cities.
-            // This is a specialized, lightweight query.
+            // (Koden er skjult for overblikkets skyld, men er den samme som du postede)
+            // ...
             var existingWorldPlayer = await _worldPlayerRepository.GetByProfileAndWorldAsync(profileId, worldId);
 
             if (existingWorldPlayer != null)
             {
-                // Note: GetByProfileAndWorldAsync should Include(Cities) solely for this ID retrieval to keep it performant.
                 var cityId = existingWorldPlayer.Cities.FirstOrDefault()?.Id;
-                return new WorldPlayerJoinResponse(true, "Welcome back. Loading existing city data.", cityId);
+                return new WorldPlayerJoinResponse(true, "Welcome back. Loading existing city data.", cityId, existingWorldPlayer.Id);
             }
 
-            // 2. Fetch only necessary Profile data (UserName) for naming the city.
-            // Do NOT include WorldPlayers/Cities here.
             var profileName = await _profileRepository.GetUserNameByIdAsync(profileId);
 
             if (string.IsNullOrEmpty(profileName))
             {
-                return new WorldPlayerJoinResponse(false, "Player profile could not be identified.", null);
+                return new WorldPlayerJoinResponse(false, "Player profile could not be identified.", null, null);
             }
 
-            // 3. Create new entities
             var newWorldPlayer = new WorldPlayer
             {
                 PlayerProfileId = profileId,
@@ -72,10 +122,10 @@ namespace Application.Services
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Failed to create WorldPlayer for Profile {ProfileId} on World {WorldId}", profileId, worldId);
-                return new WorldPlayerJoinResponse(false, "An error occurred while joining the world.", null);
+                return new WorldPlayerJoinResponse(false, "An error occurred while joining the world.", null, null);
             }
 
-            return new WorldPlayerJoinResponse(true, "New character created and capital assigned.", startCity.Id);
+            return new WorldPlayerJoinResponse(true, "New character created and capital assigned.", startCity.Id, newWorldPlayer.Id);
         }
 
         private City CreateStartingCity(string userName, Guid worldPlayerId)
@@ -83,7 +133,6 @@ namespace Application.Services
             var city = new City
             {
                 Name = $"{userName}'s Capital",
-                // WorldPlayerId = worldPlayerId, // Not needed if we add via navigation property
                 Wood = 500,
                 Stone = 500,
                 Metal = 500,

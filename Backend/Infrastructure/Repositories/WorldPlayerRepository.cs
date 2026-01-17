@@ -29,7 +29,10 @@ namespace Infrastructure.Repositories
 
         public async Task<WorldPlayer?> GetByIdAsync(Guid id)
         {
-            return await _context.WorldPlayers.FindAsync(id);
+            return await _context.WorldPlayers
+                .Include(x => x.Alliance)
+                .Include(x => x.Cities)
+                .FirstOrDefaultAsync(x => x.Id == id);
         }
 
         public async Task<WorldPlayer?> GetByIdWithResearchAsync(Guid id)
@@ -39,6 +42,12 @@ namespace Infrastructure.Repositories
                 .FirstOrDefaultAsync(u => u.Id == id);
         }
 
+        public async Task<List<WorldPlayer>> GetAllByAllianceIdAsync(Guid allianceId)
+        {
+            return await _context.WorldPlayers
+                .Where(player => player.AllianceId == allianceId)
+                .ToListAsync();
+        }
         public async Task AddAsync(WorldPlayer user)
         {
             await _context.WorldPlayers.AddAsync(user);

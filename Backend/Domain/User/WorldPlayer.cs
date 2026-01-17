@@ -1,5 +1,6 @@
 ﻿using Domain.Abstraction;
 using Domain.Entities;
+using Domain.Enums;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -11,6 +12,7 @@ namespace Domain.User
     public class WorldPlayer : BaseEntity
     {
         public int Silver { get; set; }
+        public AllianceRoleEnum AllianceRole { get; set; } = AllianceRoleEnum.None;
 
         //Navprops
         public List<City> Cities { get; set; } = new();

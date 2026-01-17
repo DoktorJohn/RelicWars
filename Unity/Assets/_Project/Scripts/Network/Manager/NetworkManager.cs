@@ -13,18 +13,22 @@ namespace Project.Network.Manager
 
         // --- State Management ---
         public string JwtToken { get; private set; }
-        public string PlayerId { get; private set; }
+        public string PlayerProfileId { get; private set; }
+        public string WorldPlayerId { get; private set; }
         public string PlayerName { get; private set; }
         public Guid? ActiveCityId { get; private set; }
 
         // --- Services ---
         public ClientAuthService Auth { get; private set; }
-        public ClientGameWorldService GameWorld { get; private set; }
+        public ClientWorldService World { get; private set; }
+        public ClientWorldPlayerService WorldPlayer { get; private set; }
         public ClientCityService City { get; private set; }
         public ClientBuildingService Building { get; private set; }
         public ClientBarracksService Barracks { get; private set; }
         public ClientStableService Stable { get; private set; }
         public ClientWorkshopService Workshop { get; private set; }
+        public ClientRankingService Ranking { get; private set; }
+        public ClientAllianceService Alliance { get; private set; }
 
         private void Awake()
         {
@@ -44,12 +48,15 @@ namespace Project.Network.Manager
         {
             // Vi instansierer services med base URL
             Auth = new ClientAuthService(_backendBaseUrl);
-            GameWorld = new ClientGameWorldService(_backendBaseUrl);
+            World = new ClientWorldService(_backendBaseUrl);
             City = new ClientCityService(_backendBaseUrl);
             Building = new ClientBuildingService(_backendBaseUrl);
             Barracks = new ClientBarracksService(_backendBaseUrl);
             Stable = new ClientStableService(_backendBaseUrl);
             Workshop = new ClientWorkshopService(_backendBaseUrl);
+            Ranking = new ClientRankingService(_backendBaseUrl);
+            WorldPlayer = new ClientWorldPlayerService(_backendBaseUrl);
+            Alliance = new ClientAllianceService(_backendBaseUrl);
 
             Debug.Log("[NetworkManager] Services Initialized.");
         }
@@ -90,11 +97,21 @@ namespace Project.Network.Manager
 
         public void JoinWorld(Guid worldId, Action<bool> onComplete)
         {
-            StartCoroutine(GameWorld.JoinWorld(PlayerId, worldId, JwtToken, (response) =>
+            StartCoroutine(WorldPlayer.JoinWorld(PlayerProfileId, worldId, JwtToken, (response) =>
             {
-                if (response.ConnectionSuccessful && !string.IsNullOrEmpty(response.ActiveCityId))
+                if (response.ConnectionSuccessful)
                 {
-                    ActiveCityId = Guid.Parse(response.ActiveCityId);
+                    if (!string.IsNullOrEmpty(response.ActiveCityId))
+                    {
+                        ActiveCityId = Guid.Parse(response.ActiveCityId);
+                    }
+
+                    if (!string.IsNullOrEmpty(response.WorldPlayerId))
+                    {
+                        WorldPlayerId = response.WorldPlayerId;
+                    }
+
+                    Debug.Log($"[NetworkManager] Joined World. City: {ActiveCityId}, Player: {WorldPlayerId}");
                     onComplete?.Invoke(true);
                 }
                 else
@@ -109,9 +126,9 @@ namespace Project.Network.Manager
             if (response.Profile != null)
             {
                 JwtToken = response.JwtToken;
-                PlayerId = response.Profile.PlayerId;
+                PlayerProfileId = response.Profile.PlayerId;
                 PlayerName = response.Profile.UserName;
-                Debug.Log($"[NetworkManager] Session Startet: {PlayerName} ({PlayerId})");
+                Debug.Log($"[NetworkManager] Session Startet: {PlayerName} ({PlayerProfileId})");
             }
         }
     }

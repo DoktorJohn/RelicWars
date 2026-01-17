@@ -54,7 +54,7 @@ namespace Infrastructure.Migrations
                     b.Property<int>("MaxPlayers")
                         .HasColumnType("INTEGER");
 
-                    b.Property<string>("MemberIds")
+                    b.Property<string>("Members")
                         .IsRequired()
                         .HasColumnType("TEXT");
 

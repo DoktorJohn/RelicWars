@@ -1,0 +1,161 @@
+/* ============================================================
+   OVERLAY & FRAME
+   ============================================================ */
+.profile-window-screen-overlay {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.6);
+    justify-content: center;
+    align-items: center;
+}
+
+.profile-window-frame {
+    /* KRITISK: position: absolute forhindrer drag-offset fejl */
+    position: absolute;
+    width: 450px;
+    height: 500px;
+    
+    background-color: rgba(35, 35, 35, 0.98);
+    border-width: 2px;
+    border-color: rgba(80, 50, 30, 0.9);
+    border-radius: 8px;
+    padding: 0px;
+    overflow: hidden;
+}
+
+/* ============================================================
+   HEADER / TITLE BAR
+   ============================================================ */
+.profile-window-title-bar {
+    flex-direction: row;
+    height: 50px;
+    background-color: rgba(20, 20, 20, 1.0);
+    align-items: center;
+    padding-left: 20px;
+    padding-right: 10px;
+    justify-content: space-between;
+    border-bottom-width: 2px;
+    border-bottom-color: rgba(80, 50, 30, 0.8);
+    cursor: move-arrow;
+}
+
+.profile-window-title-label {
+    color: rgba(200, 150, 50, 1.0);
+    -unity-font-style: bold;
+    font-size: 20px;
+    letter-spacing: 2px;
+}
+
+.profile-window-close-button {
+    width: 35px;
+    height: 35px;
+    background-color: rgba(0, 0, 0, 0);
+    border-width: 0;
+    color: rgb(150, 150, 150);
+    font-size: 24px;
+    -unity-text-align: middle-center;
+}
+
+.profile-window-close-button:hover {
+    color: white;
+    background-color: rgba(255, 0, 0, 0.2);
+}
+
+/* ============================================================
+   MAIN CONTENT AREA
+   ============================================================ */
+.profile-content-container {
+    flex-grow: 1;
+    padding: 20px;
+    align-items: center; /* Centrerer alt indhold horisontalt */
+    background-color: rgba(0, 0, 0, 0.2);
+}
+
+/* Avatar Image */
+.profile-avatar-icon {
+    width: 100px;
+    height: 100px;
+    margin-top: 10px;
+    margin-bottom: 15px;
+    /* Standard billede hvis intet er loadet */
+    background-image: url('project://database/Assets/UI/Icons/PlayerIcon.png'); 
+    -unity-background-scale-mode: scale-to-fit;
+    border-width: 2px;
+    border-color: rgba(200, 150, 50, 0.5);
+    border-radius: 50%; /* Gør billedet rundt hvis muligt, ellers firkantet med bløde kanter */
+}
+
+/* Player Name */
+.profile-player-name {
+    color: white;
+    font-size: 26px;
+    -unity-font-style: bold;
+    margin-bottom: 2px;
+    -unity-text-align: middle-center;
+}
+
+/* Alliance Name */
+.profile-alliance-name {
+    color: rgb(100, 180, 255); /* Lyseblå */
+    font-size: 16px;
+    margin-bottom: 25px;
+    -unity-font-style: italic;
+    -unity-text-align: middle-center;
+}
+
+/* ============================================================
+   STATS GRID (Rank, Points, Cities)
+   ============================================================ */
+.profile-stats-grid {
+    flex-direction: row;
+    width: 100%;
+    height: 80px;
+    background-color: rgba(0, 0, 0, 0.3);
+    border-radius: 8px;
+    align-items: center;
+    justify-content: space-evenly;
+    margin-bottom: 25px;
+    border-width: 1px;
+    border-color: rgba(255, 255, 255, 0.1);
+}
+
+.profile-stat-box {
+    align-items: center;
+    justify-content: center;
+    width: 30%;
+}
+
+.profile-stat-label {
+    color: rgb(160, 160, 160);
+    font-size: 12px;
+    margin-bottom: 5px;
+    letter-spacing: 1px;
+}
+
+.profile-stat-value {
+    color: rgb(255, 215, 100); /* Guld */
+    font-size: 20px;
+    -unity-font-style: bold;
+}
+
+/* En lille streg mellem stats */
+.profile-stat-divider {
+    width: 1px;
+    height: 60%;
+    background-color: rgba(255, 255, 255, 0.1);
+}
+
+/* ============================================================
+   DESCRIPTION
+   ============================================================ */
+.profile-description-label {
+    width: 100%;
+    color: rgb(200, 200, 200);
+    font-size: 14px;
+    white-space: normal; /* Tillader tekstombrydning */
+    -unity-text-align: upper-center;
+    padding-left: 10px;
+    padding-right: 10px;
+    -unity-font-style: italic;
+}

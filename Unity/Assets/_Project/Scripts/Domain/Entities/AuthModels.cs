@@ -15,4 +15,5 @@ public class PlayerWorldJoinResponse
     public bool ConnectionSuccessful;
     public string Message;
     public string ActiveCityId;
+    public string WorldPlayerId;
 }

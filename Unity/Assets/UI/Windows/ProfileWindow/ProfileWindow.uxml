@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" editor-extension-mode="False">
+    
+    <ui:Style src="project://database/Assets/UI/Windows/ProfileWindow/ProfileWindow.uss" />
+
+    <ui:VisualElement name="ProfileWindow-ScreenOverlay" picking-mode="Ignore" class="profile-window-screen-overlay">
+        
+        <ui:VisualElement name="ProfileWindow-Frame" class="profile-window-frame">
+            
+            <ui:VisualElement name="ProfileWindow-TitleBar" class="profile-window-title-bar">
+                <ui:Label name="ProfileWindow-TitleLabel" class="profile-window-title-label" text="PLAYER PROFILE" />
+                <ui:Button name="ProfileWindow-Close-Button" class="profile-window-close-button" text="×" />
+            </ui:VisualElement>
+
+            <ui:VisualElement name="ProfileWindow-Content" class="profile-content-container">
+                
+                <ui:VisualElement name="Img-PlayerAvatar" class="profile-avatar-icon" />
+                
+                <ui:Label name="Lbl-PlayerName" class="profile-player-name" text="Loading..." />
+                <ui:Label name="Lbl-AllianceName" class="profile-alliance-name" text="-" />
+
+                <ui:VisualElement class="profile-stats-grid">
+                    
+                    <ui:VisualElement class="profile-stat-box">
+                        <ui:Label text="RANK" class="profile-stat-label" />
+                        <ui:Label name="Lbl-RankValue" class="profile-stat-value" text="0" />
+                    </ui:VisualElement>
+                    
+                    <ui:VisualElement class="profile-stat-divider" />
+
+                    <ui:VisualElement class="profile-stat-box">
+                        <ui:Label text="POINTS" class="profile-stat-label" />
+                        <ui:Label name="Lbl-PointsValue" class="profile-stat-value" text="0" />
+                    </ui:VisualElement>
+
+                    <ui:VisualElement class="profile-stat-divider" />
+
+                    <ui:VisualElement class="profile-stat-box">
+                        <ui:Label text="CITIES" class="profile-stat-label" />
+                        <ui:Label name="Lbl-CitiesValue" class="profile-stat-value" text="0" />
+                    </ui:VisualElement>
+
+                </ui:VisualElement>
+
+                <ui:Label name="Lbl-Description" class="profile-description-label" text="Ingen beskrivelse tilgængelig." />
+
+            </ui:VisualElement>
+
+        </ui:VisualElement>
+    </ui:VisualElement>
+</ui:UXML>
