@@ -148,7 +148,7 @@ namespace Application.Services
 
         //private void HandleResearchJob(City city, ResearchJob job)
         //{
-        //    // Implementer Academy research logik her...
+        //    // Implementer University research logik her...
         //}
     }
 }

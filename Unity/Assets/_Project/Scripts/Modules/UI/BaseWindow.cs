@@ -12,9 +12,9 @@ namespace Project.Modules.UI
         protected UIDocument MyUiDocument;
 
         // Abstract: Every window must define its visual names
-        protected abstract string WindowName { get; } // e.g., "Senate"
-        protected abstract string VisualContainerName { get; } // e.g., "Senate-MainContainer"
-        protected abstract string HeaderName { get; } // e.g., "Senate-Header"
+        protected abstract string WindowName { get; } // e.g., "TownHall"
+        protected abstract string VisualContainerName { get; } // e.g., "TownHall-MainContainer"
+        protected abstract string HeaderName { get; } // e.g., "TownHall-Header"
 
         public WindowTypeEnum Type { get; private set; }
         private GlobalWindowManager _manager;

@@ -31,21 +31,36 @@ namespace Project.Network
 
                 if (request.result == UnityWebRequest.Result.Success)
                 {
+                    List<RankingEntryDataDTO> resultData = null; // Variabel til at holde data
+
                     try
                     {
-                        var data = JsonConvert.DeserializeObject<List<RankingEntryDataDTO>>(request.downloadHandler.text);
-                        callback?.Invoke(data);
+                        string jsonText = request.downloadHandler.text;
+                        // Debug.Log($"[Ranking] JSON: {jsonText}"); 
+
+                        if (!string.IsNullOrEmpty(jsonText) && jsonText != "null")
+                        {
+                            resultData = JsonConvert.DeserializeObject<List<RankingEntryDataDTO>>(jsonText);
+                        }
+
+                        if (resultData == null) resultData = new List<RankingEntryDataDTO>();
                     }
                     catch (Exception exception)
                     {
                         Debug.LogError($"[Ranking] Deserialization Error: {exception.Message}");
-                        callback?.Invoke(null);
+                        // Her er det okay at returnere null eller tom liste, da JSON fejlede
+                        callback?.Invoke(new List<RankingEntryDataDTO>());
+                        yield break;
                     }
+
+                    // VIGTIGT: Kald callback UDENFOR try-catch blokken!
+                    // Så hvis UI crasher, kan vi se den rigtige fejl i konsollen.
+                    callback?.Invoke(resultData);
                 }
                 else
                 {
-                    Debug.LogError($"[Ranking] GetRankings Failed: {request.error}");
-                    callback?.Invoke(null);
+                    Debug.LogError($"[Ranking] Network Error: {request.error}");
+                    callback?.Invoke(new List<RankingEntryDataDTO>());
                 }
             }
         }

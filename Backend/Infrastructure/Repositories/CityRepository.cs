@@ -27,7 +27,7 @@ namespace Infrastructure.Repositories
         public async Task<City?> GetCityWithBuildingsByCityIdentifierAsync(Guid cityIdentifier)
         {
             return await _context.Cities
-                .Include(city => city.Buildings) // Needed for Senate
+                .Include(city => city.Buildings) // Needed for TownHall
                 .Include(city => city.WorldPlayer) // Needed for modifiers
                     .ThenInclude(player => player.ModifiersAppliedToWorldPlayer)
                 .Include(city => city.UnitStacks)

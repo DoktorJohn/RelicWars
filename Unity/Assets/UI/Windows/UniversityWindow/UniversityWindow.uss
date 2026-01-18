@@ -1,0 +1,88 @@
+/* Assets/UI/Windows/UniversityWindow/UniversityWindow.uss */
+
+/* --- TEXT & FLAVOR --- */
+.text-subtitle {
+    margin-top: 5px;
+    margin-bottom: 15px;
+    
+    /* Bigger, Bold & Centered */
+    font-size: 24px; 
+    -unity-font-style: bold;
+    color: var(--c-text-header);
+    -unity-text-align: middle-center;
+}
+
+.flavor-text {
+    margin-bottom: 20px;
+    padding-left: 20px; padding-right: 20px;
+    
+    /* Fix overflow */
+    white-space: normal; 
+    -unity-text-align: middle-center;
+}
+
+.divider {
+    height: 2px;
+    background-color: var(--c-border);
+    margin-bottom: 20px; width: 80%;
+    align-self: center;
+}
+
+/* --- DATA TABLE --- */
+.table-container {
+    flex-grow: 1;
+    background-color: rgba(0, 0, 0, 0.04);
+    border-radius: 6px;
+    border-width: 1px;
+    border-color: rgba(0,0,0,0.1);
+    padding: 10px;
+    overflow: hidden; 
+}
+
+.table-header-row {
+    flex-direction: row; height: 35px;
+    background-color: rgba(0, 0, 0, 0.06);
+    border-bottom-width: 2px;
+    border-bottom-color: var(--c-border);
+    margin-bottom: 5px; align-items: center;
+    flex-shrink: 0; 
+}
+
+.table-header-label {
+    -unity-font-definition: var(--font-header);
+    color: var(--c-text-header);
+    font-size: 14px; -unity-font-style: bold;
+    -unity-text-align: middle-center;
+    flex-grow: 1; width: 50%;
+}
+
+/* --- SCROLLVIEW FIX --- */
+.unity-scroller { display: none; opacity: 0; }
+.unity-scroller--vertical { width: 0; }
+.unity-scroller--horizontal { height: 0; }
+
+.unity-scroll-view__content-container {
+    flex-grow: 1;
+    min-width: 100%;
+}
+
+/* --- DYNAMIC ROWS --- */
+.table-row {
+    flex-direction: row; height: 40px; align-items: center;
+    border-bottom-width: 1px;
+    border-bottom-color: rgba(0, 0, 0, 0.05);
+    flex-shrink: 0; 
+}
+
+.table-row-current {
+    background-color: rgba(185, 140, 60, 0.2); 
+    border-left-width: 4px;
+    border-left-color: var(--c-border);
+}
+
+.row-label {
+    -unity-font-definition: var(--font-body);
+    color: var(--c-text-body);
+    font-size: 14px; -unity-text-align: middle-center;
+    flex-grow: 1; width: 50%;
+}

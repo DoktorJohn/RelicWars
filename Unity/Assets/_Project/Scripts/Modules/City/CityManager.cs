@@ -15,7 +15,7 @@ namespace Project.Modules.City
 
         [Header("Bygnings Præfab Referencer")]
         [SerializeField] private GameObject barracksPrefab;
-        [SerializeField] private GameObject senatePrefab;
+        [SerializeField] private GameObject townHallPrefab;
         [SerializeField] private GameObject timberCampPrefab;
         [SerializeField] private GameObject stoneQuarryPrefab;
         [SerializeField] private GameObject metalMinePrefab;
@@ -23,8 +23,9 @@ namespace Project.Modules.City
         [SerializeField] private GameObject housingPrefab;
         [SerializeField] private GameObject wallPrefab;
         [SerializeField] private GameObject workshopPrefab;
-        [SerializeField] private GameObject academyPrefab;
+        [SerializeField] private GameObject universityPrefab;
         [SerializeField] private GameObject stablePrefab;
+        [SerializeField] private GameObject marketPlacePrefab;
 
         [Header("Special Præfabs")]
         [Tooltip("En visuel markør eller platform der vises, når en bygning er i level 0.")]
@@ -200,7 +201,7 @@ namespace Project.Modules.City
         {
             return type switch
             {
-                BuildingTypeEnum.Senate => senatePrefab,
+                BuildingTypeEnum.TownHall => townHallPrefab,
                 BuildingTypeEnum.Warehouse => warehousePrefab,
                 BuildingTypeEnum.Housing => housingPrefab,
                 BuildingTypeEnum.Barracks => barracksPrefab,
@@ -209,8 +210,9 @@ namespace Project.Modules.City
                 BuildingTypeEnum.MetalMine => metalMinePrefab,
                 BuildingTypeEnum.Wall => wallPrefab,
                 BuildingTypeEnum.Workshop => workshopPrefab,
-                BuildingTypeEnum.Academy => academyPrefab,
+                BuildingTypeEnum.University => universityPrefab,
                 BuildingTypeEnum.Stable => stablePrefab,
+                BuildingTypeEnum.MarketPlace => marketPlacePrefab,
                 _ => null
             };
         }

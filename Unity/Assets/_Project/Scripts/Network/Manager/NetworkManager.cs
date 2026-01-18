@@ -29,6 +29,7 @@ namespace Project.Network.Manager
         public ClientWorkshopService Workshop { get; private set; }
         public ClientRankingService Ranking { get; private set; }
         public ClientAllianceService Alliance { get; private set; }
+        public ClientMarketPlaceService MarketPlace { get; private set; }
 
         private void Awake()
         {
@@ -57,6 +58,7 @@ namespace Project.Network.Manager
             Ranking = new ClientRankingService(_backendBaseUrl);
             WorldPlayer = new ClientWorldPlayerService(_backendBaseUrl);
             Alliance = new ClientAllianceService(_backendBaseUrl);
+            MarketPlace = new ClientMarketPlaceService(_backendBaseUrl);
 
             Debug.Log("[NetworkManager] Services Initialized.");
         }

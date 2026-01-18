@@ -4,16 +4,15 @@ using UnityEngine.UIElements;
 using System;
 using Project.Network.Manager;
 using Project.Scripts.Domain.DTOs;
-using Unity.VisualScripting;
 
 namespace Project.Modules.UI.Windows.Implementations
 {
     public class ProfileWindowController : BaseWindow
     {
         // --- BASEWINDOW CONTRACT ---
-        protected override string WindowName => "ProfileWindow";
-        protected override string VisualContainerName => "ProfileWindow-Frame";
-        protected override string HeaderName => "ProfileWindow-TitleBar";
+        protected override string WindowName => "Profile";
+        protected override string VisualContainerName => "Profile-Window-MainContainer";
+        protected override string HeaderName => "Profile-Window-Header";
 
         // --- UI REFERENCES ---
         private Label _playerNameLabel;
@@ -22,11 +21,18 @@ namespace Project.Modules.UI.Windows.Implementations
         private Label _pointsValueLabel;
         private Label _citiesValueLabel;
         private Label _descriptionLabel;
+        private VisualElement _avatarImage;
 
         public override void OnOpen(object dataPayload)
         {
+            // 1. Setup Close Button (Using standard Header button)
+            var closeBtn = Root.Q<Button>("Header-Close-Button");
+            if (closeBtn != null) { closeBtn.clicked -= Close; closeBtn.clicked += Close; }
+
+            // 2. Initialize References
             InitializeVisualElementReferences();
 
+            // 3. Determine ID
             Guid targetWorldPlayerId = DetermineTargetPlayerId(dataPayload);
 
             if (targetWorldPlayerId != Guid.Empty)
@@ -35,7 +41,8 @@ namespace Project.Modules.UI.Windows.Implementations
             }
             else
             {
-                Debug.LogError("[ProfileWindow] Kunne ikke identificere spiller ID.");
+                Debug.LogError("[ProfileWindow] Could not identify Player ID.");
+                if (_playerNameLabel != null) _playerNameLabel.text = "Error";
             }
         }
 
@@ -43,10 +50,13 @@ namespace Project.Modules.UI.Windows.Implementations
         {
             _playerNameLabel = Root.Q<Label>("Lbl-PlayerName");
             _allianceNameLabel = Root.Q<Label>("Lbl-AllianceName");
+
             _rankValueLabel = Root.Q<Label>("Lbl-RankValue");
             _pointsValueLabel = Root.Q<Label>("Lbl-PointsValue");
             _citiesValueLabel = Root.Q<Label>("Lbl-CitiesValue");
+
             _descriptionLabel = Root.Q<Label>("Lbl-Description");
+            _avatarImage = Root.Q<VisualElement>("Img-PlayerAvatar");
         }
 
         private Guid DetermineTargetPlayerId(object payload)
@@ -79,7 +89,7 @@ namespace Project.Modules.UI.Windows.Implementations
                 }
                 else
                 {
-                    Debug.LogError($"[ProfileWindow] Fandt ingen data for spiller {worldPlayerId}");
+                    Debug.LogError($"[ProfileWindow] No data found for player {worldPlayerId}");
                     if (_playerNameLabel != null) _playerNameLabel.text = "Error loading data";
                 }
             }));
@@ -88,12 +98,16 @@ namespace Project.Modules.UI.Windows.Implementations
         private void UpdateUserProfileInterface(WorldPlayerProfileDTO data)
         {
             if (_playerNameLabel != null) _playerNameLabel.text = data.UserName;
-            if (_allianceNameLabel != null) _allianceNameLabel.text = string.IsNullOrEmpty(data.AllianceName) ? "Ingen Alliance" : data.AllianceName;
+
+            if (_allianceNameLabel != null)
+                _allianceNameLabel.text = string.IsNullOrEmpty(data.AllianceName) ? "-" : $"<{data.AllianceName}>";
 
             if (_rankValueLabel != null) _rankValueLabel.text = data.Ranking.ToString();
             if (_pointsValueLabel != null) _pointsValueLabel.text = data.TotalPoints.ToString("N0");
             if (_citiesValueLabel != null) _citiesValueLabel.text = data.CityCount.ToString();
 
+            // Optional: Description support
+            // if (_descriptionLabel != null) _descriptionLabel.text = ...
         }
     }
 }

@@ -33,10 +33,11 @@ namespace Domain.StaticData.Generators
             buildingDataDictionary[BuildingTypeEnum.Workshop] = GenerateRecruitmentData<WorkshopLevelData>(BuildingTypeEnum.Workshop);
 
             // Infrastruktur og specialbygninger
-            buildingDataDictionary[BuildingTypeEnum.Senate] = GenerateSenateData();
-            buildingDataDictionary[BuildingTypeEnum.Academy] = GenerateAcademyData();
+            buildingDataDictionary[BuildingTypeEnum.TownHall] = GenerateTownHallData();
+            buildingDataDictionary[BuildingTypeEnum.University] = GenerateUniversityData();
             buildingDataDictionary[BuildingTypeEnum.Warehouse] = GenerateWarehouseData();
             buildingDataDictionary[BuildingTypeEnum.Wall] = GenerateWallData();
+            buildingDataDictionary[BuildingTypeEnum.MarketPlace] = GenerateMarketPlaceData();
 
             var serializerOptions = new JsonSerializerOptions { WriteIndented = true };
             string serializedContent = JsonSerializer.Serialize(buildingDataDictionary, serializerOptions);
@@ -56,7 +57,7 @@ namespace Domain.StaticData.Generators
             return (int)Math.Round(pointCalculation);
         }
 
-        private static List<object> GenerateSenateData()
+        private static List<object> GenerateTownHallData()
         {
             var progressionLevels = new List<object>();
             double resourceMultiplier = 1.21;
@@ -67,10 +68,10 @@ namespace Domain.StaticData.Generators
                 int totalCalculatedResourceCost = (int)(initialBaseCost * Math.Pow(resourceMultiplier, currentLvl - 1));
                 int calculatedPopulationCost = (currentLvl <= 20) ? currentLvl * 2 : 40 + (int)(Math.Pow(currentLvl - 20, 2) * 2);
 
-                var senateEntry = new SenateLevelData
+                var townHallEntry = new TownHallLevelData
                 {
                     Level = currentLvl,
-                    Points = CalculatePointValueForLevel(currentLvl, 1.15), // Senatet er vigtigt og giver flere point
+                    Points = CalculatePointValueForLevel(currentLvl, 1.15), // Townhall er vigtigt og giver flere point
                     BuildTime = TimeSpan.FromSeconds(Math.Pow(currentLvl, 1.9) + 60),
                     PopulationCost = calculatedPopulationCost,
                     WoodCost = (int)(totalCalculatedResourceCost * 0.4),
@@ -78,16 +79,16 @@ namespace Domain.StaticData.Generators
                     MetalCost = (int)(totalCalculatedResourceCost * 0.2)
                 };
 
-                senateEntry.ModifiersThatAffects.Add(ModifierTagEnum.Construction);
-                senateEntry.ModifiersInternal.Add(new Modifier
+                townHallEntry.ModifiersThatAffects.Add(ModifierTagEnum.Construction);
+                townHallEntry.ModifiersInternal.Add(new Modifier
                 {
                     Tag = ModifierTagEnum.Construction,
                     Type = ModifierTypeEnum.Increased,
                     Value = (currentLvl * 0.10),
-                    Source = $"Senate Level {currentLvl}"
+                    Source = $"TownHall Level {currentLvl}"
                 });
 
-                progressionLevels.Add(senateEntry);
+                progressionLevels.Add(townHallEntry);
             }
             return progressionLevels;
         }
@@ -207,13 +208,18 @@ namespace Domain.StaticData.Generators
             return progressionLevels;
         }
 
-        private static List<object> GenerateAcademyData()
+        private static List<object> GenerateUniversityData()
         {
             var progressionLevels = new List<object>();
             for (int currentLvl = 1; currentLvl <= 30; currentLvl++)
             {
                 int totalCalculatedResourceCost = (int)(200 * Math.Pow(1.22, currentLvl - 1));
-                var academyEntry = new AcademyLevelData
+
+                // Beregning af Production (f.eks. Research Points). 
+                // Formel: Starter på 10 og stiger med 10% pr level.
+                int calculatedProduction = (int)(10 * Math.Pow(1.10, currentLvl));
+
+                var universityEntry = new UniversityLevelData
                 {
                     Level = currentLvl,
                     Points = CalculatePointValueForLevel(currentLvl, 1.1),
@@ -222,17 +228,61 @@ namespace Domain.StaticData.Generators
                     MetalCost = totalCalculatedResourceCost / 3,
                     BuildTime = TimeSpan.FromMinutes(currentLvl * 1.5),
                     PopulationCost = (currentLvl <= 20) ? currentLvl * 3 : 60 + (int)(Math.Pow(currentLvl - 20, 2) * 2.4),
+
+                    // NY PROPERTY HER:
+                    ProductionPerHour = calculatedProduction,
+
                     ModifiersThatAffects = { ModifierTagEnum.Research }
                 };
 
-                academyEntry.ModifiersInternal.Add(new Modifier
+                progressionLevels.Add(universityEntry);
+            }
+            return progressionLevels;
+        }
+
+        private static List<object> GenerateMarketPlaceData()
+        {
+            var progressionLevels = new List<object>();
+            for (int currentLvl = 1; currentLvl <= 30; currentLvl++)
+            {
+                // Marketplace koster typisk lidt mindre end University, eller en anden fordeling. 
+                // Her bruger vi samme base cost formel for konsistens.
+                int totalCalculatedResourceCost = (int)(150 * Math.Pow(1.20, currentLvl - 1));
+
+                // Beregning af Silver Flat Rate.
+                // Formel: Starter på 50 silver i timen, stiger med 12% pr level.
+                double silverProductionValue = Math.Floor(50 * Math.Pow(1.12, currentLvl));
+
+                var marketPlaceEntry = new MarketPlaceLevelData
                 {
-                    Tag = ModifierTagEnum.Research,
-                    Type = ModifierTypeEnum.Increased,
-                    Value = (currentLvl / 30.0),
-                    Source = $"Academy Level {currentLvl}"
-                });
-                progressionLevels.Add(academyEntry);
+                    Level = currentLvl,
+                    Points = CalculatePointValueForLevel(currentLvl, 1.0), // Måske lidt færre points end uni
+
+                    // Marketplace er ofte dyrere i Wood/Stone end Metal
+                    WoodCost = (int)(totalCalculatedResourceCost * 0.4),
+                    StoneCost = (int)(totalCalculatedResourceCost * 0.4),
+                    MetalCost = (int)(totalCalculatedResourceCost * 0.2),
+
+                    BuildTime = TimeSpan.FromMinutes(currentLvl * 1.2),
+                    PopulationCost = (currentLvl <= 20) ? currentLvl * 2 : 40 + (int)(Math.Pow(currentLvl - 20, 2) * 2.0),
+
+                    // HER TILFØJES MODIFIEREN
+                    ModifiersInternal = new List<Modifier>
+                {
+                    new Modifier
+                    {
+                        Tag = ModifierTagEnum.Silver, // Antager denne enum værdi findes baseret på din prompt
+                        Type = ModifierTypeEnum.Flat,
+                        Value = silverProductionValue,
+                        Source = "MarketPlace Building"
+                    }
+                },
+
+                    // Hvis marketplace påvirker f.eks. Trading Speed generelt, kan det tilføjes her
+                    ModifiersThatAffects = { ModifierTagEnum.Silver }
+                };
+
+                progressionLevels.Add(marketPlaceEntry);
             }
             return progressionLevels;
         }

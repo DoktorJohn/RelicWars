@@ -1,12 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
-<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" editor-extension-mode="False">
+<ui:UXML xmlns:ui="UnityEngine.UIElements" editor-extension-mode="False">
     
-    <ui:Style src="project://database/Assets/UI//RankingWindow/RankingWindow.uss" />
-    
-    <ui:VisualElement name="RankingRow-VisualContainer" class="ranking-row-visual-container">
-        <ui:Label name="Row-Rank" class="ranking-row-label-base ranking-column-rank-width" text="#" />
-        <ui:Label name="Row-PlayerName" class="ranking-row-label-base ranking-column-player-name-width" text="Loading..." />
-        <ui:Label name="Row-Points" class="ranking-row-label-base ranking-column-points-amount-width" text="-" />
+    <ui:Style src="project://database/Assets/UI/Windows/WindowTheme.uss" />
+    <ui:Style src="RankingWindow.uss" />
+
+    <ui:VisualElement class="table-row">
+        <ui:Label name="Row-Rank" class="row-label col-rank" text="#" />
+        <ui:Label name="Row-PlayerName" class="row-label col-name" text="Player Name" />
+        <ui:Label name="Row-Points" class="row-label col-points" text="0" />
     </ui:VisualElement>
 
 </ui:UXML>

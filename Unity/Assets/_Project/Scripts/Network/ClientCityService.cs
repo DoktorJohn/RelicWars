@@ -1,12 +1,12 @@
+using Newtonsoft.Json;
+using Project.Network.Helper;
+using Project.Network.Models;
+using Project.Scripts.Domain.DTOs;
 using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Networking;
-using Newtonsoft.Json;
-using Project.Network.Models;
-using Project.Network.Helper;
-using Project.Scripts.Domain.DTOs;
 
 namespace Project.Network
 {
@@ -48,9 +48,9 @@ namespace Project.Network
             }
         }
 
-        public IEnumerator GetSenateAvailableBuildings(Guid cityId, string jwtToken, Action<List<AvailableBuildingDTO>> callback)
+        public IEnumerator GetTownHallAvailableBuildings(Guid cityId, string jwtToken, Action<List<AvailableBuildingDTO>> callback)
         {
-            string url = $"{_baseUrl}/{cityId}/senate/available-buildings";
+            string url = $"{_baseUrl}/{cityId}/townHall/available-buildings";
 
             using (var request = BackendRequestHelper.CreateGetRequest(url, jwtToken))
             {

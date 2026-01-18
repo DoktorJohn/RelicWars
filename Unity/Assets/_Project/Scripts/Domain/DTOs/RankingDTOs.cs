@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 
 namespace Project.Scripts.Domain.DTOs
 {
+    [Serializable]
     public class RankingEntryDataDTO
     {
         public string WorldPlayerId { get; set; }

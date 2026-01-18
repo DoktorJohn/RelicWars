@@ -46,10 +46,10 @@ namespace Project.Network
             }
         }
 
-        public IEnumerator GetAcademyInfo(Guid cityId, string token, Action<List<AcademyInfoDTO>> callback)
+        public IEnumerator GetUniversityInfo(Guid cityId, string token, Action<List<UniversityInfoDTO>> callback)
         {
-            // Antager endpoint: /api/building/{cityId}/academy
-            string url = $"{_baseUrl}/miscbuilding/{cityId}/academy";
+            // Antager endpoint: /api/building/{cityId}/university
+            string url = $"{_baseUrl}/miscbuilding/{cityId}/university";
 
             using (UnityWebRequest request = UnityWebRequest.Get(url))
             {
@@ -64,7 +64,7 @@ namespace Project.Network
                     string json = request.downloadHandler.text;
                     try
                     {
-                        var data = JsonConvert.DeserializeObject<List<AcademyInfoDTO>>(json);
+                        var data = JsonConvert.DeserializeObject<List<UniversityInfoDTO>>(json);
                         callback?.Invoke(data);
                     }
                     catch (Exception e)

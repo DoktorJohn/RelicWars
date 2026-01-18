@@ -1,9 +1,7 @@
 using Project.Modules.UI;
 using UnityEngine;
 using UnityEngine.UIElements;
-using System;
 using System.Collections.Generic;
-using Assets.Scripts.Domain.Enums;
 using Project.Network.Manager;
 using Project.Scripts.Domain.DTOs;
 
@@ -11,81 +9,77 @@ namespace Project.Modules.UI.Windows.Implementations
 {
     public class RankingWindowController : BaseWindow
     {
-        // Kontrakten med BaseWindow
         protected override string WindowName => "RankingWindow";
-        protected override string VisualContainerName => "RankingWindow-Frame";
-        protected override string HeaderName => "RankingWindow-TitleBar";
+        protected override string VisualContainerName => "Ranking-Window-MainContainer";
+        protected override string HeaderName => "Ranking-Window-Header";
 
         [Header("Template Configuration")]
         [SerializeField] private VisualTreeAsset _rankingRowTemplate;
 
-        private ListView _rankingsListView;
-        private List<RankingEntryDataDTO> _rankingsDataSource = new List<RankingEntryDataDTO>();
+        private ScrollView _listContainer;
 
         public override void OnOpen(object dataPayload)
         {
-            // BEMÆRK: Vi skal IKKE binde Close-knappen her manuelt. 
-            // BaseWindow.Initialize gør det for os, da knappenavnet i UXML nu matcher standarden.
-
-            _rankingsListView = Root.Q<ListView>("Ranking-ListView");
-
-            InitializeListView();
-            RefreshRankingData();
-        }
-
-        private void InitializeListView()
-        {
-            if (_rankingsListView == null)
+            // 1. Close Button
+            var closeBtn = Root.Q<Button>("Header-Close-Button");
+            if (closeBtn != null)
             {
-                Debug.LogError("[RankingWindow] ListView 'Ranking-ListView' ikke fundet.");
-                return;
+                closeBtn.clicked -= Close;
+                closeBtn.clicked += Close;
             }
 
-            _rankingsListView.makeItem = () => _rankingRowTemplate.Instantiate();
+            // 2. Container
+            _listContainer = Root.Q<ScrollView>("Ranking-List-Container");
 
-            _rankingsListView.bindItem = (VisualElement element, int index) =>
-            {
-                if (index < 0 || index >= _rankingsDataSource.Count) return;
-
-                var data = _rankingsDataSource[index];
-
-                var rankLabel = element.Q<Label>("Row-Rank");
-                var playerNameLabel = element.Q<Label>("Row-PlayerName");
-                var pointsLabel = element.Q<Label>("Row-Points");
-
-                if (rankLabel != null) rankLabel.text = data.Rank.ToString();
-                if (playerNameLabel != null) playerNameLabel.text = data.PlayerName;
-                if (pointsLabel != null) pointsLabel.text = data.TotalPoints.ToString("N0");
-            };
-
-            _rankingsListView.itemsSource = _rankingsDataSource;
+            RefreshRankingData();
         }
 
         private void RefreshRankingData()
         {
+            if (_listContainer != null) _listContainer.Clear();
             string jwtToken = NetworkManager.Instance.JwtToken;
 
             StartCoroutine(NetworkManager.Instance.Ranking.GetGlobalRankings(jwtToken, (rankingsList) =>
             {
                 if (rankingsList != null)
                 {
-                    UpdateRankingUI(rankingsList);
+                    PopulateList(rankingsList);
                 }
                 else
                 {
-                    Debug.LogError("[RankingWindow] Modtog ingen data fra serveren.");
+                    Debug.LogError("[RankingWindow] No data received from ranking service.");
                 }
             }));
         }
 
-        private void UpdateRankingUI(List<RankingEntryDataDTO> data)
+        private void PopulateList(List<RankingEntryDataDTO> data)
         {
-            if (_rankingsListView == null) return;
+            if (_listContainer == null) return;
+            _listContainer.Clear();
 
-            _rankingsDataSource.Clear();
-            _rankingsDataSource.AddRange(data);
+            if (_rankingRowTemplate == null)
+            {
+                Debug.LogError("[RankingWindow] RankingRowTemplate is not assigned in the Inspector!");
+                return;
+            }
 
-            _rankingsListView.RefreshItems();
+            foreach (var entry in data)
+            {
+                // Instantiate nu uden inline var() styles - dette stopper crashet.
+                VisualElement row = _rankingRowTemplate.Instantiate();
+
+                // Find labels inde i den nye row
+                var rankLbl = row.Q<Label>("Row-Rank");
+                var nameLbl = row.Q<Label>("Row-PlayerName");
+                var pointsLbl = row.Q<Label>("Row-Points");
+
+                // Map data
+                if (rankLbl != null) rankLbl.text = entry.Rank.ToString();
+                if (nameLbl != null) nameLbl.text = entry.PlayerName;
+                if (pointsLbl != null) pointsLbl.text = entry.TotalPoints.ToString("N0");
+
+                _listContainer.Add(row);
+            }
         }
     }
 }

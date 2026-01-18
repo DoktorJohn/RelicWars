@@ -16,8 +16,8 @@ namespace Domain.StaticData.Data
         // Lænken: Hvilken research skal være færdig før denne kan startes?
         public string? ParentId { get; set; }
 
-        // Krav til bygninger (typisk Academy level)
-        public int RequiredAcademyLevel { get; set; }
+        // Krav til bygninger (typisk University level)
+        public int RequiredUniversityLevel { get; set; }
 
         // Pris og tid
         public int WoodCost { get; set; }

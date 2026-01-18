@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" editor-extension-mode="False">
+    
+    <ui:Style src="project://database/Assets/UI/Windows/WindowTheme.uss" />
+    <ui:Style src="TownHallWindow.uss" />
+
+    <ui:VisualElement name="TownHall-Window-Overlay" picking-mode="Ignore" class="screen-overlay">
+        
+        <ui:VisualElement name="TownHall-Window-MainContainer" class="window-frame" style="width: 1000px; height: 750px;">
+            
+            <ui:VisualElement name="TownHall-Window-Header" class="window-header">
+                <ui:Label name="TownHall-Label-Title" class="window-header-label" text="THE TOWNHALL" />
+                <ui:Button name="Header-Close-Button" class="window-close-btn" text="x" />
+            </ui:VisualElement>
+            
+            <ui:VisualElement style="padding: 20px; flex-grow: 1;">
+                
+                <ui:Label class="flavor-text text-flavor" text="Here you oversee the construction and expansion of your city." />
+                
+                <ui:VisualElement class="divider" style="margin-bottom: 10px;" />
+
+                <ui:ScrollView name="TownHall-Building-List" class="building-grid-view" />
+
+                <ui:VisualElement name="Resource-Tooltip" class="resource-tooltip" picking-mode="Ignore">
+                    <ui:Label text="CONSTRUCTION COST" class="tooltip-title" />
+                    
+                    <ui:VisualElement class="tooltip-row">
+                        <ui:Label text="Wood:" class="tooltip-label" style="color:#C89664;" />
+                        <ui:Label name="Tip-Wood" text="0" class="tooltip-label" />
+                    </ui:VisualElement>
+                    
+                    <ui:VisualElement class="tooltip-row">
+                        <ui:Label text="Stone:" class="tooltip-label" style="color:#969696;" />
+                        <ui:Label name="Tip-Stone" text="0" class="tooltip-label" />
+                    </ui:VisualElement>
+                    
+                    <ui:VisualElement class="tooltip-row">
+                        <ui:Label text="Metal:" class="tooltip-label" style="color:#B4C8DC;" />
+                        <ui:Label name="Tip-Metal" text="0" class="tooltip-label" />
+                    </ui:VisualElement>
+                    
+                    <ui:VisualElement class="tooltip-row" style="margin-top: 5px;">
+                        <ui:Label text="Time:" class="tooltip-label" style="color:#64C864;" />
+                        <ui:Label name="Tip-Time" text="00:00:00" class="tooltip-label" />
+                    </ui:VisualElement>
+                </ui:VisualElement>
+
+            </ui:VisualElement>
+            
+        </ui:VisualElement>
+    </ui:VisualElement>
+</ui:UXML>

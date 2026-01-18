@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ui:UXML xmlns:ui="UnityEngine.UIElements" editor-extension-mode="False">
+    
+    <ui:VisualElement name="Card-Content" style="flex-grow: 1; justify-content: space-between;">
+        
+        <ui:VisualElement class="card-header">
+            <ui:Label name="Building-Name" class="card-name" text="Barracks" />
+            <ui:Label name="Building-Level" class="card-level" text="Lvl 5" />
+        </ui:VisualElement>
+
+        <ui:Button name="Upgrade-Button" class="card-upgrade-button" text="UPGRADE" />
+        
+    </ui:VisualElement>
+
+</ui:UXML>

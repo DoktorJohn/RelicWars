@@ -1,25 +1,53 @@
 <?xml version="1.0" encoding="utf-8"?>
-<ui:UXML xmlns:ui="UnityEngine.UIElements" editor-extension-mode="False">
-    <ui:Style src="WorkshopWindow.uss" />
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" editor-extension-mode="False">
+    
+    <ui:Style src="project://database/Assets/UI/Windows/WindowTheme.uss" />
+    <ui:Style src="project://database/Assets/UI/Windows/WorkshopWindow/WorkshopWindow.uss" />
 
-    <ui:VisualElement name="Workshop-Window-Overlay" picking-mode="Ignore" class="window-overlay">
-        <ui:VisualElement name="Workshop-Window-MainContainer" class="window-container">
+    <ui:VisualElement name="Workshop-Window-Overlay" picking-mode="Ignore" class="screen-overlay">
+        
+        <ui:VisualElement name="Workshop-Window-MainContainer" class="window-frame size-large">
             
             <ui:VisualElement name="Workshop-Window-Header" class="window-header">
-                <ui:Label name="Lbl-Title" class="window-title" text="WORKSHOP" />
+                <ui:Label name="Lbl-Title" class="window-header-label" text="WORKSHOP" />
+                <ui:Button name="Header-Close-Button" class="window-close-btn" text="×" />
             </ui:VisualElement>
             
-            <ui:Label name="Lbl-Level" class="level-subtitle" text="Level ..." />
-            
-            <ui:Label class="flavor-text" text="Here your engineers construct powerful siege engines capable of bringing down the strongest fortifications." />
-            
-            <ui:VisualElement class="divider" />
+            <ui:VisualElement style="padding: 20px; flex-grow: 1;">
+                
+                <ui:Label text="SELECT SIEGE ENGINE" class="section-label" />
+                <ui:VisualElement class="tabs-wrapper">
+                    <ui:ScrollView name="Tabs-Scroll-Container" mode="Horizontal" class="tabs-scroll-view" />
+                </ui:VisualElement>
 
-            <ui:VisualElement class="table-container">
-                <ui:ScrollView name="Workshop-Stats-List" />
+                <ui:VisualElement class="divider" style="margin-top: 10px; margin-bottom: 10px;" />
+
+                <ui:VisualElement name="Detail-View-Container" class="detail-container">
+                    
+                    <ui:Label name="Lbl-UnitName" class="unit-name-large" text="Battering Ram" />
+                    <ui:Label name="Lbl-OwnedCount" class="text-subtitle" text="Owned: 0" style="margin-bottom: 15px;" />
+
+                    <ui:Label name="Lbl-Flavor" class="flavor-text text-flavor" text="..." />
+
+                    <ui:VisualElement class="cost-box">
+                        <ui:Label text="CONSTRUCTION COST" class="section-label-small" />
+                        <ui:Label name="Lbl-CostString" class="text-body" text="Wood: 200 | Stone: 100 | Time: 60s" style="margin-top: 5px;" />
+                    </ui:VisualElement>
+
+                    <ui:VisualElement class="controls-area">
+                        <ui:Label text="QUANTITY" class="section-label-small" />
+                        
+                        <ui:VisualElement class="slider-row">
+                            <ui:SliderInt name="Slider-Quantity" low-value="1" high-value="100" class="game-slider" style="flex-grow: 1; margin-right: 10px;" />
+                            <ui:IntegerField name="Input-Quantity" class="game-input-number" style="width: 80px;" />
+                        </ui:VisualElement>
+
+                        <ui:Button name="Btn-Recruit" class="btn-base btn-primary" text="CONSTRUCT ENGINES" style="height: 50px; margin-top: 15px;" />
+                    </ui:VisualElement>
+
+                </ui:VisualElement>
+
             </ui:VisualElement>
-
-            <ui:Button name="Common-Close-Button" class="close-button" text="CLOSE" />
             
         </ui:VisualElement>
     </ui:VisualElement>

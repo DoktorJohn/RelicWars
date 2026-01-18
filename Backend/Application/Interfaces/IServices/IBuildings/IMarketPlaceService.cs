@@ -1,5 +1,4 @@
 ﻿using Application.DTOs;
-using Domain.Enums;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -8,9 +7,8 @@ using System.Threading.Tasks;
 
 namespace Application.Interfaces.IServices.IBuildings
 {
-    public interface IAcademyService
+    public interface IMarketPlaceService
     {
-        Task<List<AcademyInfoDTO>> GetAcademyInfoAsync(Guid cityId);
-        
+        Task<MarketPlaceInfoDTO> GetMarketPlaceInfoAsync(Guid cityId);
     }
 }

@@ -29,6 +29,7 @@ namespace Project.Modules.City
         [SerializeField] private float _networkSynchronizationIntervalInSeconds = 30f;
 
         private CityResourceState _currentResourceState = new CityResourceState(); // Initialiseret for at undgå null ref
+        public CityResourceState CurrentResources => _currentResourceState;
         private bool _isRequestInProgress = false;
         private bool _isDataInitialized = false;
         private Coroutine _activePollingCoroutine;

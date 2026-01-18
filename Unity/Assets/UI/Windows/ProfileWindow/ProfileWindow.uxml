@@ -1,51 +1,54 @@
 <?xml version="1.0" encoding="utf-8"?>
 <ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" editor-extension-mode="False">
     
-    <ui:Style src="project://database/Assets/UI/Windows/ProfileWindow/ProfileWindow.uss" />
+    <ui:Style src="project://database/Assets/UI/Windows/WindowTheme.uss" />
+    <ui:Style src="ProfileWindow.uss" />
 
-    <ui:VisualElement name="ProfileWindow-ScreenOverlay" picking-mode="Ignore" class="profile-window-screen-overlay">
+    <ui:VisualElement name="Profile-Window-Overlay" picking-mode="Ignore" class="screen-overlay">
         
-        <ui:VisualElement name="ProfileWindow-Frame" class="profile-window-frame">
+        <ui:VisualElement name="Profile-Window-MainContainer" class="window-frame" style="width: 450px; height: 550px;">
             
-            <ui:VisualElement name="ProfileWindow-TitleBar" class="profile-window-title-bar">
-                <ui:Label name="ProfileWindow-TitleLabel" class="profile-window-title-label" text="PLAYER PROFILE" />
-                <ui:Button name="ProfileWindow-Close-Button" class="profile-window-close-button" text="×" />
+            <ui:VisualElement name="Profile-Window-Header" class="window-header">
+                <ui:Label name="Lbl-Title" class="window-header-label" text="PLAYER PROFILE" />
+                <ui:Button name="Header-Close-Button" class="window-close-btn" text="x" />
             </ui:VisualElement>
+            
+            <ui:VisualElement class="profile-content-container">
+                
+                <ui:VisualElement name="Img-PlayerAvatar" class="profile-avatar" />
+                
+                <ui:Label name="Lbl-PlayerName" class="profile-name" text="Loading..." />
+                <ui:Label name="Lbl-AllianceName" class="profile-alliance" text="-" />
 
-            <ui:VisualElement name="ProfileWindow-Content" class="profile-content-container">
-                
-                <ui:VisualElement name="Img-PlayerAvatar" class="profile-avatar-icon" />
-                
-                <ui:Label name="Lbl-PlayerName" class="profile-player-name" text="Loading..." />
-                <ui:Label name="Lbl-AllianceName" class="profile-alliance-name" text="-" />
+                <ui:VisualElement class="divider" style="width: 100%; margin-bottom: 20px;" />
 
                 <ui:VisualElement class="profile-stats-grid">
                     
-                    <ui:VisualElement class="profile-stat-box">
-                        <ui:Label text="RANK" class="profile-stat-label" />
-                        <ui:Label name="Lbl-RankValue" class="profile-stat-value" text="0" />
+                    <ui:VisualElement class="stat-box">
+                        <ui:Label text="RANK" class="stat-label" />
+                        <ui:Label name="Lbl-RankValue" class="stat-value" text="0" />
                     </ui:VisualElement>
                     
-                    <ui:VisualElement class="profile-stat-divider" />
+                    <ui:VisualElement class="stat-vertical-divider" />
 
-                    <ui:VisualElement class="profile-stat-box">
-                        <ui:Label text="POINTS" class="profile-stat-label" />
-                        <ui:Label name="Lbl-PointsValue" class="profile-stat-value" text="0" />
+                    <ui:VisualElement class="stat-box">
+                        <ui:Label text="POINTS" class="stat-label" />
+                        <ui:Label name="Lbl-PointsValue" class="stat-value" text="0" />
                     </ui:VisualElement>
 
-                    <ui:VisualElement class="profile-stat-divider" />
+                    <ui:VisualElement class="stat-vertical-divider" />
 
-                    <ui:VisualElement class="profile-stat-box">
-                        <ui:Label text="CITIES" class="profile-stat-label" />
-                        <ui:Label name="Lbl-CitiesValue" class="profile-stat-value" text="0" />
+                    <ui:VisualElement class="stat-box">
+                        <ui:Label text="CITIES" class="stat-label" />
+                        <ui:Label name="Lbl-CitiesValue" class="stat-value" text="0" />
                     </ui:VisualElement>
 
                 </ui:VisualElement>
 
-                <ui:Label name="Lbl-Description" class="profile-description-label" text="Ingen beskrivelse tilgængelig." />
+                <ui:Label name="Lbl-Description" class="profile-description" text="No description available." />
 
             </ui:VisualElement>
-
+            
         </ui:VisualElement>
     </ui:VisualElement>
 </ui:UXML>

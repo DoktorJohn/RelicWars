@@ -10,9 +10,9 @@ namespace Project.Modules.UI.Windows.Implementations
     public class AllianceWindowController : BaseWindow
     {
         // --- BaseWindow Setup ---
-        protected override string WindowName => "AllianceWindow";
-        protected override string VisualContainerName => "AllianceWindow-Frame";
-        protected override string HeaderName => "AllianceWindow-TitleBar";
+        protected override string WindowName => "Alliance";
+        protected override string VisualContainerName => "Alliance-Window-MainContainer";
+        protected override string HeaderName => "Alliance-Window-Header";
 
         // --- View Containers ---
         private VisualElement _viewCreateAlliance;
@@ -34,15 +34,18 @@ namespace Project.Modules.UI.Windows.Implementations
 
         public override void OnOpen(object dataPayload)
         {
+            // 1. Standard Close Button
+            var closeBtn = Root.Q<Button>("Header-Close-Button");
+            if (closeBtn != null) { closeBtn.clicked -= Close; closeBtn.clicked += Close; }
+
             InitializeUI();
 
-            // 1. Vi er nødt til at vide om spilleren allerede er i en alliance.
-            // Vi henter spillerens profil først.
+            // 2. Check Player Status
             Guid currentPlayerId = GetCurrentWorldPlayerId();
 
             if (currentPlayerId == Guid.Empty)
             {
-                Debug.LogError("[AllianceWindow] Ingen WorldPlayerId fundet.");
+                Debug.LogError("[AllianceWindow] No WorldPlayerId found.");
                 return;
             }
 
@@ -71,7 +74,7 @@ namespace Project.Modules.UI.Windows.Implementations
             _lblTotalPoints = Root.Q<Label>("Lbl-TotalPoints");
             _btnLeave = Root.Q<Button>("Btn-LeaveAlliance");
 
-            // TODO: Implement Leave Logic senere
+            // TODO: Implement Leave Logic later
         }
 
         private Guid GetCurrentWorldPlayerId()
@@ -88,13 +91,10 @@ namespace Project.Modules.UI.Windows.Implementations
         {
             string token = NetworkManager.Instance.JwtToken;
 
-            // Vi genbruger WorldPlayer servicen til at hente vores egen profil
-            // for at se om "AllianceId" er sat.
             StartCoroutine(NetworkManager.Instance.WorldPlayer.GetPlayerProfile(playerId, token, (profile) =>
             {
                 if (profile == null) return;
 
-                // LOGIKKEN: Har spilleren et AllianceId?
                 if (profile.AllianceId != Guid.Empty)
                 {
                     ShowInfoView(profile.AllianceId);
@@ -118,7 +118,6 @@ namespace Project.Modules.UI.Windows.Implementations
             string name = _inputName.text;
             string tag = _inputTag.text;
 
-            // Simpel validering
             if (string.IsNullOrEmpty(name) || name.Length < 3)
             {
                 SetError("Name too short");
@@ -145,11 +144,10 @@ namespace Project.Modules.UI.Windows.Implementations
 
             StartCoroutine(NetworkManager.Instance.Alliance.CreateAlliance(dto, token, (resultDto) =>
             {
-                _btnCreate.SetEnabled(true);
+                if (_btnCreate != null) _btnCreate.SetEnabled(true);
 
                 if (resultDto != null)
                 {
-                    // Succes! Skift view til Info View med den nye alliance ID
                     ShowInfoView(resultDto.Id);
                 }
                 else
@@ -183,7 +181,7 @@ namespace Project.Modules.UI.Windows.Implementations
 
                 if (_lblInfoName != null) _lblInfoName.text = data.Name;
                 if (_lblInfoTag != null) _lblInfoTag.text = $"[{data.Tag}]";
-                if (_lblInfoDescription != null) _lblInfoDescription.text = data.Description;
+                if (_lblInfoDescription != null) _lblInfoDescription.text = string.IsNullOrEmpty(data.Description) ? "No description." : data.Description;
                 if (_lblMemberCount != null) _lblMemberCount.text = $"{data.MemberCount} / {data.MaxPlayers}";
                 if (_lblTotalPoints != null) _lblTotalPoints.text = data.TotalPoints.ToString("N0");
             }));

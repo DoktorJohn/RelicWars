@@ -61,10 +61,10 @@ namespace Application.Services
             if (globalResearchJob != null)
                 return new BuildingResult(false, "Du er allerede i gang med at forske et andet sted.");
 
-            // 5. VALIDERING: Academy Level i den valgte by
-            var academy = city.Buildings.FirstOrDefault(b => b.Type == BuildingTypeEnum.Academy);
-            if (academy == null || academy.Level < node.RequiredAcademyLevel)
-                return new BuildingResult(false, $"Byens Academy skal være level {node.RequiredAcademyLevel}.");
+            // 5. VALIDERING: University Level i den valgte by
+            var university = city.Buildings.FirstOrDefault(b => b.Type == BuildingTypeEnum.University);
+            if (university == null || university.Level < node.RequiredUniversityLevel)
+                return new BuildingResult(false, $"Byens University skal være level {node.RequiredUniversityLevel}.");
 
             // 6. VALIDERING: Ressourcer
             var now = DateTime.UtcNow;

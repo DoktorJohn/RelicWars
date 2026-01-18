@@ -15,9 +15,10 @@ namespace Project.Scripts.Domain.DTOs
     }
 
     [Serializable]
-    public class AcademyInfoDTO
+    public class UniversityInfoDTO
     {
         public int Level;
+        public int ProductionPerHour;
         public bool IsCurrentLevel;
     }
 
@@ -34,6 +35,19 @@ namespace Project.Scripts.Domain.DTOs
         public int Level;
         public ModifierDTO DefensiveModifier; // Den nestede DTO
         public bool IsCurrentLevel;
+    }
+
+    [Serializable]
+    public class MarketPlaceInfoDTO
+    {
+        public int Level { get; set; }
+        public ModifierDTO Modifier { get; set; } = new();
+    }
+
+    public class TownHallInfoDTO
+    {
+        public int Level { get; set; }
+        public ModifierDTO BuildingSpeedModifier { get; set; } = new();
     }
 
     [Serializable]

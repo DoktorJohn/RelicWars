@@ -50,5 +50,6 @@ namespace Game.Controllers
             var data = await _housingService.GetHousingInfoAsync(cityId);
             return Ok(data);
         }
+
     }
 }

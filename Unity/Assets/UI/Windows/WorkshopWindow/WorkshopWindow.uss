@@ -1,106 +1,131 @@
-/* --- OVERLAY & CONTAINER --- */
-.window-overlay {
-    position: absolute;
-    width: 100%; height: 100%;
-    background-color: rgba(0, 0, 0, 0.6);
-    justify-content: center; align-items: center;
+/* Assets/UI/Windows/WorkshopWindow/WorkshopWindow.uss */
+
+/* --- GENERAL LABELS --- */
+.section-label {
+    -unity-font-definition: var(--font-header);
+    color: var(--c-text-header); 
+    font-size: 16px;
+    -unity-font-style: bold;
+    margin-bottom: 5px;
+    letter-spacing: 1px;
 }
 
-.window-container {
-    width: 800px;
-    height: 600px;
-    background-image: url('/Assets/_ExternalAssets/UI/PNG/panelInset_brown.png');
-    background-color: rgb(45, 45, 50); /* Mere stål-grå til workshop */
-    -unity-slice-left: 20; -unity-slice-top: 20; -unity-slice-right: 20; -unity-slice-bottom: 20;
-    padding: 30px;
-    position: absolute;
-    border-radius: 15px;
+.section-label-small {
+    -unity-font-definition: var(--font-body);
+    color: var(--c-text-muted);
+    font-size: 10px;
+    -unity-font-style: bold;
+    letter-spacing: 1px;
 }
 
-/* --- HEADER --- */
-.window-header {
-    height: 50px;
-    flex-direction: row; justify-content: center; align-items: center;
+.unit-name-large {
+    -unity-font-definition: var(--font-header);
+    color: var(--c-text-header);
+    font-size: 32px;
+    -unity-font-style: bold;
+    -unity-text-align: middle-center;
+    margin-top: 10px;
+}
+
+/* --- TABS SYSTEM --- */
+.tabs-wrapper {
+    height: 50px; 
+    background-color: rgba(0,0,0,0.05);
+    border-radius: 6px;
+    border-width: 1px;
+    border-color: rgba(0,0,0,0.1);
     margin-bottom: 5px;
 }
 
-.window-title {
-    -unity-font-definition: url('/Assets/TextMesh Pro/Fonts/Cinzel.asset');
-    color: rgb(200, 210, 255); /* Lys blålig stål farve */
-    font-size: 42px; -unity-font-style: bold;
-    -unity-text-align: middle-center;
+.tabs-scroll-view .unity-scroll-view__content-container {
+    min-width: 100%;
+    flex-direction: row;
 }
 
-.level-subtitle {
-    -unity-font-definition: url('/Assets/TextMesh Pro/Fonts/Roboto.asset');
-    color: rgb(160, 170, 180);
-    font-size: 18px; margin-top: 5px;
-    -unity-text-align: middle-center;
+.tab-button {
+    flex-grow: 1; 
+    width: auto;
+    height: 40px; 
+    min-width: 60px; 
+    padding-left: 5px; padding-right: 5px;
+    
+    background-color: rgba(0,0,0,0.1);
+    border-width: 1px;
+    border-color: var(--c-border);
+    border-radius: 4px;
+    
+    margin-top: 4px; margin-left: 2px; margin-right: 2px;
+    
+    color: var(--c-text-body);
+    -unity-font-definition: var(--font-header);
+    -unity-font-style: bold;
+    font-size: 12px; 
+}
+
+.tab-button:hover { background-color: rgba(255,255,255,0.1); }
+
+.tab-button-active {
+    background-color: var(--c-btn-chill-bg);
+    border-color: var(--c-btn-chill-border);
+    color: white;
+}
+
+/* --- DETAIL VIEW --- */
+.detail-container {
+    flex-grow: 1;
+    justify-content: flex-start;
+    align-items: center; 
+}
+
+.detail-container > .text-subtitle { margin-bottom: 15px; }
+
+.cost-box {
+    width: 100%; 
+    background-color: rgba(0,0,0,0.06);
+    border-radius: 6px;
+    padding: 15px;
+    margin-top: 10px; margin-bottom: 20px;
+    align-items: center;
+    border-width: 1px; border-color: rgba(0,0,0,0.05);
+}
+
+.controls-area {
+    width: 100%; 
+    background-color: rgba(0,0,0,0.03);
+    border-radius: 6px;
+    padding: 15px;
 }
 
 .flavor-text {
-    -unity-font-definition: url('/Assets/TextMesh Pro/Fonts/Roboto.asset');
-    color: rgb(180, 190, 200);
-    font-size: 14px; -unity-font-style: italic;
-    white-space: normal; -unity-text-align: middle-center;
-    margin-bottom: 20px; padding: 0 40px;
+    width: 100%; 
+    padding-left: 20px; padding-right: 20px;
 }
 
-.divider {
-    height: 2px; background-color: rgba(100, 120, 255, 0.2);
-    margin-bottom: 20px; width: 95%; align-self: center;
+.slider-row {
+    flex-direction: row;
+    align-items: center;
+    margin-top: 5px;
 }
 
-/* --- DATA TABLE --- */
-.table-container {
-    flex-grow: 1;
-    background-color: rgba(0, 0, 0, 0.3);
-    border-radius: 8px;
-    padding: 10px;
-}
-
-/* Dynamic Rows */
-.table-row {
-    flex-direction: column; /* Stacker info over knapper */
-    height: auto;
-    min-height: 50px;
-    border-bottom-width: 1px;
-    border-bottom-color: rgba(100, 150, 255, 0.1);
-    padding: 10px;
-    margin-bottom: 5px;
-}
-
-.row-label {
-    -unity-font-definition: url('/Assets/TextMesh Pro/Fonts/Roboto.asset');
-    color: white;
-    font-size: 15px;
-}
-
-/* --- UI ELEMENTS (BUTTONS & INPUTS) --- */
-.unity-button {
+/* --- INPUT & SLIDER OVERRIDES --- */
+.game-input-number > .unity-integer-field__input {
+    background-color: rgba(0,0,0,0.1);
+    border-width: 1px; border-color: var(--c-border);
     border-radius: 4px;
-    border-width: 1px;
-    border-color: rgba(0, 0, 0, 0.5);
-    background-color: rgb(60, 70, 85); /* Mørkeblå knapper */
-    color: white;
-    -unity-font-style: bold;
-    margin: 2px;
+    color: var(--c-text-body);
+    -unity-text-align: middle-center;
+    height: 35px;
 }
 
-.unity-button:hover {
-    background-color: rgb(80, 100, 130);
+.game-slider .unity-base-slider__tracker {
+    background-color: rgba(0,0,0,0.2);
+    height: 4px;
+}
+.game-slider .unity-base-slider__dragger {
+    background-color: var(--c-border);
+    width: 20px; height: 20px;
+    border-radius: 10px;
+    border-width: 2px; border-color: white;
 }
 
-.unity-button:disabled {
-    opacity: 0.5;
-    background-color: rgb(40, 40, 40);
-}
-
-/* --- CLOSE BUTTON --- */
-.close-button {
-    height: 40px; width: 150px; align-self: center; margin-top: 15px;
-    background-color: rgb(120, 40, 40); color: white; border-radius: 5px;
-    -unity-font-definition: url('/Assets/TextMesh Pro/Fonts/Cinzel.asset');
-    font-size: 16px;
-}
-.close-button:hover { background-color: rgb(160, 50, 50); }
+.tabs-scroll-view .unity-scroller { display: none; height: 0; }

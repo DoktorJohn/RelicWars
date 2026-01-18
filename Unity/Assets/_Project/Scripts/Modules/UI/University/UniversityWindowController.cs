@@ -1,4 +1,3 @@
-using Project.Modules.UI;
 using UnityEngine;
 using UnityEngine.UIElements;
 using System;
@@ -6,25 +5,27 @@ using System.Collections.Generic;
 using Assets.Scripts.Domain.Enums;
 using Project.Network.Manager;
 using Project.Scripts.Domain.DTOs;
+using Project.Modules.UI.Windows;
 
 namespace Project.Modules.UI.Windows.Implementations
 {
-    public class AcademyWindowController : BaseWindow
+    public class UniversityWindowController : BaseWindow
     {
-        protected override string WindowName => "Academy";
-        protected override string VisualContainerName => "Academy-Window-MainContainer";
-        protected override string HeaderName => "Academy-Window-Header";
+        protected override string WindowName => "University";
+        protected override string VisualContainerName => "University-Window-MainContainer";
+        protected override string HeaderName => "University-Window-Header";
 
         private Label _levelLabel;
         private ScrollView _statsContainer;
 
         public override void OnOpen(object dataPayload)
         {
-            var closeBtn = Root.Q<Button>("Common-Close-Button");
+            // FIX: Correct ID for the close button in the header
+            var closeBtn = Root.Q<Button>("Header-Close-Button");
             if (closeBtn != null) { closeBtn.clicked -= Close; closeBtn.clicked += Close; }
 
             _levelLabel = Root.Q<Label>("Lbl-Level");
-            _statsContainer = Root.Q<ScrollView>("Academy-Stats-List");
+            _statsContainer = Root.Q<ScrollView>("University-Stats-List");
 
             Guid cityId = (dataPayload is Guid id) ? id : NetworkManager.Instance.ActiveCityId ?? Guid.Empty;
             if (cityId == Guid.Empty) return;
@@ -37,23 +38,24 @@ namespace Project.Modules.UI.Windows.Implementations
             if (_statsContainer != null) _statsContainer.Clear();
             string token = NetworkManager.Instance.JwtToken;
 
-            StartCoroutine(NetworkManager.Instance.Building.GetAcademyInfo(cityId, token, (dataList) =>
+            StartCoroutine(NetworkManager.Instance.Building.GetUniversityInfo(cityId, token, (dataList) =>
             {
                 if (dataList != null && dataList.Count > 0)
                 {
-                    var current = dataList.Find(x => x.IsCurrentLevel);
-                    if (current != null && _levelLabel != null)
-                        _levelLabel.text = $"Level {current.Level}";
-                    else if (_levelLabel != null)
-                        _levelLabel.text = "Not Constructed";
-
-                    PopulateTable(dataList);
+                    UpdateUI(dataList);
                 }
             }));
         }
 
-        private void PopulateTable(List<AcademyInfoDTO> dataList)
+        private void UpdateUI(List<UniversityInfoDTO> dataList)
         {
+            var current = dataList.Find(x => x.IsCurrentLevel);
+
+            if (current != null && _levelLabel != null)
+                _levelLabel.text = $"Level {current.Level}";
+            else if (_levelLabel != null)
+                _levelLabel.text = "Not Constructed";
+
             if (_statsContainer == null) return;
             _statsContainer.Clear();
 
@@ -63,7 +65,7 @@ namespace Project.Modules.UI.Windows.Implementations
             }
         }
 
-        private void CreateTableRow(AcademyInfoDTO item)
+        private void CreateTableRow(UniversityInfoDTO item)
         {
             VisualElement row = new VisualElement();
             row.AddToClassList("table-row");
@@ -73,25 +75,22 @@ namespace Project.Modules.UI.Windows.Implementations
                 row.AddToClassList("table-row-current");
             }
 
-            // Level Cell
+            // 1. Level Cell
             Label lvlLabel = new Label(item.Level.ToString());
             lvlLabel.AddToClassList("row-label");
+            if (item.IsCurrentLevel) lvlLabel.style.unityFontStyleAndWeight = FontStyle.Bold;
             row.Add(lvlLabel);
 
-            // Status Cell
-            string statusText = item.IsCurrentLevel ? "Operational" : "Upgrade Available";
-            if (item.Level < 1) statusText = "Not Built";
+            // 2. Production Cell (Research Points)
+            Label prodLabel = new Label($"+{item.ProductionPerHour:N0}");
+            prodLabel.AddToClassList("row-label");
 
-            Label statusLabel = new Label(statusText);
-            statusLabel.AddToClassList("row-label");
+            // COLOR: Science Cyan (#64D2FF)
+            prodLabel.style.color = new StyleColor(new Color(0.2f, 0.6f, 0.2f));
 
-            if (item.IsCurrentLevel)
-            {
-                // Cyan / Science farve (#64D2FF)
-                statusLabel.style.color = new StyleColor(new Color(0.39f, 0.82f, 1f));
-            }
+            if (item.IsCurrentLevel) prodLabel.style.unityFontStyleAndWeight = FontStyle.Bold;
 
-            row.Add(statusLabel);
+            row.Add(prodLabel);
 
             _statsContainer.Add(row);
         }

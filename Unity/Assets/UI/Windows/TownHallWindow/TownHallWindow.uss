@@ -1,0 +1,106 @@
+/* Assets/UI/Windows/SenateWindow/SenateWindow.uss */
+
+/* --- GRID VIEW LAYOUT --- */
+.building-grid-view {
+    flex-grow: 1;
+    margin-bottom: 10px;
+}
+
+/* Target the content container to enable wrapping */
+.building-grid-view .unity-scroll-view__content-container {
+    flex-direction: row; 
+    flex-wrap: wrap;     
+    justify-content: flex-start; /* Aligns items to the left, flowing naturally */
+    align-items: flex-start;
+    padding-left: 10px; /* Slight padding to center the grid visually */
+    padding-bottom: 20px;
+    min-width: 100%;
+}
+
+/* HIDE SCROLLBARS */
+.unity-scroller { display: none; opacity: 0; }
+.unity-scroller--vertical { width: 0; }
+.unity-scroller--horizontal { height: 0; }
+
+/* --- BUILDING CARD (Applied via C#) --- */
+.building-card {
+    /* Fixed Dimensions for Grid */
+    width: 290px;
+    height: 90px;
+    margin: 8px; 
+    
+    background-color: rgba(0, 0, 0, 0.2);
+    border-width: 1px;
+    border-color: rgba(165, 125, 50, 0.3); /* Faint Gold */
+    border-radius: 6px;
+    
+    padding: 10px;
+    
+    /* Ensure styles propagate to children */
+    justify-content: space-between; 
+    transition-duration: 0.1s;
+}
+
+.building-card:hover {
+    border-color: var(--c-border); 
+    background-color: rgba(0, 0, 0, 0.3);
+    scale: 1.02;
+}
+
+/* --- CARD HEADER (Flex Row) --- */
+.card-header {
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom-width: 1px;
+    border-bottom-color: rgba(255, 255, 255, 0.1);
+    padding-bottom: 5px;
+    margin-bottom: 5px;
+}
+
+.card-name {
+    -unity-font-definition: var(--font-header);
+    color: var(--c-text-header);
+    font-size: 16px; 
+    -unity-font-style: bold;
+}
+
+.card-level {
+    -unity-font-definition: var(--font-body);
+    color: var(--c-text-muted);
+    font-size: 14px;
+    -unity-font-style: bold;
+}
+
+/* --- BUTTON --- */
+.card-upgrade-button {
+    width: 100%; height: 32px; 
+    background-color: var(--c-btn-chill-bg);
+    color: white; border-radius: 4px;
+    -unity-font-definition: var(--font-header);
+    font-size: 12px; -unity-font-style: bold;
+    border-width: 1px; border-color: var(--c-btn-chill-border);
+}
+
+.card-upgrade-button:hover { background-color: rgb(175, 55, 45); cursor: link; }
+.card-upgrade-button:disabled { background-color: rgba(60, 60, 60, 0.8); color: grey; border-color: grey; }
+
+/* --- TOOLTIP --- */
+.resource-tooltip {
+    position: absolute;
+    width: 220px;
+    background-color: rgba(35, 32, 30, 0.98); 
+    border-width: 2px; border-color: var(--c-border);
+    border-radius: 8px; padding: 10px;
+    display: none; 
+}
+
+.tooltip-title {
+    -unity-font-definition: var(--font-header);
+    color: var(--c-text-header); font-size: 14px; margin-bottom: 8px;
+    border-bottom-width: 1px; border-bottom-color: rgba(255,255,255,0.2);
+    -unity-text-align: middle-center; -unity-font-style: bold;
+}
+
+.tooltip-row { flex-direction: row; justify-content: space-between; margin-bottom: 2px; }
+.tooltip-label { -unity-font-definition: var(--font-body); color: white; font-size: 13px; }

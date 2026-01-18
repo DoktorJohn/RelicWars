@@ -99,8 +99,8 @@ namespace Project.Modules.City
         {
             switch (buildingType)
             {
-                case BuildingTypeEnum.Senate:
-                    return WindowTypeEnum.Senate;
+                case BuildingTypeEnum.TownHall:
+                    return WindowTypeEnum.TownHall;
 
                 case BuildingTypeEnum.Barracks:
                     return WindowTypeEnum.Barracks;
@@ -123,14 +123,17 @@ namespace Project.Modules.City
                 case BuildingTypeEnum.Wall:
                     return WindowTypeEnum.Wall;
 
-                case BuildingTypeEnum.Academy:
-                    return WindowTypeEnum.Academy;
+                case BuildingTypeEnum.University:
+                    return WindowTypeEnum.University;
 
                 case BuildingTypeEnum.Stable:
                     return WindowTypeEnum.Stable;
 
                 case BuildingTypeEnum.Workshop:
                     return WindowTypeEnum.Workshop;
+
+                case BuildingTypeEnum.MarketPlace:
+                    return WindowTypeEnum.MarketPlace;
 
                 // Add other mappings here as you create windows for them
                 // case BuildingTypeEnum.TimberCamp: return WindowTypeEnum.ProductionBuilding;

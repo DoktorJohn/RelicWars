@@ -1,18 +1,54 @@
 <?xml version="1.0" encoding="utf-8"?>
-<ui:UXML xmlns:ui="UnityEngine.UIElements" editor-extension-mode="False">
-    <ui:Style src="StableWindow.uss" />
-    <ui:VisualElement name="Stable-Window-Overlay" class="window-overlay">
-        <ui:VisualElement name="Stable-Window-MainContainer" class="window-container">
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" editor-extension-mode="False">
+    
+    <ui:Style src="project://database/Assets/UI/Windows/WindowTheme.uss" />
+    <ui:Style src="project://database/Assets/UI/Windows/StableWindow/StableWindow.uss" />
+
+    <ui:VisualElement name="Stable-Window-Overlay" picking-mode="Ignore" class="screen-overlay">
+        
+        <ui:VisualElement name="Stable-Window-MainContainer" class="window-frame size-large">
+            
             <ui:VisualElement name="Stable-Window-Header" class="window-header">
-                <ui:Label name="Lbl-Title" class="window-title" text="STABLE" />
+                <ui:Label name="Lbl-Title" class="window-header-label" text="STABLE" />
+                <ui:Button name="Header-Close-Button" class="window-close-btn" text="×" />
             </ui:VisualElement>
-            <ui:Label name="Lbl-Level" class="level-subtitle" text="Level ..." />
-            <ui:Label class="flavor-text" text="Home of your cavalry. Breed strong horses and train riders to strike swiftly at your enemies." />
-            <ui:VisualElement class="divider" />
-            <ui:VisualElement class="table-container">
-                <ui:ScrollView name="Stable-Stats-List" />
+            
+            <ui:VisualElement style="padding: 20px; flex-grow: 1;">
+                
+                <ui:Label text="SELECT UNIT" class="section-label" />
+                <ui:VisualElement class="tabs-wrapper">
+                    <ui:ScrollView name="Tabs-Scroll-Container" mode="Horizontal" class="tabs-scroll-view" />
+                </ui:VisualElement>
+
+                <ui:VisualElement class="divider" style="margin-top: 10px; margin-bottom: 10px;" />
+
+                <ui:VisualElement name="Detail-View-Container" class="detail-container">
+                    
+                    <ui:Label name="Lbl-UnitName" class="unit-name-large" text="Scout" />
+                    <ui:Label name="Lbl-OwnedCount" class="text-subtitle" text="Owned: 0" style="margin-bottom: 15px;" />
+
+                    <ui:Label name="Lbl-Flavor" class="flavor-text text-flavor" text="..." />
+
+                    <ui:VisualElement class="cost-box">
+                        <ui:Label text="TRAINING COST" class="section-label-small" />
+                        <ui:Label name="Lbl-CostString" class="text-body" text="Wood: 100 | Stone: 50 | Time: 30s" style="margin-top: 5px;" />
+                    </ui:VisualElement>
+
+                    <ui:VisualElement class="controls-area">
+                        <ui:Label text="QUANTITY" class="section-label-small" />
+                        
+                        <ui:VisualElement class="slider-row">
+                            <ui:SliderInt name="Slider-Quantity" low-value="1" high-value="100" class="game-slider" style="flex-grow: 1; margin-right: 10px;" />
+                            <ui:IntegerField name="Input-Quantity" class="game-input-number" style="width: 80px;" />
+                        </ui:VisualElement>
+
+                        <ui:Button name="Btn-Recruit" class="btn-base btn-primary" text="RECRUIT UNITS" style="height: 50px; margin-top: 15px;" />
+                    </ui:VisualElement>
+
+                </ui:VisualElement>
+
             </ui:VisualElement>
-            <ui:Button name="Common-Close-Button" class="close-button" text="CLOSE" />
+            
         </ui:VisualElement>
     </ui:VisualElement>
 </ui:UXML>

@@ -25,7 +25,7 @@ namespace Domain.StaticData.Data
         public List<ModifierTagEnum> ModifiersThatAffects { get; set; } = new();
     }
 
-    public class SenateLevelData : BuildingLevelData
+    public class TownHallLevelData : BuildingLevelData
     {
     }
 
@@ -61,8 +61,9 @@ namespace Domain.StaticData.Data
     {
     }
 
-    public class AcademyLevelData : BuildingLevelData
+    public class UniversityLevelData : BuildingLevelData
     {
+        public int ProductionPerHour { get; set; }
     }
 
     public class WarehouseLevelData : BuildingLevelData
@@ -72,5 +73,10 @@ namespace Domain.StaticData.Data
 
     public class WallLevelData : BuildingLevelData
     {
+    }
+
+    public class MarketPlaceLevelData : BuildingLevelData
+    {
+
     }
 }

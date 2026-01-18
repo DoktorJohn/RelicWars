@@ -117,7 +117,7 @@ namespace Application.Services
             );
         }
 
-        public async Task<List<AvailableBuildingDTO>> GetAvailableBuildingsForSenateAsync(Guid cityIdentifier)
+        public async Task<List<AvailableBuildingDTO>> GetAvailableBuildingsForTownHallAsync(Guid cityIdentifier)
         {
             var cityEntity = await _cityRepo.GetCityWithBuildingsByCityIdentifierAsync(cityIdentifier);
             if (cityEntity == null) return new List<AvailableBuildingDTO>();

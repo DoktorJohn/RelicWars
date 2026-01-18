@@ -1,4 +1,3 @@
-using Project.Modules.UI;
 using UnityEngine;
 using UnityEngine.UIElements;
 using System;
@@ -6,38 +5,29 @@ using System.Collections.Generic;
 using Assets.Scripts.Domain.Enums;
 using Project.Network.Manager;
 using Project.Scripts.Domain.DTOs;
+using Project.Modules.UI.Windows; // BaseWindow namespace
 
 namespace Project.Modules.UI.Windows.Implementations
 {
     public class TimberCampWindowController : BaseWindow
     {
-        // 1. Konfiguration af BaseWindow
         protected override string WindowName => "TimberCamp";
         protected override string VisualContainerName => "Timber-Window-MainContainer";
         protected override string HeaderName => "Timber-Window-Header";
 
-        // 2. UI Referencer
         private Label _levelLabel;
         private ScrollView _statsContainer;
 
         public override void OnOpen(object dataPayload)
         {
-            // Setup Close Button
-            var closeBtn = Root.Q<Button>("Common-Close-Button");
+            var closeBtn = Root.Q<Button>("Header-Close-Button");
             if (closeBtn != null) { closeBtn.clicked -= Close; closeBtn.clicked += Close; }
 
-            // Find UI elementer
             _levelLabel = Root.Q<Label>("Lbl-Level");
             _statsContainer = Root.Q<ScrollView>("Timber-Stats-List");
 
-            // Hent City ID (fra payload eller aktiv by)
             Guid cityId = (dataPayload is Guid id) ? id : NetworkManager.Instance.ActiveCityId ?? Guid.Empty;
-
-            if (cityId == Guid.Empty)
-            {
-                Debug.LogError("[TimberCampWindow] Ingen ActiveCityId fundet.");
-                return;
-            }
+            if (cityId == Guid.Empty) return;
 
             RefreshContent(cityId);
         }
@@ -49,7 +39,6 @@ namespace Project.Modules.UI.Windows.Implementations
             string token = NetworkManager.Instance.JwtToken;
             var buildingType = BuildingTypeEnum.TimberCamp;
 
-            // 3. Kald Netværket
             StartCoroutine(NetworkManager.Instance.Building.GetResourceProductionInfo(cityId, buildingType, token, (dataList) =>
             {
                 if (dataList != null && dataList.Count > 0)
@@ -61,14 +50,17 @@ namespace Project.Modules.UI.Windows.Implementations
 
         private void UpdateUI(List<ResourceBuildingInfoDTO> dataList)
         {
-            // Opdater Header (Nuværende Level)
+            // Find Current Level
             var current = dataList.Find(x => x.IsCurrentLevel);
             if (current != null && _levelLabel != null)
             {
                 _levelLabel.text = $"Level {current.Level}";
             }
+            else if (_levelLabel != null)
+            {
+                _levelLabel.text = "Not Constructed";
+            }
 
-            // Byg Tabellen
             if (_statsContainer == null) return;
             _statsContainer.Clear();
 
@@ -83,22 +75,25 @@ namespace Project.Modules.UI.Windows.Implementations
             VisualElement row = new VisualElement();
             row.AddToClassList("table-row");
 
-            // Highlight nuværende level
             if (item.IsCurrentLevel)
             {
                 row.AddToClassList("table-row-current");
             }
 
-            // Level Kolonne
+            // Level Cell
             Label lvlLabel = new Label(item.Level.ToString());
             lvlLabel.AddToClassList("row-label");
+            if (item.IsCurrentLevel) lvlLabel.style.unityFontStyleAndWeight = FontStyle.Bold;
             row.Add(lvlLabel);
 
-            // Production Kolonne
-            // Vi viser "+X" og farver det grønt for at indikere indtægt
+            // Production Cell
             Label prodLabel = new Label($"+{item.ProductionPrHour:N0}");
             prodLabel.AddToClassList("row-label");
-            prodLabel.style.color = new StyleColor(new Color(0.6f, 1f, 0.6f)); // Lys grøn
+
+            // Make it green to indicate income
+            prodLabel.style.color = new StyleColor(new Color(0.2f, 0.6f, 0.2f));
+            if (item.IsCurrentLevel) prodLabel.style.unityFontStyleAndWeight = FontStyle.Bold;
+
             row.Add(prodLabel);
 
             _statsContainer.Add(row);

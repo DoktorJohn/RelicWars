@@ -3,7 +3,7 @@
     public enum WindowTypeEnum
     {
         None,
-        Senate,
+        TownHall,
         Barracks,
         Warehouse,
         TimberCamp,
@@ -13,7 +13,8 @@
         Wall,
         Stable,
         Workshop,
-        Academy,
+        University,
+        MarketPlace,
 
         Profile,
         Alliance,

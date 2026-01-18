@@ -1,11 +1,12 @@
-using Project.Modules.UI;
 using UnityEngine;
 using UnityEngine.UIElements;
 using System;
 using System.Collections.Generic;
-using Assets.Scripts.Domain.Enums;
+using System.Linq;
 using Project.Network.Manager;
+using Assets.Scripts.Domain.Enums;
 using Project.Scripts.Domain.DTOs;
+using Project.Modules.City;
 
 namespace Project.Modules.UI.Windows.Implementations
 {
@@ -15,140 +16,260 @@ namespace Project.Modules.UI.Windows.Implementations
         protected override string VisualContainerName => "Workshop-Window-MainContainer";
         protected override string HeaderName => "Workshop-Window-Header";
 
+        // UI References
         private Label _levelLabel;
-        private ScrollView _contentContainer;
+        private ScrollView _tabsContainer;
+
+        // Detail View Elements
+        private Label _lblUnitName;
+        private Label _lblOwnedCount;
+        private Label _lblFlavor;
+        private Label _lblCostString;
+
+        private SliderInt _quantitySlider;
+        private IntegerField _quantityInput;
+        private Button _recruitBtn;
+
+        // Data State
         private Guid _currentCityId;
+        private WorkshopUnitInfoDTO _selectedUnit; // Note: Workshop DTO
+        private List<Button> _tabButtons = new List<Button>();
 
         public override void OnOpen(object dataPayload)
         {
-            var closeBtn = Root.Q<Button>("Common-Close-Button");
+            var closeBtn = Root.Q<Button>("Header-Close-Button");
             if (closeBtn != null) { closeBtn.clicked -= Close; closeBtn.clicked += Close; }
 
             _levelLabel = Root.Q<Label>("Lbl-Level");
-            _contentContainer = Root.Q<ScrollView>("Workshop-Stats-List");
+            _tabsContainer = Root.Q<ScrollView>("Tabs-Scroll-Container");
+
+            _lblUnitName = Root.Q<Label>("Lbl-UnitName");
+            _lblOwnedCount = Root.Q<Label>("Lbl-OwnedCount");
+            _lblFlavor = Root.Q<Label>("Lbl-Flavor");
+            _lblCostString = Root.Q<Label>("Lbl-CostString");
+
+            _quantitySlider = Root.Q<SliderInt>("Slider-Quantity");
+            _quantityInput = Root.Q<IntegerField>("Input-Quantity");
+            _recruitBtn = Root.Q<Button>("Btn-Recruit");
+
+            if (_quantitySlider != null && _quantityInput != null)
+            {
+                _quantitySlider.RegisterValueChangedCallback(evt =>
+                {
+                    if (_quantityInput.value != evt.newValue)
+                        _quantityInput.value = evt.newValue;
+
+                    UpdateRecruitButtonText(evt.newValue);
+                    UpdateCostLabel(evt.newValue);
+                });
+
+                _quantityInput.RegisterValueChangedCallback(evt =>
+                {
+                    int clamped = Mathf.Clamp(evt.newValue, _quantitySlider.lowValue, _quantitySlider.highValue);
+                    if (clamped != evt.newValue) _quantityInput.SetValueWithoutNotify(clamped);
+
+                    if (_quantitySlider.value != clamped)
+                        _quantitySlider.value = clamped;
+                });
+            }
+
+            if (_recruitBtn != null)
+            {
+                _recruitBtn.clicked -= OnRecruitClicked;
+                _recruitBtn.clicked += OnRecruitClicked;
+            }
 
             _currentCityId = (dataPayload is Guid id) ? id : NetworkManager.Instance.ActiveCityId ?? Guid.Empty;
             if (_currentCityId == Guid.Empty) return;
 
-            RefreshWorkshopData();
+            RefreshData();
         }
 
-        private void RefreshWorkshopData()
+        private void RefreshData()
         {
-            if (_contentContainer != null) _contentContainer.Clear();
             string token = NetworkManager.Instance.JwtToken;
-
             StartCoroutine(NetworkManager.Instance.Workshop.GetWorkshopOverviewInformation(_currentCityId, token, (workshopData) =>
             {
                 if (workshopData != null)
                 {
-                    UpdateWorkshopUI(workshopData);
+                    UpdateUI(workshopData);
                 }
             }));
         }
 
-        private void UpdateWorkshopUI(WorkshopFullViewDTO data)
+        private void UpdateUI(WorkshopFullViewDTO data)
         {
             if (_levelLabel != null)
                 _levelLabel.text = data.BuildingLevel > 0 ? $"Level {data.BuildingLevel}" : "Under Construction";
 
-            if (_contentContainer == null) return;
-            _contentContainer.Clear();
-
-            if (data.RecruitmentQueue != null && data.RecruitmentQueue.Count > 0)
+            if (_tabsContainer != null)
             {
-                Label queueHeader = new Label("CONSTRUCTION QUEUE");
-                queueHeader.style.unityFontStyleAndWeight = FontStyle.Bold;
-                queueHeader.style.color = new StyleColor(new Color(0.7f, 0.7f, 0.7f));
-                _contentContainer.Add(queueHeader);
+                _tabsContainer.Clear();
+                _tabButtons.Clear();
 
-                foreach (var queueItem in data.RecruitmentQueue)
+                if (data.AvailableUnits != null && data.AvailableUnits.Count > 0)
                 {
-                    CreateQueueRow(queueItem);
-                }
+                    foreach (var unit in data.AvailableUnits)
+                    {
+                        CreateTab(unit);
+                    }
 
-                _contentContainer.Add(new VisualElement { style = { height = 20 } });
-            }
-
-            Label recruitHeader = new Label("BUILD SIEGE ENGINES");
-            recruitHeader.style.unityFontStyleAndWeight = FontStyle.Bold;
-            _contentContainer.Add(recruitHeader);
-
-            if (data.AvailableUnits != null)
-            {
-                foreach (var unit in data.AvailableUnits)
-                {
-                    CreateRecruitRow(unit);
+                    if (_selectedUnit == null || !data.AvailableUnits.Any(u => u.UnitType == _selectedUnit.UnitType))
+                    {
+                        SelectUnit(data.AvailableUnits[0]);
+                    }
+                    else
+                    {
+                        var refreshedUnit = data.AvailableUnits.First(u => u.UnitType == _selectedUnit.UnitType);
+                        SelectUnit(refreshedUnit);
+                    }
                 }
             }
         }
 
-        private void CreateQueueRow(RecruitmentQueueItemDTO item)
+        private void CreateTab(WorkshopUnitInfoDTO unit)
         {
-            VisualElement row = new VisualElement();
-            row.style.flexDirection = FlexDirection.Row;
-            row.style.justifyContent = Justify.SpaceBetween;
-            row.AddToClassList("table-row");
+            Button tab = new Button();
+            tab.text = unit.UnitName;
+            tab.AddToClassList("tab-button");
+            tab.clicked += () => SelectUnit(unit);
 
-            row.Add(new Label($"{item.Amount}x {item.UnitType}") { style = { color = Color.white } });
-
-            TimeSpan timeSpan = TimeSpan.FromSeconds(item.TimeRemainingSeconds);
-            row.Add(new Label($"{timeSpan.Hours:D2}:{timeSpan.Minutes:D2}:{timeSpan.Seconds:D2}") { style = { color = Color.yellow } });
-
-            _contentContainer.Add(row);
+            _tabsContainer.Add(tab);
+            _tabButtons.Add(tab);
         }
 
-        private void CreateRecruitRow(WorkshopUnitInfoDTO unit)
+        private void SelectUnit(WorkshopUnitInfoDTO unit)
         {
-            VisualElement row = new VisualElement();
-            row.AddToClassList("table-row");
+            _selectedUnit = unit;
 
-            row.Add(new Label($"{unit.UnitName} (In Storage: {unit.CurrentInventoryCount})") { style = { unityFontStyleAndWeight = FontStyle.Bold } });
-            row.Add(new Label($"W: {unit.CostWood} | S: {unit.CostStone} | M: {unit.CostMetal} | {unit.RecruitmentTimeInSeconds}s")
-            { style = { fontSize = 12, color = new Color(0.8f, 0.8f, 0.8f) } });
-
-            if (unit.IsUnlocked)
+            foreach (var btn in _tabButtons)
             {
-                VisualElement actionContainer = new VisualElement { style = { flexDirection = FlexDirection.Row, marginTop = 5 } };
-
-                Button buildOneBtn = new Button(() => PerformSiegeConstruction(unit.UnitType, 1, null)) { text = "Build 1", style = { flexGrow = 1 } };
-                buildOneBtn.clicked += () => PerformSiegeConstruction(unit.UnitType, 1, buildOneBtn);
-
-                Button buildFiveBtn = new Button() { text = "Build 5", style = { flexGrow = 1 } };
-                buildFiveBtn.clicked += () => PerformSiegeConstruction(unit.UnitType, 5, buildFiveBtn);
-
-                actionContainer.Add(buildOneBtn);
-                actionContainer.Add(buildFiveBtn);
-                row.Add(actionContainer);
-            }
-            else
-            {
-                row.Add(new Label("LOCKED (Higher Workshop Level Required)") { style = { color = Color.red } });
+                if (btn.text == unit.UnitName) btn.AddToClassList("tab-button-active");
+                else btn.RemoveFromClassList("tab-button-active");
             }
 
-            _contentContainer.Add(row);
-        }
+            if (_lblUnitName != null) _lblUnitName.text = unit.UnitName;
+            if (_lblOwnedCount != null) _lblOwnedCount.text = $"In Storage: {unit.CurrentInventoryCount}";
+            if (_lblFlavor != null) _lblFlavor.text = GetFlavorText(unit.UnitType);
 
-        private void PerformSiegeConstruction(UnitTypeEnum type, int amount, Button clickedButton)
-        {
-            if (clickedButton != null) clickedButton.SetEnabled(false);
+            // CALCULATE AFFORDABLE MAX
+            int maxAffordable = CalculateMaxAffordableAmount(unit);
 
-            string token = NetworkManager.Instance.JwtToken;
-            StartCoroutine(NetworkManager.Instance.Workshop.RecruitUnits(_currentCityId, type, amount, token, (success, message) =>
+            if (_quantitySlider != null && _quantityInput != null)
             {
-                if (clickedButton != null) clickedButton.SetEnabled(true);
+                _quantitySlider.lowValue = 1;
+                _quantitySlider.highValue = Mathf.Max(1, maxAffordable);
 
-                if (success)
+                int startValue = maxAffordable > 0 ? 1 : 0;
+
+                _quantitySlider.value = startValue;
+                _quantityInput.value = startValue;
+
+                bool canRecruit = unit.IsUnlocked && maxAffordable > 0;
+
+                _quantitySlider.SetEnabled(canRecruit);
+                _quantityInput.SetEnabled(canRecruit);
+                _recruitBtn.SetEnabled(canRecruit);
+
+                if (!unit.IsUnlocked)
                 {
-                    RefreshWorkshopData();
-                    if (Project.Modules.City.CityResourceService.Instance != null)
-                        Project.Modules.City.CityResourceService.Instance.InitiateResourceRefresh(_currentCityId);
+                    _recruitBtn.text = "LOCKED (Low Level)";
+                }
+                else if (maxAffordable == 0)
+                {
+                    _recruitBtn.text = "NOT ENOUGH RESOURCES";
                 }
                 else
                 {
-                    Debug.LogError($"[Workshop Error] {message}");
+                    UpdateRecruitButtonText(startValue);
+                }
+            }
+
+            UpdateCostLabel(_quantitySlider != null ? _quantitySlider.value : 1);
+        }
+
+        private int CalculateMaxAffordableAmount(WorkshopUnitInfoDTO unit)
+        {
+            if (CityResourceService.Instance == null) return 999;
+
+            var resources = CityResourceService.Instance.CurrentResources;
+
+            int maxWood = unit.CostWood > 0
+                ? (int)(resources.WoodAmount / unit.CostWood)
+                : 9999;
+
+            int maxStone = unit.CostStone > 0
+                ? (int)(resources.StoneAmount / unit.CostStone)
+                : 9999;
+
+            int maxMetal = unit.CostMetal > 0
+                ? (int)(resources.MetalAmount / unit.CostMetal)
+                : 9999;
+
+            int maxAffordable = Mathf.Min(maxWood, Mathf.Min(maxStone, maxMetal));
+            return Mathf.Min(maxAffordable, 100); // Lower cap for siege engines (expensive)
+        }
+
+        private void UpdateCostLabel(int quantity)
+        {
+            if (_selectedUnit == null || _lblCostString == null) return;
+
+            long totalWood = (long)_selectedUnit.CostWood * quantity;
+            long totalStone = (long)_selectedUnit.CostStone * quantity;
+            long totalMetal = (long)_selectedUnit.CostMetal * quantity;
+            long totalTime = (long)_selectedUnit.RecruitmentTimeInSeconds * quantity;
+
+            _lblCostString.text = $"Wood: {totalWood}  |  Stone: {totalStone}  |  Metal: {totalMetal}  |  Time: {totalTime}s";
+
+            if (CityResourceService.Instance != null)
+            {
+                var res = CityResourceService.Instance.CurrentResources;
+                bool canAfford = res.WoodAmount >= totalWood && res.StoneAmount >= totalStone && res.MetalAmount >= totalMetal;
+                _lblCostString.style.color = canAfford ? new StyleColor(new Color(0.1f, 0.1f, 0.1f)) : new StyleColor(Color.red);
+            }
+        }
+
+        private void UpdateRecruitButtonText(int amount)
+        {
+            if (_recruitBtn == null || _selectedUnit == null) return;
+            _recruitBtn.text = $"CONSTRUCT {amount} {(_selectedUnit.UnitName.ToUpper())}";
+        }
+
+        private void OnRecruitClicked()
+        {
+            if (_selectedUnit == null) return;
+
+            int amount = _quantityInput.value;
+            if (amount <= 0) return;
+
+            string token = NetworkManager.Instance.JwtToken;
+            _recruitBtn.SetEnabled(false);
+
+            StartCoroutine(NetworkManager.Instance.Workshop.RecruitUnits(_currentCityId, _selectedUnit.UnitType, amount, token, (success, message) =>
+            {
+                _recruitBtn.SetEnabled(true);
+
+                if (success)
+                {
+                    Debug.Log($"<color=green>[Workshop] SUCCESS:</color> {message}");
+                    if (CityResourceService.Instance != null)
+                        CityResourceService.Instance.InitiateResourceRefresh(_currentCityId);
+
+                    RefreshData();
+                }
+                else
+                {
+                    Debug.LogError($"<color=red>[Workshop] FAILED:</color> {message}");
                 }
             }));
+        }
+
+        private string GetFlavorText(UnitTypeEnum type)
+        {
+            switch (type)
+            {
+                default: return "A powerful siege machine.";
+            }
         }
     }
 }

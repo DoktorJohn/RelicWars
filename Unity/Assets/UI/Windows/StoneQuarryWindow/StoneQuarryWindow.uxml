@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" editor-extension-mode="False">
+    
+    <ui:Style src="project://database/Assets/UI/Windows/WindowTheme.uss" />
+    <ui:Style src="project://database/Assets/UI/Windows/StoneQuarryWindow/StoneQuarryWindow.uss" />
+
+    <ui:VisualElement name="Stone-Window-Overlay" picking-mode="Ignore" class="screen-overlay">
+        
+        <ui:VisualElement name="Stone-Window-MainContainer" class="window-frame size-medium">
+            
+            <ui:VisualElement name="Stone-Window-Header" class="window-header">
+                <ui:Label name="Lbl-Title" class="window-header-label" text="STONE QUARRY" />
+                <ui:Button name="Header-Close-Button" class="window-close-btn" text="x" />
+            </ui:VisualElement>
+            
+            <ui:VisualElement style="padding: 20px; flex-grow: 1;">
+                
+                <ui:Label name="Lbl-Level" class="text-subtitle" text="Level ..." />
+                
+                <ui:Label class="flavor-text text-flavor" text="A solid foundation requires good stone. Upgrade the Quarry to extract more stone blocks per hour." />
+                
+                <ui:VisualElement class="divider" />
+
+                <ui:VisualElement class="table-container">
+                    <ui:VisualElement class="table-header-row">
+                        <ui:Label text="LEVEL" class="table-header-label" />
+                        <ui:Label text="STONE / HOUR" class="table-header-label" />
+                    </ui:VisualElement>
+
+                    <ui:ScrollView name="Stone-Stats-List" />
+                </ui:VisualElement>
+
+            </ui:VisualElement>
+            
+        </ui:VisualElement>
+    </ui:VisualElement>
+</ui:UXML>

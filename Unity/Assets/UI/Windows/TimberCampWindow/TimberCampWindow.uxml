@@ -1,30 +1,37 @@
 <?xml version="1.0" encoding="utf-8"?>
-<ui:UXML xmlns:ui="UnityEngine.UIElements" editor-extension-mode="False">
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" editor-extension-mode="False">
+    
+    <ui:Style src="project://database/Assets/UI/Windows/WindowTheme.uss" />
+    
     <ui:Style src="TimberCampWindow.uss" />
 
-    <ui:VisualElement name="Timber-Window-Overlay" picking-mode="Ignore" class="window-overlay">
-        <ui:VisualElement name="Timber-Window-MainContainer" class="window-container">
+    <ui:VisualElement name="Timber-Window-Overlay" picking-mode="Ignore" class="screen-overlay">
+        
+        <ui:VisualElement name="Timber-Window-MainContainer" class="window-frame size-medium">
             
             <ui:VisualElement name="Timber-Window-Header" class="window-header">
-                <ui:Label name="Lbl-Title" class="window-title" text="TIMBER CAMP" />
+                <ui:Label name="Lbl-Title" class="window-header-label" text="TIMBER CAMP" />
+                <ui:Button name="Header-Close-Button" class="window-close-btn" text="x" />
             </ui:VisualElement>
             
-            <ui:Label name="Lbl-Level" class="level-subtitle" text="Level ..." />
-            
-            <ui:Label class="flavor-text" text="Wood is the backbone of your city. Expand the Timber Camp to increase your hourly wood production." />
-            
-            <ui:VisualElement class="divider" />
+            <ui:VisualElement style="padding: 20px; flex-grow: 1;">
+                
+                <ui:Label name="Lbl-Level" class="text-subtitle" text="Level ..." />
+                
+                <ui:Label class="flavor-text text-flavor" text="Wood is the backbone of your city. Expand the Timber Camp to increase your hourly wood production." />
+                
+                <ui:VisualElement class="divider" />
 
-            <ui:VisualElement class="table-container">
-                <ui:VisualElement class="table-header-row">
-                    <ui:Label text="LEVEL" class="table-header-label" />
-                    <ui:Label text="WOOD / HOUR" class="table-header-label" />
+                <ui:VisualElement class="table-container">
+                    <ui:VisualElement class="table-header-row">
+                        <ui:Label text="LEVEL" class="table-header-label" />
+                        <ui:Label text="WOOD / HOUR" class="table-header-label" />
+                    </ui:VisualElement>
+
+                    <ui:ScrollView name="Timber-Stats-List" />
                 </ui:VisualElement>
 
-                <ui:ScrollView name="Timber-Stats-List" />
             </ui:VisualElement>
-
-            <ui:Button name="Common-Close-Button" class="close-button" text="CLOSE" />
             
         </ui:VisualElement>
     </ui:VisualElement>

@@ -1,133 +1,154 @@
-/* --- OVERLAY & CONTAINER --- */
-.window-overlay {
-    position: absolute;
-    width: 100%; height: 100%;
-    background-color: rgba(0, 0, 0, 0.6);
-    justify-content: center; align-items: center;
+/* Assets/UI/Windows/BarracksWindow/BarracksWindow.uss */
+
+/* --- GENERAL LABELS --- */
+.section-label {
+    -unity-font-definition: var(--font-header);
+    color: var(--c-text-header); 
+    font-size: 16px;
+    -unity-font-style: bold;
+    margin-bottom: 5px;
+    letter-spacing: 1px;
 }
 
-.window-container {
-    width: 800px;
-    height: 600px;
-    background-image: url('/Assets/_ExternalAssets/UI/PNG/panelInset_brown.png');
-    background-color: rgb(60, 40, 30);
-    -unity-slice-left: 20; -unity-slice-top: 20; -unity-slice-right: 20; -unity-slice-bottom: 20;
-    padding: 30px;
-    position: absolute;
-    border-radius: 15px;
+.section-label-small {
+    -unity-font-definition: var(--font-body);
+    color: var(--c-text-muted);
+    font-size: 10px;
+    -unity-font-style: bold;
+    letter-spacing: 1px;
 }
 
-/* --- HEADER --- */
-.window-header {
-    height: 50px;
-    flex-direction: row; justify-content: center; align-items: center;
-    margin-bottom: 5px; cursor: move-arrow;
-}
-
-.window-title {
-    -unity-font-definition: url('/Assets/TextMesh Pro/Fonts/Cinzel.asset');
-    color: rgb(255, 215, 100);
-    font-size: 42px; -unity-font-style: bold;
+.unit-name-large {
+    -unity-font-definition: var(--font-header);
+    color: var(--c-text-header);
+    font-size: 32px;
+    -unity-font-style: bold;
     -unity-text-align: middle-center;
 }
 
-.level-subtitle {
-    -unity-font-definition: url('/Assets/TextMesh Pro/Fonts/Roboto.asset');
-    color: rgb(180, 180, 180);
-    font-size: 18px; margin-top: 5px;
-    -unity-text-align: middle-center;
-}
-
-.flavor-text {
-    -unity-font-definition: url('/Assets/TextMesh Pro/Fonts/Roboto.asset');
-    color: rgb(210, 190, 170);
-    font-size: 14px; -unity-font-style: italic;
-    white-space: normal; -unity-text-align: middle-center;
-    margin-bottom: 20px; padding-left: 40px; padding-right: 40px;
-}
-
-.divider {
-    height: 2px; background-color: rgba(255, 255, 255, 0.3);
-    margin-bottom: 20px; width: 95%; align-self: center;
-}
-
-/* --- DATA TABLE / CONTENT --- */
-.table-container {
-    flex-grow: 1;
-    background-color: rgba(0, 0, 0, 0.2);
-    border-radius: 8px;
-    padding: 10px;
-}
-
-/* Slettet .table-header-row styles da vi ikke bruger dem her */
-
-/* Dynamic Rows - Updated for flexibility */
-.table-row {
-    flex-direction: row;
-    /* VIGTIGT: Auto height tillader rækker at vokse (til recruit knapper) */
-    height: auto; 
-    min-height: 40px;
-    align-items: center;
-    border-bottom-width: 1px;
-    border-bottom-color: rgba(255, 255, 255, 0.1);
-    padding: 5px;
+/* --- TABS SYSTEM --- */
+.tabs-wrapper {
+    height: 50px; 
+    background-color: rgba(0,0,0,0.05);
+    border-radius: 6px;
+    border-width: 1px;
+    border-color: rgba(0,0,0,0.1);
     margin-bottom: 5px;
 }
 
-.table-row-current {
-    background-color: rgba(40, 100, 40, 0.4);
-    border-left-width: 4px;
-    border-left-color: rgb(100, 255, 100);
+/* NYT: Sikrer at indholdet i scrollviewet fylder hele bredden, så flex-grow virker */
+.tabs-scroll-view .unity-scroll-view__content-container {
+    min-width: 100%;
+    flex-direction: row;
 }
 
-.row-label {
-    -unity-font-definition: url('/Assets/TextMesh Pro/Fonts/Roboto.asset');
-    color: white;
-    font-size: 16px;
-    -unity-text-align: middle-center;
+/* Tab knap style - OPDATERET FOR AUTO-WIDTH */
+.tab-button {
+    /* MAGIC PROPERTY: Får knappen til at vokse og fylde ledig plads */
     flex-grow: 1; 
-}
-
-/* --- UI ELEMENTS (INPUTS & BUTTONS INSIDE LIST) --- */
-
-/* TextField Styling (for at undgå kridhvide inputs) */
-.unity-text-field {
-    margin: 0; padding: 0;
-}
-
-.unity-text-field__input {
-    background-color: rgba(0, 0, 0, 0.5);
-    color: rgb(255, 215, 100);
+    width: auto;
+    
+    height: 40px; 
+    
+    /* Sikrer at de ikke bliver FOR små, men ellers tilpasser de sig */
+    min-width: 100px; 
+    
+    padding-left: 5px; padding-right: 5px;
+    
+    background-color: rgba(0,0,0,0.1);
     border-width: 1px;
-    border-color: rgba(255, 255, 255, 0.3);
+    border-color: var(--c-border);
     border-radius: 4px;
-    -unity-text-align: middle-center;
-}
-
-/* Standard Buttons inside the list */
-.unity-button {
-    border-radius: 4px;
-    border-width: 1px;
-    border-color: rgba(0,0,0,0.5);
-    margin-left: 5px;
-    margin-right: 5px;
+    
+    margin-top: 4px;
+    margin-left: 2px; 
+    margin-right: 2px;
+    
+    color: var(--c-text-body);
+    -unity-font-definition: var(--font-header);
     -unity-font-style: bold;
+    
+    font-size: 12px; 
 }
 
-.unity-button:hover {
-    background-color: rgba(255, 255, 255, 0.1);
+.tab-button:hover {
+    background-color: rgba(255,255,255,0.1);
 }
 
-.unity-button:active {
-    background-color: rgba(0, 0, 0, 0.5);
+.tab-button-active {
+    background-color: var(--c-btn-chill-bg);
+    border-color: var(--c-btn-chill-border);
+    color: white;
 }
 
-
-/* --- CLOSE BUTTON (FOOTER) --- */
-.close-button {
-    height: 40px; width: 150px; align-self: center; margin-top: 15px;
-    background-color: rgb(160, 30, 20); color: white; border-radius: 5px;
-    -unity-font-definition: url('/Assets/TextMesh Pro/Fonts/Cinzel.asset');
-    font-size: 16px;
+/* --- DETAIL VIEW AREAS --- */
+.detail-container {
+    flex-grow: 1;
+    justify-content: flex-start;
+    align-items: center; 
 }
-.close-button:hover { background-color: rgb(190, 50, 40); }
+
+.detail-container > .unit-name-large {
+    margin-top: 10px;
+}
+.detail-container > .text-subtitle {
+    margin-bottom: 15px;
+}
+
+.cost-box {
+    width: 100%; 
+    background-color: rgba(0,0,0,0.06);
+    border-radius: 6px;
+    padding: 15px;
+    margin-top: 10px;
+    margin-bottom: 20px;
+    align-items: center;
+    border-width: 1px;
+    border-color: rgba(0,0,0,0.05);
+}
+
+.controls-area {
+    width: 100%; 
+    background-color: rgba(0,0,0,0.03);
+    border-radius: 6px;
+    padding: 15px;
+}
+
+.flavor-text {
+    width: 100%; 
+    padding-left: 20px; padding-right: 20px;
+}
+
+.slider-row {
+    flex-direction: row;
+    align-items: center;
+    margin-top: 5px;
+}
+
+/* --- INPUT & SLIDER OVERRIDES --- */
+.game-input-number > .unity-integer-field__input {
+    background-color: rgba(0,0,0,0.1);
+    border-width: 1px; border-color: var(--c-border);
+    border-radius: 4px;
+    color: var(--c-text-body);
+    -unity-text-align: middle-center;
+    height: 35px;
+}
+
+.game-slider .unity-base-slider__tracker {
+    background-color: rgba(0,0,0,0.2);
+    height: 4px;
+}
+.game-slider .unity-base-slider__dragger {
+    background-color: var(--c-border);
+    width: 20px; height: 20px;
+    border-radius: 10px;
+    border-width: 2px; border-color: white;
+}
+
+/* --- SPECIFIKT SCROLLBAR FIX TIL TABS --- */
+/* Dette skjuler scrollbaren KUN på tabs-listen, men lader den være på slideren */
+.tabs-scroll-view .unity-scroller { 
+    display: none; 
+    height: 0; 
+}

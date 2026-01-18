@@ -1,11 +1,11 @@
-﻿using Project.Modules.UI;
-using UnityEngine;
+﻿using UnityEngine;
 using UnityEngine.UIElements;
 using System;
 using System.Collections.Generic;
 using Assets.Scripts.Domain.Enums;
 using Project.Network.Manager;
 using Project.Scripts.Domain.DTOs;
+using Project.Modules.UI.Windows; // BaseWindow namespace
 
 namespace Project.Modules.UI.Windows.Implementations
 {
@@ -20,19 +20,15 @@ namespace Project.Modules.UI.Windows.Implementations
 
         public override void OnOpen(object dataPayload)
         {
-            // 1. Setup Close Button
-            var closeBtn = Root.Q<Button>("Common-Close-Button");
+            var closeBtn = Root.Q<Button>("Header-Close-Button");
             if (closeBtn != null) { closeBtn.clicked -= Close; closeBtn.clicked += Close; }
 
-            // 2. References
             _levelLabel = Root.Q<Label>("Lbl-Level");
             _statsContainer = Root.Q<ScrollView>("Stone-Stats-List");
 
-            // 3. Get City ID
             Guid cityId = (dataPayload is Guid id) ? id : NetworkManager.Instance.ActiveCityId ?? Guid.Empty;
             if (cityId == Guid.Empty) return;
 
-            // 4. Load Data
             RefreshData(cityId);
         }
 
@@ -40,28 +36,29 @@ namespace Project.Modules.UI.Windows.Implementations
         {
             if (_statsContainer != null) _statsContainer.Clear();
             string token = NetworkManager.Instance.JwtToken;
-
-            // VIGTIGT: Vi beder om Stone Quarry data her
             var buildingType = BuildingTypeEnum.StoneQuarry;
 
             StartCoroutine(NetworkManager.Instance.Building.GetResourceProductionInfo(cityId, buildingType, token, (dataList) =>
             {
                 if (dataList != null && dataList.Count > 0)
                 {
-                    // Opdater header level
-                    var current = dataList.Find(x => x.IsCurrentLevel);
-                    if (current != null && _levelLabel != null)
-                        _levelLabel.text = $"Level {current.Level}";
-                    else if (_levelLabel != null)
-                        _levelLabel.text = "Not Constructed";
-
-                    PopulateTable(dataList);
+                    UpdateUI(dataList);
                 }
             }));
         }
 
-        private void PopulateTable(List<ResourceBuildingInfoDTO> dataList)
+        private void UpdateUI(List<ResourceBuildingInfoDTO> dataList)
         {
+            var current = dataList.Find(x => x.IsCurrentLevel);
+            if (current != null && _levelLabel != null)
+            {
+                _levelLabel.text = $"Level {current.Level}";
+            }
+            else if (_levelLabel != null)
+            {
+                _levelLabel.text = "Not Constructed";
+            }
+
             if (_statsContainer == null) return;
             _statsContainer.Clear();
 
@@ -84,14 +81,16 @@ namespace Project.Modules.UI.Windows.Implementations
             // Level Cell
             Label lvlLabel = new Label(item.Level.ToString());
             lvlLabel.AddToClassList("row-label");
+            if (item.IsCurrentLevel) lvlLabel.style.unityFontStyleAndWeight = FontStyle.Bold;
             row.Add(lvlLabel);
 
             // Production Cell
             Label prodLabel = new Label($"+{item.ProductionPrHour:N0}");
             prodLabel.AddToClassList("row-label");
 
-            // Grå farve for sten (#969696)
-            prodLabel.style.color = new StyleColor(new Color(0.58f, 0.58f, 0.58f));
+            // Stone Grey Color (#969696 is roughly 0.58f)
+            prodLabel.style.color = new StyleColor(new Color(0.2f, 0.6f, 0.2f));
+            if (item.IsCurrentLevel) prodLabel.style.unityFontStyleAndWeight = FontStyle.Bold;
 
             row.Add(prodLabel);
 

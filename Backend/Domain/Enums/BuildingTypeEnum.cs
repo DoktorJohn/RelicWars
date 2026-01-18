@@ -6,5 +6,5 @@ using System.Threading.Tasks;
 
 namespace Domain.Enums
 {
-    public enum BuildingTypeEnum { Senate, StoneQuarry, TimberCamp, MetalMine, Housing, Barracks, Wall, Stable, Academy, Warehouse, Workshop }
+    public enum BuildingTypeEnum { TownHall, StoneQuarry, TimberCamp, MetalMine, Housing, Barracks, Wall, Stable, University, Warehouse, Workshop, MarketPlace }
 }

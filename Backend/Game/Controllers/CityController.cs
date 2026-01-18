@@ -47,10 +47,10 @@ namespace WebApi.Controllers
             return Ok(detailedInfo);
         }
 
-        [HttpGet("{cityIdentifier}/senate/available-buildings")]
-        public async Task<ActionResult<List<AvailableBuildingDTO>>> GetSenateBuildingData(Guid cityIdentifier)
+        [HttpGet("{cityIdentifier}/townHall/available-buildings")]
+        public async Task<ActionResult<List<AvailableBuildingDTO>>> GetTownHallBuildingData(Guid cityIdentifier)
         {
-            var buildings = await _cityService.GetAvailableBuildingsForSenateAsync(cityIdentifier);
+            var buildings = await _cityService.GetAvailableBuildingsForTownHallAsync(cityIdentifier);
             return Ok(buildings);
         }
     }

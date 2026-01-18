@@ -47,9 +47,10 @@ namespace Application.DTOs
         public bool IsCurrentLevel { get; set; }
     }
 
-    public class AcademyInfoDTO
+    public class UniversityInfoDTO
     {
         public int Level { get; set; }
+        public int ProductionPerHour { get; set; }
         public bool IsCurrentLevel { get; set; }
     }
 
@@ -78,6 +79,18 @@ namespace Application.DTOs
         public int Level { get; set; }
         public ModifierDTO DefensiveModifier { get; set; } = new();
         public bool IsCurrentLevel { get; set; }
+    }
+
+    public class MarketPlaceInfoDTO
+    {
+        public int Level { get; set; }
+        public ModifierDTO Modifier { get; set; } = new();
+    }
+
+    public class TownHallInfoDTO
+    {
+        public int Level { get; set; }
+        public ModifierDTO BuildingSpeedModifier { get; set; } = new();
     }
 
     public record BuildingResult(bool Success, string Message);

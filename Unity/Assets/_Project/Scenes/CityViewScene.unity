@@ -606,7 +606,7 @@ GameObject:
   - component: {fileID: 1045636848}
   - component: {fileID: 1045636849}
   m_Layer: 0
-  m_Name: Anchor_Academy
+  m_Name: Anchor_University
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -944,6 +944,51 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Project.Modules.City.CityBuildingAnchor
   BuildingType: 9
+--- !u!1 &1425401527
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1425401528}
+  - component: {fileID: 1425401529}
+  m_Layer: 0
+  m_Name: Anchor_MarketPlace
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1425401528
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1425401527}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: -10, y: 1, z: 15}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 2015809361}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1425401529
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1425401527}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4a7a5c09a3ca6e544941d3707b63f268, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Project.Modules.City.CityBuildingAnchor
+  BuildingType: 11
 --- !u!1 &1729628126
 GameObject:
   m_ObjectHideFlags: 0
@@ -975,7 +1020,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Project.Modules.CityView.Design.CityDesignPreviewManager
   barracksPrefab: {fileID: 5638267272905261689, guid: f50671e969253c743be1b2c75d262969, type: 3}
-  senatePrefab: {fileID: 5344484190985560661, guid: 059be091160be2c438e2d44e50a0b0b4, type: 3}
+  townHallPrefab: {fileID: 5344484190985560661, guid: 059be091160be2c438e2d44e50a0b0b4, type: 3}
   timberCampPrefab: {fileID: 8180255637265470112, guid: 8ea9c53f640412c4ca2687e69b5b0fbe, type: 3}
   stoneQuarryPrefab: {fileID: 6192041381389265602, guid: c70db01a473f95242b3b3207ca038295, type: 3}
   metalMinePrefab: {fileID: 6281116155709797544, guid: 3cd52980f23dc434b9aabcdf3b540ada, type: 3}
@@ -983,8 +1028,9 @@ MonoBehaviour:
   housingPrefab: {fileID: 5344484190985560661, guid: 35718aef47f921b40ace4415e20d2504, type: 3}
   wallPrefab: {fileID: 6192041381389265602, guid: 0d8c81b521a300a40ba27954d668cede, type: 3}
   workshopPrefab: {fileID: 6192041381389265602, guid: 4120bbe67aa3d2b489d12b9feeb70f4f, type: 3}
-  academyPrefab: {fileID: 6192041381389265602, guid: cff1024dc6e44084f9a6a4c9d36af37c, type: 3}
+  universityPrefab: {fileID: 6192041381389265602, guid: cff1024dc6e44084f9a6a4c9d36af37c, type: 3}
   stablePrefab: {fileID: 6192041381389265602, guid: f77b271dd62733e44a213a3c19dd2f51, type: 3}
+  marketPlacePrefab: {fileID: 5124975445505385162, guid: f7c518942d5d6ac4f82c1261dae65aef, type: 3}
   constructionGhostPrefab: {fileID: 5455909985651811521, guid: 43a6f95ce48da25409d9596284e12417, type: 3}
   buildingInstanceParent: {fileID: 1812800212}
 --- !u!4 &1729628128
@@ -1056,7 +1102,7 @@ GameObject:
   - component: {fileID: 1872649324}
   - component: {fileID: 1872649325}
   m_Layer: 0
-  m_Name: Anchor_Senate
+  m_Name: Anchor_TownHall
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -1288,6 +1334,7 @@ Transform:
   - {fileID: 1045636848}
   - {fileID: 1421182257}
   - {fileID: 190560410}
+  - {fileID: 1425401528}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1660057539 &9223372036854775807

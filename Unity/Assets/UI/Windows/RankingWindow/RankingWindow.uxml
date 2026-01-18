@@ -1,26 +1,32 @@
 <?xml version="1.0" encoding="utf-8"?>
 <ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" editor-extension-mode="False">
     
-    <ui:Style src="project://database/Assets/UI/Windows/RankingWindow/RankingWindow.uss" />
+    <ui:Style src="project://database/Assets/UI/Windows/WindowTheme.uss" />
+    <ui:Style src="RankingWindow.uss" />
 
-    <ui:VisualElement name="RankingWindow-ScreenOverlay" picking-mode="Ignore" class="ranking-window-screen-overlay">
+    <ui:VisualElement name="Ranking-Window-Overlay" picking-mode="Ignore" class="screen-overlay">
         
-        <ui:VisualElement name="RankingWindow-Frame" class="ranking-window-frame">
+        <ui:VisualElement name="Ranking-Window-MainContainer" class="window-frame size-medium">
             
-            <ui:VisualElement name="RankingWindow-TitleBar" class="ranking-window-title-bar">
-                <ui:Label name="RankingWindow-TitleLabel" class="ranking-window-title-label" text="GLOBAL RANKINGS" />
-                <ui:Button name="RankingWindow-Close-Button" class="ranking-window-close-button" text="×" />
+            <ui:VisualElement name="Ranking-Window-Header" class="window-header">
+                <ui:Label name="Lbl-Title" class="window-header-label" text="GLOBAL RANKINGS" />
+                <ui:Button name="Header-Close-Button" class="window-close-btn" text="x" />
             </ui:VisualElement>
+            
+            <ui:VisualElement style="padding: 20px; flex-grow: 1;">
+                
+                <ui:VisualElement class="table-container">
+                    <ui:VisualElement class="table-header-row">
+                        <ui:Label text="#" class="table-header-label" style="width: 15%;" />
+                        <ui:Label text="PLAYER" class="table-header-label" style="width: 60%; -unity-text-align: middle-left; padding-left: 20px;" />
+                        <ui:Label text="POINTS" class="table-header-label" style="width: 25%;" />
+                    </ui:VisualElement>
 
-            <ui:VisualElement name="RankingWindow-TableHeader" class="ranking-window-table-header">
-                <ui:Label name="Header-Rank" class="ranking-row-label-base ranking-column-rank-width" text="#" />
-                <ui:Label name="Header-PlayerName" class="ranking-row-label-base ranking-column-player-name-width" text="SPILLERNAVN" />
-                <ui:Label name="Header-Points" class="ranking-row-label-base ranking-column-points-amount-width" text="TOTAL POINT" />
+                    <ui:ScrollView name="Ranking-List-Container" />
+                </ui:VisualElement>
+
             </ui:VisualElement>
-
-            <ui:ListView name="Ranking-ListView" class="ranking-window-list-view" fixed-item-height="45" selection-type="None" />
-
+            
         </ui:VisualElement>
-
     </ui:VisualElement>
 </ui:UXML>

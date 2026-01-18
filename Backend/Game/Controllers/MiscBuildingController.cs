@@ -17,13 +17,15 @@ namespace Game.Controllers
     {
         private readonly ILogger<MiscBuildingController> _logger;
         private readonly IWallService _wallService;
-        private readonly IAcademyService _academyService;
+        private readonly IUniversityService _universityService;
+        private readonly ITownHallService _townHallService;
 
-        public MiscBuildingController(ILogger<MiscBuildingController> logger, IWallService wallService, IAcademyService academyService)
+        public MiscBuildingController(ILogger<MiscBuildingController> logger, IWallService wallService, IUniversityService universityService, ITownHallService townHallService)
         {
             _logger = logger;
             _wallService = wallService;
-            _academyService = academyService;
+            _universityService = universityService;
+            _townHallService = townHallService;
         }
 
         [HttpGet("{cityId}/wall")]
@@ -33,10 +35,17 @@ namespace Game.Controllers
             return Ok(data);
         }
 
-        [HttpGet("{cityId}/academy")]
-        public async Task<IActionResult> GetAcademyInfo(Guid cityId)
+        [HttpGet("{cityId}/university")]
+        public async Task<IActionResult> GetUniversityInfo(Guid cityId)
         {
-            var data = await _academyService.GetAcademyInfoAsync(cityId);
+            var data = await _universityService.GetUniversityInfoAsync(cityId);
+            return Ok(data);
+        }
+
+        [HttpGet("{cityId}/townHall")]
+        public async Task<IActionResult> GetTownHallInfo(Guid cityId)
+        {
+            var data = await _townHallService.GetTownHallInfoAsync(cityId);
             return Ok(data);
         }
     }

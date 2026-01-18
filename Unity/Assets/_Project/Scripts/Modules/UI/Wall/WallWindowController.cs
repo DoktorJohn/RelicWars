@@ -1,4 +1,3 @@
-using Project.Modules.UI;
 using UnityEngine;
 using UnityEngine.UIElements;
 using System;
@@ -6,6 +5,7 @@ using System.Collections.Generic;
 using Assets.Scripts.Domain.Enums;
 using Project.Network.Manager;
 using Project.Scripts.Domain.DTOs;
+using Project.Modules.UI.Windows; // BaseWindow namespace
 
 namespace Project.Modules.UI.Windows.Implementations
 {
@@ -20,7 +20,7 @@ namespace Project.Modules.UI.Windows.Implementations
 
         public override void OnOpen(object dataPayload)
         {
-            var closeBtn = Root.Q<Button>("Common-Close-Button");
+            var closeBtn = Root.Q<Button>("Header-Close-Button");
             if (closeBtn != null) { closeBtn.clicked -= Close; closeBtn.clicked += Close; }
 
             _levelLabel = Root.Q<Label>("Lbl-Level");
@@ -37,7 +37,6 @@ namespace Project.Modules.UI.Windows.Implementations
             if (_statsContainer != null) _statsContainer.Clear();
             string token = NetworkManager.Instance.JwtToken;
 
-            // Kald Wall endpointet
             StartCoroutine(NetworkManager.Instance.Building.GetWallInfo(cityId, token, (dataList) =>
             {
                 if (dataList != null && dataList.Count > 0)
@@ -77,31 +76,28 @@ namespace Project.Modules.UI.Windows.Implementations
             // Level Cell
             Label lvlLabel = new Label(item.Level.ToString());
             lvlLabel.AddToClassList("row-label");
+            if (item.IsCurrentLevel) lvlLabel.style.unityFontStyleAndWeight = FontStyle.Bold;
             row.Add(lvlLabel);
 
-            // Defense Bonus Cell (Formatering)
-            string bonusText = "0";
+            // Defense Bonus Cell
+            string bonusText = "0%";
 
             if (item.DefensiveModifier != null)
             {
-                // Hvis typen er "Increased", antager vi det er procent (f.eks. 0.05 = 5%)
+                // Antag at Increased = % (f.eks. 0.05 -> 5%)
                 if (item.DefensiveModifier.ModifierType == ModifierTypeEnum.Increased)
                 {
-                    // Gang med 100 for at vise procent
-                    bonusText = $"+{item.DefensiveModifier.Value * 100:0.##}%";
+                    bonusText = $"+{item.DefensiveModifier.Value * 100:0.#}%";
                 }
                 else
                 {
-                    // Hvis typen er "Additive", viser vi bare tallet
-                    bonusText = $"+{item.DefensiveModifier.Value:0.##}";
+                    bonusText = $"+{item.DefensiveModifier.Value:0.#}";
                 }
             }
 
             Label bonusLabel = new Label(bonusText);
             bonusLabel.AddToClassList("row-label");
-
-            // Brug en "Sølv/Skjold" farve (#DCDCDC)
-            bonusLabel.style.color = new StyleColor(new Color(0.86f, 0.86f, 0.86f));
+            if (item.IsCurrentLevel) bonusLabel.style.unityFontStyleAndWeight = FontStyle.Bold;
 
             row.Add(bonusLabel);
 

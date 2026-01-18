@@ -1,141 +1,71 @@
-/* ============================================================
-   WINDOW OVERLAY & FRAME
-   ============================================================ */
-.ranking-window-screen-overlay {
-    position: absolute;
-    width: 100%;
-    height: 100%;
-    background-color: rgba(0, 0, 0, 0.6);
-    justify-content: center;
-    align-items: center;
+/* Assets/UI/Windows/RankingWindow/RankingWindow.uss */
+
+/* --- TABLE CONTAINER --- */
+.table-container {
+    flex-grow: 1;
+    background-color: rgba(0, 0, 0, 0.04);
+    border-radius: 6px;
+    border-width: 1px;
+    border-color: rgba(0,0,0,0.1);
+    padding: 10px;
+    overflow: hidden; 
 }
 
-.ranking-window-frame {
-    position: absolute;
-    width: 600px;
-    height: 80%;
-    background-color: rgba(35, 35, 35, 0.98);
-    border-width: 2px;
-    border-color: rgba(80, 50, 30, 0.9);
-    border-radius: 8px;
-    padding: 0px;
-    overflow: hidden;
-}
-
-/* ============================================================
-   TITLE BAR
-   ============================================================ */
-.ranking-window-title-bar {
-    flex-direction: row;
-    height: 50px;
-    background-color: rgba(20, 20, 20, 1.0);
-    align-items: center;
-    padding-left: 20px;
-    padding-right: 10px;
-    justify-content: space-between;
+/* --- HEADER ROW --- */
+.table-header-row {
+    flex-direction: row; height: 35px;
+    background-color: rgba(0, 0, 0, 0.06);
     border-bottom-width: 2px;
-    border-bottom-color: rgba(80, 50, 30, 0.8);
-    cursor: move-arrow;
+    border-bottom-color: var(--c-border);
+    margin-bottom: 5px; align-items: center;
+    flex-shrink: 0; 
 }
 
-.ranking-window-title-label {
-    color: rgba(200, 150, 50, 1.0);
-    -unity-font-style: bold;
-    font-size: 20px;
-    letter-spacing: 2px;
-}
-
-.ranking-window-close-button {
-    width: 35px;
-    height: 35px;
-    background-color: rgba(0, 0, 0, 0);
-    border-width: 0;
-    color: rgb(150, 150, 150);
-    font-size: 24px;
+.table-header-label {
+    -unity-font-definition: var(--font-header);
+    color: var(--c-text-header);
+    font-size: 14px; -unity-font-style: bold;
     -unity-text-align: middle-center;
 }
 
-.ranking-window-close-button:hover {
-    color: white;
-    background-color: rgba(255, 0, 0, 0.2);
-}
-
-/* ============================================================
-   SHARED COLUMN STYLES (Bruges af både Header og Rows)
-   ============================================================ */
-.ranking-column-rank-width {
-    width: 45px;
-    flex-shrink: 0;
-    -unity-font-style: bold;
-    color: rgba(200, 150, 50, 1.0);
-    -unity-text-align: middle-center;
-}
-
-.ranking-column-player-name-width {
-    flex-grow: 1;
-    padding-left: 10px;
-    padding-right: 10px;
-    -unity-text-align: middle-left;
-    overflow: hidden;
-    text-overflow: ellipsis;
-}
-
-.ranking-column-points-amount-width {
-    width: 110px;
-    flex-shrink: 0;
-    -unity-text-align: middle-right;
-    -unity-font-style: bold;
-    color: white;
-}
-
-/* ============================================================
-   TABLE HEADER
-   ============================================================ */
-.ranking-window-table-header {
-    flex-direction: row;
-    height: 40px;
-    background-color: rgba(0, 0, 0, 0.3);
-    align-items: center;
-    padding-left: 10px;
-    padding-right: 25px; /* Matcher rækkens padding */
+/* --- DATA ROWS --- */
+.table-row {
+    flex-direction: row; height: 45px; align-items: center;
     border-bottom-width: 1px;
-    border-bottom-color: rgba(255, 255, 255, 0.1);
+    border-bottom-color: rgba(0, 0, 0, 0.05);
+    flex-shrink: 0; 
 }
 
-/* Styles til teksten i headeren */
-.ranking-window-table-header > .ranking-row-label-base {
+.row-label {
+    -unity-font-definition: var(--font-body);
+    color: var(--c-text-body);
+    font-size: 14px; -unity-text-align: middle-center;
+}
+
+/* --- COLUMN SPECIFIC STYLES (Moved from Inline UXML) --- */
+.col-rank {
+    width: 15%;
     -unity-font-style: bold;
-    color: rgb(180, 180, 180);
+    color: var(--c-text-highlight);
 }
 
-.ranking-window-list-view {
-    flex-grow: 1;
-    padding: 5px;
-}
-
-/* ============================================================
-   RANKING ROW (Det er her layoutet styres)
-   ============================================================ */
-.ranking-row-visual-container {
-    /* Dette tvinger elementerne til at stå på række */
-    flex-direction: row; 
-    
-    height: 45px;
-    width: 100%;
-    align-items: center;
-    
-    padding-left: 10px;
-    padding-right: 25px;
-    
-    border-bottom-width: 1px;
-    border-bottom-color: rgba(255, 255, 255, 0.05);
-    background-color: rgba(0, 0, 0, 0.1);
-}
-
-.ranking-row-label-base {
-    color: rgb(210, 210, 210);
-    font-size: 14px;
-    height: 100%; /* Vigtigt for vertikal centrering */
+.col-name {
+    width: 60%;
     -unity-text-align: middle-left;
-    white-space: nowrap;
+    padding-left: 20px;
+}
+
+.col-points {
+    width: 25%;
+    -unity-font-style: bold;
+}
+
+/* --- SCROLLBAR HIDING --- */
+.unity-scroller { display: none; opacity: 0; }
+.unity-scroller--vertical { width: 0; }
+.unity-scroller--horizontal { height: 0; }
+
+.unity-scroll-view__content-container {
+    flex-grow: 1;
+    min-width: 100%;
 }
