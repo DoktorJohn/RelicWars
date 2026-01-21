@@ -29,20 +29,15 @@ namespace Application.Services
             });
         }
 
-        public async Task<RankingEntryData> GetRankingById(Guid worldPlayerId)
+        public async Task<RankingEntryData?> GetRankingById(Guid worldPlayerId)
         {
             return await Task.Run(() =>
             {
                 var allRankings = _reader.GetGlobalRankings();
 
-                var entry = allRankings.FirstOrDefault(x => x.WorldPlayerId == worldPlayerId);
+                var rankingEntry = allRankings.FirstOrDefault(x => x.WorldPlayerId == worldPlayerId);
 
-                if (entry == null)
-                {
-                    throw new KeyNotFoundException($"Spilleren med ID {worldPlayerId} blev ikke fundet i ranglisten.");
-                }
-
-                return entry;
+                return rankingEntry;
             });
         }
     }

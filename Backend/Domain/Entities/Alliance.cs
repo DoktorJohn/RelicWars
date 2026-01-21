@@ -1,4 +1,5 @@
 ﻿using Domain.Abstraction;
+using Domain.Enums;
 using Domain.User;
 using System;
 using System.Collections.Generic;
@@ -8,7 +9,7 @@ using System.Threading.Tasks;
 
 namespace Domain.Entities
 {
-    public class Alliance : BaseEntity
+    public class Alliance : BaseEntity, IModifierProvider
     {
         public string Name { get; set; } = string.Empty;
         public string Tag { get; set; } = string.Empty;
@@ -16,9 +17,17 @@ namespace Domain.Entities
         public string BannerImageUrl { get; set; } = string.Empty;
         public int MaxPlayers { get; set; } = 50;
 
+        public List<Modifier> ModifiersInternal { get; set; } = new();
+
         //Nav prop
         public List<WorldPlayer> Members { get; set; } = new();
         public List<Alliance> AlliancesAtWar { get; set; } = new();
         public List<Alliance> AlliancesPacted { get; set; } = new();
+
+        public IEnumerable<Modifier> GetModifiers()
+        {
+            return ModifiersInternal;
+        }
+
     }
 }

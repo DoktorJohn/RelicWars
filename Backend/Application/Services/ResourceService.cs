@@ -1,123 +1,132 @@
-﻿using Application.Interfaces.IServices;
-using Application.Utility;
+﻿using Application.DTOs;
+using Application.Interfaces.IServices;
+using Domain.Abstraction;
 using Domain.Entities;
 using Domain.Enums;
 using Domain.StaticData.Data;
 using Domain.StaticData.Readers;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using static Application.Services.ResourceService;
 
 namespace Application.Services
 {
     public record ResourceSnapshot(
-    double Wood,
-    double Stone,
-    double Metal,
-    double WoodProductionPerHour,
-    double StoneProductionPerHour,
-    double MetalProductionPerHour,
-    DateTime Timestamp);
+        double Wood,
+        double Stone,
+        double Metal,
+        double SilverGeneratedByThisCity,
+        double ResearchGeneratedByThisCity,
+        double WoodProductionPerHour,
+        double StoneProductionPerHour,
+        double MetalProductionPerHour,
+        double SilverProductionPerHourByThisCity,
+        double ResearchProductionPerHourByThisCity,
+        DateTime Timestamp);
 
     public class ResourceService : IResourceService
     {
         private readonly BuildingDataReader _buildingData;
         private readonly ICityStatService _statService;
+        private readonly IModifierService _modifierService;
         private readonly ILogger<ResourceService> _logger;
 
-        public ResourceService(BuildingDataReader buildingData, ICityStatService statService, ILogger<ResourceService> logger)
+        public ResourceService(
+            BuildingDataReader buildingData,
+            ICityStatService statService,
+            IModifierService modifierService,
+            ILogger<ResourceService> logger)
         {
             _buildingData = buildingData;
             _statService = statService;
+            _modifierService = modifierService;
             _logger = logger;
         }
 
-        // Vi tilføjer List<Modifier> her, så vi kan regne research med
-        public ResourceSnapshot CalculateCurrent(City cityEntity, DateTime currentDateTime, List<Modifier>? externalAccountModifiers = null)
+        public ResourceSnapshot CalculateCurrent(City cityEntity, DateTime currentDateTime)
         {
-            externalAccountModifiers ??= cityEntity.WorldPlayer?.ModifiersAppliedToWorldPlayer;
-
             DateTime startTime = DateTime.SpecifyKind(cityEntity.LastResourceUpdate, DateTimeKind.Utc);
             DateTime endTime = DateTime.SpecifyKind(currentDateTime, DateTimeKind.Utc);
 
             double totalHoursPassedSinceLastUpdate = (endTime - startTime).TotalHours;
             if (totalHoursPassedSinceLastUpdate < 0) totalHoursPassedSinceLastUpdate = 0;
 
-            // LOGGING: Tjekker om bygninger er indlæst
-            if (cityEntity.Buildings == null || !cityEntity.Buildings.Any())
-            {
-                _logger.LogWarning($"[ResourceService] ADVARSEL: Ingen bygninger fundet for by {cityEntity.Id}. Produktion bliver 0!");
-            }
+            var woodTags = new[] { ModifierTagEnum.Wood, ModifierTagEnum.ResourceProduction };
+            var stoneTags = new[] { ModifierTagEnum.Stone, ModifierTagEnum.ResourceProduction };
+            var metalTags = new[] { ModifierTagEnum.Metal, ModifierTagEnum.ResourceProduction };
+            var silverTags = new[] { ModifierTagEnum.Silver };
+            var researchTags = new[] { ModifierTagEnum.Research };
 
-            double hourlyWoodProduction = GetProductionPerHour(cityEntity, BuildingTypeEnum.TimberCamp, externalAccountModifiers);
-            double hourlyStoneProduction = GetProductionPerHour(cityEntity, BuildingTypeEnum.StoneQuarry, externalAccountModifiers);
-            double hourlyMetalProduction = GetProductionPerHour(cityEntity, BuildingTypeEnum.MetalMine, externalAccountModifiers);
-
-            // LOGGING: Tjekker de beregnede rater
-            _logger.LogInformation($"[ResourceService] By {cityEntity.Name}: Delta={totalHoursPassedSinceLastUpdate:F4}t, WoodRate={hourlyWoodProduction}/t, CurrentWood={cityEntity.Wood}");
+            // 2. Beregn rater pr. time
+            var woodResult = GetProductionResult(cityEntity, BuildingTypeEnum.TimberCamp, woodTags);
+            var stoneResult = GetProductionResult(cityEntity, BuildingTypeEnum.StoneQuarry, stoneTags);
+            var metalResult = GetProductionResult(cityEntity, BuildingTypeEnum.MetalMine, metalTags);
+            var silverResult = GetProductionResult(cityEntity, BuildingTypeEnum.MarketPlace, silverTags);
+            var researchResult = GetProductionResult(cityEntity, BuildingTypeEnum.University, researchTags);
 
             double capacityLimit = _statService.GetWarehouseCapacity(cityEntity);
 
-            double newWoodAmount = Math.Min(capacityLimit, cityEntity.Wood + (hourlyWoodProduction * totalHoursPassedSinceLastUpdate));
-            double newStoneAmount = Math.Min(capacityLimit, cityEntity.Stone + (hourlyStoneProduction * totalHoursPassedSinceLastUpdate));
-            double newMetalAmount = Math.Min(capacityLimit, cityEntity.Metal + (hourlyMetalProduction * totalHoursPassedSinceLastUpdate));
-
-            return new ResourceSnapshot(newWoodAmount, newStoneAmount, newMetalAmount, hourlyWoodProduction, hourlyStoneProduction, hourlyMetalProduction, endTime);
+            return new ResourceSnapshot(
+                CalculateNewAmount(cityEntity.Wood, woodResult.FinalValue, totalHoursPassedSinceLastUpdate, capacityLimit),
+                CalculateNewAmount(cityEntity.Stone, stoneResult.FinalValue, totalHoursPassedSinceLastUpdate, capacityLimit),
+                CalculateNewAmount(cityEntity.Metal, metalResult.FinalValue, totalHoursPassedSinceLastUpdate, capacityLimit),
+                silverResult.FinalValue * totalHoursPassedSinceLastUpdate,
+                researchResult.FinalValue * totalHoursPassedSinceLastUpdate,
+                woodResult.FinalValue,
+                stoneResult.FinalValue,
+                metalResult.FinalValue,
+                silverResult.FinalValue,
+                researchResult.FinalValue,
+                endTime);
         }
 
-        private double GetProductionPerHour(City cityEntity, BuildingTypeEnum resourceBuildingType, List<Modifier>? activeAccountModifiers = null)
+        private double CalculateNewAmount(double currentAmount, double productionRate, double hours, double capacity)
         {
-            var targetBuilding = cityEntity.Buildings.FirstOrDefault(building => building.Type == resourceBuildingType);
+            return Math.Min(capacity, currentAmount + (productionRate * hours));
+        }
 
-            // Hvis bygningen ikke findes eller er i niveau 0, produceres der intet.
-            if (targetBuilding == null || targetBuilding.Level == 0)
+        private ModifierCalculationResult GetProductionResult(City cityEntity, BuildingTypeEnum buildingType, IEnumerable<ModifierTagEnum> targetTags)
+        {
+            double baseValue = GetBaseValue(cityEntity, buildingType);
+            var providers = new List<IModifierProvider>();
+
+            var targetBuilding = cityEntity.Buildings.FirstOrDefault(b => b.Type == buildingType);
+            if (targetBuilding != null && targetBuilding.Level > 0)
             {
-                return 0.0;
+                providers.Add(_buildingData.GetConfig<BuildingLevelData>(buildingType, targetBuilding.Level));
             }
 
-            double baseProductionValueFromStaticData = 0.0;
-
-            // OBJEKTIV FIX: Vi kalder GetConfig med den SPECIFIKKE type-parameter i stedet for base-klassen.
-            // Dette sikrer, at deserializeren/læseren returnerer et objekt med ProductionPerHour feltet udfyldt.
-            switch (resourceBuildingType)
+            providers.Add(cityEntity);
+            if (cityEntity.WorldPlayer != null)
             {
-                case BuildingTypeEnum.TimberCamp:
-                    var timberConfig = _buildingData.GetConfig<TimberCampLevelData>(resourceBuildingType, targetBuilding.Level);
-                    baseProductionValueFromStaticData = timberConfig?.ProductionPerHour ?? 0.0;
-                    break;
-
-                case BuildingTypeEnum.StoneQuarry:
-                    var stoneConfig = _buildingData.GetConfig<StoneQuarryLevelData>(resourceBuildingType, targetBuilding.Level);
-                    baseProductionValueFromStaticData = stoneConfig?.ProductionPerHour ?? 0.0;
-                    break;
-
-                case BuildingTypeEnum.MetalMine:
-                    var metalConfig = _buildingData.GetConfig<MetalMineLevelData>(resourceBuildingType, targetBuilding.Level);
-                    baseProductionValueFromStaticData = metalConfig?.ProductionPerHour ?? 0.0;
-                    break;
-
-                default:
-                    baseProductionValueFromStaticData = 0.0;
-                    break;
+                providers.Add(cityEntity.WorldPlayer);
+                if (cityEntity.WorldPlayer.Alliance != null) providers.Add(cityEntity.WorldPlayer.Alliance);
             }
 
-            // Definer hvilke tags denne produktion reagerer på i StatCalculator
-            var relevantModifierTags = new List<ModifierTagEnum> { ModifierTagEnum.ResourceProduction };
+            return _modifierService.CalculateEntityValueWithModifiers(baseValue, targetTags, providers);
+        }
 
-            if (resourceBuildingType == BuildingTypeEnum.TimberCamp)
-                relevantModifierTags.Add(ModifierTagEnum.Wood);
-            else if (resourceBuildingType == BuildingTypeEnum.StoneQuarry)
-                relevantModifierTags.Add(ModifierTagEnum.Stone);
-            else if (resourceBuildingType == BuildingTypeEnum.MetalMine)
-                relevantModifierTags.Add(ModifierTagEnum.Metal);
+        private double GetBaseValue(City cityEntity, BuildingTypeEnum buildingType)
+        {
+            if (buildingType == BuildingTypeEnum.MarketPlace)
+            {
+                // OBJEKTIV RETTELSE: Vi henter nu population direkte fra CityStatService, 
+                // som beregner det ud fra Housing-bygninger.
+                return (double)_statService.GetMaxPopulation(cityEntity) * 7.0;
+            }
 
-            // Beregn slutværdien via StatCalculator
-            return StatCalculator.ApplyModifiers(baseProductionValueFromStaticData, relevantModifierTags, activeAccountModifiers);
+            var building = cityEntity.Buildings.FirstOrDefault(b => b.Type == buildingType);
+            if (building == null || building.Level == 0) return 0.0;
+
+            return buildingType switch
+            {
+                BuildingTypeEnum.TimberCamp => _buildingData.GetConfig<TimberCampLevelData>(buildingType, building.Level).ProductionPerHour,
+                BuildingTypeEnum.StoneQuarry => _buildingData.GetConfig<StoneQuarryLevelData>(buildingType, building.Level).ProductionPerHour,
+                BuildingTypeEnum.MetalMine => _buildingData.GetConfig<MetalMineLevelData>(buildingType, building.Level).ProductionPerHour,
+                BuildingTypeEnum.University => _buildingData.GetConfig<UniversityLevelData>(buildingType, building.Level).ProductionPerHour,
+                _ => 0.0
+            };
         }
     }
 }

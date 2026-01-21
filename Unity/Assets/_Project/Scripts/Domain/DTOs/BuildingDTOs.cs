@@ -8,6 +8,17 @@ using System.Threading.Tasks;
 namespace Project.Scripts.Domain.DTOs
 {
     [Serializable]
+    public class BuildingDTO
+    {
+        public Guid Id;
+        public string Type;
+        public int Level;
+        public DateTime? UpgradeFinished;
+        public bool IsUpgrading;
+    }
+    
+
+    [Serializable]
     public class WorkshopInfoDTO
     {
         public int Level;

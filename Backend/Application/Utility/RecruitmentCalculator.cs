@@ -26,7 +26,7 @@ namespace Application.Utility
 
         public async Task<double> CalculateFinalRecruitmentTimeAsync(Guid userId, City city, UnitData unit)
         {
-            List<ModifierTagEnum> applicableModifierTags = new List<ModifierTagEnum>(unit.ModifiersThatAffects);
+            List<ModifierTagEnum> applicableModifierTags = new List<ModifierTagEnum>(unit.ModifiersThatAffectsThis);
 
             if (!applicableModifierTags.Contains(ModifierTagEnum.Recruitment))
             {

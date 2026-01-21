@@ -11,6 +11,8 @@ namespace Project.Modules.UI
     {
         private VisualElement _rootVisualElement;
 
+        private VisualElement _overviewButton;
+        private VisualElement _researchButton;
         private VisualElement _playerProfileButton;
         private VisualElement _alliancePanelButton;
         private VisualElement _globalRankingsButton;
@@ -33,9 +35,11 @@ namespace Project.Modules.UI
             {
                 _rootVisualElement = uiDocumentComponent.rootVisualElement;
 
+                _overviewButton = _rootVisualElement.Q<VisualElement>("SideBar-Button-Overview");
                 _playerProfileButton = _rootVisualElement.Q<VisualElement>("SideBar-Button-Profile");
                 _alliancePanelButton = _rootVisualElement.Q<VisualElement>("SideBar-Button-Alliance");
                 _globalRankingsButton = _rootVisualElement.Q<VisualElement>("SideBar-Button-Rankings");
+                _researchButton = _rootVisualElement.Q<VisualElement>("SideBar-Button-Research");
 
                 ValidateButtonReferences();
             }
@@ -43,28 +47,44 @@ namespace Project.Modules.UI
 
         private void ValidateButtonReferences()
         {
-            if (_playerProfileButton == null) Debug.LogError("[SideBar] Profile Button ikke fundet i UXML.");
-            if (_alliancePanelButton == null) Debug.LogError("[SideBar] Alliance Button ikke fundet i UXML.");
-            if (_globalRankingsButton == null) Debug.LogError("[SideBar] Rankings Button ikke fundet i UXML.");
+            if (_overviewButton == null) Debug.LogError("[SideBarViewController] Overview Button reference missing.");
+            if (_playerProfileButton == null) Debug.LogError("[SideBarViewController] Profile Button reference missing.");
+            if (_alliancePanelButton == null) Debug.LogError("[SideBarViewController] Alliance Button reference missing.");
+            if (_globalRankingsButton == null) Debug.LogError("[SideBarViewController] Rankings Button reference missing.");
+            if (_researchButton == null) Debug.LogError("[SideBarViewController] Research Button reference missing.");
         }
 
         private void RegisterNavigationButtonCallbacks()
         {
+            _overviewButton?.RegisterCallback<ClickEvent>(OnOverviewButtonClicked);
             _playerProfileButton?.RegisterCallback<ClickEvent>(OnProfileButtonClicked);
             _alliancePanelButton?.RegisterCallback<ClickEvent>(OnAllianceButtonClicked);
             _globalRankingsButton?.RegisterCallback<ClickEvent>(OnRankingsButtonClicked);
+            _researchButton?.RegisterCallback<ClickEvent>(OnResearchButtonClicked);
         }
 
         private void UnregisterNavigationButtonCallbacks()
         {
+            _overviewButton?.UnregisterCallback<ClickEvent>(OnOverviewButtonClicked);
             _playerProfileButton?.UnregisterCallback<ClickEvent>(OnProfileButtonClicked);
             _alliancePanelButton?.UnregisterCallback<ClickEvent>(OnAllianceButtonClicked);
             _globalRankingsButton?.UnregisterCallback<ClickEvent>(OnRankingsButtonClicked);
+            _researchButton?.UnregisterCallback<ClickEvent>(OnResearchButtonClicked);
+        }
+
+        private void OnOverviewButtonClicked(ClickEvent clickEvent)
+        {
+            ExecuteOpenWindowRequest(WindowTypeEnum.Overview);
         }
 
         private void OnProfileButtonClicked(ClickEvent clickEvent)
         {
             ExecuteOpenWindowRequest(WindowTypeEnum.Profile);
+        }
+
+        private void OnResearchButtonClicked(ClickEvent clickEvent)
+        {
+            ExecuteOpenWindowRequest(WindowTypeEnum.Research);
         }
 
         private void OnAllianceButtonClicked(ClickEvent clickEvent)
@@ -85,7 +105,7 @@ namespace Project.Modules.UI
             }
             else
             {
-                Debug.LogError("[SideBar] Kunne ikke åbne vindue: GlobalWindowManager.Instance er NULL.");
+                Debug.LogError("[SideBarViewController] Failed to open window: GlobalWindowManager Instance is null.");
             }
         }
     }

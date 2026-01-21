@@ -1,31 +1,34 @@
 <?xml version="1.0" encoding="utf-8"?>
 <ui:UXML xmlns:ui="UnityEngine.UIElements" editor-extension-mode="False">
+    <ui:Style src="project://database/Assets/UI/Windows/WindowTheme.uss" />
     <ui:Style src="HousingWindow.uss" />
 
-    <ui:VisualElement name="Housing-Window-Overlay" picking-mode="Ignore" class="window-overlay">
-        <ui:VisualElement name="Housing-Window-MainContainer" class="window-container">
+    <ui:VisualElement name="Housing-Window-Overlay" picking-mode="Ignore" class="screen-overlay">
+        <ui:VisualElement name="Housing-Window-MainContainer" class="window-frame size-medium">
             
             <ui:VisualElement name="Housing-Window-Header" class="window-header">
-                <ui:Label name="Lbl-Title" class="window-title" text="HOUSING" />
+                <ui:Label text="HOUSING" class="window-header-label" />
+                <ui:Button name="Header-Close-Button" class="window-close-btn" text="x" />
             </ui:VisualElement>
-            
-            <ui:Label name="Lbl-Level" class="level-subtitle" text="Level ..." />
-            
-            <ui:Label class="flavor-text" text="Your citizens need a place to live. Expanding your Housing increases your maximum population capacity." />
-            
-            <ui:VisualElement class="divider" />
 
-            <ui:VisualElement class="table-container">
-                <ui:VisualElement class="table-header-row">
-                    <ui:Label text="LEVEL" class="table-header-label" />
-                    <ui:Label text="POPULATION" class="table-header-label" />
+            <ui:VisualElement style="padding: 20px; flex-grow: 1;">
+                
+                <ui:Label name="Label-Level-Display" class="text-subtitle" text="Level ..." />
+                
+                <ui:Label class="flavor-text" text="Citizens require adequate housing to thrive. Expanding your residential districts increases the maximum population capacity of the city." />
+                
+                <ui:VisualElement class="divider" />
+
+                <ui:VisualElement class="table-container">
+                    <ui:VisualElement class="table-header-row">
+                        <ui:Label text="LEVEL" class="table-header-label" />
+                        <ui:Label text="POPULATION" class="table-header-label" />
+                    </ui:VisualElement>
+
+                    <ui:ScrollView name="Housing-Stats-List" class="housing-scroll-view" />
                 </ui:VisualElement>
 
-                <ui:ScrollView name="Housing-Stats-List" />
             </ui:VisualElement>
-
-            <ui:Button name="Common-Close-Button" class="close-button" text="CLOSE" />
-            
         </ui:VisualElement>
     </ui:VisualElement>
 </ui:UXML>

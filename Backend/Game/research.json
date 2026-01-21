@@ -3,107 +3,162 @@
     "Id": "ECON_PROD_1",
     "Name": "Effektiv Minedrift I",
     "Description": "\u00D8ger produktionen af alle r\u00E5materialer med 1%",
+    "ResearchType": "Economy",
     "ParentId": null,
-    "RequiredUniversityLevel": 1,
-    "WoodCost": 500,
-    "StoneCost": 500,
-    "MetalCost": 500,
+    "ResearchPointCost": 100,
     "ResearchTimeInSeconds": 300,
-    "Modifiers": [
+    "ModifiersInternal": [
       {
         "Tag": "ResourceProduction",
         "Type": "Increased",
         "Value": 0.01,
         "Source": "Research: Minedrift I"
       }
-    ]
+    ],
+    "ModifiersThatAffectsThis": []
   },
   {
     "Id": "ECON_SILVER_1",
     "Name": "Handelsaftaler",
     "Description": "\u002B3% bonus til markedspladsens s\u00F8lv-generering",
+    "ResearchType": "Economy",
     "ParentId": "ECON_PROD_1",
-    "RequiredUniversityLevel": 5,
-    "WoodCost": 1000,
-    "StoneCost": 1000,
-    "MetalCost": 1000,
+    "ResearchPointCost": 250,
     "ResearchTimeInSeconds": 1200,
-    "Modifiers": [
+    "ModifiersInternal": [
       {
         "Tag": "Silver",
         "Type": "Increased",
         "Value": 0.03,
         "Source": "Research: Handelsaftaler"
       }
-    ]
+    ],
+    "ModifiersThatAffectsThis": []
   },
   {
-    "Id": "MIL_SIEGE_UPKEEP_1",
-    "Name": "Logistik for Belejring",
-    "Description": "Neds\u00E6tter upkeep af belejringsenheder med 5%",
-    "ParentId": null,
-    "RequiredUniversityLevel": 10,
-    "WoodCost": 2000,
-    "StoneCost": 500,
-    "MetalCost": 2000,
-    "ResearchTimeInSeconds": 3600,
-    "Modifiers": [
+    "Id": "ECON_WAREHOUSE_1",
+    "Name": "Struktureret Lager",
+    "Description": "\u00D8ger lagerkapaciteten med 5%",
+    "ResearchType": "Economy",
+    "ParentId": "ECON_PROD_1",
+    "ResearchPointCost": 300,
+    "ResearchTimeInSeconds": 900,
+    "ModifiersInternal": [
       {
-        "Tag": "Siege",
-        "Type": "Decreased",
-        "Value": 0.05,
-        "Source": "Research: Belejringslogistik"
-      },
-      {
-        "Tag": "Upkeep",
-        "Type": "Decreased",
-        "Value": 0.05,
-        "Source": "Research: Belejringslogistik"
-      }
-    ]
-  },
-  {
-    "Id": "MIL_SIEGE_POWER_1",
-    "Name": "Tung Ammunition",
-    "Description": "Belejringsv\u00E5ben giver 5% mere skade",
-    "ParentId": "MIL_SIEGE_UPKEEP_1",
-    "RequiredUniversityLevel": 15,
-    "WoodCost": 5000,
-    "StoneCost": 1000,
-    "MetalCost": 5000,
-    "ResearchTimeInSeconds": 7200,
-    "Modifiers": [
-      {
-        "Tag": "Siege",
+        "Tag": "WarehouseCapacity",
         "Type": "Increased",
         "Value": 0.05,
-        "Source": "Research: Tung Ammunition"
-      },
-      {
-        "Tag": "Power",
-        "Type": "Increased",
-        "Value": 0.05,
-        "Source": "Research: Tung Ammunition"
+        "Source": "Research: Lager"
       }
-    ]
+    ],
+    "ModifiersThatAffectsThis": []
   },
   {
-    "Id": "LOG_ROADS_1",
-    "Name": "Vejbygning I",
-    "Description": "Bygning og reparation af veje er 10% hurtigere",
+    "Id": "MIL_INF_1",
+    "Name": "Skarpe Klinger",
+    "Description": "Infanteri giver 5% mere skade",
+    "ResearchType": "War",
     "ParentId": null,
-    "RequiredUniversityLevel": 4,
-    "WoodCost": 300,
-    "StoneCost": 800,
-    "MetalCost": 100,
+    "ResearchPointCost": 150,
     "ResearchTimeInSeconds": 600,
-    "Modifiers": [
+    "ModifiersInternal": [
+      {
+        "Tag": "Infantry",
+        "Type": "Increased",
+        "Value": 0.05,
+        "Source": "Research: Klinger"
+      }
+    ],
+    "ModifiersThatAffectsThis": []
+  },
+  {
+    "Id": "MIL_SIEGE_1",
+    "Name": "Belejringslogistik",
+    "Description": "Neds\u00E6tter upkeep af belejringsenheder med 5%",
+    "ResearchType": "War",
+    "ParentId": null,
+    "ResearchPointCost": 400,
+    "ResearchTimeInSeconds": 3600,
+    "ModifiersInternal": [
+      {
+        "Tag": "Siege",
+        "Type": "Decreased",
+        "Value": 0.05,
+        "Source": "Research: Belejringslogistik"
+      }
+    ],
+    "ModifiersThatAffectsThis": []
+  },
+  {
+    "Id": "DEF_WALL_1",
+    "Name": "Forst\u00E6rket Murv\u00E6rk",
+    "Description": "\u00D8ger murens forsvarsevne med 10%",
+    "ResearchType": "War",
+    "ParentId": null,
+    "ResearchPointCost": 300,
+    "ResearchTimeInSeconds": 1800,
+    "ModifiersInternal": [
+      {
+        "Tag": "Wall",
+        "Type": "Increased",
+        "Value": 0.1,
+        "Source": "Research: Murv\u00E6rk"
+      }
+    ],
+    "ModifiersThatAffectsThis": []
+  },
+  {
+    "Id": "UTIL_ROADS_1",
+    "Name": "Vejbygning I",
+    "Description": "Bygning af veje er 10% hurtigere",
+    "ResearchType": "Utility",
+    "ParentId": null,
+    "ResearchPointCost": 150,
+    "ResearchTimeInSeconds": 600,
+    "ModifiersInternal": [
       {
         "Tag": "Construction",
         "Type": "Increased",
         "Value": 0.1,
         "Source": "Research: Vejbygning I"
       }
-    ]
+    ],
+    "ModifiersThatAffectsThis": []
+  },
+  {
+    "Id": "UTIL_STUDY_1",
+    "Name": "Videnskabelig Metode",
+    "Description": "\u00D8ger RP generering med 5%",
+    "ResearchType": "Utility",
+    "ParentId": null,
+    "ResearchPointCost": 500,
+    "ResearchTimeInSeconds": 1500,
+    "ModifiersInternal": [
+      {
+        "Tag": "Research",
+        "Type": "Increased",
+        "Value": 0.05,
+        "Source": "Research: Metode"
+      }
+    ],
+    "ModifiersThatAffectsThis": []
+  },
+  {
+    "Id": "UTIL_POP_1",
+    "Name": "Byplanl\u00E6gning",
+    "Description": "\u00D8ger max befolkning med 100",
+    "ResearchType": "Utility",
+    "ParentId": null,
+    "ResearchPointCost": 800,
+    "ResearchTimeInSeconds": 3600,
+    "ModifiersInternal": [
+      {
+        "Tag": "Population",
+        "Type": "Flat",
+        "Value": 100,
+        "Source": "Research: Byplanl\u00E6gning"
+      }
+    ],
+    "ModifiersThatAffectsThis": []
   }
 ]

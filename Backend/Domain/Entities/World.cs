@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 
 namespace Domain.Entities
 {
-    public class World : BaseEntity
+    public class World : BaseEntity, IModifierProvider
     {
         public const int TileSize = 10;
         public string Name { get; set; } = string.Empty;
@@ -20,6 +20,7 @@ namespace Domain.Entities
 
         [NotMapped]
         public Tile[,] Tiles { get; set; }
+        public List<Modifier> ModifiersInternal { get; set; } = new();
 
         protected World() { InitializeTiles(); } // EF Core bruger denne
 
@@ -48,6 +49,11 @@ namespace Domain.Entities
                     };
                 }
             }
+        }
+
+        public IEnumerable<Modifier> GetModifiers()
+        {
+            return ModifiersInternal;
         }
     }
 }

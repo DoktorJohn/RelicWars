@@ -3,7 +3,6 @@ using UnityEngine;
 using UnityEngine.UIElements;
 using System;
 using System.Collections.Generic;
-using Assets.Scripts.Domain.Enums;
 using Project.Network.Manager;
 using Project.Scripts.Domain.DTOs;
 
@@ -15,85 +14,101 @@ namespace Project.Modules.UI.Windows.Implementations
         protected override string VisualContainerName => "Housing-Window-MainContainer";
         protected override string HeaderName => "Housing-Window-Header";
 
-        private Label _levelLabel;
-        private ScrollView _statsContainer;
+        private Label _currentHousingLevelDisplayLabel;
+        private ScrollView _housingStatisticsScrollView;
 
         public override void OnOpen(object dataPayload)
         {
-            // 1. Setup Close Button
-            var closeBtn = Root.Q<Button>("Common-Close-Button");
-            if (closeBtn != null) { closeBtn.clicked -= Close; closeBtn.clicked += Close; }
+            InitializeUserInterfaceComponentReferences();
 
-            // 2. References
-            _levelLabel = Root.Q<Label>("Lbl-Level");
-            _statsContainer = Root.Q<ScrollView>("Housing-Stats-List");
+            Guid activeCityIdentifier = (dataPayload is Guid cityGuid) ? cityGuid : NetworkManager.Instance.ActiveCityId ?? Guid.Empty;
 
-            // 3. Get City ID
-            Guid cityId = (dataPayload is Guid id) ? id : NetworkManager.Instance.ActiveCityId ?? Guid.Empty;
-            if (cityId == Guid.Empty) return;
+            if (activeCityIdentifier == Guid.Empty)
+            {
+                Debug.LogWarning("[HousingWindowController] Open failed: No valid City ID found.");
+                return;
+            }
 
-            // 4. Load Data
-            RefreshData(cityId);
+            RequestAndRenderHousingProjectionData(activeCityIdentifier);
         }
 
-        private void RefreshData(Guid cityId)
+        private void InitializeUserInterfaceComponentReferences()
         {
-            if (_statsContainer != null) _statsContainer.Clear();
-            string token = NetworkManager.Instance.JwtToken;
-
-            // Kald den specifikke Housing metode
-            StartCoroutine(NetworkManager.Instance.Building.GetHousingProjection(cityId, token, (dataList) =>
+            var headerCloseButton = Root.Q<Button>("Header-Close-Button");
+            if (headerCloseButton != null)
             {
-                if (dataList != null && dataList.Count > 0)
-                {
-                    // Opdater Header
-                    var current = dataList.Find(x => x.IsCurrentLevel);
-                    if (current != null && _levelLabel != null)
-                        _levelLabel.text = $"Level {current.Level}";
-                    else if (_levelLabel != null)
-                        _levelLabel.text = "Not Constructed";
+                headerCloseButton.clicked -= Close;
+                headerCloseButton.clicked += Close;
+            }
 
-                    PopulateTable(dataList);
+            _currentHousingLevelDisplayLabel = Root.Q<Label>("Label-Level-Display");
+            _housingStatisticsScrollView = Root.Q<ScrollView>("Housing-Stats-List");
+        }
+
+        private void RequestAndRenderHousingProjectionData(Guid cityIdentifier)
+        {
+            if (_housingStatisticsScrollView != null)
+            {
+                _housingStatisticsScrollView.Clear();
+            }
+
+            string authenticationToken = NetworkManager.Instance.JwtToken;
+
+            StartCoroutine(NetworkManager.Instance.Building.GetHousingProjection(cityIdentifier, authenticationToken, (projectionDataList) =>
+            {
+                if (projectionDataList != null && projectionDataList.Count > 0)
+                {
+                    UpdateHousingHeaderInformation(projectionDataList);
+                    PopulateHousingStatisticsTable(projectionDataList);
                 }
             }));
         }
 
-        private void PopulateTable(List<HousingProjectionDTO> dataList)
+        private void UpdateHousingHeaderInformation(List<HousingProjectionDTO> projectionDataList)
         {
-            if (_statsContainer == null) return;
-            _statsContainer.Clear();
+            HousingProjectionDTO currentLevelEntry = projectionDataList.Find(projection => projection.IsCurrentLevel);
 
-            foreach (var item in dataList)
+            if (_currentHousingLevelDisplayLabel != null)
             {
-                CreateTableRow(item);
+                _currentHousingLevelDisplayLabel.text = currentLevelEntry != null
+                    ? $"Level {currentLevelEntry.Level}"
+                    : "Not Constructed";
             }
         }
 
-        private void CreateTableRow(HousingProjectionDTO item)
+        private void PopulateHousingStatisticsTable(List<HousingProjectionDTO> projectionDataList)
         {
-            VisualElement row = new VisualElement();
-            row.AddToClassList("table-row");
+            if (_housingStatisticsScrollView == null) return;
 
-            if (item.IsCurrentLevel)
+            _housingStatisticsScrollView.Clear();
+
+            foreach (HousingProjectionDTO housingProjection in projectionDataList)
             {
-                row.AddToClassList("table-row-current");
+                CreateAndAddHousingStatisticRow(housingProjection);
+            }
+        }
+
+        private void CreateAndAddHousingStatisticRow(HousingProjectionDTO housingProjectionData)
+        {
+            VisualElement tableRowContainer = new VisualElement();
+            tableRowContainer.AddToClassList("table-row");
+
+            if (housingProjectionData.IsCurrentLevel)
+            {
+                tableRowContainer.AddToClassList("table-row-current");
             }
 
-            // Level Cell
-            Label lvlLabel = new Label(item.Level.ToString());
-            lvlLabel.AddToClassList("row-label");
-            row.Add(lvlLabel);
+            // Level Label
+            Label levelValueLabel = new Label(housingProjectionData.Level.ToString());
+            levelValueLabel.AddToClassList("row-label");
+            tableRowContainer.Add(levelValueLabel);
 
-            // Population Cell
-            Label popLabel = new Label($"{item.Population:N0}");
-            popLabel.AddToClassList("row-label");
+            // Population Label
+            Label populationValueLabel = new Label($"{housingProjectionData.Population:N0}");
+            populationValueLabel.AddToClassList("row-label");
+            tableRowContainer.Add(populationValueLabel);
 
-            // Brug en hvid/beige farve for befolkning, da det ikke er en ressource man "høster"
-            popLabel.style.color = new StyleColor(new Color(0.9f, 0.9f, 0.85f));
-
-            row.Add(popLabel);
-
-            _statsContainer.Add(row);
+            _housingStatisticsScrollView.Add(tableRowContainer);
         }
     }
 }

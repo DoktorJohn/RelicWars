@@ -1,7 +1,7 @@
 /* Assets/UI/Theme/WindowTheme.uss */
 
 /* ============================================================
-   GLOBAL VARIABLES & FONTS (VIBRANT STONE)
+    GLOBAL VARIABLES & FONTS (VIBRANT STONE)
    ============================================================ */
 :root {
     /* --- ROMAN PALETTE --- */
@@ -24,20 +24,32 @@
     /* --- FONTS --- */
     --font-header: url("project://database/Assets/TextMesh Pro/Fonts/Cinzel.asset");
     --font-body: url("project://database/Assets/TextMesh Pro/Fonts/Roboto.asset");
+
+    /* --- ASSETS --- */
+    --img-window-background: url("project://database/Assets/UI/BackgroundUI.png");
 }
 
 /* ============================================================
-   WINDOW STRUCTURE
+    WINDOW STRUCTURE
    ============================================================ */
 .screen-overlay {
-    position: absolute; width: 100%; height: 100%;
+    position: absolute; 
+    width: 100%; 
+    height: 100%;
     background-color: rgba(0, 0, 0, 0); 
-    justify-content: center; align-items: center;
+    justify-content: center; 
+    align-items: center;
 }
 
 .window-frame {
     position: absolute;
+    /* Farven herunder skinner igennem de 70% transparens i dit billede */
     background-color: var(--c-window-bg);
+    
+    /* BACKGROUND IMAGE SETUP */
+    background-image: var(--img-window-background);
+    -unity-background-scale-mode: stretch-to-fill;
+
     border-radius: 12px; 
     border-width: 2px;
     border-color: var(--c-border);
@@ -45,15 +57,18 @@
 }
 
 /* ============================================================
-   HEADER & TYPOGRAPHY
+    HEADER & TYPOGRAPHY
    ============================================================ */
 .window-header {
-    flex-direction: row; height: 50px;
+    flex-direction: row; 
+    height: 50px;
     background-color: var(--c-header-bg);
     border-bottom-width: 2px;
     border-bottom-color: var(--c-border);
-    align-items: center; justify-content: space-between;
-    padding-left: 20px; padding-right: 10px;
+    align-items: center; 
+    justify-content: space-between;
+    padding-left: 20px; 
+    padding-right: 10px;
     cursor: move-arrow;
 }
 
@@ -67,9 +82,10 @@
     -unity-text-outline-color: rgba(0, 0, 0, 0.2);
 }
 
-/* --- THE ENGAGING "X" BUTTON --- */
+/* --- THE CLOSE "X" BUTTON --- */
 .window-close-btn {
-    width: 36px; height: 36px;
+    width: 36px; 
+    height: 36px;
     background-color: var(--c-btn-chill-bg);
     border-width: 1px;
     border-color: var(--c-btn-chill-border);
@@ -91,7 +107,7 @@
     scale: 0.95;
 }
 
-/* --- BODY TEXT (SLICK / CLEAN) --- */
+/* --- BODY TEXT --- */
 .text-body {
     -unity-font-definition: var(--font-body);
     color: var(--c-text-body);
@@ -100,24 +116,29 @@
 }
 
 /* ============================================================
-   INPUTS & BUTTONS
+    INPUTS & BUTTONS
    ============================================================ */
 .game-input {
     height: 40px;
     background-color: rgba(0, 0, 0, 0.08);
-    border-width: 1px; border-color: var(--c-border);
+    border-width: 1px; 
+    border-color: var(--c-border);
     border-radius: 6px;
     color: var(--c-text-body);
     -unity-font-definition: var(--font-body);
     -unity-font-style: normal; 
-    font-size: 16px; padding-left: 10px;
+    font-size: 16px; 
+    padding-left: 10px;
 }
 
 .btn-base {
-    height: 40px; border-radius: 6px; border-width: 1px;
+    height: 40px; 
+    border-radius: 6px; 
+    border-width: 1px;
     -unity-font-definition: var(--font-header);
     -unity-font-style: bold;
-    font-size: 16px; color: white; 
+    font-size: 16px; 
+    color: white; 
     margin-top: 10px;
     transition-duration: 0.1s;
 }
@@ -126,17 +147,16 @@
     background-color: var(--c-btn-chill-bg);
     border-color: var(--c-btn-chill-border);
 }
-.btn-primary:hover { scale: 1.02; background-color: rgb(175, 55, 45); }
-.btn-primary:active { scale: 0.98; }
-
-.btn-danger {
-    background-color: var(--c-btn-warn-bg);
-    border-color: var(--c-btn-warn-border);
+.btn-primary:hover { 
+    scale: 1.02; 
+    background-color: rgb(175, 55, 45); 
 }
-.btn-danger:hover { scale: 1.02; background-color: rgb(110, 50, 40); }
+.btn-primary:active { 
+    scale: 0.98; 
+}
 
 /* ============================================================
-   UTILITY SIZES
+    UTILITY SIZES
    ============================================================ */
 .size-small  { width: 400px; height: 350px; }
 .size-medium { width: 550px; height: 500px; }

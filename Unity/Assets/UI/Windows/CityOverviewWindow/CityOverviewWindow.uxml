@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ui:UXML xmlns:ui="UnityEngine.UIElements" editor-extension-mode="False">
+    <ui:Style src="project://database/Assets/UI/Windows/WindowTheme.uss" />
+    <ui:Style src="CityOverviewWindow.uss" />
+
+    <ui:VisualElement name="Overview-Window-Overlay" class="screen-overlay">
+        <ui:VisualElement name="Overview-Window-MainContainer" class="window-frame overview-main-container">
+            
+            <ui:VisualElement name="Overview-Window-Header" class="window-header">
+                <ui:Label text="CITY OVERVIEW" class="window-header-label" />
+                <ui:Button name="Header-Close-Button" class="window-close-btn" text="x" />
+            </ui:VisualElement>
+
+            <ui:VisualElement class="window-content-container overview-content-body">
+                
+                <ui:VisualElement class="overview-global-wallet">
+                    <ui:VisualElement class="wallet-item">
+                        <ui:VisualElement class="side-bar-icon-base icon-silver" style="width: 20px; height: 20px;" />
+                        <ui:Label text="SILVER:" class="wallet-item-prefix" />
+                        <ui:Label name="Label-Global-Silver" text="0" class="wallet-label" />
+                    </ui:VisualElement>
+                    <ui:VisualElement class="wallet-item">
+                        <ui:VisualElement class="side-bar-icon-base icon-research" style="width: 20px; height: 20px;" />
+                        <ui:Label text="RESEARCH POINTS:" class="wallet-item-prefix" />
+                        <ui:Label name="Label-Global-Research" text="0" class="wallet-label" />
+                    </ui:VisualElement>
+                </ui:VisualElement>
+
+                <ui:VisualElement class="divider" style="margin-bottom: 10px; opacity: 0.3;" />
+
+                <ui:Label text="ECONOMY &amp; PRODUCTION" class="section-title-label" />
+                <ui:VisualElement name="Economy-Grid-Container" class="economy-grid-container" />
+
+                <ui:VisualElement class="bottom-panels-container">
+                    
+                    <ui:VisualElement class="overview-panel population-panel">
+                        <ui:Label text="POPULATION" class="panel-title" />
+                        <ui:VisualElement class="pop-bar-bg">
+                            <ui:VisualElement name="Population-Bar-Used" class="pop-bar-fill" />
+                        </ui:VisualElement>
+                        <ui:Label name="Label-Pop-Details" text="U: 0 | Units: 0 | F: 0" class="pop-sub-label" />
+                    </ui:VisualElement>
+
+                    <ui:VisualElement class="overview-panel activity-panel">
+                        <ui:Label text="CITY ACTIVITY" class="panel-title" />
+                        <ui:VisualElement class="status-row">
+                            <ui:Label text="Town Hall:" class="status-label" />
+                            <ui:Label name="Status-TownHall" text="Idle" class="status-value" />
+                        </ui:VisualElement>
+                        <ui:VisualElement class="status-row">
+                            <ui:Label text="Barracks:" class="status-label" />
+                            <ui:Label name="Status-Barracks" text="Idle" class="status-value" />
+                        </ui:VisualElement>
+                    </ui:VisualElement>
+
+                </ui:VisualElement>
+
+            </ui:VisualElement>
+        </ui:VisualElement>
+    </ui:VisualElement>
+</ui:UXML>

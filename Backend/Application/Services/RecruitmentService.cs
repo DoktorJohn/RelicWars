@@ -7,6 +7,7 @@ using Domain.Enums;
 using Domain.StaticData.Data;
 using Domain.StaticData.Readers;
 using Domain.Workers;
+using Domain.Workers.Abstraction;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -54,7 +55,12 @@ namespace Application.Services
             var cityEntity = await _cityRepository.GetByIdAsync(cityId);
             var unitStaticData = _unitDataReader.GetUnit(type);
 
-            var activeJobsInCity = await _jobRepository.GetJobsByCityAsync(cityId);
+            List<BaseJob> activeJobsInCity = new();
+
+            var recruitmentJobs = await _jobRepository.GetRecruitmentJobsAsync(cityId);
+            var buildingJobs = await _jobRepository.GetBuildingJobsAsync(cityId);
+            activeJobsInCity.AddRange(recruitmentJobs);
+            activeJobsInCity.AddRange(buildingJobs);
 
             // --- POPULATION CHECK ---
             int availablePopulationCalculated = _cityStatService.GetAvailablePopulation(cityEntity, activeJobsInCity);

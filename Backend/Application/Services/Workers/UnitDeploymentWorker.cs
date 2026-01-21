@@ -2,13 +2,13 @@
 using Application.Interfaces.IServices;
 using Domain.Entities;
 using Domain.Enums;
-using Domain.StaticData.Data;
 using Domain.StaticData.Readers;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Domain.Abstraction;
 
 namespace Application.Services.Workers
 {
@@ -20,6 +20,7 @@ namespace Application.Services.Workers
         private readonly IBattleReportRepository _reportRepo;
         private readonly IResourceService _resService;
         private readonly ICityStatService _statService;
+        private readonly IModifierService _modifierService;
         private readonly UnitDataReader _unitData;
         private readonly ILogger<UnitDeploymentWorker> _logger;
 
@@ -30,6 +31,7 @@ namespace Application.Services.Workers
             IBattleReportRepository reportRepo,
             IResourceService resService,
             ICityStatService statService,
+            IModifierService modifierService,
             UnitDataReader unitData,
             ILogger<UnitDeploymentWorker> logger)
         {
@@ -39,6 +41,7 @@ namespace Application.Services.Workers
             _reportRepo = reportRepo;
             _resService = resService;
             _statService = statService;
+            _modifierService = modifierService;
             _unitData = unitData;
             _logger = logger;
         }
@@ -50,7 +53,6 @@ namespace Application.Services.Workers
 
             if (!due.Any()) return;
 
-            // 1. Håndtér ankomster (Tropper der lander i en mållokalitet)
             var arrivals = due.Where(d => d.UnitDeploymentMovementStatus == UnitDeploymentMovementStatusEnum.Arriving)
                               .GroupBy(d => d.TargetCityId);
 
@@ -59,7 +61,6 @@ namespace Application.Services.Workers
                 await ResolveArrivalGroup(group.Key, group.ToList());
             }
 
-            // 2. Håndtér hjemkomster (Tropper der lander i deres oprindelsesby)
             var returnees = due.Where(d => d.UnitDeploymentMovementStatus == UnitDeploymentMovementStatusEnum.Returning);
             foreach (var dep in returnees)
             {
@@ -72,24 +73,21 @@ namespace Application.Services.Workers
             var targetCity = await _cityRepo.GetByIdAsync(targetCityId);
             if (targetCity == null) return;
 
-            // Split gruppen op i Support (venner) og Combat (fjender)
+            SyncCityResourcesToNow(targetCity);
+
             var supportMissions = incomingGroup.Where(d => d.UnitDeploymentType == UnitDeploymentTypeEnum.Support).ToList();
             var combatMissions = incomingGroup.Where(d => d.UnitDeploymentType == UnitDeploymentTypeEnum.Attack ||
                                                          d.UnitDeploymentType == UnitDeploymentTypeEnum.Conquest).ToList();
 
-            // --- 1. HÅNDTÉR SUPPORT ANKOMST ---
             foreach (var sup in supportMissions)
             {
                 sup.UnitDeploymentMovementStatus = UnitDeploymentMovementStatusEnum.Stationed;
-                sup.ArrivalTime = DateTime.MaxValue; // De bliver stående indtil de kaldes hjem
+                sup.ArrivalTime = DateTime.MaxValue;
                 await _deployRepo.UpdateAsync(sup);
-                _logger.LogInformation($"{sup.Quantity}x {sup.UnitType} er nu stationeret som support i {targetCity.Name}");
             }
 
-            // --- 2. HÅNDTÉR KAMP (ATTACK / CONQUEST) ---
             if (combatMissions.Any())
             {
-                // Find alle forsvarere: Lokale tropper + Stationed tropper (Support)
                 var allDeployments = await _deployRepo.GetActiveDeploymentsAsync();
                 var stationedDefenders = allDeployments
                     .Where(d => d.TargetCityId == targetCityId && d.UnitDeploymentMovementStatus == UnitDeploymentMovementStatusEnum.Stationed)
@@ -103,33 +101,52 @@ namespace Application.Services.Workers
 
                 var attackerStacks = combatMissions.Select(d => new UnitStack { Type = d.UnitType, Quantity = d.Quantity }).ToList();
 
-                // Afvikl slag
                 var result = _combatService.ResolveBattle(attackerStacks, defensePool);
                 bool attackerWon = result.RemainingAttackers.Any(s => s.Quantity > 0);
 
-                // --- LOOT BEREGNING ---
                 double stolenWood = 0, stolenStone = 0, stolenMetal = 0;
+
                 if (attackerWon)
                 {
-                    int totalCarryCap = result.RemainingAttackers.Sum(s => _unitData.GetUnit(s.Type).LootCapacity * s.Quantity);
-                    var defenderRes = _resService.CalculateCurrent(targetCity, DateTime.UtcNow);
-                    double availableTotal = defenderRes.Wood + defenderRes.Stone + defenderRes.Metal;
-                    double takeRatio = availableTotal > 0 ? Math.Min(1.0, (double)totalCarryCap / availableTotal) : 0;
+                    var originCityId = combatMissions.First().OriginCityId;
+                    var originCity = await _cityRepo.GetByIdAsync(originCityId);
 
-                    stolenWood = defenderRes.Wood * takeRatio;
-                    stolenStone = defenderRes.Stone * takeRatio;
-                    stolenMetal = defenderRes.Metal * takeRatio;
+                    var attackerProviders = new List<IModifierProvider>();
+                    if (originCity != null)
+                    {
+                        attackerProviders.Add(originCity);
+                        if (originCity.WorldPlayer != null)
+                        {
+                            attackerProviders.Add(originCity.WorldPlayer);
+                            if (originCity.WorldPlayer.Alliance != null)
+                                attackerProviders.Add(originCity.WorldPlayer.Alliance);
+                        }
+                    }
 
-                    targetCity.Wood = defenderRes.Wood - stolenWood;
-                    targetCity.Stone = defenderRes.Stone - stolenStone;
-                    targetCity.Metal = defenderRes.Metal - stolenMetal;
-                    targetCity.LastResourceUpdate = DateTime.UtcNow;
+                    var lootCapModifierResult = _modifierService.CalculateEntityValueWithModifiers(
+                        1.0,
+                        new[] { ModifierTagEnum.LootCapacity },
+                        attackerProviders
+                    );
+
+                    double totalCarryCap = result.RemainingAttackers.Sum(s =>
+                        (_unitData.GetUnit(s.Type).LootCapacity * lootCapModifierResult.FinalValue) * s.Quantity
+                    );
+
+                    double availableTotal = targetCity.Wood + targetCity.Stone + targetCity.Metal;
+                    double takeRatio = availableTotal > 0 ? Math.Min(1.0, totalCarryCap / availableTotal) : 0;
+
+                    stolenWood = targetCity.Wood * takeRatio;
+                    stolenStone = targetCity.Stone * takeRatio;
+                    stolenMetal = targetCity.Metal * takeRatio;
+
+                    targetCity.Wood -= stolenWood;
+                    targetCity.Stone -= stolenStone;
+                    targetCity.Metal -= stolenMetal;
                 }
 
                 await GenerateReport(targetCity, combatMissions, result, attackerWon, stolenWood, stolenStone, stolenMetal);
 
-                // --- OPDATER FORSVARERES TILSTAND ---
-                // Opdater stationerede support-enheder (hvis de døde eller tog skade)
                 foreach (var sd in stationedDefenders)
                 {
                     var survivor = result.RemainingDefenders.FirstOrDefault(r => r.Type == sd.UnitType);
@@ -142,14 +159,12 @@ namespace Application.Services.Workers
                     }
                 }
 
-                // Opdater byens egne lokale enheder (fjern de typer der var supportet)
                 targetCity.UnitStacks = result.RemainingDefenders
                     .Where(r => !stationedDefenders.Any(sd => sd.UnitType == r.Type))
                     .ToList();
 
                 await _cityRepo.UpdateAsync(targetCity);
 
-                // --- OPDATER ANGRIBERES TILSTAND ---
                 foreach (var dep in combatMissions)
                 {
                     var survivor = result.RemainingAttackers.FirstOrDefault(s => s.Type == dep.UnitType);
@@ -161,7 +176,7 @@ namespace Application.Services.Workers
                         dep.LootWood = stolenWood * share;
                         dep.LootStone = stolenStone * share;
                         dep.LootMetal = stolenMetal * share;
-                        dep.ArrivalTime = DateTime.UtcNow.AddSeconds(30); // Hjemrejse
+                        dep.ArrivalTime = DateTime.UtcNow.AddSeconds(30);
                         await _deployRepo.UpdateAsync(dep);
                     }
                     else
@@ -177,22 +192,37 @@ namespace Application.Services.Workers
             var homeCity = await _cityRepo.GetByIdAsync(dep.OriginCityId);
             if (homeCity != null)
             {
-                var currentRes = _resService.CalculateCurrent(homeCity, DateTime.UtcNow);
+                SyncCityResourcesToNow(homeCity);
+
                 double cap = _statService.GetWarehouseCapacity(homeCity);
 
-                homeCity.Wood = Math.Min(cap, currentRes.Wood + dep.LootWood);
-                homeCity.Stone = Math.Min(cap, currentRes.Stone + dep.LootStone);
-                homeCity.Metal = Math.Min(cap, currentRes.Metal + dep.LootMetal);
-                homeCity.LastResourceUpdate = DateTime.UtcNow;
+                homeCity.Wood = Math.Min(cap, homeCity.Wood + dep.LootWood);
+                homeCity.Stone = Math.Min(cap, homeCity.Stone + dep.LootStone);
+                homeCity.Metal = Math.Min(cap, homeCity.Metal + dep.LootMetal);
 
                 var stack = homeCity.UnitStacks.FirstOrDefault(s => s.Type == dep.UnitType);
                 if (stack != null) stack.Quantity += dep.Quantity;
                 else homeCity.UnitStacks.Add(new UnitStack { Type = dep.UnitType, Quantity = dep.Quantity, CityId = homeCity.Id });
 
                 await _cityRepo.UpdateAsync(homeCity);
-                _logger.LogInformation($"{dep.Quantity}x {dep.UnitType} er vendt hjem til {homeCity.Name} med bytte.");
             }
             await _deployRepo.DeleteAsync(dep);
+        }
+
+        private void SyncCityResourcesToNow(City city)
+        {
+            var snapshot = _resService.CalculateCurrent(city, DateTime.UtcNow);
+
+            city.Wood = snapshot.Wood;
+            city.Stone = snapshot.Stone;
+            city.Metal = snapshot.Metal;
+
+            if (city.WorldPlayer != null)
+            {
+                city.WorldPlayer.Silver += snapshot.SilverGeneratedByThisCity;
+            }
+
+            city.LastResourceUpdate = snapshot.Timestamp;
         }
 
         private async Task GenerateReport(City target, List<UnitDeployment> attackers, CombatResult res, bool win, double w, double s, double m)

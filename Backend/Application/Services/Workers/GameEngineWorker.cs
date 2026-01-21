@@ -32,76 +32,32 @@ namespace Application.Services.Workers
             {
                 using (IServiceScope serviceScope = _services.CreateScope())
                 {
-                    IServiceProvider scopedProvider = serviceScope.ServiceProvider;
-
+                    var scopedProvider = serviceScope.ServiceProvider;
                     try
                     {
-                        var cityJobProcessingWorker = scopedProvider.GetRequiredService<CityWorker>();
-                        await cityJobProcessingWorker.ProcessCityJobsAsync();
+                        // 1. Kør bygge/rekrutterings jobs
+                        var cityJobWorker = scopedProvider.GetRequiredService<CityWorker>();
+                        await cityJobWorker.ProcessCityJobsAsync();
 
+                        // 2. Kør hær-bevægelser (Ankomster/Retur)
                         var unitDeploymentWorker = scopedProvider.GetRequiredService<UnitDeploymentWorker>();
                         await unitDeploymentWorker.ProcessMilitaryMovementsAsync();
 
-                        if ((DateTime.UtcNow - _lastResourceSave).TotalMinutes >= 0.5)
-                        {
-                            await SynchronizeAllPlayerCitiesResourceStatesAsync(scopedProvider);
-                            _lastResourceSave = DateTime.UtcNow;
-                        }
-
-                        if ((DateTime.UtcNow - _lastRankingGeneration).TotalMinutes >= 0.1)
+                        if ((DateTime.UtcNow - _lastRankingGeneration).TotalMinutes >= 10)
                         {
                             await SynchronizeAllPlayerPointsAndRankings(scopedProvider);
                             _lastRankingGeneration = DateTime.UtcNow;
                         }
-
-                        if ((DateTime.UtcNow.Date != _lastDailySave.Date))
-                        {
-                            // await SynchroinzeAllPlayerMedalsAndDailyAwards
-                            _lastDailySave = DateTime.UtcNow;
-                        }
                     }
                     catch (Exception exception)
                     {
-                        _logger.LogError(exception, "En fejl opstod under kørsel af GameEngine-løkken.");
+                        _logger.LogError(exception, "GameEngine Loop Error");
                     }
                 }
-
                 await Task.Delay(1000, stoppingToken);
             }
         }
 
-        private async Task SynchronizeAllPlayerCitiesResourceStatesAsync(IServiceProvider scopedProvider)
-        {
-            // Nu kan vi sikkert løse ICityRepository, da det sker via et scope.
-            var cityDataRepository = scopedProvider.GetRequiredService<ICityRepository>();
-            var resourceCalculationService = scopedProvider.GetRequiredService<IResourceService>();
-
-            var allCitiesInWorld = await cityDataRepository.GetAllAsync();
-            var currentSystemTime = DateTime.UtcNow;
-
-            _logger.LogInformation($"[Sync] Starter synkronisering for {allCitiesInWorld.Count} entiteter.");
-
-            foreach (var cityEntity in allCitiesInWorld)
-            {
-                // Vi logger kun for spillere for at undgå NPC-støj
-                bool isPlayerOwnedCity = cityEntity.WorldPlayer != null;
-
-                var calculatedResourceSnapshot = resourceCalculationService.CalculateCurrent(cityEntity, currentSystemTime);
-
-                if (isPlayerOwnedCity)
-                {
-                    _logger.LogInformation($"[Sync-PLAYER] By: {cityEntity.Name} | Wood: {cityEntity.Wood:F2} -> {calculatedResourceSnapshot.Wood:F2} | Rate: {calculatedResourceSnapshot.WoodProductionPerHour}/t");
-                }
-
-                cityEntity.Wood = calculatedResourceSnapshot.Wood;
-                cityEntity.Stone = calculatedResourceSnapshot.Stone;
-                cityEntity.Metal = calculatedResourceSnapshot.Metal;
-                cityEntity.LastResourceUpdate = currentSystemTime;
-            }
-
-            await cityDataRepository.UpdateRangeAsync(allCitiesInWorld);
-            _logger.LogInformation("[Sync] Database synkronisering fuldført.");
-        }
 
         private async Task SynchronizeAllPlayerPointsAndRankings(IServiceProvider scopedProvider)
         {

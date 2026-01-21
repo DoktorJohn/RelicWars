@@ -46,7 +46,7 @@ namespace Application.Services.Buildings
             };
 
             // 1. Hent og filtrer Jobs til Køen (Kun Cavalry)
-            var allActiveJobs = await _jobRepo.GetJobsByCityAsync(cityId);
+            var allActiveJobs = await _jobRepo.GetRecruitmentJobsAsync(cityId);
             var recruitmentJobsForStable = allActiveJobs.OfType<RecruitmentJob>()
                 .OrderBy(job => job.ExecutionTime)
                 .ToList();

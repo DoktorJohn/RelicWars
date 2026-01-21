@@ -18,6 +18,8 @@
 
         Profile,
         Alliance,
-        Rankings
+        Rankings,
+        Overview,
+        Research
     }
 }

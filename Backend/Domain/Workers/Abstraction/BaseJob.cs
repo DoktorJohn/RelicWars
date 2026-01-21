@@ -12,7 +12,6 @@ namespace Domain.Workers.Abstraction
     {
         public Guid UserId { get; set; }
         public DateTime ExecutionTime { get; set; }
-        public Guid CityId { get; set; }
         public bool IsCompleted { get; set; }
     }
 }

@@ -1,22 +1,32 @@
 <?xml version="1.0" encoding="utf-8"?>
-<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" editor-extension-mode="False">
+<ui:UXML xmlns:ui="UnityEngine.UIElements" editor-extension-mode="False">
     <ui:Style src="project://database/Assets/UI/HUD/SideBar.uss" />
     
     <ui:VisualElement name="SideBar-MainContainer" class="side-bar-main-container">
         
+        <ui:VisualElement name="SideBar-Button-Overview" class="side-bar-button-container">
+            <ui:VisualElement class="side-bar-icon-base icon-overview" />
+            <ui:Label text="OVERVIEW" class="side-bar-label" />
+        </ui:VisualElement>
+
         <ui:VisualElement name="SideBar-Button-Profile" class="side-bar-button-container">
-            <ui:VisualElement name="SideBar-Icon-Profile" class="side-bar-icon-base icon-profile" />
+            <ui:VisualElement class="side-bar-icon-base icon-profile" />
             <ui:Label text="PROFILE" class="side-bar-label" />
         </ui:VisualElement>
         
         <ui:VisualElement name="SideBar-Button-Alliance" class="side-bar-button-container">
-            <ui:VisualElement name="SideBar-Icon-Alliance" class="side-bar-icon-base icon-alliance" />
+            <ui:VisualElement class="side-bar-icon-base icon-alliance" />
             <ui:Label text="ALLIANCE" class="side-bar-label" />
         </ui:VisualElement>
         
         <ui:VisualElement name="SideBar-Button-Rankings" class="side-bar-button-container">
-            <ui:VisualElement name="SideBar-Icon-Rankings" class="side-bar-icon-base icon-rankings" />
+            <ui:VisualElement class="side-bar-icon-base icon-rankings" />
             <ui:Label text="RANKING" class="side-bar-label" />
+        </ui:VisualElement>
+
+        <ui:VisualElement name="SideBar-Button-Research" class="side-bar-button-container">
+            <ui:VisualElement class="side-bar-icon-base icon-research-sidebar" />
+            <ui:Label text="RESEARCH" class="side-bar-label" />
         </ui:VisualElement>
         
     </ui:VisualElement>

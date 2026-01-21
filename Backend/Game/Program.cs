@@ -15,6 +15,7 @@ using Application.Services.Authentication;
 using Application.Utility;
 using Application.Interfaces.IServices.IBuildings;
 using Application.Services.Buildings;
+using Application.Services.Jobs;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -84,7 +85,6 @@ builder.Services.AddScoped<IResourceService, ResourceService>();
 builder.Services.AddScoped<CombatService>();
 builder.Services.AddScoped<ICityStatService, CityStatService>();
 builder.Services.AddScoped<IJobService, JobService>();
-builder.Services.AddScoped<IBuildingService, BuildingService>();
 builder.Services.AddScoped<IRecruitmentService, RecruitmentService>();
 builder.Services.AddScoped<IMarketPlaceService, MarketPlaceService>();
 builder.Services.AddScoped<IResearchService, ResearchService>();
@@ -95,7 +95,6 @@ builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IWorldService, WorldService>();
 builder.Services.AddScoped<IWorldPlayerService, WorldPlayerService>();
 builder.Services.AddScoped<IJwtService, JwtService>();
-builder.Services.AddScoped<IResourceService, ResourceService>();
 builder.Services.AddScoped<CityWorker>();
 builder.Services.AddScoped<UnitDeploymentWorker>();
 builder.Services.AddScoped<RecruitmentTimeCalculationService>();
@@ -112,6 +111,7 @@ builder.Services.AddScoped<IUniversityService, UniversityService>();
 builder.Services.AddScoped<IRankingService, RankingService>();
 builder.Services.AddScoped<IAllianceService, AllianceService>();
 builder.Services.AddScoped<IAllianceRepository, AllianceRepository>();
+builder.Services.AddScoped<IModifierService, ModifierService>();
 
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();

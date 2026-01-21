@@ -10,6 +10,6 @@ namespace Application.Interfaces.IServices
 {
     public interface IResourceService
     {
-        ResourceSnapshot CalculateCurrent(City city, DateTime now, List<Modifier>? accountModifiers = null);
+        ResourceSnapshot CalculateCurrent(City city, DateTime now);
     }
 }

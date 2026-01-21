@@ -1,13 +1,8 @@
-﻿using Domain.Enums;
-using Domain.StaticData.Data;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Text.Json.Serialization;
-using System.Text.Json;
-using System.Threading.Tasks;
+﻿using Domain.StaticData.Data;
 using Domain.Entities;
+using Domain.Enums;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 
 namespace Domain.StaticData.Generators
 {
@@ -17,20 +12,18 @@ namespace Domain.StaticData.Generators
         {
             var nodes = new List<ResearchData>();
 
-            // --- ECONOMY PATH (Wood, Stone, Metal Production) ---
+            // ============================================================
+            // ECONOMY TREE
+            // ============================================================
             nodes.Add(new ResearchData
             {
                 Id = "ECON_PROD_1",
                 Name = "Effektiv Minedrift I",
+                ResearchType = ResearchTypeEnum.Economy,
                 Description = "Øger produktionen af alle råmaterialer med 1%",
-                RequiredUniversityLevel = 1,
-                WoodCost = 500,
-                StoneCost = 500,
-                MetalCost = 500,
+                ResearchPointCost = 100,
                 ResearchTimeInSeconds = 300,
-                Modifiers = {
-                new Modifier { Tag = ModifierTagEnum.ResourceProduction, Type = ModifierTypeEnum.Increased, Value = 0.01, Source = "Research: Minedrift I" }
-            }
+                ModifiersInternal = { new Modifier { Tag = ModifierTagEnum.ResourceProduction, Type = ModifierTypeEnum.Increased, Value = 0.01, Source = "Research: Minedrift I" } }
             });
 
             nodes.Add(new ResearchData
@@ -38,65 +31,95 @@ namespace Domain.StaticData.Generators
                 Id = "ECON_SILVER_1",
                 Name = "Handelsaftaler",
                 ParentId = "ECON_PROD_1",
+                ResearchType = ResearchTypeEnum.Economy,
                 Description = "+3% bonus til markedspladsens sølv-generering",
-                RequiredUniversityLevel = 5,
-                WoodCost = 1000,
-                StoneCost = 1000,
-                MetalCost = 1000,
+                ResearchPointCost = 250,
                 ResearchTimeInSeconds = 1200,
-                Modifiers = {
-                new Modifier { Tag = ModifierTagEnum.Silver, Type = ModifierTypeEnum.Increased, Value = 0.03, Source = "Research: Handelsaftaler" }
-            }
-            });
-
-            // --- MILITARY PATH (Siege Focus) ---
-            nodes.Add(new ResearchData
-            {
-                Id = "MIL_SIEGE_UPKEEP_1",
-                Name = "Logistik for Belejring",
-                Description = "Nedsætter upkeep af belejringsenheder med 5%",
-                RequiredUniversityLevel = 10,
-                WoodCost = 2000,
-                StoneCost = 500,
-                MetalCost = 2000,
-                ResearchTimeInSeconds = 3600,
-                Modifiers = {
-                new Modifier { Tag = ModifierTagEnum.Siege, Type = ModifierTypeEnum.Decreased, Value = 0.05, Source = "Research: Belejringslogistik" },
-                new Modifier { Tag = ModifierTagEnum.Upkeep, Type = ModifierTypeEnum.Decreased, Value = 0.05, Source = "Research: Belejringslogistik" }
-            }
+                ModifiersInternal = { new Modifier { Tag = ModifierTagEnum.Silver, Type = ModifierTypeEnum.Increased, Value = 0.03, Source = "Research: Handelsaftaler" } }
             });
 
             nodes.Add(new ResearchData
             {
-                Id = "MIL_SIEGE_POWER_1",
-                Name = "Tung Ammunition",
-                ParentId = "MIL_SIEGE_UPKEEP_1",
-                Description = "Belejringsvåben giver 5% mere skade",
-                RequiredUniversityLevel = 15,
-                WoodCost = 5000,
-                StoneCost = 1000,
-                MetalCost = 5000,
-                ResearchTimeInSeconds = 7200,
-                Modifiers = {
-                new Modifier { Tag = ModifierTagEnum.Siege, Type = ModifierTypeEnum.Increased, Value = 0.05, Source = "Research: Tung Ammunition" },
-                new Modifier { Tag = ModifierTagEnum.Power, Type = ModifierTypeEnum.Increased, Value = 0.05, Source = "Research: Tung Ammunition" }
-            }
+                Id = "ECON_WAREHOUSE_1",
+                Name = "Struktureret Lager",
+                ParentId = "ECON_PROD_1",
+                ResearchType = ResearchTypeEnum.Economy,
+                Description = "Øger lagerkapaciteten med 5%",
+                ResearchPointCost = 300,
+                ResearchTimeInSeconds = 900,
+                ModifiersInternal = { new Modifier { Tag = ModifierTagEnum.WarehouseCapacity, Type = ModifierTypeEnum.Increased, Value = 0.05, Source = "Research: Lager" } }
             });
 
-            // --- LOGISTICS PATH ---
+            // ============================================================
+            // WAR TREE
+            // ============================================================
             nodes.Add(new ResearchData
             {
-                Id = "LOG_ROADS_1",
-                Name = "Vejbygning I",
-                Description = "Bygning og reparation af veje er 10% hurtigere",
-                RequiredUniversityLevel = 4,
-                WoodCost = 300,
-                StoneCost = 800,
-                MetalCost = 100,
+                Id = "MIL_INF_1",
+                Name = "Skarpe Klinger",
+                ResearchType = ResearchTypeEnum.War,
+                Description = "Infanteri giver 5% mere skade",
+                ResearchPointCost = 150,
                 ResearchTimeInSeconds = 600,
-                Modifiers = {
-                new Modifier { Tag = ModifierTagEnum.Construction, Type = ModifierTypeEnum.Increased, Value = 0.10, Source = "Research: Vejbygning I" }
-            }
+                ModifiersInternal = { new Modifier { Tag = ModifierTagEnum.Infantry, Type = ModifierTypeEnum.Increased, Value = 0.05, Source = "Research: Klinger" } }
+            });
+
+            nodes.Add(new ResearchData
+            {
+                Id = "MIL_SIEGE_1",
+                Name = "Belejringslogistik",
+                ResearchType = ResearchTypeEnum.War,
+                Description = "Nedsætter upkeep af belejringsenheder med 5%",
+                ResearchPointCost = 400,
+                ResearchTimeInSeconds = 3600,
+                ModifiersInternal = { new Modifier { Tag = ModifierTagEnum.Siege, Type = ModifierTypeEnum.Decreased, Value = 0.05, Source = "Research: Belejringslogistik" } }
+            });
+
+            nodes.Add(new ResearchData
+            {
+                Id = "DEF_WALL_1",
+                Name = "Forstærket Murværk",
+                ResearchType = ResearchTypeEnum.War,
+                Description = "Øger murens forsvarsevne med 10%",
+                ResearchPointCost = 300,
+                ResearchTimeInSeconds = 1800,
+                ModifiersInternal = { new Modifier { Tag = ModifierTagEnum.Wall, Type = ModifierTypeEnum.Increased, Value = 0.10, Source = "Research: Murværk" } }
+            });
+
+            // ============================================================
+            // UTILITY TREE
+            // ============================================================
+            nodes.Add(new ResearchData
+            {
+                Id = "UTIL_ROADS_1",
+                Name = "Vejbygning I",
+                ResearchType = ResearchTypeEnum.Utility,
+                Description = "Bygning af veje er 10% hurtigere",
+                ResearchPointCost = 150,
+                ResearchTimeInSeconds = 600,
+                ModifiersInternal = { new Modifier { Tag = ModifierTagEnum.Construction, Type = ModifierTypeEnum.Increased, Value = 0.10, Source = "Research: Vejbygning I" } }
+            });
+
+            nodes.Add(new ResearchData
+            {
+                Id = "UTIL_STUDY_1",
+                Name = "Videnskabelig Metode",
+                ResearchType = ResearchTypeEnum.Utility,
+                Description = "Øger RP generering med 5%",
+                ResearchPointCost = 500,
+                ResearchTimeInSeconds = 1500,
+                ModifiersInternal = { new Modifier { Tag = ModifierTagEnum.Research, Type = ModifierTypeEnum.Increased, Value = 0.05, Source = "Research: Metode" } }
+            });
+
+            nodes.Add(new ResearchData
+            {
+                Id = "UTIL_POP_1",
+                Name = "Byplanlægning",
+                ResearchType = ResearchTypeEnum.Utility,
+                Description = "Øger max befolkning med 100",
+                ResearchPointCost = 800,
+                ResearchTimeInSeconds = 3600,
+                ModifiersInternal = { new Modifier { Tag = ModifierTagEnum.Population, Type = ModifierTypeEnum.Flat, Value = 100, Source = "Research: Byplanlægning" } }
             });
 
             var options = new JsonSerializerOptions { WriteIndented = true, Converters = { new JsonStringEnumConverter() } };

@@ -12,11 +12,11 @@ namespace Application.Interfaces.IRepositories
     {
         Task<BaseJob?> GetByIdAsync(Guid id);
         Task<List<BaseJob>> GetDueJobsAsync(DateTime now);
-        Task<List<BaseJob>> GetJobsByCityAsync(Guid cityId); // Til Dashboardet
+        Task<List<BuildingJob>> GetBuildingJobsAsync(Guid cityId);
         Task AddAsync(BaseJob job);
         Task UpdateAsync(BaseJob job); // Til Recruitment fremskridt
         Task DeleteAsync(Guid jobId);
-        Task<BaseJob?> GetActiveResearchJobForUserAsync(Guid userId);
-        Task<List<RecruitmentJob>> GetRecruitmentJobsByCityAsync(Guid cityId);
+        Task<ResearchJob?> GetResearchJobAsync(Guid userId);
+        Task<List<RecruitmentJob>> GetRecruitmentJobsAsync(Guid cityId);
     }
 }

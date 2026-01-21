@@ -1,25 +1,29 @@
-/* ============================================================
-   CITY-TOPBAR-MAIN-CONTAINER
-   ============================================================ */
+/* Assets/UI/HUD/CityTopBar.uss */
+
 .city-top-bar-main-container {
+    --c-hud-bg-dark: rgb(35, 31, 28);
+    --c-hud-border-gold: rgb(165, 125, 50);
+    --c-hud-text-light: rgb(235, 230, 220);
+    
     position: absolute;
     top: 0;
     left: 0;
     width: 100%;
-    height: 65px;
+    height: 50px;
     flex-direction: row;
     align-items: flex-start;
-    padding-left: 25px;
-    padding-right: 25px;
-    
-    background-image: url('project://database/Assets/UI/Coal_Surface_2_Albedo.png');
-    -unity-background-image-tint-color: rgba(160, 120, 90, 1.0);
-    -unity-background-scale-mode: scale-and-crop;
+    padding-left: 0;
+    padding-right: 20px;
 
-    border-bottom-width: 2px;
-    border-bottom-color: rgba(80, 50, 30, 0.8);
-    justify-content: flex-end;
-    overflow: visible;
+    background-color: var(--c-hud-bg-dark);
+    background-image: url('project://database/Assets/UI/TopBarHUD.jpg');
+    -unity-background-scale-mode: scale-and-crop;
+    background-position: center;
+    -unity-background-image-tint-color: rgba(0, 0, 0, 0.2);
+
+    border-bottom-width: 5px;
+    border-bottom-color: var(--c-hud-border-gold);
+    overflow: visible; 
 }
 
 .city-top-bar-resource-section-right {
@@ -34,37 +38,38 @@
 .city-resource-group {
     flex-direction: row;
     align-items: center;
-    margin-left: 20px;
-    margin-top: 15px; /* Luften til toppen */
+    width: 120px; 
+    height: 100%;
+    justify-content: center;
     overflow: visible;
+    flex-shrink: 0; 
 }
 
-/* ============================================================
-   IKONER OG BUE-CONTAINER */
+/* IKONER SKALERET NED (PUNKT 3) */
 .city-resource-icon-container {
-    width: 54px;
-    height: 54px;
+    width: 40px;
+    height: 40px;
     justify-content: center;
     align-items: center;
     overflow: visible;
+    flex-shrink: 0;
 }
 
 .city-resource-icon-base {
-    width: 54px; 
-    height: 54px;
-    min-width: 54px;
-    min-height: 54px;
+    width: 40px; 
+    height: 40px;
     -unity-background-scale-mode: scale-to-fit;
     flex-shrink: 0;
 }
 
-/* Lærredet til halvcirklen - placeret absolut over ikonet */
+/* WAREHOUSE BUE (ALIGNMENT FIX) 
+   Vi bruger 48px (ikon 40px + 4px margin på hver side) */
 .city-warehouse-capacity-bar {
     position: absolute;
-    width: 64px; /* Lidt bredere end ikonet for at omfavne det */
-    height: 64px;
-    top: -5px;
-    left: -5px;
+    width: 48px;
+    height: 48px;
+    top: -4px;
+    left: -4px;
 }
 
 .icon-wood { background-image: url('project://database/Assets/UI/Icons/wood.png'); }
@@ -72,50 +77,30 @@
 .icon-metal { background-image: url('project://database/Assets/UI/Icons/metal.png'); }
 .icon-silver { background-image: url('project://database/Assets/UI/Icons/silver.png'); }
 .icon-population { background-image: url('project://database/Assets/UI/Icons/population.png'); }
+.icon-research { background-image: url('project://database/Assets/UI/Icons/research.png'); }
 
-/* ============================================================
-   TEKST / LABELS */
 .city-resource-label-amount {
-    color: white;
+    color: var(--c-hud-text-light);
+    -unity-font-definition: url("project://database/Assets/TextMesh Pro/Fonts/Roboto.asset");
     -unity-font-style: bold;
-    font-size: 18px; 
+    font-size: 16px; 
+    margin-left: 6px;
+    width: 70px; 
+    -unity-text-align: middle-left;
+    overflow: hidden; 
+    white-space: nowrap;
     text-shadow: 1px 1px 1px rgba(0, 0, 0, 0.8);
-    margin-left: 8px;
 }
 
 .city-top-bar-map-button {
-    /* Absolut positionering for at bryde ud af flowet */
     position: absolute;
-    top: -5px;  /* Trækker den lidt op over kanten */
-    left: -5px; /* Trækker den lidt ud til venstre */
-    
-    /* Størrelse - større end selve baren (som er 65px høj) */
-    width: 160px;
-    height: 160px;
-
-    /* Ikonet */
+    top: -5px;
+    left: 5px;
+    width: 120px;
+    height: 120px;
     background-image: url('project://database/Assets/UI/Icons/MapIcon.png');
     -unity-background-scale-mode: scale-to-fit;
-
-    /* Nulstil standard knap-styling */
-    background-color: rgba(0,0,0,0); /* Gennemsigtig baggrund */
+    background-color: rgba(0,0,0,0);
     border-width: 0;
-    border-radius: 0;
-    
-    /* Animationer */
-    transition-property: scale, -unity-background-image-tint-color;
-    transition-duration: 0.1s;
-}
-
-/* Hover effekt */
-.city-top-bar-map-button:hover {
-    scale: 1.05;
-    -unity-background-image-tint-color: rgb(230, 230, 230); /* Lidt lysere */
-    cursor: link; /* Viser en hånd-cursor */
-}
-
-/* Klik effekt */
-.city-top-bar-map-button:active {
-    scale: 0.95;
-    -unity-background-image-tint-color: rgb(180, 180, 180); /* Lidt mørkere */
+    transition-duration: 0.15s;
 }

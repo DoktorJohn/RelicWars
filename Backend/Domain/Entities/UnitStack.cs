@@ -13,5 +13,12 @@ namespace Domain.Entities
         public UnitTypeEnum Type { get; set; }
         public int Quantity { get; set; }
         public Guid CityId { get; set; }
+        public List<Modifier> ModifiersInternal { get; set; } = new();
+        public List<ModifierTagEnum> ModifiersThatAffectsThis { get; set; } = new();
+
+        public IEnumerable<Modifier> GetModifiers()
+        {
+            return ModifiersInternal;
+        }
     }
 }

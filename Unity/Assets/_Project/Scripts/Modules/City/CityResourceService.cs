@@ -79,6 +79,9 @@ namespace Project.Modules.City
             double metalGrowthThisFrame = (_currentResourceState.MetalProductionPerHour / 3600.0) * secondsPassedSinceLastFrame;
             _currentResourceState.MetalAmount = Math.Min(_currentResourceState.MetalMaxCapacity, _currentResourceState.MetalAmount + metalGrowthThisFrame);
 
+            _currentResourceState.SilverAmount += (_currentResourceState.SilverProductionPerHour / 3600.0) * secondsPassedSinceLastFrame;
+            _currentResourceState.ResearchPointsAmount += (_currentResourceState.ResearchPointsProductionPerHour / 3600.0) * secondsPassedSinceLastFrame;
+
             // Vi affyrer eventet hver frame, så UI'et (TopBar) kan opdatere sine labels og bue-painters flydende.
             OnResourceStateChanged?.Invoke(_currentResourceState);
         }
@@ -158,9 +161,13 @@ namespace Project.Modules.City
                 _currentResourceState.MetalProductionPerHour = detailedInformationDto.MetalProductionPerHour;
 
                 _currentResourceState.SilverAmount = detailedInformationDto.CurrentSilverAmount;
+                _currentResourceState.SilverProductionPerHour = detailedInformationDto.SilverProductionPerHour;
 
                 _currentResourceState.CurrentPopulationUsage = detailedInformationDto.CurrentPopulationUsage;
                 _currentResourceState.MaxPopulationCapacity = detailedInformationDto.MaxPopulationCapacity;
+
+                _currentResourceState.ResearchPointsAmount = detailedInformationDto.CurrentResearchPoints;
+                _currentResourceState.ResearchPointsProductionPerHour = detailedInformationDto.ResearchPointsPerHour;
 
                 _isDataInitialized = true;
 
@@ -185,11 +192,13 @@ namespace Project.Modules.City
         /// Bruges til manuelt at trække ressourcer fra lokalt (fx når brugeren starter en bygning),
         /// så UI'et reagerer med det samme uden at vente på næste server-poll.
         /// </summary>
-        public void DeductResourcesLocally(double wood, double stone, double metal)
+        public void DeductResourcesLocally(double wood, double stone, double metal, double silver = 0, double research = 0)
         {
             _currentResourceState.WoodAmount -= wood;
             _currentResourceState.StoneAmount -= stone;
             _currentResourceState.MetalAmount -= metal;
+            _currentResourceState.SilverAmount -= silver;
+            _currentResourceState.ResearchPointsAmount -= research;
 
             OnResourceStateChanged?.Invoke(_currentResourceState);
         }

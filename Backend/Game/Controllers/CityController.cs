@@ -20,23 +20,24 @@ namespace WebApi.Controllers
             _logger = logger;
         }
 
-        [HttpGet("{id}")]
-        public async Task<IActionResult> GetCityOverview(Guid id)
-        {
-            var city = await _cityService.GetCityOverviewAsync(id);
-            if (city == null)
-            {
-                _logger.LogWarning("City Overview not found for ID: {CityId}", id);
-                return NotFound("City not found.");
-            }
-
-            return Ok(city);
-        }
-
         [HttpGet("GetDetailedCityInformation/{cityIdentifier}")]
         public async Task<ActionResult<CityControllerGetDetailedCityInformationDTO>> GetDetailedCityInformation(Guid cityIdentifier)
         {
             var detailedInfo = await _cityService.GetDetailedCityInformationByCityIdentifierAsync(cityIdentifier);
+
+            if (detailedInfo == null)
+            {
+                _logger.LogWarning("Detailed info request failed. City ID {CityId} not found.", cityIdentifier);
+                return NotFound(new { Message = $"City with ID {cityIdentifier} was not found." });
+            }
+
+            return Ok(detailedInfo);
+        }
+
+        [HttpGet("CityOverviewHUD/{cityIdentifier}")]
+        public async Task<ActionResult<CityControllerGetDetailedCityInformationDTO>> GetCityOverviewHUD(Guid cityIdentifier)
+        {
+            var detailedInfo = await _cityService.GetCityOverviewHUD(cityIdentifier);
 
             if (detailedInfo == null)
             {

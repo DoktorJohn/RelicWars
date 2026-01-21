@@ -1,4 +1,5 @@
-﻿using Domain.Entities;
+﻿using Domain.Abstraction;
+using Domain.Entities;
 using Domain.Enums;
 using System;
 using System.Collections.Generic;
@@ -10,7 +11,7 @@ namespace Domain.StaticData.Data
 {
     public record BuildingRequirement(BuildingTypeEnum Type, int RequiredLevel);
 
-    public class BuildingLevelData
+    public class BuildingLevelData : IModifierProvider
     {
         public int Level { get; set; }
         public int Points { get; set; }
@@ -22,7 +23,12 @@ namespace Domain.StaticData.Data
 
         public List<BuildingRequirement> Prerequisites { get; set; } = new();
         public List<Modifier> ModifiersInternal { get; set; } = new();
-        public List<ModifierTagEnum> ModifiersThatAffects { get; set; } = new();
+        public List<ModifierTagEnum> ModifiersThatAffectsThis { get; set; } = new();
+
+        public IEnumerable<Modifier> GetModifiers()
+        {
+            return ModifiersInternal;
+        }
     }
 
     public class TownHallLevelData : BuildingLevelData

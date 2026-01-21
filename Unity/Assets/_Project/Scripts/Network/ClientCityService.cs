@@ -19,6 +19,36 @@ namespace Project.Network
             _baseUrl = $"{baseUrl}/City";
         }
 
+        public IEnumerator GetCityOverviewHUD(Guid cityId, string jwtToken, Action<CityOverviewHUDDTO> callback)
+        {
+            string url = $"{_baseUrl}/CityOverviewHUD/{cityId}";
+
+            using (var request = BackendRequestHelper.CreateGetRequest(url, jwtToken))
+            {
+                yield return request.SendWebRequest();
+
+                if (request.result == UnityWebRequest.Result.Success)
+                {
+                    try
+                    {
+                        var data = JsonConvert.DeserializeObject<CityOverviewHUDDTO>(request.downloadHandler.text);
+                        callback?.Invoke(data);
+                    }
+                    catch (Exception ex)
+                    {
+                        Debug.LogError($"[City] Deserialization Error (OverviewHUD): {ex.Message}");
+                        callback?.Invoke(null);
+                    }
+                }
+                else
+                {
+                    Debug.LogError($"[City] GetCityOverviewHUD Failed: {request.error}");
+                    callback?.Invoke(null);
+                }
+            }
+        }
+
+
         public IEnumerator GetDetailedCityInfo(Guid cityId, string jwtToken, Action<CityControllerGetDetailedCityInformationDTO> callback)
         {
             string url = $"{_baseUrl}/GetDetailedCityInformation/{cityId}";

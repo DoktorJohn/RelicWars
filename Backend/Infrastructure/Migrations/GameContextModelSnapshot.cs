@@ -169,6 +169,10 @@ namespace Infrastructure.Migrations
                     b.Property<double>("Metal")
                         .HasColumnType("REAL");
 
+                    b.Property<string>("ModifiersThatAffectsThis")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasColumnType("TEXT");
@@ -268,6 +272,10 @@ namespace Infrastructure.Migrations
                     b.Property<double>("LootWood")
                         .HasColumnType("REAL");
 
+                    b.Property<string>("ModifiersThatAffectsThis")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
                     b.Property<Guid>("OriginCityId")
                         .HasColumnType("TEXT");
 
@@ -308,6 +316,10 @@ namespace Infrastructure.Migrations
 
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("INTEGER");
+
+                    b.Property<string>("ModifiersThatAffectsThis")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
 
                     b.Property<int>("Quantity")
                         .HasColumnType("INTEGER");
@@ -439,11 +451,18 @@ namespace Infrastructure.Migrations
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("INTEGER");
 
+                    b.Property<string>("ModifiersThatAffectsThis")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
                     b.Property<Guid>("PlayerProfileId")
                         .HasColumnType("TEXT");
 
-                    b.Property<int>("Silver")
-                        .HasColumnType("INTEGER");
+                    b.Property<double>("ResearchPoints")
+                        .HasColumnType("REAL");
+
+                    b.Property<double>("Silver")
+                        .HasColumnType("REAL");
 
                     b.Property<Guid>("WorldId")
                         .HasColumnType("TEXT");
@@ -463,9 +482,6 @@ namespace Infrastructure.Migrations
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("TEXT");
-
-                    b.Property<Guid>("CityId")
                         .HasColumnType("TEXT");
 
                     b.Property<DateTime>("DateCreated")
@@ -507,6 +523,9 @@ namespace Infrastructure.Migrations
                     b.Property<int>("BuildingType")
                         .HasColumnType("INTEGER");
 
+                    b.Property<Guid>("CityId")
+                        .HasColumnType("TEXT");
+
                     b.Property<int>("TargetLevel")
                         .HasColumnType("INTEGER");
 
@@ -518,6 +537,9 @@ namespace Infrastructure.Migrations
             modelBuilder.Entity("Domain.Workers.RecruitmentJob", b =>
                 {
                     b.HasBaseType("Domain.Workers.Abstraction.BaseJob");
+
+                    b.Property<Guid>("CityId")
+                        .HasColumnType("TEXT");
 
                     b.Property<int>("CompletedQuantity")
                         .HasColumnType("INTEGER");
@@ -533,6 +555,12 @@ namespace Infrastructure.Migrations
 
                     b.Property<int>("UnitType")
                         .HasColumnType("INTEGER");
+
+                    b.ToTable("Jobs", t =>
+                        {
+                            t.Property("CityId")
+                                .HasColumnName("RecruitmentJob_CityId");
+                        });
 
                     b.HasDiscriminator().HasValue("Recruitment");
                 });
@@ -563,6 +591,43 @@ namespace Infrastructure.Migrations
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("Domain.Entities.Alliance", b =>
+                {
+                    b.OwnsMany("Domain.Entities.Modifier", "ModifiersInternal", b1 =>
+                        {
+                            b1.Property<int>("Id")
+                                .ValueGeneratedOnAdd()
+                                .HasColumnType("INTEGER");
+
+                            b1.Property<Guid>("AllianceId")
+                                .HasColumnType("TEXT");
+
+                            b1.Property<string>("Source")
+                                .IsRequired()
+                                .HasColumnType("TEXT");
+
+                            b1.Property<int>("Tag")
+                                .HasColumnType("INTEGER");
+
+                            b1.Property<int>("Type")
+                                .HasColumnType("INTEGER");
+
+                            b1.Property<double>("Value")
+                                .HasColumnType("REAL");
+
+                            b1.HasKey("Id");
+
+                            b1.HasIndex("AllianceId");
+
+                            b1.ToTable("AllianceModifiers", (string)null);
+
+                            b1.WithOwner()
+                                .HasForeignKey("AllianceId");
+                        });
+
+                    b.Navigation("ModifiersInternal");
+                });
+
             modelBuilder.Entity("Domain.Entities.Building", b =>
                 {
                     b.HasOne("Domain.Entities.City", null)
@@ -580,6 +645,40 @@ namespace Infrastructure.Migrations
                         .WithMany("Cities")
                         .HasForeignKey("WorldPlayerId");
 
+                    b.OwnsMany("Domain.Entities.Modifier", "ModifiersInternal", b1 =>
+                        {
+                            b1.Property<int>("Id")
+                                .ValueGeneratedOnAdd()
+                                .HasColumnType("INTEGER");
+
+                            b1.Property<Guid>("CityId")
+                                .HasColumnType("TEXT");
+
+                            b1.Property<string>("Source")
+                                .IsRequired()
+                                .HasColumnType("TEXT");
+
+                            b1.Property<int>("Tag")
+                                .HasColumnType("INTEGER");
+
+                            b1.Property<int>("Type")
+                                .HasColumnType("INTEGER");
+
+                            b1.Property<double>("Value")
+                                .HasColumnType("REAL");
+
+                            b1.HasKey("Id");
+
+                            b1.HasIndex("CityId");
+
+                            b1.ToTable("CityModifiers", (string)null);
+
+                            b1.WithOwner()
+                                .HasForeignKey("CityId");
+                        });
+
+                    b.Navigation("ModifiersInternal");
+
                     b.Navigation("World");
 
                     b.Navigation("WorldPlayer");
@@ -592,6 +691,43 @@ namespace Infrastructure.Migrations
                         .HasForeignKey("WorldPlayerId");
                 });
 
+            modelBuilder.Entity("Domain.Entities.UnitDeployment", b =>
+                {
+                    b.OwnsMany("Domain.Entities.Modifier", "ModifiersInternal", b1 =>
+                        {
+                            b1.Property<int>("Id")
+                                .ValueGeneratedOnAdd()
+                                .HasColumnType("INTEGER");
+
+                            b1.Property<string>("Source")
+                                .IsRequired()
+                                .HasColumnType("TEXT");
+
+                            b1.Property<int>("Tag")
+                                .HasColumnType("INTEGER");
+
+                            b1.Property<int>("Type")
+                                .HasColumnType("INTEGER");
+
+                            b1.Property<Guid>("UnitDeploymentId")
+                                .HasColumnType("TEXT");
+
+                            b1.Property<double>("Value")
+                                .HasColumnType("REAL");
+
+                            b1.HasKey("Id");
+
+                            b1.HasIndex("UnitDeploymentId");
+
+                            b1.ToTable("UnitDeploymentModifiers", (string)null);
+
+                            b1.WithOwner()
+                                .HasForeignKey("UnitDeploymentId");
+                        });
+
+                    b.Navigation("ModifiersInternal");
+                });
+
             modelBuilder.Entity("Domain.Entities.UnitStack", b =>
                 {
                     b.HasOne("Domain.Entities.City", null)
@@ -599,6 +735,77 @@ namespace Infrastructure.Migrations
                         .HasForeignKey("CityId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+
+                    b.OwnsMany("Domain.Entities.Modifier", "ModifiersInternal", b1 =>
+                        {
+                            b1.Property<int>("Id")
+                                .ValueGeneratedOnAdd()
+                                .HasColumnType("INTEGER");
+
+                            b1.Property<string>("Source")
+                                .IsRequired()
+                                .HasColumnType("TEXT");
+
+                            b1.Property<int>("Tag")
+                                .HasColumnType("INTEGER");
+
+                            b1.Property<int>("Type")
+                                .HasColumnType("INTEGER");
+
+                            b1.Property<Guid>("UnitStackId")
+                                .HasColumnType("TEXT");
+
+                            b1.Property<double>("Value")
+                                .HasColumnType("REAL");
+
+                            b1.HasKey("Id");
+
+                            b1.HasIndex("UnitStackId");
+
+                            b1.ToTable("UnitStackModifiers", (string)null);
+
+                            b1.WithOwner()
+                                .HasForeignKey("UnitStackId");
+                        });
+
+                    b.Navigation("ModifiersInternal");
+                });
+
+            modelBuilder.Entity("Domain.Entities.World", b =>
+                {
+                    b.OwnsMany("Domain.Entities.Modifier", "ModifiersInternal", b1 =>
+                        {
+                            b1.Property<int>("Id")
+                                .ValueGeneratedOnAdd()
+                                .HasColumnType("INTEGER");
+
+                            b1.Property<string>("Source")
+                                .IsRequired()
+                                .HasColumnType("TEXT");
+
+                            b1.Property<int>("Tag")
+                                .HasColumnType("INTEGER");
+
+                            b1.Property<int>("Type")
+                                .HasColumnType("INTEGER");
+
+                            b1.Property<double>("Value")
+                                .HasColumnType("REAL");
+
+                            b1.Property<Guid>("WorldId")
+                                .HasColumnType("TEXT");
+
+                            b1.HasKey("Id");
+
+                            b1.HasIndex("WorldId");
+
+                            b1.ToTable("WorldModifiers", (string)null);
+
+                            b1.WithOwner()
+                                .HasForeignKey("WorldId");
+                        });
+
+                    b.Navigation("ModifiersInternal");
                 });
 
             modelBuilder.Entity("Domain.User.WorldPlayer", b =>
@@ -619,11 +826,8 @@ namespace Infrastructure.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.OwnsMany("Domain.Entities.Modifier", "ModifiersAppliedToWorldPlayer", b1 =>
+                    b.OwnsMany("Domain.Entities.Modifier", "ModifiersInternal", b1 =>
                         {
-                            b1.Property<Guid>("WorldPlayerId")
-                                .HasColumnType("TEXT");
-
                             b1.Property<int>("Id")
                                 .ValueGeneratedOnAdd()
                                 .HasColumnType("INTEGER");
@@ -641,7 +845,12 @@ namespace Infrastructure.Migrations
                             b1.Property<double>("Value")
                                 .HasColumnType("REAL");
 
-                            b1.HasKey("WorldPlayerId", "Id");
+                            b1.Property<Guid>("WorldPlayerId")
+                                .HasColumnType("TEXT");
+
+                            b1.HasKey("Id");
+
+                            b1.HasIndex("WorldPlayerId");
 
                             b1.ToTable("PlayerModifiers", (string)null);
 
@@ -651,7 +860,7 @@ namespace Infrastructure.Migrations
 
                     b.Navigation("Alliance");
 
-                    b.Navigation("ModifiersAppliedToWorldPlayer");
+                    b.Navigation("ModifiersInternal");
 
                     b.Navigation("PlayerProfile");
 

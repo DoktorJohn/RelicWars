@@ -43,7 +43,7 @@ namespace Application.Services.Buildings
             };
 
             // 1. Hent og filtrer Jobs til Køen (Kun Infantry)
-            var allActiveJobs = await _jobRepo.GetRecruitmentJobsByCityAsync(cityId);
+            var allActiveJobs = await _jobRepo.GetRecruitmentJobsAsync(cityId);
 
             foreach (var recruitmentJob in allActiveJobs)
             {

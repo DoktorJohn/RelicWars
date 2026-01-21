@@ -9,9 +9,9 @@ namespace Application.Interfaces.IServices
 {
     public interface ICityService
     {
-        Task<CityDetailsDTO?> GetCityOverviewAsync(Guid cityId);
         Task UpdateCityPointsAsync(Guid cityId);
         Task<CityControllerGetDetailedCityInformationDTO?> GetDetailedCityInformationByCityIdentifierAsync(Guid cityId);
         Task<List<AvailableBuildingDTO>> GetAvailableBuildingsForTownHallAsync(Guid cityId);
+        Task<CityOverviewHUD> GetCityOverviewHUD(Guid cityId);
     }
 }

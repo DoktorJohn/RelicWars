@@ -1,52 +1,56 @@
 <?xml version="1.0" encoding="utf-8"?>
-<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="UnityEngine.UIElements ../../UIElementsSchema/UnityEngine.UIElements.xsd" editor-extension-mode="False">
-    
+<ui:UXML xmlns:ui="UnityEngine.UIElements" editor-extension-mode="False">
     <ui:Style src="project://database/Assets/UI/HUD/CityTopBar.uss" />
 
     <ui:VisualElement name="City-TopBar-MainContainer" class="city-top-bar-main-container">
-        
-        <ui:Button name="City-TopBar-MapButton" class="city-top-bar-map-button" />
-
         <ui:VisualElement name="City-TopBar-ResourceSection-Right" class="city-top-bar-resource-section-right">
             
-            <ui:VisualElement name="City-ResourceGroup-Population" class="city-resource-group">
-                <ui:VisualElement name="City-ResourceIcon-Container-Population" class="city-resource-icon-container">
-                    <ui:VisualElement name="City-ResourceIcon-Population" class="city-resource-icon-base icon-population" />
+            <ui:VisualElement class="city-resource-group">
+                <ui:VisualElement class="city-resource-icon-container">
+                    <ui:VisualElement class="city-resource-icon-base icon-population" />
                 </ui:VisualElement>
-                <ui:Label name="City-ResourceLabel-PopulationAmount" class="city-resource-label-amount" text="0 / 0" />
+                <ui:Label name="City-ResourceLabel-PopulationAmount" class="city-resource-label-amount" text="0" />
             </ui:VisualElement>
 
-            <ui:VisualElement name="City-ResourceGroup-Wood" class="city-resource-group">
-                <ui:VisualElement name="City-ResourceIcon-Container-Wood" class="city-resource-icon-container">
-                    <ui:VisualElement name="City-ResourceIcon-Wood" class="city-resource-icon-base icon-wood" />
+            <ui:VisualElement class="city-resource-group">
+                <ui:VisualElement class="city-resource-icon-container">
+                    <ui:VisualElement class="city-resource-icon-base icon-wood" />
                     <ui:VisualElement name="City-WarehouseBar-Wood" class="city-warehouse-capacity-bar" />
                 </ui:VisualElement>
                 <ui:Label name="City-ResourceLabel-WoodAmount" class="city-resource-label-amount" text="0" />
             </ui:VisualElement>
 
-            <ui:VisualElement name="City-ResourceGroup-Stone" class="city-resource-group">
-                <ui:VisualElement name="City-ResourceIcon-Container-Stone" class="city-resource-icon-container">
-                    <ui:VisualElement name="City-ResourceIcon-Stone" class="city-resource-icon-base icon-stone" />
+            <ui:VisualElement class="city-resource-group">
+                <ui:VisualElement class="city-resource-icon-container">
+                    <ui:VisualElement class="city-resource-icon-base icon-stone" />
                     <ui:VisualElement name="City-WarehouseBar-Stone" class="city-warehouse-capacity-bar" />
                 </ui:VisualElement>
                 <ui:Label name="City-ResourceLabel-StoneAmount" class="city-resource-label-amount" text="0" />
             </ui:VisualElement>
 
-            <ui:VisualElement name="City-ResourceGroup-Metal" class="city-resource-group">
-                <ui:VisualElement name="City-ResourceIcon-Container-Metal" class="city-resource-icon-container">
-                    <ui:VisualElement name="City-ResourceIcon-Metal" class="city-resource-icon-base icon-metal" />
+            <ui:VisualElement class="city-resource-group">
+                <ui:VisualElement class="city-resource-icon-container">
+                    <ui:VisualElement class="city-resource-icon-base icon-metal" />
                     <ui:VisualElement name="City-WarehouseBar-Metal" class="city-warehouse-capacity-bar" />
                 </ui:VisualElement>
                 <ui:Label name="City-ResourceLabel-MetalAmount" class="city-resource-label-amount" text="0" />
             </ui:VisualElement>
 
-            <ui:VisualElement name="City-ResourceGroup-Silver" class="city-resource-group">
-                <ui:VisualElement name="City-ResourceIcon-Container-Silver" class="city-resource-icon-container">
-                    <ui:VisualElement name="City-ResourceIcon-Silver" class="city-resource-icon-base icon-silver" />
+            <ui:VisualElement class="city-resource-group">
+                <ui:VisualElement class="city-resource-icon-container">
+                    <ui:VisualElement class="city-resource-icon-base icon-silver" />
                 </ui:VisualElement>
                 <ui:Label name="City-ResourceLabel-SilverAmount" class="city-resource-label-amount" text="0" />
             </ui:VisualElement>
 
+            <ui:VisualElement class="city-resource-group">
+                <ui:VisualElement class="city-resource-icon-container">
+                    <ui:VisualElement class="city-resource-icon-base icon-research" />
+                </ui:VisualElement>
+                <ui:Label name="City-ResourceLabel-ResearchAmount" class="city-resource-label-amount" text="0" />
+            </ui:VisualElement>
+
         </ui:VisualElement>
+        <ui:Button name="City-TopBar-MapButton" class="city-top-bar-map-button" />
     </ui:VisualElement>
 </ui:UXML>

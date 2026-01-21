@@ -30,6 +30,7 @@ namespace Infrastructure.Repositories
         public async Task<WorldPlayer?> GetByIdAsync(Guid id)
         {
             return await _context.WorldPlayers
+                .Include(wp => wp.PlayerProfile)
                 .Include(x => x.Alliance)
                 .Include(x => x.Cities)
                 .FirstOrDefaultAsync(x => x.Id == id);

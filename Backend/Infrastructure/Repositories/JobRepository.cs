@@ -23,24 +23,23 @@ namespace Infrastructure.Repositories
             _logger = logger;
         }
 
-        public async Task<List<RecruitmentJob>> GetRecruitmentJobsByCityAsync(Guid cityId)
+        public async Task<List<RecruitmentJob>> GetRecruitmentJobsAsync(Guid cityId)
         {
-            // Vi filtrerer på typen RecruitmentJob og sorterer efter hvornår næste unit er færdig
             return await _context.Jobs
                 .OfType<RecruitmentJob>()
                 .Where(j => j.CityId == cityId && !j.IsCompleted)
                 .OrderBy(j => j.ExecutionTime)
                 .ToListAsync();
         }
-        // 1. Helper til at undgå redundans i queries
-        // Alle queries starter herfra, så vi altid kun ser ikke-færdige jobs sorteret efter tid
+
         private IQueryable<BaseJob> ActiveJobs => _context.Jobs
         .Where(j => !j.IsCompleted);
 
-        public async Task<BaseJob?> GetActiveResearchJobForUserAsync(Guid userId)
+        public async Task<ResearchJob?> GetResearchJobAsync(Guid userId)
         {
             return await _context.Jobs
-        .Where(j => j is ResearchJob && !j.IsCompleted && j.UserId == userId)
+        .OfType<ResearchJob>()
+        .Where(j => !j.IsCompleted && j.UserId == userId)
         .FirstOrDefaultAsync();
         }
 
@@ -57,11 +56,13 @@ namespace Infrastructure.Repositories
             .ToListAsync();
         }
 
-        public async Task<List<BaseJob>> GetJobsByCityAsync(Guid cityId)
+
+        public async Task<List<BuildingJob>> GetBuildingJobsAsync(Guid cityId)
         {
             return await ActiveJobs
+            .OfType<BuildingJob>()
             .Where(j => j.CityId == cityId)
-            .OrderBy(j => j.ExecutionTime) // Sortering her til sidst
+            .OrderBy(j => j.ExecutionTime)
             .ToListAsync();
         }
 

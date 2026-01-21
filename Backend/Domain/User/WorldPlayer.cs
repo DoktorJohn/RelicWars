@@ -9,15 +9,17 @@ using System.Threading.Tasks;
 
 namespace Domain.User
 {
-    public class WorldPlayer : BaseEntity
+    public class WorldPlayer : BaseEntity, IModifierProvider
     {
-        public int Silver { get; set; }
+        public double Silver { get; set; }
+        public double ResearchPoints { get; set; }
         public AllianceRoleEnum AllianceRole { get; set; } = AllianceRoleEnum.None;
 
         //Navprops
         public List<City> Cities { get; set; } = new();
         public List<Research> CompletedResearches { get; set; } = new();
-        public List<Modifier> ModifiersAppliedToWorldPlayer { get; set; } = new();
+        public List<Modifier> ModifiersInternal { get; set; } = new();
+        public List<ModifierTagEnum> ModifiersThatAffectsThis { get; set; } = new();
 
         //Foreign keys
         public Guid? AllianceId { get; set; }
@@ -26,6 +28,11 @@ namespace Domain.User
         public PlayerProfile PlayerProfile { get; set; } = null!;
         public Guid WorldId { get; set; }
         public World World { get; set; } = null!;
+
+        public IEnumerable<Modifier> GetModifiers()
+        {
+            return ModifiersInternal;
+        }
 
     }
 }

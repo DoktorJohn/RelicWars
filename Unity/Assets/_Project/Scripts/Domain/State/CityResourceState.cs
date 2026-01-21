@@ -15,6 +15,10 @@ namespace Assets.Scripts.Domain.State
         public double MetalProductionPerHour;
 
         public double SilverAmount;
+        public double SilverProductionPerHour;
+
+        public double ResearchPointsAmount;
+        public double ResearchPointsProductionPerHour;
 
         public int CurrentPopulationUsage;
         public int MaxPopulationCapacity;

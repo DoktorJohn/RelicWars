@@ -33,8 +33,6 @@ namespace Application.Services
 
         public async Task<WorldPlayerProfileDTO> GetWorldPlayerProfileAsync(Guid worldPlayerId)
         {
-            // 1. Hent entitets-data (Navn, Alliance) fra databasen
-            // Vi har brug for en repo metode der Includer PlayerProfile og Alliance
             var worldPlayer = await _worldPlayerRepository.GetByIdAsync(worldPlayerId);
 
             if (worldPlayer == null)
@@ -42,38 +40,32 @@ namespace Application.Services
                 throw new KeyNotFoundException($"WorldPlayer med ID {worldPlayerId} blev ikke fundet.");
             }
 
-            // Hent profilnavnet (hvis det ikke var inkluderet i GetByIdAsync)
-            // Ideelt set bør _worldPlayerRepository.GetByIdAsync inkludere PlayerProfile.
-            string userName = worldPlayer.PlayerProfile?.UserName
-                              ?? await _profileRepository.GetUserNameByIdAsync(worldPlayer.PlayerProfileId);
+            string userName = worldPlayer.PlayerProfile?.UserName ?? "Unknown";
 
-            // 2. Hent statistik (Point, Rank, CityCount) fra RankingService (Snapshot)
-            // Dette er meget hurtigere end at beregne det live.
+            // 2. Hent statistik fra RankingService (Snapshot)
             int rank = 0;
-            int totalPoints = 0;
-            int cityCount = 0;
+            int totalPoints = worldPlayer.Cities.Sum(c => c.Points); // Default til live point fra DB
+            int cityCount = worldPlayer.Cities.Count; // Default til live antal fra DB
 
-            try
+            // Forsøg at få fat i snapshot-data for at få den rigtige Rank
+            var rankingData = await _rankingService.GetRankingById(worldPlayerId);
+
+            if (rankingData != null)
             {
-                // Vi forsøger at slå op i det cachede snapshot
-                var rankingData = await _rankingService.GetRankingById(worldPlayerId);
                 rank = rankingData.Rank;
                 totalPoints = rankingData.TotalPoints;
                 cityCount = rankingData.CityCount;
             }
-            catch (KeyNotFoundException)
+            else
             {
-                // Hvis spilleren er helt ny og ikke kommet med i snapshot endnu (går op til 1 min),
-                // så defaulter vi bare til 0 eller henter data manuelt.
-                // Her defaulter vi til 0/1 for at holde det simpelt og hurtigt.
-                cityCount = 1;
-                _logger.LogWarning($"Spiller {worldPlayerId} fandtes ikke i Ranking Snapshot (sandsynligvis nyoprettet).");
+                _logger.LogInformation("Spiller {PlayerId} er ikke i ranglisten endnu. Bruger live-data fra databasen.", worldPlayerId);
+                // rank forbliver 0 (unranked)
             }
 
             // 3. Map til DTO
             return new WorldPlayerProfileDTO(
                 worldPlayerId,
-                userName ?? "Unknown",
+                userName,
                 totalPoints,
                 rank,
                 cityCount,

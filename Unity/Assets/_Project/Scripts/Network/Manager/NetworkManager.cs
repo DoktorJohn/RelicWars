@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Project.Scripts.Network;
+using System;
 using UnityEngine;
 
 namespace Project.Network.Manager
@@ -30,6 +31,7 @@ namespace Project.Network.Manager
         public ClientRankingService Ranking { get; private set; }
         public ClientAllianceService Alliance { get; private set; }
         public ClientMarketPlaceService MarketPlace { get; private set; }
+        public ClientResearchService Research { get; private set; }
 
         private void Awake()
         {
@@ -59,6 +61,7 @@ namespace Project.Network.Manager
             WorldPlayer = new ClientWorldPlayerService(_backendBaseUrl);
             Alliance = new ClientAllianceService(_backendBaseUrl);
             MarketPlace = new ClientMarketPlaceService(_backendBaseUrl);
+            Research = new ClientResearchService(_backendBaseUrl);
 
             Debug.Log("[NetworkManager] Services Initialized.");
         }

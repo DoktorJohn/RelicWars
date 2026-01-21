@@ -46,6 +46,42 @@ namespace Project.Network
             }
         }
 
+        public IEnumerator GetBuildingQueue(Guid cityId, string token, Action<List<BuildingDTO>> callback)
+        {
+            string url = $"{_baseUrl}/building/{cityId}/buildingQueue";
+
+            using (UnityWebRequest request = UnityWebRequest.Get(url))
+            {
+                request.certificateHandler = new BypassCertificateHandler();
+                request.SetRequestHeader("Authorization", "Bearer " + token);
+                request.SetRequestHeader("Accept", "application/json");
+
+                yield return request.SendWebRequest();
+
+                if (request.result == UnityWebRequest.Result.Success)
+                {
+                    try
+                    {
+                        string jsonResponse = request.downloadHandler.text;
+                        List<BuildingDTO> buildingQueue = JsonConvert.DeserializeObject<List<BuildingDTO>>(jsonResponse);
+
+                        Debug.Log($"[ClientBuildingService] Hentede {buildingQueue.Count} jobs i køen for by {cityId}");
+                        callback?.Invoke(buildingQueue);
+                    }
+                    catch (Exception exception)
+                    {
+                        Debug.LogError($"[ClientBuildingService] Fejl ved deserialisering af byggekø: {exception.Message}");
+                        callback?.Invoke(null);
+                    }
+                }
+                else
+                {
+                    Debug.LogError($"[ClientBuildingService] Kunne ikke hente byggekø: {request.error}");
+                    callback?.Invoke(null);
+                }
+            }
+        }
+
         public IEnumerator GetUniversityInfo(Guid cityId, string token, Action<List<UniversityInfoDTO>> callback)
         {
             // Antager endpoint: /api/building/{cityId}/university

@@ -1,11 +1,12 @@
 ﻿using UnityEngine;
 using UnityEngine.UIElements;
 using System;
+using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using Assets.Scripts.Domain.Enums;
 using Project.Network.Manager;
 using Project.Scripts.Domain.DTOs;
-using Project.Modules.UI.Windows; // For BaseWindow
 
 namespace Project.Modules.UI.Windows.Implementations
 {
@@ -18,174 +19,234 @@ namespace Project.Modules.UI.Windows.Implementations
         [Header("UI Templates")]
         [SerializeField] private VisualTreeAsset _buildingRowTemplateAsset;
 
-        private ScrollView _gridContainer;
+        private ScrollView _buildingGridScrollView;
+        private ScrollView _constructionQueueScrollView;
 
         // Tooltip Elements
-        private VisualElement _tooltipContainer;
-        private Label _tipWood, _tipStone, _tipMetal, _tipTime;
+        private VisualElement _resourceTooltipContainer;
+        private Label _tooltipWoodAmountLabel;
+        private Label _tooltipStoneAmountLabel;
+        private Label _tooltipMetalAmountLabel;
+        private Label _tooltipConstructionTimeLabel;
+
+        private Guid _activeCityId;
 
         public override void OnOpen(object dataPayload)
         {
-            // 1. Initialize Tooltip & References
-            _tooltipContainer = Root.Q<VisualElement>("Resource-Tooltip");
-            _tipWood = Root.Q<Label>("Tip-Wood");
-            _tipStone = Root.Q<Label>("Tip-Stone");
-            _tipMetal = Root.Q<Label>("Tip-Metal");
-            _tipTime = Root.Q<Label>("Tip-Time");
+            InitializeUserInterfaceReferences();
 
-            if (_tooltipContainer != null) _tooltipContainer.style.display = DisplayStyle.None;
+            _activeCityId = (dataPayload is Guid id) ? id : NetworkManager.Instance.ActiveCityId ?? Guid.Empty;
+            if (_activeCityId == Guid.Empty) return;
 
-            // 2. Close Button
-            var closeBtn = Root.Q<Button>("Header-Close-Button");
-            if (closeBtn != null) { closeBtn.clicked -= Close; closeBtn.clicked += Close; }
-
-            // 3. Data ID
-            Guid cityId = (dataPayload is Guid id) ? id : NetworkManager.Instance.ActiveCityId ?? Guid.Empty;
-            if (cityId == Guid.Empty) return;
-
-            _gridContainer = Root.Q<ScrollView>("TownHall-Building-List");
-
-            // Safety Check
-            if (_gridContainer == null)
-            {
-                Debug.LogError("[SenateWindow] Could not find 'TownHall-Building-List' ScrollView in UXML.");
-                return;
-            }
-
-            RefreshContent(cityId);
+            RefreshTownHallContent(_activeCityId);
         }
 
-        private void RefreshContent(Guid cityId)
+        private void InitializeUserInterfaceReferences()
         {
-            // Clear immediately to show loading state if desired
-            if (_gridContainer != null) _gridContainer.Clear();
+            // Tooltip mapping
+            _resourceTooltipContainer = Root.Q<VisualElement>("Resource-Tooltip");
+            _tooltipWoodAmountLabel = Root.Q<Label>("Tip-Wood");
+            _tooltipStoneAmountLabel = Root.Q<Label>("Tip-Stone");
+            _tooltipMetalAmountLabel = Root.Q<Label>("Tip-Metal");
+            _tooltipConstructionTimeLabel = Root.Q<Label>("Tip-Time");
 
-            string token = NetworkManager.Instance.JwtToken;
-
-            StartCoroutine(NetworkManager.Instance.City.GetTownHallAvailableBuildings(cityId, token, (buildings) =>
+            if (_resourceTooltipContainer != null)
             {
-                // CRITICAL FIX: Check if this controller/window is still valid before updating UI
-                if (_gridContainer == null) return;
+                _resourceTooltipContainer.style.display = DisplayStyle.None;
+            }
 
-                PopulateGrid(buildings, cityId);
+            // Global actions
+            var closeWindowButton = Root.Q<Button>("Header-Close-Button");
+            if (closeWindowButton != null)
+            {
+                closeWindowButton.clicked -= Close;
+                closeWindowButton.clicked += Close;
+            }
+
+            _buildingGridScrollView = Root.Q<ScrollView>("TownHall-Building-List");
+            _constructionQueueScrollView = Root.Q<ScrollView>("Building-Queue-List");
+        }
+
+        private void RefreshTownHallContent(Guid cityIdentifier)
+        {
+            string authenticationToken = NetworkManager.Instance.JwtToken;
+
+            // 1. Hent tilgængelige bygninger
+            StartCoroutine(NetworkManager.Instance.City.GetTownHallAvailableBuildings(cityIdentifier, authenticationToken, (availableBuildings) =>
+            {
+                if (_buildingGridScrollView == null || availableBuildings == null) return;
+                PopulateBuildingGrid(availableBuildings, cityIdentifier);
+            }));
+
+            // 2. Hent byggekøen
+            StartCoroutine(NetworkManager.Instance.Building.GetBuildingQueue(cityIdentifier, authenticationToken, (currentQueue) =>
+            {
+                if (_constructionQueueScrollView == null || currentQueue == null) return;
+                PopulateConstructionQueue(currentQueue);
             }));
         }
 
-        private void PopulateGrid(List<AvailableBuildingDTO> buildings, Guid cityId)
+        private void PopulateBuildingGrid(List<AvailableBuildingDTO> buildingDataList, Guid cityIdentifier)
         {
-            // Double check
-            if (_gridContainer == null || buildings == null) return;
+            _buildingGridScrollView.Clear();
 
-            _gridContainer.Clear();
-
-            foreach (var building in buildings)
+            foreach (var building in buildingDataList)
             {
-                if (_buildingRowTemplateAsset == null)
-                {
-                    Debug.LogError("[SenateWindow] Building Row Template Asset is missing in Inspector!");
-                    return;
-                }
+                VisualElement buildingCardInstance = _buildingRowTemplateAsset.Instantiate();
+                buildingCardInstance.AddToClassList("building-card");
 
-                VisualElement card = _buildingRowTemplateAsset.Instantiate();
-                card.AddToClassList("building-card"); // Ensure CSS class is applied
+                var buildingNameLabel = buildingCardInstance.Q<Label>("Building-Name");
+                var buildingLevelLabel = buildingCardInstance.Q<Label>("Building-Level");
+                var upgradeExecutionButton = buildingCardInstance.Q<Button>("Upgrade-Button");
 
-                // --- SET INFO ---
-                // Find elements safely
-                var nameLbl = card.Q<Label>("Building-Name");
-                var levelLbl = card.Q<Label>("Building-Level");
-                var upgradeBtn = card.Q<Button>("Upgrade-Button");
+                if (buildingNameLabel != null) buildingNameLabel.text = building.BuildingName;
+                if (buildingLevelLabel != null) buildingLevelLabel.text = $"Lvl {building.CurrentLevel}";
 
-                if (nameLbl != null) nameLbl.text = building.BuildingName;
-                if (levelLbl != null) levelLbl.text = $"Lvl {building.CurrentLevel}";
-
-                // --- BUTTON ---
-                if (upgradeBtn != null)
+                if (upgradeExecutionButton != null)
                 {
                     if (building.IsCurrentlyUpgrading)
                     {
-                        upgradeBtn.text = "BUILDING...";
-                        upgradeBtn.SetEnabled(false);
+                        upgradeExecutionButton.text = "BUILDING...";
+                        upgradeExecutionButton.SetEnabled(false);
                     }
                     else
                     {
-                        // Logic: Can afford AND meets requirements
-                        bool canBuild = building.CanAfford && building.HasPopulationRoom;
-                        // Note: You might want to check dependency requirements here too if available in DTO
-
-                        upgradeBtn.SetEnabled(canBuild);
-                        upgradeBtn.text = canBuild ? "UPGRADE" : "LOCKED";
+                        bool canAffordUpgrade = building.CanAfford && building.HasPopulationRoom;
+                        upgradeExecutionButton.SetEnabled(canAffordUpgrade);
+                        upgradeExecutionButton.text = canAffordUpgrade ? "UPGRADE" : "LOCKED";
                     }
 
-                    // Capture variables for closure
-                    var bType = building.BuildingType;
-                    upgradeBtn.clicked += () => ExecuteUpgrade(cityId, bType);
+                    var buildingType = building.BuildingType;
+                    upgradeExecutionButton.clicked += () => ExecuteUpgradeRequest(cityIdentifier, buildingType);
 
-                    // --- TOOLTIP EVENTS ---
-                    upgradeBtn.RegisterCallback<MouseEnterEvent>(evt => ShowTooltip(evt, building));
-                    upgradeBtn.RegisterCallback<MouseLeaveEvent>(evt => HideTooltip());
-                    upgradeBtn.RegisterCallback<MouseMoveEvent>(evt => UpdateTooltipPosition(evt));
+                    // Event Registration for Tooltip
+                    upgradeExecutionButton.RegisterCallback<MouseEnterEvent>(mouseEvent => ShowResourceUpgradeTooltip(mouseEvent, building));
+                    upgradeExecutionButton.RegisterCallback<MouseLeaveEvent>(mouseEvent => HideResourceUpgradeTooltip());
+                    upgradeExecutionButton.RegisterCallback<MouseMoveEvent>(mouseEvent => UpdateResourceUpgradeTooltipPosition(mouseEvent));
                 }
 
-                _gridContainer.Add(card);
+                _buildingGridScrollView.Add(buildingCardInstance);
             }
         }
 
-        private void ShowTooltip(MouseEnterEvent evt, AvailableBuildingDTO data)
+        private void PopulateConstructionQueue(List<BuildingDTO> constructionJobs)
         {
-            if (_tooltipContainer == null) return;
+            _constructionQueueScrollView.Clear();
 
-            // Set Data
-            if (_tipWood != null) _tipWood.text = $"{data.WoodCost:N0}";
-            if (_tipStone != null) _tipStone.text = $"{data.StoneCost:N0}";
-            if (_tipMetal != null) _tipMetal.text = $"{data.MetalCost:N0}";
-
-            if (_tipTime != null)
+            if (constructionJobs.Count == 0)
             {
-                TimeSpan t = TimeSpan.FromSeconds(data.ConstructionTimeInSeconds);
-                _tipTime.text = t.ToString(@"hh\:mm\:ss");
+                Label emptyQueueLabel = new Label("No active construction.");
+                emptyQueueLabel.style.color = new Color(0.5f, 0.5f, 0.5f);
+                emptyQueueLabel.style.marginTop = 20;
+                _constructionQueueScrollView.Add(emptyQueueLabel);
+                return;
             }
 
-            _tooltipContainer.style.display = DisplayStyle.Flex;
-            _tooltipContainer.BringToFront();
-
-            UpdateTooltipPosition(evt);
-        }
-
-        private void UpdateTooltipPosition(IMouseEvent evt)
-        {
-            if (_tooltipContainer == null || _tooltipContainer.parent == null) return;
-
-            // Convert mouse position to local coordinates
-            Vector2 localPos = _tooltipContainer.parent.WorldToLocal(evt.mousePosition);
-
-            // Offset
-            _tooltipContainer.style.left = localPos.x + 15;
-            _tooltipContainer.style.top = localPos.y + 15;
-        }
-
-        private void HideTooltip()
-        {
-            if (_tooltipContainer != null) _tooltipContainer.style.display = DisplayStyle.None;
-        }
-
-        private void ExecuteUpgrade(Guid cityId, BuildingTypeEnum type)
-        {
-            StartCoroutine(NetworkManager.Instance.Building.UpgradeBuilding(cityId, type, NetworkManager.Instance.JwtToken, (success, msg) =>
+            foreach (var job in constructionJobs)
             {
-                if (success)
+                VisualElement queueItemElement = new VisualElement();
+                queueItemElement.AddToClassList("queue-item-card");
+
+                Label jobTitleLabel = new Label($"{job.Type} (Lvl {job.Level})");
+                jobTitleLabel.AddToClassList("queue-item-title");
+
+                Label timerDisplayLabel = new Label("Calculating...");
+                timerDisplayLabel.AddToClassList("queue-item-time");
+
+                queueItemElement.Add(jobTitleLabel);
+                queueItemElement.Add(timerDisplayLabel);
+                _constructionQueueScrollView.Add(queueItemElement);
+
+                if (job.UpgradeFinished.HasValue)
                 {
-                    Debug.Log($"<color=green>[TownHall] Upgrade Started: {type}</color>");
+                    StartCoroutine(UpdateConstructionTimerLabel(timerDisplayLabel, job.UpgradeFinished.Value));
+                }
+            }
+        }
 
+        private IEnumerator UpdateConstructionTimerLabel(Label label, DateTime finishTimestamp)
+        {
+            while (label != null)
+            {
+                TimeSpan timeRemaining = finishTimestamp - DateTime.UtcNow;
+                if (timeRemaining.TotalSeconds <= 0)
+                {
+                    label.text = "FINISHED";
+                    RefreshTownHallContent(_activeCityId);
+                    yield break;
+                }
+
+                label.text = timeRemaining.ToString(@"hh\:mm\:ss");
+                yield return new WaitForSeconds(1);
+            }
+        }
+
+        private void ExecuteUpgradeRequest(Guid cityId, BuildingTypeEnum buildingType)
+        {
+            StartCoroutine(NetworkManager.Instance.Building.UpgradeBuilding(cityId, buildingType, NetworkManager.Instance.JwtToken, (requestSuccess, responseMessage) =>
+            {
+                if (requestSuccess)
+                {
                     if (Project.Modules.City.CityResourceService.Instance != null)
+                    {
                         Project.Modules.City.CityResourceService.Instance.InitiateResourceRefresh(cityId);
+                    }
 
-                    RefreshContent(cityId);
-                }
-                else
-                {
-                    Debug.LogError($"[TownHall Error] {msg}");
+                    RefreshTownHallContent(cityId);
                 }
             }));
+        }
+
+        // ============================================================
+        // TOOLTIP IMPLEMENTATION
+        // ============================================================
+
+        private void ShowResourceUpgradeTooltip(MouseEnterEvent mouseEnterEvent, AvailableBuildingDTO buildingData)
+        {
+            if (_resourceTooltipContainer == null) return;
+
+            // Opdater værdier i tooltip baseret på DTO
+            if (_tooltipWoodAmountLabel != null) _tooltipWoodAmountLabel.text = buildingData.WoodCost.ToString("N0");
+            if (_tooltipStoneAmountLabel != null) _tooltipStoneAmountLabel.text = buildingData.StoneCost.ToString("N0");
+            if (_tooltipMetalAmountLabel != null) _tooltipMetalAmountLabel.text = buildingData.MetalCost.ToString("N0");
+
+            // Vi antager at DTO har en måde at vise tiden på (enten sekunder eller formateret streng)
+            if (_tooltipConstructionTimeLabel != null)
+            {
+                TimeSpan constructionDuration = TimeSpan.FromSeconds(buildingData.ConstructionTimeInSeconds);
+                _tooltipConstructionTimeLabel.text = constructionDuration.ToString(@"hh\:mm\:ss");
+            }
+
+            // Gør tooltip synlig
+            _resourceTooltipContainer.style.display = DisplayStyle.Flex;
+
+            // Opdater position med det samme så den ikke "blinker" i 0,0
+            UpdateResourceUpgradeTooltipPosition(mouseEnterEvent);
+        }
+
+        private void UpdateResourceUpgradeTooltipPosition(IMouseEvent mouseEvent)
+        {
+            if (_resourceTooltipContainer == null || _resourceTooltipContainer.style.display == DisplayStyle.None) return;
+
+            // Vi transformerer musens globale position til tooltip-containerens forældre-koordinater
+            // Dette sikrer at tooltippet følger musen korrekt uanset scroll eller vinduesstørrelse
+            Vector2 worldMousePosition = mouseEvent.mousePosition;
+            Vector2 localPositionInParent = _resourceTooltipContainer.parent.WorldToLocal(worldMousePosition);
+
+            // Tilføj et lille offset så tooltippet ikke ligger direkte under cursoren
+            float horizontalOffset = 15f;
+            float verticalOffset = 15f;
+
+            _resourceTooltipContainer.style.left = localPositionInParent.x + horizontalOffset;
+            _resourceTooltipContainer.style.top = localPositionInParent.y + verticalOffset;
+        }
+
+        private void HideResourceUpgradeTooltip()
+        {
+            if (_resourceTooltipContainer != null)
+            {
+                _resourceTooltipContainer.style.display = DisplayStyle.None;
+            }
         }
     }
 }

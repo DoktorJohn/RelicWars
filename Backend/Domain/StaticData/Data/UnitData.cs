@@ -1,4 +1,6 @@
-﻿using Domain.Enums;
+﻿using Domain.Abstraction;
+using Domain.Entities;
+using Domain.Enums;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -27,6 +29,7 @@ namespace Domain.StaticData.Data
 
         public int RecruitmentTimeInSeconds { get; set; }
         public List<UnitRequirement> Prerequisites { get; set; } = new();
-        public List<ModifierTagEnum> ModifiersThatAffects { get; set; } = new();
+        public List<ModifierTagEnum> ModifiersThatAffectsThis { get; set; } = new();
+
     }
 }

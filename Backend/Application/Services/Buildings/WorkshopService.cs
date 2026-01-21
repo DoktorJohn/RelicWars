@@ -50,7 +50,7 @@ namespace Application.Services.Buildings
             var workshopResponse = new WorkshopFullViewDTO { BuildingLevel = currentBuildingLevel };
 
             // 1. Hent og filtrer Jobs til Køen (Kun Siege)
-            var allActiveJobs = await _jobRepo.GetJobsByCityAsync(cityId);
+            var allActiveJobs = await _jobRepo.GetRecruitmentJobsAsync(cityId);
             var recruitmentJobsForWorkshop = allActiveJobs.OfType<RecruitmentJob>()
                 .OrderBy(job => job.ExecutionTime)
                 .ToList();

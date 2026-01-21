@@ -79,7 +79,7 @@ namespace Domain.StaticData.Generators
                     MetalCost = (int)(totalCalculatedResourceCost * 0.2)
                 };
 
-                townHallEntry.ModifiersThatAffects.Add(ModifierTagEnum.Construction);
+                townHallEntry.ModifiersThatAffectsThis.Add(ModifierTagEnum.Construction);
                 townHallEntry.ModifiersInternal.Add(new Modifier
                 {
                     Tag = ModifierTagEnum.Construction,
@@ -115,22 +115,22 @@ namespace Domain.StaticData.Generators
                     MetalCost = (int)(totalCalculatedResourceCost * 0.30)
                 };
 
-                resourceEntry.ModifiersThatAffects.Add(ModifierTagEnum.ResourceProduction);
+                resourceEntry.ModifiersThatAffectsThis.Add(ModifierTagEnum.ResourceProduction);
                 int calculatedHourlyProduction = (int)(28.5 * Math.Pow(currentLvl, 1.1));
 
                 if (resourceEntry is TimberCampLevelData timberData)
                 {
-                    resourceEntry.ModifiersThatAffects.Add(ModifierTagEnum.Wood);
+                    resourceEntry.ModifiersThatAffectsThis.Add(ModifierTagEnum.Wood);
                     timberData.ProductionPerHour = calculatedHourlyProduction;
                 }
                 else if (resourceEntry is StoneQuarryLevelData stoneData)
                 {
-                    resourceEntry.ModifiersThatAffects.Add(ModifierTagEnum.Stone);
+                    resourceEntry.ModifiersThatAffectsThis.Add(ModifierTagEnum.Stone);
                     stoneData.ProductionPerHour = calculatedHourlyProduction;
                 }
                 else if (resourceEntry is MetalMineLevelData metalData)
                 {
-                    resourceEntry.ModifiersThatAffects.Add(ModifierTagEnum.Metal);
+                    resourceEntry.ModifiersThatAffectsThis.Add(ModifierTagEnum.Metal);
                     metalData.ProductionPerHour = calculatedHourlyProduction;
                 }
 
@@ -153,7 +153,7 @@ namespace Domain.StaticData.Generators
                     Population = (int)(150 * Math.Pow(currentLvl, 1.05)),
                     BuildTime = TimeSpan.FromMinutes(currentLvl * 2),
                     PopulationCost = 0,
-                    ModifiersThatAffects = { ModifierTagEnum.Population }
+                    ModifiersThatAffectsThis = { ModifierTagEnum.Population }
                 });
             }
             return progressionLevels;
@@ -187,12 +187,12 @@ namespace Domain.StaticData.Generators
                     WoodCost = (int)(totalCalculatedResourceCost * woodPercentage),
                     StoneCost = (int)(totalCalculatedResourceCost * stonePercentage),
                     MetalCost = (int)(totalCalculatedResourceCost * metalPercentage),
-                    ModifiersThatAffects = { ModifierTagEnum.Recruitment }
+                    ModifiersThatAffectsThis = { ModifierTagEnum.Recruitment }
                 };
 
-                if (recruitmentEntry is BarracksLevelData) recruitmentEntry.ModifiersThatAffects.Add(ModifierTagEnum.Infantry);
-                else if (recruitmentEntry is StableLevelData) recruitmentEntry.ModifiersThatAffects.Add(ModifierTagEnum.Cavalry);
-                else if (recruitmentEntry is WorkshopLevelData) recruitmentEntry.ModifiersThatAffects.Add(ModifierTagEnum.Siege);
+                if (recruitmentEntry is BarracksLevelData) recruitmentEntry.ModifiersThatAffectsThis.Add(ModifierTagEnum.Infantry);
+                else if (recruitmentEntry is StableLevelData) recruitmentEntry.ModifiersThatAffectsThis.Add(ModifierTagEnum.Cavalry);
+                else if (recruitmentEntry is WorkshopLevelData) recruitmentEntry.ModifiersThatAffectsThis.Add(ModifierTagEnum.Siege);
 
                 double calculatedModifierValue = Math.Pow(currentLvl / 30.0, 1.7);
                 recruitmentEntry.ModifiersInternal.Add(new Modifier
@@ -232,7 +232,7 @@ namespace Domain.StaticData.Generators
                     // NY PROPERTY HER:
                     ProductionPerHour = calculatedProduction,
 
-                    ModifiersThatAffects = { ModifierTagEnum.Research }
+                    ModifiersThatAffectsThis = { ModifierTagEnum.Research }
                 };
 
                 progressionLevels.Add(universityEntry);
@@ -278,8 +278,8 @@ namespace Domain.StaticData.Generators
                     }
                 },
 
-                    // Hvis marketplace påvirker f.eks. Trading Speed generelt, kan det tilføjes her
-                    ModifiersThatAffects = { ModifierTagEnum.Silver }
+                    // Hvis marketplace påvirker f.eks. Trading TravelSpeed generelt, kan det tilføjes her
+                    ModifiersThatAffectsThis = { ModifierTagEnum.Silver }
                 };
 
                 progressionLevels.Add(marketPlaceEntry);
@@ -302,7 +302,7 @@ namespace Domain.StaticData.Generators
                     PopulationCost = (currentLvl <= 20) ? currentLvl * 2 : 40 + (int)(Math.Pow(currentLvl - 20, 2) * 2.6),
                     BuildTime = TimeSpan.FromMinutes(currentLvl),
                     Capacity = 1500 + (int)(Math.Pow(currentLvl, 2) * 37.22),
-                    ModifiersThatAffects = { ModifierTagEnum.Storage }
+                    ModifiersThatAffectsThis = { ModifierTagEnum.WarehouseCapacity }
                 });
             }
             return progressionLevels;
@@ -320,7 +320,7 @@ namespace Domain.StaticData.Generators
                     Points = CalculatePointValueForLevel(currentLvl, 1.1),
                     BuildTime = TimeSpan.FromMinutes(currentLvl * 2),
                     PopulationCost = currentLvl * 2,
-                    ModifiersThatAffects = { ModifierTagEnum.Wall }
+                    ModifiersThatAffectsThis = { ModifierTagEnum.Wall }
                 };
 
                 wallEntry.ModifiersInternal.Add(new Modifier

@@ -6,6 +6,7 @@ using Domain.StaticData.Readers;
 using Domain.Workers.Abstraction;
 using Domain.Workers;
 using Application.Utility;
+using Domain.Abstraction;
 
 namespace Application.Services
 {
@@ -13,11 +14,13 @@ namespace Application.Services
     {
         private readonly BuildingDataReader _buildingData;
         private readonly UnitDataReader _unitData;
+        private readonly IModifierService _modifierService;
 
-        public CityStatService(BuildingDataReader buildingData, UnitDataReader unitData)
+        public CityStatService(BuildingDataReader buildingData, UnitDataReader unitData, IModifierService modifierService)
         {
             _buildingData = buildingData;
             _unitData = unitData;
+            _modifierService = modifierService;
         }
 
         public double GetWarehouseCapacity(City city)
@@ -29,27 +32,40 @@ namespace Application.Services
             return config?.Capacity ?? 500.0;
         }
 
-        public int GetMaxPopulation(City city)
+        public int GetMaxPopulation(City cityEntity)
         {
-            var housingBuilding = city.Buildings.FirstOrDefault(building => building.Type == BuildingTypeEnum.Housing);
+            double basePopulationCapacity = 0;
 
-            if (housingBuilding == null || housingBuilding.Level == 0)
+            // 1. Find alle bygninger af typen Housing og summer deres befolkningstilvækst
+            var housingBuildings = cityEntity.Buildings.Where(building => building.Type == BuildingTypeEnum.Housing);
+
+            foreach (var building in housingBuildings)
             {
-                return 100;
+                var housingConfig = _buildingData.GetConfig<HousingLevelData>(BuildingTypeEnum.Housing, building.Level);
+                if (housingConfig != null)
+                {
+                    basePopulationCapacity += housingConfig.Population;
+                }
             }
 
-            var housingLevelConfig = _buildingData.GetConfig<HousingLevelData>(BuildingTypeEnum.Housing, housingBuilding.Level);
-            var activePlayerModifiers = city.WorldPlayer?.ModifiersAppliedToWorldPlayer;
+            // 2. Saml alle providers for at se om der er bonusser til befolkningstallet
+            var modifierProviders = new List<IModifierProvider> { cityEntity };
+            if (cityEntity.WorldPlayer != null)
+            {
+                modifierProviders.Add(cityEntity.WorldPlayer);
+                if (cityEntity.WorldPlayer.Alliance != null)
+                {
+                    modifierProviders.Add(cityEntity.WorldPlayer.Alliance);
+                }
+            }
 
-            double basePopulationValue = (double)(housingLevelConfig?.Population ?? 0);
+            // 3. Beregn den endelige kapacitet (Vi genbruger ResourceProduction tagget eller definerer et specifikt hvis ønsket)
+            var calculationResult = _modifierService.CalculateEntityValueWithModifiers(
+                basePopulationCapacity,
+                new[] { ModifierTagEnum.ResourceProduction },
+                modifierProviders);
 
-            double modifiedPopulationValue = StatCalculator.ApplyModifiers(
-                basePopulationValue,
-                housingLevelConfig?.ModifiersThatAffects,
-                activePlayerModifiers
-            );
-
-            return (int)modifiedPopulationValue;
+            return (int)calculationResult.FinalValue;
         }
 
         public int GetCurrentPopulationUsage(City city)

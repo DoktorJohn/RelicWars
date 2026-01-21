@@ -10,10 +10,11 @@ namespace Application.Interfaces.IServices
 {
     public interface IResearchService
     {
-        Task<BuildingResult> QueueResearchAsync(Guid userId, Guid cityId, string researchId);
+        Task<BuildingResult> QueueResearchAsync(Guid userId, string researchId);
 
         Task<BuildingResult> CancelResearchAsync(Guid userId, Guid jobId);
 
         Task<List<Modifier>> GetUserResearchModifiersAsync(Guid userId);
+        Task<ResearchTreeDTO> GetResearchTreeAsync(Guid userId);
     }
 }

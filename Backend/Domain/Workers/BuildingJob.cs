@@ -11,6 +11,7 @@ namespace Domain.Workers
     public class BuildingJob : BaseJob
     {
         public BuildingTypeEnum BuildingType { get; set; }
+        public Guid CityId { get; set; }
         public int TargetLevel { get; set; }
     }
 }

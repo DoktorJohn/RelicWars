@@ -104,3 +104,52 @@
 
 .tooltip-row { flex-direction: row; justify-content: space-between; margin-bottom: 2px; }
 .tooltip-label { -unity-font-definition: var(--font-body); color: white; font-size: 13px; }
+
+    /* --- QUEUE SECTION --- */
+.queue-container {
+    height: 120px;
+    margin-top: 10px;
+    padding: 10px;
+    background-color: rgba(0, 0, 0, 0.4);
+    border-width: 1px;
+    border-color: rgba(165, 125, 50, 0.2);
+    border-radius: 8px;
+}
+
+.queue-header-label {
+    -unity-font-definition: var(--font-header);
+    color: var(--c-text-muted);
+    font-size: 12px;
+    -unity-font-style: bold;
+    letter-spacing: 1px;
+}
+
+.queue-scroll-view {
+    flex-grow: 1;
+}
+
+/* Queue Item Card */
+.queue-item-card {
+    width: 220px;
+    height: 70px;
+    margin-right: 10px;
+    background-color: rgba(45, 40, 35, 0.9);
+    border-left-width: 4px;
+    border-left-color: var(--c-accent); /* Gold indicator */
+    border-radius: 4px;
+    padding: 8px;
+    justify-content: center;
+}
+
+.queue-item-title {
+    -unity-font-definition: var(--font-header);
+    color: white;
+    font-size: 14px;
+}
+
+.queue-item-time {
+    -unity-font-definition: var(--font-body);
+    color: #64C864; /* Green timer */
+    font-size: 13px;
+    -unity-font-style: bold;
+}

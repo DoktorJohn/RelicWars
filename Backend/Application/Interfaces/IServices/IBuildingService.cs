@@ -11,6 +11,7 @@ namespace Application.Interfaces.IServices
     public interface IBuildingService
     {
         Task<BuildingResult> QueueUpgradeAsync(Guid cityId, BuildingTypeEnum type);
+        Task<List<BuildingDTO>> GetBuildingQueueAsync(Guid cityId);
 
     }
 }

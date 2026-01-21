@@ -1,4 +1,5 @@
 ﻿using Domain.Abstraction;
+using Domain.Enums;
 using Domain.User;
 using Domain.Workers;
 using System;
@@ -9,7 +10,7 @@ using System.Threading.Tasks;
 
 namespace Domain.Entities
 {
-    public class City : BaseEntity
+    public class City : BaseEntity, IModifierProvider
     {
         public string Name { get; set; } = string.Empty;
         public int Points { get; set; } = 100;
@@ -32,11 +33,18 @@ namespace Domain.Entities
         public List<Building> Buildings { get; set; } = new();
         public List<BuildingJob> BuildingQueue { get; set; } = new();
         public List<UnitStack> UnitStacks { get; set; } = new();
+        public List<Modifier> ModifiersInternal { get; set; } = new();
+        public List<ModifierTagEnum> ModifiersThatAffectsThis { get; set; } = new();
 
         //Foreign key
         public Guid? WorldPlayerId { get; set; }
         public WorldPlayer? WorldPlayer { get; set; }
         public Guid? WorldId { get; set; }
         public World? World { get; set; }
+
+        public IEnumerable<Modifier> GetModifiers()
+        {
+            return ModifiersInternal;
+        }
     }
 }

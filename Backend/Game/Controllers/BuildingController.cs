@@ -1,4 +1,5 @@
-﻿using Application.Interfaces.IServices;
+﻿using Application.DTOs;
+using Application.Interfaces.IServices;
 using Application.Interfaces.IServices.IBuildings;
 using Domain.Enums;
 using Microsoft.AspNetCore.Mvc;
@@ -30,6 +31,13 @@ namespace Game.Controllers
             return BadRequest(result.Message);
         }
 
-       
+        [HttpGet("{cityId}/buildingQueue")]
+        public async Task<ActionResult<List<BuildingDTO>>> GetBuildingQueue(Guid cityId)
+        {
+            var queue = await _buildingService.GetBuildingQueueAsync(cityId);
+            return Ok(queue);
+        }
+
+
     }
 }

@@ -20,7 +20,7 @@ namespace Infrastructure.Repositories
                 .Include(city => city.Buildings)
                 .Include(city => city.UnitStacks)
                 .Include(city => city.WorldPlayer)
-                    .ThenInclude(player => player.ModifiersAppliedToWorldPlayer)
+                    .ThenInclude(player => player.ModifiersInternal)
                 .FirstOrDefaultAsync(city => city.Id == cityIdentifier);
         }
 
@@ -29,7 +29,7 @@ namespace Infrastructure.Repositories
             return await _context.Cities
                 .Include(city => city.Buildings) // Needed for TownHall
                 .Include(city => city.WorldPlayer) // Needed for modifiers
-                    .ThenInclude(player => player.ModifiersAppliedToWorldPlayer)
+                    .ThenInclude(player => player.ModifiersInternal)
                 .Include(city => city.UnitStacks)
                 .FirstOrDefaultAsync(city => city.Id == cityIdentifier);
         }
@@ -45,7 +45,7 @@ namespace Infrastructure.Repositories
                     .ThenInclude(playerEntity => playerEntity!.PlayerProfile)
 
                 .Include(cityEntity => cityEntity.WorldPlayer)
-                    .ThenInclude(playerEntity => playerEntity!.ModifiersAppliedToWorldPlayer)
+                    .ThenInclude(playerEntity => playerEntity!.ModifiersInternal)
 
                 .ToListAsync();
         }

@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ui:UXML xmlns:ui="UnityEngine.UIElements" editor-extension-mode="False">
+    <ui:Style src="project://database/Assets/UI/Windows/WindowTheme.uss" />
+    <ui:Style src="ResearchWindow.uss" />
+
+    <ui:VisualElement name="Research-Window-Overlay" class="screen-overlay">
+        <ui:VisualElement name="Research-Window-MainContainer" class="window-frame research-main-container">
+            
+            <ui:VisualElement name="Research-Window-Header" class="window-header">
+                <ui:Label text="TECHNOLOGY &amp; RESEARCH" class="window-header-label" />
+                <ui:Button name="Header-Close-Button" class="window-close-btn" text="x" />
+            </ui:VisualElement>
+
+            <ui:VisualElement class="research-tab-container">
+                <ui:Button name="Tab-Economy" text="ECONOMY" class="research-tab-button" />
+                <ui:Button name="Tab-War" text="WAR" class="research-tab-button" />
+                <ui:Button name="Tab-Utility" text="UTILITY" class="research-tab-button" />
+            </ui:VisualElement>
+
+            <ui:VisualElement class="research-stats-bar">
+                <ui:VisualElement class="points-display">
+                    <ui:VisualElement class="side-bar-icon-base icon-research" style="width: 24px; height: 24px;" />
+                    <ui:Label text="RESEARCH POINTS:" class="points-prefix" />
+                    <ui:Label name="Research-Points-Amount" text="0" class="points-value" />
+                </ui:VisualElement>
+            </ui:VisualElement>
+
+            <ui:VisualElement class="research-content-body">
+                <ui:VisualElement name="Research-Tree-Container" class="research-tree-grid" />
+            </ui:VisualElement>
+
+            <ui:VisualElement name="Active-Research-Panel" class="active-research-footer">
+                <ui:VisualElement style="flex-direction: row; align-items: center;">
+                    <ui:VisualElement class="loading-spinner" />
+                    <ui:VisualElement style="margin-left: 15px;">
+                        <ui:Label text="CURRENTLY RESEARCHING:" class="active-label-hint" />
+                        <ui:Label name="Active-Research-Name" text="None" class="active-research-title" />
+                    </ui:VisualElement>
+                </ui:VisualElement>
+
+                <ui:VisualElement style="align-items: flex-end;">
+                    <ui:Label name="Active-Research-Timer" text="00:00:00" class="active-timer-text" />
+                    <ui:Button name="Button-Cancel-Research" text="CANCEL RESEARCH" class="cancel-research-btn" />
+                </ui:VisualElement>
+            </ui:VisualElement>
+
+        </ui:VisualElement>
+    </ui:VisualElement>
+</ui:UXML>
