@@ -1,3 +1,4 @@
+using Project.Scripts.Domain.Enums;
 using System;
 
 [Serializable]
@@ -16,4 +17,5 @@ public class PlayerWorldJoinResponse
     public string Message;
     public string ActiveCityId;
     public string WorldPlayerId;
+    public IdeologyTypeEnum SelectedIdeology;
 }

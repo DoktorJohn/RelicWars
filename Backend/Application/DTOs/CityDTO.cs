@@ -19,6 +19,7 @@ namespace Application.DTOs
         public double CurrentMetalAmount { get; set; }
         public double CurrentSilverAmount { get; set; }
         public double CurrentResearchPoints { get; set; }
+        public double CurrentIdeologyFocusPoints { get; set; }
 
         public double MaxWoodCapacity { get; set; }
         public double MaxStoneCapacity { get; set; }
@@ -29,12 +30,15 @@ namespace Application.DTOs
         public double MetalProductionPerHour { get; set; }
         public double SilverProductionPerHour { get; set; }
         public double ResearchPointsPerHour { get; set; }
+        public double IdeologyFocusPointsPerHour { get; set; }
 
         public int CurrentPopulationUsage { get; set; }
         public int MaxPopulationCapacity { get; set; }
 
         // Liste over bygninger med dedikeret DTO til denne specifikke forespørgsel
         public List<CityControllerGetDetailedCityInformationBuildingDTO> BuildingList { get; set; } = new();
+        public List<UnitStackDTO> StationedUnits { get; set; } = new();
+        public List<UnitDeploymentDTO> DeployedUnits { get; set; } = new();
     }
 
     public record CityOverviewHUD(
@@ -44,6 +48,7 @@ namespace Application.DTOs
         // 1. Globale Bebeholdninger (Wallet)
         double GlobalSilverAmount,
         double GlobalResearchPointsAmount,
+        double GlobalIdeologyFocusPointsAmount,
 
         // 2. Ressource Oversigt (Lager-ressourcer)
         ResourceOverviewDTO Wood,
@@ -53,6 +58,7 @@ namespace Application.DTOs
         // 3. Produktions-detaljer (Hvor kommer tallene fra?)
         ProductionBreakdownDTO SilverProduction,
         ProductionBreakdownDTO ResearchProduction,
+        ProductionBreakdownDTO IdeologyProduction,
 
         // 4. Befolknings-detaljer
         PopulationBreakdownDTO Population,

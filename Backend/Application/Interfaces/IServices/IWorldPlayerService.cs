@@ -1,4 +1,5 @@
 ﻿using Application.DTOs;
+using Domain.User;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -11,5 +12,7 @@ namespace Application.Interfaces.IServices
     {
         Task<WorldPlayerJoinResponse> AssignPlayerToGameWorldAsync(Guid profileId, Guid worldId);
         Task<WorldPlayerProfileDTO> GetWorldPlayerProfileAsync(Guid worldPlayerId);
+        void UpdateGlobalResourceState(WorldPlayer player, DateTime currentDateTime);
+        Task<WorldPlayerSelectIdeologyResponse> SelectIdeology(SelectIdeologyRequest request);
     }
 }

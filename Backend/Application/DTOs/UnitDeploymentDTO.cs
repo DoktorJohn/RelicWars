@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Domain.Enums;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -8,12 +9,12 @@ namespace Application.DTOs
 {
     public record UnitDeploymentDTO(
     Guid Id,
-    string Type,
+    UnitTypeEnum Type,
     int Quantity,
-    string Status,
-    DateTime ArrivalTime,
+    UnitDeploymentMovementStatusEnum Status,
+    DateTime? ArrivalTime,
     Guid OriginCityId,
-    Guid TargetCityId,
-    string TargetCityName
+    Guid? TargetCityId,
+    string? TargetCityName
 );
 }

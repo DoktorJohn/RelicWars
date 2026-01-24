@@ -1,0 +1,33 @@
+[
+  {
+    "Name": "NewRecruits",
+    "RequiredIdeology": "MilitaryJunta",
+    "TimeActive": null,
+    "SpecialFlag": true,
+    "IdeologyFocusPointCost": 4,
+    "Description": "Gain 15 random non-elite units",
+    "ModifiersInternal": [],
+    "ModifiersThatAffectsThis": [
+      "IdeologyFocus"
+    ]
+  },
+  {
+    "Name": "AcceleratedConscription",
+    "RequiredIdeology": "MilitaryJunta",
+    "TimeActive": "02:00:00",
+    "SpecialFlag": false,
+    "IdeologyFocusPointCost": 8,
+    "Description": "\u002B15% recruitment speed for 2h",
+    "ModifiersInternal": [
+      {
+        "Tag": "RecruitmentSpeed",
+        "Type": "Increased",
+        "Value": 0.15,
+        "Source": "Accelerated Conscription focus: \u002B15% recruitment speed"
+      }
+    ],
+    "ModifiersThatAffectsThis": [
+      "IdeologyFocus"
+    ]
+  }
+]

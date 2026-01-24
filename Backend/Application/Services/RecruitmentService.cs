@@ -20,6 +20,7 @@ namespace Application.Services
         private readonly ICityRepository _cityRepository;
         private readonly IJobRepository _jobRepository;
         private readonly IResourceService _resourceService;
+        private readonly IWorldPlayerService _worldPlayerService;
         private readonly IResearchService _researchService;
         private readonly ICityStatService _cityStatService;
         private readonly UnitDataReader _unitDataReader;
@@ -30,6 +31,7 @@ namespace Application.Services
             ICityRepository cityRepository,
             IJobRepository jobRepository,
             IResourceService resourceService,
+            IWorldPlayerService worldPlayerService,
             IResearchService researchService,
             UnitDataReader unitDataReader,
             BuildingDataReader buildingDataReader,
@@ -39,6 +41,7 @@ namespace Application.Services
             _cityRepository = cityRepository;
             _jobRepository = jobRepository;
             _resourceService = resourceService;
+            _worldPlayerService = worldPlayerService;
             _researchService = researchService;
             _unitDataReader = unitDataReader;
             _buildingDataReader = buildingDataReader;
@@ -46,44 +49,49 @@ namespace Application.Services
             _recruitmentTimeCalculationService = recruitmentTimeCalculationService;
         }
 
-       
-
         public async Task<BuildingResult> QueueRecruitmentAsync(Guid userId, Guid cityId, UnitTypeEnum type, int quantity)
         {
             if (quantity <= 0) return new BuildingResult(false, "Antal skal være større end 0.");
 
             var cityEntity = await _cityRepository.GetByIdAsync(cityId);
+            if (cityEntity == null || cityEntity.WorldPlayer == null)
+            {
+                return new BuildingResult(false, "Byen eller ejeren blev ikke fundet.");
+            }
+
             var unitStaticData = _unitDataReader.GetUnit(type);
+            var currentDateTime = DateTime.UtcNow;
 
             List<BaseJob> activeJobsInCity = new();
-
             var recruitmentJobs = await _jobRepository.GetRecruitmentJobsAsync(cityId);
             var buildingJobs = await _jobRepository.GetBuildingJobsAsync(cityId);
             activeJobsInCity.AddRange(recruitmentJobs);
             activeJobsInCity.AddRange(buildingJobs);
 
-            // --- POPULATION CHECK ---
             int availablePopulationCalculated = _cityStatService.GetAvailablePopulation(cityEntity, activeJobsInCity);
             int totalPopulationRequired = quantity * unitStaticData.PopulationCost;
 
             if (totalPopulationRequired > availablePopulationCalculated)
                 return new BuildingResult(false, $"Ikke nok boliger. Kræver {totalPopulationRequired}, har {availablePopulationCalculated}.");
 
-            // --- RESOURCES ---
-            var resourceSnapshot = _resourceService.CalculateCurrent(cityEntity, DateTime.UtcNow);
+            _worldPlayerService.UpdateGlobalResourceState(cityEntity.WorldPlayer, currentDateTime);
 
-            if (resourceSnapshot.Wood < (unitStaticData.WoodCost * quantity) ||
-                resourceSnapshot.Stone < (unitStaticData.StoneCost * quantity) ||
-                resourceSnapshot.Metal < (unitStaticData.MetalCost * quantity))
-                return new BuildingResult(false, "Ikke nok ressourcer.");
+            var citySnapshot = _resourceService.CalculateCityResources(cityEntity, currentDateTime);
 
-            // --- EXECUTION TIME ---
+            if (citySnapshot.Wood < (unitStaticData.WoodCost * quantity) ||
+                citySnapshot.Stone < (unitStaticData.StoneCost * quantity) ||
+                citySnapshot.Metal < (unitStaticData.MetalCost * quantity))
+            {
+                return new BuildingResult(false, "Ikke nok ressourcer i byens lager.");
+            }
+
             double calculatedSecondsPerUnit = await _recruitmentTimeCalculationService.CalculateFinalRecruitmentTimeAsync(userId, cityEntity, unitStaticData);
 
-            cityEntity.Wood = resourceSnapshot.Wood - (unitStaticData.WoodCost * quantity);
-            cityEntity.Stone = resourceSnapshot.Stone - (unitStaticData.StoneCost * quantity);
-            cityEntity.Metal = resourceSnapshot.Metal - (unitStaticData.MetalCost * quantity);
-            cityEntity.LastResourceUpdate = DateTime.UtcNow;
+            cityEntity.Wood = citySnapshot.Wood - (unitStaticData.WoodCost * quantity);
+            cityEntity.Stone = citySnapshot.Stone - (unitStaticData.StoneCost * quantity);
+            cityEntity.Metal = citySnapshot.Metal - (unitStaticData.MetalCost * quantity);
+
+            cityEntity.LastResourceUpdate = currentDateTime;
 
             await _cityRepository.UpdateAsync(cityEntity);
 
@@ -94,12 +102,12 @@ namespace Application.Services
                 UnitType = type,
                 TotalQuantity = quantity,
                 SecondsPerUnit = calculatedSecondsPerUnit,
-                LastTickTime = DateTime.UtcNow,
-                ExecutionTime = DateTime.UtcNow.AddSeconds(calculatedSecondsPerUnit),
+                LastTickTime = currentDateTime,
+                ExecutionTime = currentDateTime.AddSeconds(calculatedSecondsPerUnit),
                 CompletedQuantity = 0
             });
 
-            return new BuildingResult(true, $"Træning af {quantity}x {type} startet.");
+            return new BuildingResult(true, $"Træning af {quantity}x {type} startet i {cityEntity.Name}.");
         }
     }
 }

@@ -20,6 +20,8 @@
         Alliance,
         Rankings,
         Overview,
-        Research
+        Research,
+
+        IdeologyFocus,
     }
 }

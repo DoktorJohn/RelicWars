@@ -187,9 +187,9 @@ namespace Project.Modules.UI.Windows.Implementations
             {
                 if (requestSuccess)
                 {
-                    if (Project.Modules.City.CityResourceService.Instance != null)
+                    if (Project.Modules.City.CityStateManager.Instance != null)
                     {
-                        Project.Modules.City.CityResourceService.Instance.InitiateResourceRefresh(cityId);
+                        Project.Modules.City.CityStateManager.Instance.InitiateResourceRefresh(cityId);
                     }
 
                     RefreshTownHallContent(cityId);

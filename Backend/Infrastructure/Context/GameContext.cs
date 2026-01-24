@@ -32,6 +32,7 @@ namespace Infrastructure.Context
         public DbSet<RecruitmentJob> RecruitmentJobs { get; set; }
         public DbSet<Research> Researches { get; set; }
         public DbSet<BattleReport> BattleReports { get; set; }
+        public DbSet<IdeologyFocus> IdeologyFocuses { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -61,8 +62,20 @@ namespace Infrastructure.Context
             modelBuilder.Entity<BaseJob>()
                 .HasDiscriminator<string>("JobType")
                 .HasValue<BuildingJob>("Building")
-                .HasValue<RecruitmentJob>("Recruitment")
+                .HasValue<RecruitmentJob>("RecruitmentSpeed")
                 .HasValue<ResearchJob>("Research");
+
+            modelBuilder.Entity<UnitDeployment>()
+                .HasOne(ud => ud.OriginCity)
+                .WithMany(c => c.OriginUnitDeployments)
+                .HasForeignKey(ud => ud.OriginCityId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<UnitDeployment>()
+                .HasOne(ud => ud.TargetCity)
+                .WithMany(c => c.TargetUnitDeployments)
+                .HasForeignKey(ud => ud.TargetCityId)
+                .OnDelete(DeleteBehavior.Restrict);
 
             base.OnModelCreating(modelBuilder);
         }

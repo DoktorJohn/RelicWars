@@ -31,6 +31,7 @@ namespace Infrastructure.Repositories
                 .Include(city => city.WorldPlayer) // Needed for modifiers
                     .ThenInclude(player => player.ModifiersInternal)
                 .Include(city => city.UnitStacks)
+                .Include(city => city.OriginUnitDeployments)
                 .FirstOrDefaultAsync(city => city.Id == cityIdentifier);
         }
 

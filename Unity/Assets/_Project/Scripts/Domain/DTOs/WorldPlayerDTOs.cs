@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Project.Scripts.Domain.Enums;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -15,6 +16,14 @@ namespace Project.Scripts.Domain.DTOs
         public int Ranking { get; set; }
         public int CityCount { get; set; }
         public string AllianceName { get; set; }
+        public IdeologyTypeEnum Ideology { get; set; }
         public Guid AllianceId { get; set; }
+    }
+
+    [Serializable]
+    public class WorldPlayerSelectIdeologyResponse
+    {
+        public bool ConnectionSuccessful;
+        public string Message;
     }
 }

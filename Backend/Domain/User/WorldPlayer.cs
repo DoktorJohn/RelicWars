@@ -12,7 +12,10 @@ namespace Domain.User
     public class WorldPlayer : BaseEntity, IModifierProvider
     {
         public double Silver { get; set; }
+        public double IdeologyFocusPoints { get; set; }
         public double ResearchPoints { get; set; }
+        public IdeologyTypeEnum Ideology { get; set; }
+        public DateTime LastResourceUpdate { get; set; } = DateTime.UtcNow;
         public AllianceRoleEnum AllianceRole { get; set; } = AllianceRoleEnum.None;
 
         //Navprops

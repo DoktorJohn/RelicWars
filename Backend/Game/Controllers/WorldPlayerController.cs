@@ -35,7 +35,24 @@ namespace Game.Controllers
             }
         }
 
-        
+        [HttpPost("selectIdeology")]
+        public async Task<IActionResult> SelectIdeology([FromBody] SelectIdeologyRequest request)
+        {
+            try
+            {
+                var result = await _worldPlayerService.SelectIdeology(request);
+                if (!result.ConnectionSuccessful) return BadRequest(result.Message);
+
+                return Ok(result);
+            }
+            catch (Exception exception)
+            {
+                _logger.LogError(exception, "Fejl ved valg af ideologi");
+                return StatusCode(500, "Intern serverfejl ved valg af ideologi.");
+            }
+        }
+
+
         [HttpPost("join")]
         public async Task<ActionResult<WorldPlayerJoinResponse>> ProcessPlayerWorldJoinRequest([FromBody] WorldPlayerDTO request)
         {

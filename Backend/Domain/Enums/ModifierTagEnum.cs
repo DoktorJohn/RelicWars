@@ -10,9 +10,11 @@ namespace Domain.Enums
     {
         Wood, Stone, Metal, Silver,
         ResourceProduction,
-        Recruitment, Construction, Research, Population, WarehouseCapacity,
+        RecruitmentSpeed, Construction, ConstructionCost, Research, Population, 
+        WarehouseCapacity, Market,
 
         Infantry, Cavalry, Siege,
-        Upkeep, TravelSpeed, Power, Wall, LootCapacity
+        Upkeep, TravelSpeed, Power, Armor, Discipline, Casualties, Wall, LootCapacity,
+        Ideology, IdeologyFocus
     }
 }

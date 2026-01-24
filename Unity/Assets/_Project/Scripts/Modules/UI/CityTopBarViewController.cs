@@ -17,6 +17,7 @@ namespace Project.Modules.UI
         private Label _silverResourceAmountLabel;
         private Label _populationAmountLabel;
         private Label _researchAmountLabel;
+        private Label _ideologyFocusPointsAmountLabel;
 
         private Button _mapButton;
 
@@ -35,17 +36,17 @@ namespace Project.Modules.UI
             InitializeNavigationButtons();
             InitializeWarehouseCapacityPainters();
 
-            if (CityResourceService.Instance != null)
+            if (CityStateManager.Instance != null)
             {
-                CityResourceService.Instance.OnResourceStateChanged += HandleResourceStateCalculated;
+                CityStateManager.Instance.OnResourceStateChanged += HandleResourceStateCalculated;
             }
         }
 
         private void OnDisable()
         {
-            if (CityResourceService.Instance != null)
+            if (CityStateManager.Instance != null)
             {
-                CityResourceService.Instance.OnResourceStateChanged -= HandleResourceStateCalculated;
+                CityStateManager.Instance.OnResourceStateChanged -= HandleResourceStateCalculated;
             }
         }
 
@@ -57,6 +58,7 @@ namespace Project.Modules.UI
             _silverResourceAmountLabel = _rootVisualElement.Q<Label>("City-ResourceLabel-SilverAmount");
             _populationAmountLabel = _rootVisualElement.Q<Label>("City-ResourceLabel-PopulationAmount");
             _researchAmountLabel = _rootVisualElement.Q<Label>("City-ResourceLabel-ResearchAmount");
+            _ideologyFocusPointsAmountLabel = _rootVisualElement.Q<Label>("City-ResourceLabel-IdeologyAmount");
         }
 
         private void InitializeNavigationButtons()
@@ -102,6 +104,9 @@ namespace Project.Modules.UI
 
             if (_researchAmountLabel != null)
                 _researchAmountLabel.text = Math.Floor(state.ResearchPointsAmount).ToString("N0");
+
+            if (_ideologyFocusPointsAmountLabel != null)
+                _ideologyFocusPointsAmountLabel.text = Math.Floor(state.IdeologyFocusPointsAmount).ToString("N0");
 
             if (_populationAmountLabel != null)
             {

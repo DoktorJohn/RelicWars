@@ -21,8 +21,13 @@
                     </ui:VisualElement>
                     <ui:VisualElement class="wallet-item">
                         <ui:VisualElement class="side-bar-icon-base icon-research" style="width: 20px; height: 20px;" />
-                        <ui:Label text="RESEARCH POINTS:" class="wallet-item-prefix" />
+                        <ui:Label text="RESEARCH:" class="wallet-item-prefix" />
                         <ui:Label name="Label-Global-Research" text="0" class="wallet-label" />
+                    </ui:VisualElement>
+                    <ui:VisualElement class="wallet-item">
+                        <ui:VisualElement class="side-bar-icon-base icon-ideology" style="width: 20px; height: 20px;" />
+                        <ui:Label text="IDEOLOGY:" class="wallet-item-prefix" />
+                        <ui:Label name="Label-Global-Ideology" text="0" class="wallet-label" />
                     </ui:VisualElement>
                 </ui:VisualElement>
 

@@ -2,6 +2,7 @@
 using Project.Network.Helper;
 using Project.Network.Manager;
 using Project.Scripts.Domain.DTOs;
+using Project.Scripts.Domain.Enums;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -45,6 +46,35 @@ namespace Project.Network
                         Message = "Failed to join",
                         ActiveCityId = null,
                         WorldPlayerId = null,
+                        SelectedIdeology = IdeologyTypeEnum.None
+                    });
+                }
+            }
+        }
+
+        public IEnumerator SelectIdeology(Guid worldPlayerId, IdeologyTypeEnum ideology, string jwtToken, Action<WorldPlayerSelectIdeologyResponse> callback)
+        {
+            var payload = new { WorldPlayerId = worldPlayerId.ToString(), Ideology = ideology };
+            string url = $"{_baseUrl}/selectIdeology";
+
+            using (var request = BackendRequestHelper.CreatePostRequest(url, payload, jwtToken))
+            {
+                yield return request.SendWebRequest();
+
+                if (request.result == UnityWebRequest.Result.Success)
+                {
+                    var response = JsonConvert.DeserializeObject<WorldPlayerSelectIdeologyResponse>(request.downloadHandler.text);
+                    callback?.Invoke(response);
+                }
+                else
+                {
+                    Debug.LogError($"[WorldPlayer] Select Ideology Failed: {request.downloadHandler.text}");
+
+                    // Her bruger vi Object Initializer mønstret i stedet for constructor
+                    callback?.Invoke(new WorldPlayerSelectIdeologyResponse
+                    {
+                        ConnectionSuccessful = false,
+                        Message = "Internal client error or server rejection."
                     });
                 }
             }

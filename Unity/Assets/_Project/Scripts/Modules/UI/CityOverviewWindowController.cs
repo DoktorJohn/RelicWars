@@ -15,9 +15,9 @@ namespace Assets._Project.Scripts.Modules.UI
         protected override string VisualContainerName => "Overview-Window-MainContainer";
         protected override string HeaderName => "Overview-Window-Header";
 
-        private readonly Color _darkTextColor = new Color(0.17f, 0.11f, 0.06f, 1.0f); // #2B1B10
+        private readonly Color _darkTextColor = new Color(0.17f, 0.11f, 0.06f, 1.0f);
 
-        private Label _labelGlobalSilverAmount, _labelGlobalResearchAmount;
+        private Label _labelGlobalSilverAmount, _labelGlobalResearchAmount, _labelGlobalIdeologyAmount;
         private VisualElement _economyResourceGridContainer;
 
         private VisualElement _populationUsageBarFill;
@@ -42,6 +42,8 @@ namespace Assets._Project.Scripts.Modules.UI
 
             _labelGlobalSilverAmount = Root.Q<Label>("Label-Global-Silver");
             _labelGlobalResearchAmount = Root.Q<Label>("Label-Global-Research");
+            _labelGlobalIdeologyAmount = Root.Q<Label>("Label-Global-Ideology");
+
             _economyResourceGridContainer = Root.Q<VisualElement>("Economy-Grid-Container");
 
             _populationUsageBarFill = Root.Q<VisualElement>("Population-Bar-Used");
@@ -69,6 +71,7 @@ namespace Assets._Project.Scripts.Modules.UI
             // 1. Update Global Wallets
             _labelGlobalSilverAmount.text = dataModel.GlobalSilverAmount.ToString("N0");
             _labelGlobalResearchAmount.text = dataModel.GlobalResearchPointsAmount.ToString("N0");
+            _labelGlobalIdeologyAmount.text = dataModel.GlobalIdeologyFocusPointsAmount.ToString("N0"); // NY opdatering
 
             // 2. Build Economy Grid
             _economyResourceGridContainer.Clear();
@@ -77,6 +80,7 @@ namespace Assets._Project.Scripts.Modules.UI
             AddEconomyResourceCard("METAL", "icon-metal", dataModel.Metal.Production);
             AddEconomyResourceCard("SILVER", "icon-silver", dataModel.SilverProduction);
             AddEconomyResourceCard("RESEARCH", "icon-research", dataModel.ResearchProduction);
+            AddEconomyResourceCard("IDEOLOGY", "icon-ideology", dataModel.IdeologyProduction);
 
             // 3. Update Population Visuals
             float totalPopulationUsage = dataModel.Population.UsedByBuildings + dataModel.Population.UsedByUnits;

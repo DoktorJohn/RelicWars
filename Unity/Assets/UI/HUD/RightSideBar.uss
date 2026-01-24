@@ -1,0 +1,124 @@
+/* Assets/UI/HUD/RightSideBar.uss */
+
+.right-side-bar-main-container {
+    position: absolute;
+    bottom: 20px;
+    left: 50%;
+    translate: -50% 0;
+    width: auto;
+    height: 160px;
+    flex-direction: row;
+    justify-content: center;
+    align-items: flex-end;
+    
+    /* VIGTIGT: Tillader at kortene skaleres ud over containerens top */
+    overflow: visible; 
+}
+
+/* BASE CARD STYLING */
+.hud-card {
+    --c-hud-bg-dark: rgba(28, 24, 22, 0.98);
+    --c-hud-border-gold: rgb(165, 125, 50);
+    --c-hud-text-light: rgb(235, 230, 220);
+
+    width: 110px;
+    height: 135px;
+    margin: 0 6px;
+    padding: 8px;
+    
+    background-color: var(--c-hud-bg-dark);
+    background-image: url('project://database/Assets/UI/TopBarHUD.jpg');
+    -unity-background-scale-mode: scale-and-crop;
+    -unity-background-image-tint-color: rgba(100, 100, 100, 0.4);
+
+    border-width: 2px;
+    border-color: var(--c-hud-border-gold);
+    border-radius: 12px;
+
+    align-items: center;
+    justify-content: center;
+    
+    /* FIX: Ændret fra hidden til visible så borders ikke klippes ved hover */
+    overflow: visible; 
+    
+    transition-property: scale, border-color, background-color;
+    transition-duration: 0.15s;
+}
+
+.hud-card:hover {
+    scale: 1.1;
+    border-color: rgb(255, 215, 100);
+}
+
+/* IKON STYLING */
+.hud-card-icon {
+    width: 65px;
+    height: 65px;
+    flex-shrink: 0;
+    -unity-background-scale-mode: scale-to-fit;
+    margin-top: auto;
+    margin-bottom: auto;
+}
+
+.icon-ideology { background-image: url('project://database/Assets/UI/Icons/ideology.png'); }
+.icon-unit-default { background-image: url('project://database/Assets/UI/Icons/Unit.png'); }
+
+/* TEKST STYLING */
+.hud-card-label {
+    color: var(--c-hud-text-light);
+    font-size: 10px;
+    -unity-font-style: bold;
+    -unity-text-align: middle-center;
+    text-transform: uppercase;
+    white-space: nowrap;
+    margin-top: 4px;
+}
+
+/* QUANTITY BADGE */
+.hud-card-quantity-badge {
+    background-color: rgba(0, 0, 0, 0.9);
+    border-width: 1px;
+    border-color: var(--c-hud-border-gold);
+    border-radius: 4px;
+    padding: 1px 5px;
+    position: absolute;
+    top: 5px;
+    right: 5px;
+}
+
+.hud-card-quantity-text {
+    color: var(--c-hud-border-gold);
+    font-size: 10px;
+    -unity-font-style: bold;
+}
+
+/* ============================================================
+    SCROLLVIEW & CLIPPING FIX
+   ============================================================ */
+.troop-list-scrollview {
+    flex-direction: row;
+    flex-grow: 0;
+    /* Sørger for at ScrollView-rammen ikke klipper kortene */
+    overflow: visible; 
+}
+
+/* Tvinger ScrollViewets interne viewports til at vise opskaleret indhold */
+.troop-list-scrollview #unity-content-viewport,
+.troop-list-scrollview #unity-content-container {
+    flex-direction: row;
+    justify-content: center;
+    align-items: flex-end;
+    overflow: visible; 
+}
+
+/* DEAKTIVERING AF SCROLLBARS (Forbliver skjult) */
+.troop-list-scrollview Scroller {
+    display: none;
+    opacity: 0;
+}
+
+.troop-list-scrollview #unity-low-button, 
+.troop-list-scrollview #unity-high-button, 
+.troop-list-scrollview #unity-slider {
+    display: none;
+}

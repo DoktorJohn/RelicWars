@@ -187,7 +187,7 @@ namespace Domain.StaticData.Generators
                     WoodCost = (int)(totalCalculatedResourceCost * woodPercentage),
                     StoneCost = (int)(totalCalculatedResourceCost * stonePercentage),
                     MetalCost = (int)(totalCalculatedResourceCost * metalPercentage),
-                    ModifiersThatAffectsThis = { ModifierTagEnum.Recruitment }
+                    ModifiersThatAffectsThis = { ModifierTagEnum.RecruitmentSpeed }
                 };
 
                 if (recruitmentEntry is BarracksLevelData) recruitmentEntry.ModifiersThatAffectsThis.Add(ModifierTagEnum.Infantry);
@@ -197,7 +197,7 @@ namespace Domain.StaticData.Generators
                 double calculatedModifierValue = Math.Pow(currentLvl / 30.0, 1.7);
                 recruitmentEntry.ModifiersInternal.Add(new Modifier
                 {
-                    Tag = ModifierTagEnum.Recruitment,
+                    Tag = ModifierTagEnum.RecruitmentSpeed,
                     Type = ModifierTypeEnum.Increased,
                     Value = calculatedModifierValue,
                     Source = $"{recruitmentType} Level {currentLvl}"

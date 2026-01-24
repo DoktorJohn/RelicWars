@@ -25,21 +25,18 @@ namespace Project.Modules.City
         public void InitializeBuildingInteractionData(CityControllerGetDetailedCityInformationBuildingDTO buildingData)
         {
             _associatedBuildingData = buildingData;
-
-            // Find renderer in children (e.g., House_1)
             _visualModelRenderer = GetComponentInChildren<Renderer>();
 
             if (_visualModelRenderer != null)
             {
-                // Create material instance to avoid modifying asset file
                 _initialMaterialColor = _visualModelRenderer.material.color;
                 _isControllerSuccessfullyInitialized = true;
-
-                Debug.Log($"<color=cyan>[CityInteraction]</color> Initialized correctly for {gameObject.name} ({_associatedBuildingData.BuildingType}).");
+                Debug.Log($"<color=cyan>[CityInteraction]</color> Initialized {gameObject.name} as {buildingData.BuildingType} (Lvl {buildingData.CurrentLevel})");
             }
             else
             {
-                Debug.LogWarning($"<color=yellow>[CityInteraction]</color> Warning: No Renderer found on {gameObject.name} or children.");
+                // Hvis denne rammes, kan du ikke klikke, selvom data er modtaget!
+                Debug.LogError($"<color=red>[CityInteraction]</color> CRITICAL: No Renderer found on {gameObject.name}. Initialization aborted.");
             }
         }
 
@@ -64,9 +61,11 @@ namespace Project.Modules.City
         {
             Debug.Log($"<color=magenta><b>[INTERACTION TRIGGER]</b></color> Clicked on: {gameObject.name}");
 
-            if (!_isControllerSuccessfullyInitialized || _associatedBuildingData == null)
+            if (!_isControllerSuccessfullyInitialized)
             {
-                Debug.LogError($"<color=red><b>[INTERACTION ERROR]</b></color> Click ignored: Not initialized or missing data.");
+                // Vi tilføjer detaljer om HVAD der mangler
+                string reason = (_associatedBuildingData == null) ? "Data is NULL" : "Controller not initialized (likely missing renderer)";
+                Debug.LogError($"<color=red>[INTERACTION ERROR]</color> {gameObject.name} click ignored: {reason}");
                 return;
             }
 

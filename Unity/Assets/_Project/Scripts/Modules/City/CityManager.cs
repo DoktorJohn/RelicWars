@@ -35,22 +35,40 @@ namespace Project.Modules.City
 
         private void Start()
         {
+            InitialiserScenensBygningsTilstand();
             SubscribeToBuildingDataEvents();
+        }
+
+        private void InitialiserScenensBygningsTilstand()
+        {
+            foreach (var kobling in _identificeredeBygningsReferencer)
+            {
+                if (kobling.BygningsObjektIScenene != null)
+                {
+                    kobling.BygningsObjektIScenene.SetActive(false);
+                }
+
+                // Vis byggepladser (Ghosts) som standard, hvis de findes
+                if (kobling.KonstruktionsGhostObjekt != null)
+                {
+                    kobling.KonstruktionsGhostObjekt.SetActive(true);
+                }
+            }
         }
 
         private void OnDestroy()
         {
-            if (CityResourceService.Instance != null)
+            if (CityStateManager.Instance != null)
             {
-                CityResourceService.Instance.OnBuildingStateReceived -= HandleBuildingUpdateFromService;
+                CityStateManager.Instance.OnBuildingStateReceived -= HandleBuildingUpdateFromService;
             }
         }
 
         private void SubscribeToBuildingDataEvents()
         {
-            if (CityResourceService.Instance != null)
+            if (CityStateManager.Instance != null)
             {
-                CityResourceService.Instance.OnBuildingStateReceived += HandleBuildingUpdateFromService;
+                CityStateManager.Instance.OnBuildingStateReceived += HandleBuildingUpdateFromService;
             }
         }
 
@@ -76,25 +94,28 @@ namespace Project.Modules.City
         {
             bool erBygningKonstrueret = data.CurrentLevel > 0;
 
-            // Aktivér selve bygningen hvis level > 0
             if (kobling.BygningsObjektIScenene != null)
             {
                 kobling.BygningsObjektIScenene.SetActive(erBygningKonstrueret);
             }
 
-            // Aktivér ghost/byggeplads hvis level == 0
             if (kobling.KonstruktionsGhostObjekt != null)
             {
                 kobling.KonstruktionsGhostObjekt.SetActive(!erBygningKonstrueret);
             }
 
-            // Opdatér interaktionsdata hvis bygningen er synlig
             if (erBygningKonstrueret)
             {
+                // DEBUG: Finder vi overhovedet controlleren?
                 var interactionController = kobling.BygningsObjektIScenene.GetComponentInChildren<CityBuildingInteractionController>();
+
                 if (interactionController != null)
                 {
                     interactionController.InitializeBuildingInteractionData(data);
+                }
+                else
+                {
+                    Debug.LogError($"<color=red>[CityManager ERROR]</color> Fant bygnings-objekt for {data.BuildingType}, men kunne ikke finde CityBuildingInteractionController på det eller dets børn!");
                 }
             }
         }

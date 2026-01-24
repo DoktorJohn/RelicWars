@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ui:UXML xmlns:ui="UnityEngine.UIElements" editor-extension-mode="False">
+    <ui:Style src="project://database/Assets/UI/Windows/WindowTheme.uss" />
+    <ui:Style src="LoginWindow.uss" />
+
+    <ui:VisualElement name="Login-Overlay" class="login-screen-overlay">
+        <ui:VisualElement name="Login-Window-MainContainer" class="window-frame login-main-container">
+            
+            <ui:VisualElement name="Login-Window-Header" class="window-header" style="justify-content: center;">
+                <ui:Label text="Welcome" class="window-header-label" />
+            </ui:VisualElement>
+
+            <ui:VisualElement class="window-content-container login-content">
+                
+                <ui:VisualElement>
+                    <ui:VisualElement class="input-group">
+                        <ui:Label text="EMAIL ADDRESS" class="input-label" />
+                        <ui:TextField name="Input-Email" class="auth-text-field" />
+                    </ui:VisualElement>
+
+                    <ui:VisualElement class="input-group">
+                        <ui:Label text="PASSWORD" class="input-label" />
+                        <ui:TextField name="Input-Password" password="true" class="auth-text-field" />
+                    </ui:VisualElement>
+                    
+                    <ui:Label name="Label-Status-Feedback" class="status-feedback-label" text="" />
+                </ui:VisualElement>
+
+                <ui:VisualElement>
+                    <ui:Button name="Button-Execute-Login" text="LOGIN TO WORLD" class="login-button-primary" />
+                    <ui:Button name="Button-Navigate-Register" text="No account? Register here" class="register-button-flat" />
+                </ui:VisualElement>
+
+            </ui:VisualElement>
+        </ui:VisualElement>
+    </ui:VisualElement>
+</ui:UXML>

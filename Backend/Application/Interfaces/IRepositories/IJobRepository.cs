@@ -14,7 +14,7 @@ namespace Application.Interfaces.IRepositories
         Task<List<BaseJob>> GetDueJobsAsync(DateTime now);
         Task<List<BuildingJob>> GetBuildingJobsAsync(Guid cityId);
         Task AddAsync(BaseJob job);
-        Task UpdateAsync(BaseJob job); // Til Recruitment fremskridt
+        Task UpdateAsync(BaseJob job); // Til RecruitmentSpeed fremskridt
         Task DeleteAsync(Guid jobId);
         Task<ResearchJob?> GetResearchJobAsync(Guid userId);
         Task<List<RecruitmentJob>> GetRecruitmentJobsAsync(Guid cityId);

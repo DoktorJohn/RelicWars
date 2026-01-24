@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using Assets._Project.Scripts.Domain.Enums;
 using Assets.Scripts.Domain.Enums;
 
 namespace Project.Network.Models
@@ -11,11 +12,14 @@ namespace Project.Network.Models
         public string CityName;
         public double GlobalSilverAmount;
         public double GlobalResearchPointsAmount;
+        public double GlobalIdeologyFocusPointsAmount;
+
         public ResourceOverviewDTO Wood;
         public ResourceOverviewDTO Stone;
         public ResourceOverviewDTO Metal;
         public ProductionBreakdownDTO SilverProduction;
         public ProductionBreakdownDTO ResearchProduction;
+        public ProductionBreakdownDTO IdeologyProduction;
         public PopulationBreakdownDTO Population;
         public BuildingQueueOverviewDTO TownHallStatus;
         public BarracksQueueOverviewDTO BarracksStatus;
@@ -76,24 +80,47 @@ namespace Project.Network.Models
         public double CurrentWoodAmount;
         public double CurrentStoneAmount;
         public double CurrentMetalAmount;
-        public double CurrentSilverAmount; // Tilføjet
+        public double CurrentSilverAmount;
         public double CurrentResearchPoints;
+        public double CurrentIdeologyFocusPoints;
 
-        // Kapaciteter til bue-indikatorer
-        public double MaxWoodCapacity; // Tilføjet
-        public double MaxStoneCapacity; // Tilføjet
-        public double MaxMetalCapacity; // Tilføjet
+        public double MaxWoodCapacity; 
+        public double MaxStoneCapacity;
+        public double MaxMetalCapacity; 
 
         public double WoodProductionPerHour;
         public double StoneProductionPerHour;
         public double MetalProductionPerHour;
         public double SilverProductionPerHour;
         public double ResearchPointsPerHour;
+        public double IdeologyFocusPointsPerHour;
 
         public int CurrentPopulationUsage;
         public int MaxPopulationCapacity;
 
         public List<CityControllerGetDetailedCityInformationBuildingDTO> BuildingList = new();
+        public List<UnitStackDTO> StationedUnits { get; set; } = new();
+        public List<UnitDeploymentDTO> DeployedUnits { get; set; } = new();
+    }
+
+    [Serializable]
+    public class UnitStackDTO
+    {
+        public UnitTypeEnum Type { get; set; }
+        public int Quantity { get; set; }
+    }
+
+    [Serializable]
+    public class UnitDeploymentDTO
+    {
+        public Guid Id { get; set; }
+        public UnitTypeEnum Type { get; set; }
+        public int Quantity { get; set; }
+        public UnitDeploymentMovementStatusEnum Status { get; set; }
+        public DateTime? ArrivalTime { get; set; }
+        public Guid OriginCityId { get; set; }
+        public Guid? TargetCityId { get; set; }
+        public string? TargetCityName { get; set; }
     }
 
     [Serializable]

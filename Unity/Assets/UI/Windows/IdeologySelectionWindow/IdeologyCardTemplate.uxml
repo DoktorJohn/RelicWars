@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ui:UXML xmlns:ui="UnityEngine.UIElements" editor-extension-mode="False">
+    <ui:VisualElement class="ideology-card">
+        <ui:VisualElement class="ideology-card-text-content">
+            <ui:Label name="Label-Ideology-Title" text="Monarchy" class="ideology-card-title" />
+            <ui:Label name="Label-Ideology-Description" text="Description goes here." class="ideology-card-description" />
+        </ui:VisualElement>
+        
+        <ui:Button name="Button-Select-Ideology" text="ENACT" class="enter-world-button ideology-enact-button" />
+    </ui:VisualElement>
+</ui:UXML>

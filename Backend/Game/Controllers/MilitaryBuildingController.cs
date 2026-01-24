@@ -54,7 +54,7 @@ namespace Game.Controllers
             }
             catch (Exception exception)
             {
-                _logger.LogError(exception, "Fejl ved rekruttering af kavaleri i by {CityId}", cityId);
+                _logger.LogError(exception, "Fejl ved rekruttering af kavaleri i by {OriginCityId}", cityId);
                 return StatusCode(500, "Intern serverfejl under rekruttering.");
             }
         }
@@ -70,7 +70,7 @@ namespace Game.Controllers
             }
             catch (Exception exception)
             {
-                _logger.LogError(exception, "Fejl ved hentning af stald-oversigt for by {CityId}", cityId);
+                _logger.LogError(exception, "Fejl ved hentning af stald-oversigt for by {OriginCityId}", cityId);
                 return BadRequest("Kunne ikke hente data for stalden.");
             }
         }
@@ -86,7 +86,7 @@ namespace Game.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Failed to get barracks overview for city {CityId}", cityId);
+                _logger.LogError(ex, "Failed to get barracks overview for city {OriginCityId}", cityId);
                 return BadRequest("Could not fetch barracks data.");
             }
         }
@@ -117,7 +117,7 @@ namespace Game.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Failed to recruit units in city {CityId}", cityId);
+                _logger.LogError(ex, "Failed to recruit units in city {OriginCityId}", cityId);
                 return StatusCode(500, "Internal server error.");
             }
         }

@@ -27,7 +27,7 @@ namespace WebApi.Controllers
 
             if (detailedInfo == null)
             {
-                _logger.LogWarning("Detailed info request failed. City ID {CityId} not found.", cityIdentifier);
+                _logger.LogWarning("Detailed info request failed. City ID {OriginCityId} not found.", cityIdentifier);
                 return NotFound(new { Message = $"City with ID {cityIdentifier} was not found." });
             }
 
@@ -41,7 +41,7 @@ namespace WebApi.Controllers
 
             if (detailedInfo == null)
             {
-                _logger.LogWarning("Detailed info request failed. City ID {CityId} not found.", cityIdentifier);
+                _logger.LogWarning("Detailed info request failed. City ID {OriginCityId} not found.", cityIdentifier);
                 return NotFound(new { Message = $"City with ID {cityIdentifier} was not found." });
             }
 

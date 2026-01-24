@@ -33,6 +33,9 @@ namespace Domain.Entities
         public List<Building> Buildings { get; set; } = new();
         public List<BuildingJob> BuildingQueue { get; set; } = new();
         public List<UnitStack> UnitStacks { get; set; } = new();
+        public List<UnitDeployment> OriginUnitDeployments { get; set; } = new();
+        public List<UnitDeployment> TargetUnitDeployments { get; set; } = new();
+        public List<IdeologyFocus> ActiveFocuses { get; set; } = new();
         public List<Modifier> ModifiersInternal { get; set; } = new();
         public List<ModifierTagEnum> ModifiersThatAffectsThis { get; set; } = new();
 

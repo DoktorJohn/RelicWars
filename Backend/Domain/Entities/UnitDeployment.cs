@@ -9,10 +9,7 @@ using System.Threading.Tasks;
 namespace Domain.Entities
 {
     public class UnitDeployment : BaseEntity, IModifierProvider
-    {
-        public Guid OriginCityId { get; set; }  // Hvem ejer tropperne?
-        public Guid TargetCityId { get; set; }  // Hvor er de på vej hen / hvor står de?
-
+    { 
         public UnitTypeEnum UnitType { get; set; }
         public int Quantity { get; set; }
         public double LootWood { get; set; }
@@ -24,6 +21,12 @@ namespace Domain.Entities
         public UnitDeploymentMovementStatusEnum UnitDeploymentMovementStatus { get; set; } // Enums: Moving, Stationed, Returning
         public UnitDeploymentTypeEnum UnitDeploymentType { get; set; }
         public DateTime ArrivalTime { get; set; }    // Hvornår når de frem?
+
+        //FK
+        public required City OriginCity { get; set; }
+        public Guid OriginCityId { get; set; }
+        public City? TargetCity { get; set; }
+        public Guid? TargetCityId { get; set; }
 
         public IEnumerable<Modifier> GetModifiers()
         {

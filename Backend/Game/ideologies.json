@@ -1,0 +1,128 @@
+[
+  {
+    "Name": "Feudalism",
+    "Description": "A hierarchical sociopolitical system in which vassals and nobles held the land of a ruling king, in exchange for military and economical obligations.",
+    "IdeologyType": "Feudalism",
+    "ModifiersInternal": [
+      {
+        "Tag": "Silver",
+        "Type": "Increased",
+        "Value": 0.04,
+        "Source": "Feaudalism: 4% increased tax rate"
+      },
+      {
+        "Tag": "ConstructionCost",
+        "Type": "Decreased",
+        "Value": 0.05,
+        "Source": "Feaudalism: 5% less building cost"
+      }
+    ],
+    "ModifiersThatAffectsThis": [
+      "Ideology"
+    ]
+  },
+  {
+    "Name": "Monarchy",
+    "Description": "An inherited form of government in which a single person, the monarch, serves as the head of state until death.",
+    "IdeologyType": "Monarchy",
+    "ModifiersInternal": [
+      {
+        "Tag": "Silver",
+        "Type": "Increased",
+        "Value": 0.08,
+        "Source": "Monarchy: 8% increased tax rate"
+      }
+    ],
+    "ModifiersThatAffectsThis": []
+  },
+  {
+    "Name": "Democracy",
+    "Description": "A form of government in which the rulers are elected by the people.",
+    "IdeologyType": "Democracy",
+    "ModifiersInternal": [
+      {
+        "Tag": "Research",
+        "Type": "Increased",
+        "Value": 0.05,
+        "Source": "Democracy: 5% increased research rate"
+      },
+      {
+        "Tag": "Population",
+        "Type": "Increased",
+        "Value": 0.1,
+        "Source": "Democracy: 10% increased population"
+      },
+      {
+        "Tag": "Silver",
+        "Type": "Decreased",
+        "Value": 0.6,
+        "Source": "Democracy: 6% decreased tax rate"
+      }
+    ],
+    "ModifiersThatAffectsThis": [
+      "Ideology"
+    ]
+  },
+  {
+    "Name": "Oligarchy",
+    "Description": "A form of government in which the elite rules the land.",
+    "IdeologyType": "Oligarchy",
+    "ModifiersInternal": [
+      {
+        "Tag": "TravelSpeed",
+        "Type": "Increased",
+        "Value": 0.05,
+        "Source": "Oligarchy: 5% increased travel speed"
+      },
+      {
+        "Tag": "Upkeep",
+        "Type": "Increased",
+        "Value": 0.05,
+        "Source": "Oligarchy: 5% increased upkeep"
+      },
+      {
+        "Tag": "Market",
+        "Type": "Increased",
+        "Value": 0.3,
+        "Source": "Oligarchy: 30% increased market silver generation"
+      },
+      {
+        "Tag": "Silver",
+        "Type": "Increased",
+        "Value": 0.02,
+        "Source": "Oligarchy: 2% increased tax rate"
+      }
+    ],
+    "ModifiersThatAffectsThis": [
+      "Ideology"
+    ]
+  },
+  {
+    "Name": "Military Junta",
+    "Description": "A form of government in which the land is ruled by the army and its leaders themselves.",
+    "IdeologyType": "MilitaryJunta",
+    "ModifiersInternal": [
+      {
+        "Tag": "Silver",
+        "Type": "Decreased",
+        "Value": 0.1,
+        "Source": "Military Junta: 10% decreased tax rate"
+      },
+      {
+        "Tag": "Upkeep",
+        "Type": "Decreased",
+        "Value": 0.08,
+        "Source": "Military Junta: 8% decreased upkeep"
+      },
+      {
+        "Tag": "RecruitmentSpeed",
+        "Type": "Decreased",
+        "Value": 0.5,
+        "Source": "Military Junta: 5% increased recruitment speed"
+      }
+    ],
+    "ModifiersThatAffectsThis": [
+      "Ideology"
+    ]
+  }
+]

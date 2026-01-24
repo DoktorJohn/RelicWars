@@ -1,10 +1,10 @@
-﻿using Project.Scripts.Network;
+﻿using Project.Scripts.Domain.Enums;
+using Project.Scripts.Network;
 using System;
 using UnityEngine;
 
 namespace Project.Network.Manager
 {
-
     public class NetworkManager : MonoBehaviour
     {
         public static NetworkManager Instance;
@@ -49,7 +49,6 @@ namespace Project.Network.Manager
 
         private void InitializeServices()
         {
-            // Vi instansierer services med base URL
             Auth = new ClientAuthService(_backendBaseUrl);
             World = new ClientWorldService(_backendBaseUrl);
             City = new ClientCityService(_backendBaseUrl);
@@ -100,27 +99,51 @@ namespace Project.Network.Manager
             }));
         }
 
-        public void JoinWorld(Guid worldId, Action<bool> onComplete)
+        public void JoinWorld(Guid worldId, Action<bool, IdeologyTypeEnum> onComplete)
         {
             StartCoroutine(WorldPlayer.JoinWorld(PlayerProfileId, worldId, JwtToken, (response) =>
             {
                 if (response.ConnectionSuccessful)
                 {
                     if (!string.IsNullOrEmpty(response.ActiveCityId))
-                    {
                         ActiveCityId = Guid.Parse(response.ActiveCityId);
-                    }
 
                     if (!string.IsNullOrEmpty(response.WorldPlayerId))
-                    {
                         WorldPlayerId = response.WorldPlayerId;
-                    }
 
-                    Debug.Log($"[NetworkManager] Joined World. City: {ActiveCityId}, Player: {WorldPlayerId}");
+                    Debug.Log($"[NetworkManager] Joined World. Ideology: {response.SelectedIdeology}");
+
+                    onComplete?.Invoke(true, response.SelectedIdeology);
+                }
+                else
+                {
+                    onComplete?.Invoke(false, IdeologyTypeEnum.None);
+                }
+            }));
+        }
+
+        public void SelectIdeology(IdeologyTypeEnum ideology, Action<bool> onComplete)
+        {
+            if (string.IsNullOrEmpty(WorldPlayerId))
+            {
+                Debug.LogError("[NetworkManager] Cannot select ideology: WorldPlayerId is null.");
+                onComplete?.Invoke(false);
+                return;
+            }
+
+            // Vi parser string ID til Guid da servicen forventer Guid
+            Guid worldPlayerGuid = Guid.Parse(WorldPlayerId);
+
+            StartCoroutine(WorldPlayer.SelectIdeology(worldPlayerGuid, ideology, JwtToken, (response) =>
+            {
+                if (response != null && response.ConnectionSuccessful)
+                {
+                    Debug.Log($"[NetworkManager] Ideology {ideology} successfully selected.");
                     onComplete?.Invoke(true);
                 }
                 else
                 {
+                    Debug.LogError($"[NetworkManager] Ideology selection failed: {response?.Message}");
                     onComplete?.Invoke(false);
                 }
             }));
@@ -137,5 +160,4 @@ namespace Project.Network.Manager
             }
         }
     }
-
 }

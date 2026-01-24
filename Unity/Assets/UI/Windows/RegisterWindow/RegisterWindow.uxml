@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ui:UXML xmlns:ui="UnityEngine.UIElements" editor-extension-mode="False">
+    <ui:Style src="project://database/Assets/UI/Windows/WindowTheme.uss" />
+    <ui:Style src="RegisterWindow.uss" />
+
+    <ui:VisualElement name="Register-Overlay" class="auth-screen-overlay">
+        <ui:VisualElement name="Register-Window-MainContainer" class="window-frame auth-main-container">
+            
+            <ui:VisualElement name="Register-Window-Header" class="window-header" style="justify-content: center;">
+                <ui:Label text="Create New Profile" class="window-header-label" />
+            </ui:VisualElement>
+
+            <ui:VisualElement class="window-content-container auth-content">
+                
+                <ui:VisualElement>
+                    <ui:VisualElement class="input-group">
+                        <ui:Label text="USERNAME" class="input-label" />
+                        <ui:TextField name="Input-Username" class="auth-text-field" />
+                    </ui:VisualElement>
+
+                    <ui:VisualElement class="input-group">
+                        <ui:Label text="EMAIL ADDRESS" class="input-label" />
+                        <ui:TextField name="Input-Email" class="auth-text-field" />
+                    </ui:VisualElement>
+
+                    <ui:VisualElement class="input-group">
+                        <ui:Label text="PASSWORD" class="input-label" />
+                        <ui:TextField name="Input-Password" password="true" class="auth-text-field" />
+                    </ui:VisualElement>
+                    
+                    <ui:Label name="Label-Status-Feedback" class="status-feedback-label" text="Join the struggle for Relics today." />
+                </ui:VisualElement>
+
+                <ui:VisualElement>
+                    <ui:Button name="Button-Execute-Register" text="CREATE ACCOUNT" class="button-primary" />
+                    <ui:Button name="Button-Navigate-Login" text="Already have an account? Login here" class="button-flat" />
+                </ui:VisualElement>
+
+            </ui:VisualElement>
+        </ui:VisualElement>
+    </ui:VisualElement>
+</ui:UXML>

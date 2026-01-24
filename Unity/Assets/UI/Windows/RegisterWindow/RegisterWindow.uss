@@ -1,0 +1,88 @@
+/* Assets/UI/Auth/RegisterWindow.uss */
+
+.auth-screen-overlay {
+    flex-grow: 1;
+    justify-content: center;
+    align-items: center;
+    background-image: url('project://database/Assets/Login_background_image.jpg');
+    -unity-background-scale-mode: scale-and-crop;
+}
+
+.auth-main-container {
+    width: 400px;
+    height: 550px;
+}
+
+.auth-content {
+    padding: 35px;
+    flex-grow: 1;
+    justify-content: space-between;
+}
+
+.input-group {
+    margin-bottom: 12px;
+}
+
+.input-label {
+    color: rgb(0, 0, 0);
+    font-size: 13px;
+    -unity-font-style: bold;
+    margin-bottom: 4px;
+}
+
+/* Container-fix for dobbelte rammer */
+.auth-text-field {
+    border-width: 0;
+    margin: 0;
+    padding: 0;
+}
+
+/* Internt input-felt styling */
+.auth-text-field .unity-base-text-field__input {
+    background-color: rgba(255, 255, 255, 0.8);
+    border-color: rgb(165, 125, 50);
+    border-width: 2px;
+    border-radius: 4px;
+    padding: 8px;
+    color: rgb(0, 0, 0);
+    cursor: text;
+}
+
+.window-header-label {
+    flex-grow: 1;
+    -unity-text-align: middle-center;
+}
+
+.button-primary {
+    background-color: rgb(165, 125, 50);
+    color: white;
+    -unity-font-style: bold;
+    padding: 12px;
+    margin-top: 10px;
+    border-width: 0;
+    border-radius: 4px;
+    font-size: 14px;
+}
+
+.button-primary:hover {
+    background-color: rgb(195, 155, 80);
+}
+
+.button-flat {
+    background-color: rgba(0, 0, 0, 0);
+    color: rgb(80, 60, 20);
+    border-width: 0;
+    margin-top: 8px;
+    font-size: 12px;
+    text-decoration: underline;
+    -unity-font-style: bold;
+}
+
+.status-feedback-label {
+    color: rgb(180, 30, 30);
+    font-size: 12px;
+    -unity-text-align: middle-center;
+    white-space: normal;
+    height: 40px;
+    -unity-font-style: bold;
+}

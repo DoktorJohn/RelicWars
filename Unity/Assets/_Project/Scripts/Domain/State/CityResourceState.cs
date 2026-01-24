@@ -20,6 +20,9 @@ namespace Assets.Scripts.Domain.State
         public double ResearchPointsAmount;
         public double ResearchPointsProductionPerHour;
 
+        public double IdeologyFocusPointsAmount;
+        public double IdeologyFocusPointsProductionPerHour;
+
         public int CurrentPopulationUsage;
         public int MaxPopulationCapacity;
         public int FreePopulation => MaxPopulationCapacity - CurrentPopulationUsage;

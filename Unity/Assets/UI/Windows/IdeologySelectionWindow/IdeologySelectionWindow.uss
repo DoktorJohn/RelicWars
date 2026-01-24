@@ -1,0 +1,105 @@
+/* ============================================================
+    CONTAINER & OVERLAY
+   ============================================================ */
+.ideology-overlay {
+    flex-grow: 1;
+    justify-content: center;
+    align-items: center;
+    background-image: url('project://database/Assets/Login_background_image.jpg');
+    -unity-background-scale-mode: scale-and-crop;
+}
+
+.ideology-main-container {
+    width: 1100px; 
+    height: 600px; 
+}
+
+.ideology-content-body {
+    padding: 20px;
+    flex-grow: 1;
+    align-items: center;
+    justify-content: center;
+}
+
+.ideology-main-description {
+    -unity-font-definition: var(--font-body);
+    color: var(--c-text-muted);
+    font-size: 14px;
+    -unity-text-align: middle-center;
+    margin-bottom: 20px;
+    white-space: normal;
+    padding: 0 80px;
+}
+
+.ideology-cards-horizontal-container {
+    flex-direction: row;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    flex-grow: 1;
+}
+
+.ideology-card {
+    width: 180px;
+    height: 380px; 
+    
+    margin-left: 10px;
+    margin-right: 10px;
+    
+    flex-shrink: 0; 
+
+    padding: 15px;
+    background-color: var(--c-header-bg); 
+    border-width: 2px;
+    border-color: var(--c-border);
+    border-radius: 8px;
+    
+    justify-content: space-between; 
+    transition-duration: 0.2s;
+}
+
+.ideology-card:hover {
+    scale: 1.05;
+    border-color: var(--c-text-header);
+    background-color: rgb(200, 190, 175);
+}
+
+.ideology-card-text-content {
+    flex-direction: column;
+    align-items: center;
+}
+
+.ideology-card-title {
+    -unity-font-definition: var(--font-header);
+    color: var(--c-text-header);
+    font-size: 16px;
+    -unity-font-style: bold;
+    -unity-text-align: middle-center;
+    margin-bottom: 10px;
+    text-transform: uppercase;
+}
+
+.ideology-card-description {
+    -unity-font-definition: var(--font-body);
+    color: var(--c-text-body);
+    font-size: 12px;
+    -unity-text-align: middle-center;
+    white-space: normal;
+}
+
+.ideology-enact-button {
+    height: 35px;
+    width: 100%;
+    background-color: var(--c-btn-chill-bg);
+    border-color: var(--c-btn-chill-border);
+    color: white;
+    -unity-font-definition: var(--font-header);
+    -unity-font-style: bold;
+    font-size: 14px;
+    border-radius: 4px;
+    transition-duration: 0.1s;
+}
+
+.ideology-enact-button:hover {
+    background-color: rgb(180, 60, 50);
+}

@@ -190,9 +190,9 @@ namespace Project.Modules.UI.Windows.Implementations
 
         private int CalculateMaxAffordableAmount(WorkshopUnitInfoDTO unit)
         {
-            if (CityResourceService.Instance == null) return 999;
+            if (CityStateManager.Instance == null) return 999;
 
-            var resources = CityResourceService.Instance.CurrentResources;
+            var resources = CityStateManager.Instance.CurrentResources;
 
             int maxWood = unit.CostWood > 0
                 ? (int)(resources.WoodAmount / unit.CostWood)
@@ -221,9 +221,9 @@ namespace Project.Modules.UI.Windows.Implementations
 
             _lblCostString.text = $"Wood: {totalWood}  |  Stone: {totalStone}  |  Metal: {totalMetal}  |  Time: {totalTime}s";
 
-            if (CityResourceService.Instance != null)
+            if (CityStateManager.Instance != null)
             {
-                var res = CityResourceService.Instance.CurrentResources;
+                var res = CityStateManager.Instance.CurrentResources;
                 bool canAfford = res.WoodAmount >= totalWood && res.StoneAmount >= totalStone && res.MetalAmount >= totalMetal;
                 _lblCostString.style.color = canAfford ? new StyleColor(new Color(0.1f, 0.1f, 0.1f)) : new StyleColor(Color.red);
             }
@@ -252,8 +252,8 @@ namespace Project.Modules.UI.Windows.Implementations
                 if (success)
                 {
                     Debug.Log($"<color=green>[Workshop] SUCCESS:</color> {message}");
-                    if (CityResourceService.Instance != null)
-                        CityResourceService.Instance.InitiateResourceRefresh(_currentCityId);
+                    if (CityStateManager.Instance != null)
+                        CityStateManager.Instance.InitiateResourceRefresh(_currentCityId);
 
                     RefreshData();
                 }

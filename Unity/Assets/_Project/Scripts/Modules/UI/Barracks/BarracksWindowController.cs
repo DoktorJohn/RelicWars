@@ -6,7 +6,7 @@ using System.Linq;
 using Project.Network.Manager;
 using Assets.Scripts.Domain.Enums;
 using Project.Scripts.Domain.DTOs;
-using Project.Modules.City; // Husk at inkludere denne hvis CityResourceService ligger her
+using Project.Modules.City; // Husk at inkludere denne hvis CityStateManager ligger her
 
 namespace Project.Modules.UI.Windows.Implementations
 {
@@ -203,9 +203,9 @@ namespace Project.Modules.UI.Windows.Implementations
         /// </summary>
         private int CalculateMaxAffordableAmount(BarracksUnitInfoDTO unit)
         {
-            if (CityResourceService.Instance == null) return 999; // Fallback hvis service mangler
+            if (CityStateManager.Instance == null) return 999; // Fallback hvis service mangler
 
-            var resources = CityResourceService.Instance.CurrentResources;
+            var resources = CityStateManager.Instance.CurrentResources;
 
             // Undgå division med 0 (hvis en enhed er gratis i en resource, sæt max til 'uendeligt' (9999))
             int maxWood = unit.CostWood > 0
@@ -241,9 +241,9 @@ namespace Project.Modules.UI.Windows.Implementations
             _lblCostString.text = $"Wood: {totalWood}  |  Stone: {totalStone}  |  Metal: {totalMetal}  |  Time: {totalTime}s";
 
             // Valgfrit: Gør teksten rød hvis vi ikke har råd (dobbelt tjek)
-            if (CityResourceService.Instance != null)
+            if (CityStateManager.Instance != null)
             {
-                var res = CityResourceService.Instance.CurrentResources;
+                var res = CityStateManager.Instance.CurrentResources;
                 bool canAfford = res.WoodAmount >= totalWood && res.StoneAmount >= totalStone && res.MetalAmount >= totalMetal;
                 _lblCostString.style.color = canAfford ? new StyleColor(new Color(0.1f, 0.1f, 0.1f)) : new StyleColor(Color.red);
             }
@@ -273,8 +273,8 @@ namespace Project.Modules.UI.Windows.Implementations
                 {
                     Debug.Log($"<color=green>SUCCESS:</color> {message}");
                     // Opdater ressourcer med det samme for at undgå desync i max antal
-                    if (CityResourceService.Instance != null)
-                        CityResourceService.Instance.InitiateResourceRefresh(_currentCityId);
+                    if (CityStateManager.Instance != null)
+                        CityStateManager.Instance.InitiateResourceRefresh(_currentCityId);
 
                     RefreshData();
                 }
@@ -289,9 +289,9 @@ namespace Project.Modules.UI.Windows.Implementations
         {
             switch (type)
             {
-                case UnitTypeEnum.Infantry: return "Balanced infantry unit. Good for defense and early skirmishes.";
-                case UnitTypeEnum.Archer: return "Ranged support. deadly from behind walls, but weak in melee combat.";
-                case UnitTypeEnum.Cavalry: return "Fast moving unit designed for flanking and raiding resource tiles.";
+                //case UnitTypeEnum.Infantry: return "Balanced infantry unit. Good for defense and early skirmishes.";
+                //case UnitTypeEnum.Archer: return "Ranged support. deadly from behind walls, but weak in melee combat.";
+                //case UnitTypeEnum.Cavalry: return "Fast moving unit designed for flanking and raiding resource tiles.";
                 default: return "A standard military unit.";
             }
         }

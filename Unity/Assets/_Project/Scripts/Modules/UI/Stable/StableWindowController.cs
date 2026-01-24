@@ -193,9 +193,9 @@ namespace Project.Modules.UI.Windows.Implementations
 
         private int CalculateMaxAffordableAmount(StableUnitInfoDTO unit)
         {
-            if (CityResourceService.Instance == null) return 999;
+            if (CityStateManager.Instance == null) return 999;
 
-            var resources = CityResourceService.Instance.CurrentResources;
+            var resources = CityStateManager.Instance.CurrentResources;
 
             int maxWood = unit.CostWood > 0
                 ? (int)(resources.WoodAmount / unit.CostWood)
@@ -224,9 +224,9 @@ namespace Project.Modules.UI.Windows.Implementations
 
             _lblCostString.text = $"Wood: {totalWood}  |  Stone: {totalStone}  |  Metal: {totalMetal}  |  Time: {totalTime}s";
 
-            if (CityResourceService.Instance != null)
+            if (CityStateManager.Instance != null)
             {
-                var res = CityResourceService.Instance.CurrentResources;
+                var res = CityStateManager.Instance.CurrentResources;
                 bool canAfford = res.WoodAmount >= totalWood && res.StoneAmount >= totalStone && res.MetalAmount >= totalMetal;
                 _lblCostString.style.color = canAfford ? new StyleColor(new Color(0.1f, 0.1f, 0.1f)) : new StyleColor(Color.red);
             }
@@ -255,8 +255,8 @@ namespace Project.Modules.UI.Windows.Implementations
                 if (success)
                 {
                     Debug.Log($"<color=green>[Stable] SUCCESS:</color> {message}");
-                    if (CityResourceService.Instance != null)
-                        CityResourceService.Instance.InitiateResourceRefresh(_currentCityId);
+                    if (CityStateManager.Instance != null)
+                        CityStateManager.Instance.InitiateResourceRefresh(_currentCityId);
 
                     RefreshData();
                 }
@@ -272,7 +272,7 @@ namespace Project.Modules.UI.Windows.Implementations
             switch (type)
             {
                 // Note: Ensure your Enum actually has these types, otherwise default to generic
-                case UnitTypeEnum.Cavalry: return "Swift riders ideal for raiding resources and flanking enemy lines.";
+                //case UnitTypeEnum.Cavalry: return "Swift riders ideal for raiding resources and flanking enemy lines.";
                 default: return "A powerful mounted unit.";
             }
         }

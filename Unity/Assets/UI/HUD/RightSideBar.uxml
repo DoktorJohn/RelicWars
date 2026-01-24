@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ui:UXML xmlns:ui="UnityEngine.UIElements" editor-extension-mode="False">
+    <ui:Style src="project://database/Assets/UI/HUD/RightSideBar.uss" />
+    
+    <ui:VisualElement name="HUD-Bottom-Container" class="right-side-bar-main-container">
+        
+        <ui:VisualElement name="Button-Enact-Focuses" class="hud-card">
+            <ui:VisualElement class="hud-card-icon icon-ideology" />
+            <ui:Label text="ENACT FOCUSES" class="hud-card-label" />
+        </ui:VisualElement>
+
+        <ui:ScrollView name="Container-Unit-Cards" 
+            class="troop-list-scrollview" 
+            mode="Horizontal" 
+            show-horizontal-scroller="Never" 
+            show-vertical-scroller="Never" 
+            horizontal-scroller-visibility="Hidden" 
+            vertical-scroller-visibility="Hidden" />
+        
+    </ui:VisualElement>
+</ui:UXML>

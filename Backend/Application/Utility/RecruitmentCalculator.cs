@@ -28,9 +28,9 @@ namespace Application.Utility
         {
             List<ModifierTagEnum> applicableModifierTags = new List<ModifierTagEnum>(unit.ModifiersThatAffectsThis);
 
-            if (!applicableModifierTags.Contains(ModifierTagEnum.Recruitment))
+            if (!applicableModifierTags.Contains(ModifierTagEnum.RecruitmentSpeed))
             {
-                applicableModifierTags.Add(ModifierTagEnum.Recruitment);
+                applicableModifierTags.Add(ModifierTagEnum.RecruitmentSpeed);
             }
 
             List<Modifier> applicableModifiersGathered = new List<Modifier>();

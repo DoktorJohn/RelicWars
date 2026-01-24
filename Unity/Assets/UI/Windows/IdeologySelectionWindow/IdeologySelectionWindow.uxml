@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ui:UXML xmlns:ui="UnityEngine.UIElements" editor-extension-mode="False">
+    <ui:Style src="project://database/Assets/UI/Windows/WindowTheme.uss" />
+    <ui:Style src="IdeologySelectionWindow.uss" />
+
+    <ui:VisualElement name="Ideology-Overlay" class="ideology-overlay">
+        <ui:VisualElement name="Ideology-Window-MainContainer" class="window-frame ideology-main-container">
+            
+            <ui:VisualElement name="Ideology-Window-Header" class="window-header">
+                <ui:Label text="Ideology selection" class="window-header-label" />
+            </ui:VisualElement>
+
+            <ui:VisualElement class="window-content-container ideology-content-body">
+                
+                <ui:Label name="Main-Description" 
+                    text="Choose the ideology of your empire. The choice is reversible, however it comes at a great cost, so think twice." 
+                    class="ideology-main-description" />
+
+                <ui:VisualElement name="Container-Ideology-Cards" class="ideology-cards-horizontal-container" />
+                
+            </ui:VisualElement>
+
+        </ui:VisualElement>
+    </ui:VisualElement>
+</ui:UXML>

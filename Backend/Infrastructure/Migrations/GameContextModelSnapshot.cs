@@ -210,6 +210,37 @@ namespace Infrastructure.Migrations
                     b.ToTable("Cities");
                 });
 
+            modelBuilder.Entity("Domain.Entities.IdeologyFocus", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("CityId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("DateCreated")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("DateLastModified")
+                        .HasColumnType("TEXT");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime?>("TimeOfIdeologyFinished")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("TimeOfIdeologyStarted")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CityId");
+
+                    b.ToTable("IdeologyFocuses");
+                });
+
             modelBuilder.Entity("Domain.Entities.Research", b =>
                 {
                     b.Property<Guid>("Id")
@@ -282,7 +313,7 @@ namespace Infrastructure.Migrations
                     b.Property<int>("Quantity")
                         .HasColumnType("INTEGER");
 
-                    b.Property<Guid>("TargetCityId")
+                    b.Property<Guid?>("TargetCityId")
                         .HasColumnType("TEXT");
 
                     b.Property<int>("UnitDeploymentMovementStatus")
@@ -295,6 +326,10 @@ namespace Infrastructure.Migrations
                         .HasColumnType("INTEGER");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("OriginCityId");
+
+                    b.HasIndex("TargetCityId");
 
                     b.ToTable("UnitDeployments");
                 });
@@ -448,8 +483,17 @@ namespace Infrastructure.Migrations
                     b.Property<DateTime>("DateLastModified")
                         .HasColumnType("TEXT");
 
+                    b.Property<int>("Ideology")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<double>("IdeologyFocusPoints")
+                        .HasColumnType("REAL");
+
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("INTEGER");
+
+                    b.Property<DateTime>("LastResourceUpdate")
+                        .HasColumnType("TEXT");
 
                     b.Property<string>("ModifiersThatAffectsThis")
                         .IsRequired()
@@ -501,7 +545,7 @@ namespace Infrastructure.Migrations
 
                     b.Property<string>("JobType")
                         .IsRequired()
-                        .HasMaxLength(13)
+                        .HasMaxLength(21)
                         .HasColumnType("TEXT");
 
                     b.Property<Guid>("UserId")
@@ -562,7 +606,7 @@ namespace Infrastructure.Migrations
                                 .HasColumnName("RecruitmentJob_CityId");
                         });
 
-                    b.HasDiscriminator().HasValue("Recruitment");
+                    b.HasDiscriminator().HasValue("RecruitmentSpeed");
                 });
 
             modelBuilder.Entity("Domain.Workers.ResearchJob", b =>
@@ -684,6 +728,17 @@ namespace Infrastructure.Migrations
                     b.Navigation("WorldPlayer");
                 });
 
+            modelBuilder.Entity("Domain.Entities.IdeologyFocus", b =>
+                {
+                    b.HasOne("Domain.Entities.City", "City")
+                        .WithMany("ActiveFocuses")
+                        .HasForeignKey("CityId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("City");
+                });
+
             modelBuilder.Entity("Domain.Entities.Research", b =>
                 {
                     b.HasOne("Domain.User.WorldPlayer", null)
@@ -693,6 +748,17 @@ namespace Infrastructure.Migrations
 
             modelBuilder.Entity("Domain.Entities.UnitDeployment", b =>
                 {
+                    b.HasOne("Domain.Entities.City", "OriginCity")
+                        .WithMany("OriginUnitDeployments")
+                        .HasForeignKey("OriginCityId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Domain.Entities.City", "TargetCity")
+                        .WithMany("TargetUnitDeployments")
+                        .HasForeignKey("TargetCityId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
                     b.OwnsMany("Domain.Entities.Modifier", "ModifiersInternal", b1 =>
                         {
                             b1.Property<int>("Id")
@@ -726,6 +792,10 @@ namespace Infrastructure.Migrations
                         });
 
                     b.Navigation("ModifiersInternal");
+
+                    b.Navigation("OriginCity");
+
+                    b.Navigation("TargetCity");
                 });
 
             modelBuilder.Entity("Domain.Entities.UnitStack", b =>
@@ -883,9 +953,15 @@ namespace Infrastructure.Migrations
 
             modelBuilder.Entity("Domain.Entities.City", b =>
                 {
+                    b.Navigation("ActiveFocuses");
+
                     b.Navigation("BuildingQueue");
 
                     b.Navigation("Buildings");
+
+                    b.Navigation("OriginUnitDeployments");
+
+                    b.Navigation("TargetUnitDeployments");
 
                     b.Navigation("UnitStacks");
                 });

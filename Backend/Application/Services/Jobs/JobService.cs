@@ -16,19 +16,22 @@ namespace Application.Services.Jobs
     {
         private readonly IResourceService _resourceService;
         private readonly ICityRepository _cityRepo;
-        private readonly IWorldPlayerRepository _userRepo;
+        private readonly IWorldPlayerService _worldPlayerService;
+        private readonly IWorldPlayerRepository _worldPlayerRepo;
         private readonly ILogger<JobService> _logger;
 
         public JobService(
             IResourceService resourceService,
             ICityRepository cityRepo,
             ILogger<JobService> logger,
-            IWorldPlayerRepository userRepo)
+            IWorldPlayerRepository userRepo,
+            IWorldPlayerService worldPlayerService)
         {
             _resourceService = resourceService;
             _cityRepo = cityRepo;
             _logger = logger;
-            _userRepo = userRepo;
+            _worldPlayerRepo = userRepo;
+            _worldPlayerService = worldPlayerService;
         }
 
         public async Task ProcessAsync(BaseJob job)
@@ -62,7 +65,7 @@ namespace Application.Services.Jobs
             var city = await _cityRepo.GetByIdAsync(cityId);
             if (city == null)
             {
-                _logger.LogError("Job kunne ikke processeres. Byen {CityId} findes ikke.", cityId);
+                _logger.LogError("Job kunne ikke processeres. Byen {OriginCityId} findes ikke.", cityId);
                 return;
             }
 
@@ -88,7 +91,7 @@ namespace Application.Services.Jobs
         /// </summary>
         private async Task ExecuteGlobalResearchJobProcessing(ResearchJob researchJob)
         {
-            var user = await _userRepo.GetByIdWithResearchAsync(researchJob.UserId);
+            var user = await _worldPlayerRepo.GetByIdWithResearchAsync(researchJob.UserId);
             if (user == null)
             {
                 _logger.LogError("Research kunne ikke færdiggøres. Bruger {UserId} ikke fundet.", researchJob.UserId);
@@ -99,29 +102,26 @@ namespace Application.Services.Jobs
             CompleteResearchForPlayer(user, researchJob);
 
             // Gemmer den globale spiller-tilstand
-            await _userRepo.UpdateAsync(user);
+            await _worldPlayerRepo.UpdateAsync(user);
         }
 
         private void SyncResourcesToJobCompletion(City city, DateTime executionTime)
         {
-            var snapshot = _resourceService.CalculateCurrent(city, executionTime);
+            // 1. LOKALE RESSOURCER: Brug CalculateCityResources for Wood, Stone, Metal
+            var citySnapshot = _resourceService.CalculateCityResources(city, executionTime);
 
-            // Opdater lokale lagerbeholdninger
-            city.Wood = snapshot.Wood;
-            city.Stone = snapshot.Stone;
-            city.Metal = snapshot.Metal;
+            city.Wood = citySnapshot.Wood;
+            city.Stone = citySnapshot.Stone;
+            city.Metal = citySnapshot.Metal;
+            city.LastResourceUpdate = executionTime;
 
-            // GLOBAL VALUTA: Opdater spillerens sølv og research points genereret af denne by
+            // 2. GLOBALE RESSOURCER: Deleger ansvaret til WorldPlayerService (Silver, Research, Ideology)
             if (city.WorldPlayer != null)
             {
-                city.WorldPlayer.Silver += snapshot.SilverGeneratedByThisCity;
-                city.WorldPlayer.ResearchPoints += snapshot.ResearchGeneratedByThisCity;
-
-                _logger.LogInformation("Job Sync: Tilføjede {Silver:F2} sølv og {RP:F2} research points til {PlayerId} fra by {CityId}",
-                    snapshot.SilverGeneratedByThisCity, snapshot.ResearchGeneratedByThisCity, city.WorldPlayerId, city.Id);
+                _worldPlayerService.UpdateGlobalResourceState(city.WorldPlayer, executionTime);
             }
 
-            city.LastResourceUpdate = executionTime;
+            _logger.LogInformation("[JobService] Synkronisering fuldført for by {CityName} til tidspunkt {Time}", city.Name, executionTime);
         }
 
         private void CompleteResearchForPlayer(WorldPlayer user, ResearchJob job)

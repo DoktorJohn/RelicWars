@@ -16,6 +16,8 @@ using Application.Utility;
 using Application.Interfaces.IServices.IBuildings;
 using Application.Services.Buildings;
 using Application.Services.Jobs;
+using Infrastructure.Workers;
+using Application.Services.Application.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -50,10 +52,14 @@ string buildingPath = "buildings.json";
 string unitPath = "units.json";
 string researchPath = "research.json";
 string rankingPath = "rankings.json";
+string ideologyPath = "ideologies.json";
+string ideologyFocusPath = "ideologyFocus.json";
 
 if (!File.Exists(buildingPath)) BuildingDataGenerator.GenerateDefaultJson(buildingPath);
 if (!File.Exists(unitPath)) UnitDataGenerator.GenerateDefaultJson(unitPath);
 if (!File.Exists(researchPath)) ResearchDataGenerator.GenerateDefaultJson(researchPath);
+if (!File.Exists(ideologyPath)) IdeologyDataGenerator.GenerateDefaultJson(ideologyPath);
+if (!File.Exists(ideologyFocusPath)) IdeologyFocusDataGenerator.GenerateDefaultJson(ideologyFocusPath);
 
 var buildingReader = new BuildingDataReader();
 buildingReader.Load(buildingPath);
@@ -63,6 +69,10 @@ var researchReader = new ResearchDataReader();
 researchReader.Load(researchPath);
 var rankingReader = new RankingDataReader();
 rankingReader.Load(rankingPath);
+var ideologyReader = new IdeologyDataReader();
+ideologyReader.Load(ideologyPath);
+var ideologyFocusReader = new IdeologyFocusDataReader();
+ideologyFocusReader.Load(ideologyFocusPath);
 
 builder.Services.AddSingleton(buildingReader);
 builder.Services.AddSingleton(unitReader);

@@ -1,7 +1,7 @@
 ﻿using UnityEngine;
 using System;
 using Project.Modules.City;
-using Project.Network.Manager; // Sørg for at CityResourceService ligger i dette namespace
+using Project.Network.Manager; // Sørg for at CityStateManager ligger i dette namespace
 
 namespace Project.Modules.CityView
 {
@@ -30,15 +30,15 @@ namespace Project.Modules.CityView
             {
                 Debug.Log($"[DEBUG-INIT] FUNDET: Aktivt CityId er {activeCityId.Value}. Sender anmodning til ResourceService.");
 
-                // Vi antager at CityResourceService er din lokale UI-manager, der håndterer visningen.
+                // Vi antager at CityStateManager er din lokale UI-manager, der håndterer visningen.
                 // Hvis denne klasse også fejler, skal den opdateres til at bruge NetworkManager.Instance.City.GetDetailedCityInfo(...)
-                if (CityResourceService.Instance != null)
+                if (CityStateManager.Instance != null)
                 {
-                    CityResourceService.Instance.InitiateResourceRefresh(activeCityId.Value);
+                    CityStateManager.Instance.InitiateResourceRefresh(activeCityId.Value);
                 }
                 else
                 {
-                    Debug.LogError("[DEBUG-INIT] FEJL: CityResourceService.Instance findes ikke i scenen.");
+                    Debug.LogError("[DEBUG-INIT] FEJL: CityStateManager.Instance findes ikke i scenen.");
                 }
             }
             else

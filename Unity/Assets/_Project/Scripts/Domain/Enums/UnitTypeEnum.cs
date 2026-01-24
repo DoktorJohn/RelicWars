@@ -4,8 +4,21 @@ namespace Assets.Scripts.Domain.Enums
 {
     public enum UnitTypeEnum
     {
-        Infantry = 0,
-        Archer = 1,
-        Cavalry = 2
+        None,
+        Militia,
+        MenAtArms,
+        Spearmen,
+        Axemen,
+        Swordsmen,
+        Bowmen,
+        Crossbowmen,
+        LightCavalry,
+        Knights,
+        Cataphracts,
+        Ballista,
+        Catapult,
+        Trebuchet,
+        Cannon,
+        Engineers
     }
 }

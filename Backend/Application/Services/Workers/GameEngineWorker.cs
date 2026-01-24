@@ -4,6 +4,7 @@ using Domain.Entities;
 using Domain.Enums;
 using Domain.StaticData.Generators;
 using Domain.StaticData.Readers;
+using Infrastructure.Workers;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;

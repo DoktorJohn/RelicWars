@@ -1,17 +1,24 @@
-﻿using Application.Interfaces.IRepositories;
+﻿using Application.Interfaces;
+using Application.Interfaces.IRepositories;
 using Application.Interfaces.IServices;
+using Application.Services;
+using Domain.Abstraction;
 using Domain.Entities;
 using Domain.Enums;
+using Domain.StaticData.Data;
 using Domain.StaticData.Readers;
+using Domain.User;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using Domain.Abstraction;
 
-namespace Application.Services.Workers
+namespace Infrastructure.Workers
 {
+    /// <summary>
+    /// Worker-service der håndterer alle militære bevægelser, kamp-opløsning og ressource-synkronisering ved ankomst.
+    /// </summary>
     public class UnitDeploymentWorker
     {
         private readonly IUnitDeploymentRepository _deployRepo;
@@ -19,6 +26,7 @@ namespace Application.Services.Workers
         private readonly CombatService _combatService;
         private readonly IBattleReportRepository _reportRepo;
         private readonly IResourceService _resService;
+        private readonly IWorldPlayerService _worldPlayerService; // Tilføjet for SoC
         private readonly ICityStatService _statService;
         private readonly IModifierService _modifierService;
         private readonly UnitDataReader _unitData;
@@ -30,6 +38,7 @@ namespace Application.Services.Workers
             CombatService combatService,
             IBattleReportRepository reportRepo,
             IResourceService resService,
+            IWorldPlayerService worldPlayerService,
             ICityStatService statService,
             IModifierService modifierService,
             UnitDataReader unitData,
@@ -40,6 +49,7 @@ namespace Application.Services.Workers
             _combatService = combatService;
             _reportRepo = reportRepo;
             _resService = resService;
+            _worldPlayerService = worldPlayerService;
             _statService = statService;
             _modifierService = modifierService;
             _unitData = unitData;
@@ -58,7 +68,7 @@ namespace Application.Services.Workers
 
             foreach (var group in arrivals)
             {
-                await ResolveArrivalGroup(group.Key, group.ToList());
+                await ResolveArrivalGroup(group.Key ?? Guid.Empty, group.ToList());
             }
 
             var returnees = due.Where(d => d.UnitDeploymentMovementStatus == UnitDeploymentMovementStatusEnum.Returning);
@@ -73,7 +83,8 @@ namespace Application.Services.Workers
             var targetCity = await _cityRepo.GetByIdAsync(targetCityId);
             if (targetCity == null) return;
 
-            SyncCityResourcesToNow(targetCity);
+            // SoC: Synkroniser byens tilstand inden kampen
+            SynkroniserByOgSpillerRessourcerTilNuværendeTidspunkt(targetCity);
 
             var supportMissions = incomingGroup.Where(d => d.UnitDeploymentType == UnitDeploymentTypeEnum.Support).ToList();
             var combatMissions = incomingGroup.Where(d => d.UnitDeploymentType == UnitDeploymentTypeEnum.Attack ||
@@ -192,7 +203,8 @@ namespace Application.Services.Workers
             var homeCity = await _cityRepo.GetByIdAsync(dep.OriginCityId);
             if (homeCity != null)
             {
-                SyncCityResourcesToNow(homeCity);
+                // SoC: Opdater byens egne ressourcer og spillerens globale økonomi inden vi aflæsser loot
+                SynkroniserByOgSpillerRessourcerTilNuværendeTidspunkt(homeCity);
 
                 double cap = _statService.GetWarehouseCapacity(homeCity);
 
@@ -209,20 +221,29 @@ namespace Application.Services.Workers
             await _deployRepo.DeleteAsync(dep);
         }
 
-        private void SyncCityResourcesToNow(City city)
+        /// <summary>
+        /// Udfører den dobbelte synkronisering: Globale spiller-ressourcer via WorldPlayerService 
+        /// og lokale by-ressourcer via ResourceService.
+        /// </summary>
+        private void SynkroniserByOgSpillerRessourcerTilNuværendeTidspunkt(City city)
         {
-            var snapshot = _resService.CalculateCurrent(city, DateTime.UtcNow);
+            var nuværendeTidspunkt = DateTime.UtcNow;
 
-            city.Wood = snapshot.Wood;
-            city.Stone = snapshot.Stone;
-            city.Metal = snapshot.Metal;
-
+            // 1. GLOBAL OPPDATERING (Silver, Research Points)
             if (city.WorldPlayer != null)
             {
-                city.WorldPlayer.Silver += snapshot.SilverGeneratedByThisCity;
+                _worldPlayerService.UpdateGlobalResourceState(city.WorldPlayer, nuværendeTidspunkt);
             }
 
-            city.LastResourceUpdate = snapshot.Timestamp;
+            // 2. LOKAL OPPDATERING (Wood, Stone, Metal)
+            var citySnapshot = _resService.CalculateCityResources(city, nuværendeTidspunkt);
+
+            city.Wood = citySnapshot.Wood;
+            city.Stone = citySnapshot.Stone;
+            city.Metal = citySnapshot.Metal;
+            city.LastResourceUpdate = nuværendeTidspunkt;
+
+            _logger.LogInformation("[UnitDeploymentWorker] Ressourcer synkroniseret for by: {CityName}", city.Name);
         }
 
         private async Task GenerateReport(City target, List<UnitDeployment> attackers, CombatResult res, bool win, double w, double s, double m)

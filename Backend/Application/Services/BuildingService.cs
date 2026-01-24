@@ -91,7 +91,7 @@ namespace Application.Services
             }
 
             // --- RESOURCE CALCULATION ---
-            var snapshot = _resService.CalculateCurrent(city, DateTime.UtcNow);
+            var snapshot = _resService.CalculateCityResources(city, DateTime.UtcNow);
 
             if (snapshot.Wood < config.WoodCost || snapshot.Stone < config.StoneCost || snapshot.Metal < config.MetalCost)
                 return new BuildingResult(false, "Ikke nok ressourcer.");
