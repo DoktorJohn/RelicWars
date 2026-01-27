@@ -34,7 +34,7 @@
 
                     <ui:VisualElement style="flex-grow: 1; justify-content: flex-end;">
                         <ui:Label name="Lbl-ErrorStatus" class="error-text" text="" />
-                        <ui:Button name="Btn-CreateAlliance" text="CREATE ALLIANCE" class="action-button create-button" />
+                        <ui:Button name="Btn-CreateAlliance" text="CREATE ALLIANCE" class="btn-global-base btn-imperial-success" />
                     </ui:VisualElement>
 
                 </ui:VisualElement>
@@ -68,7 +68,7 @@
                     </ui:VisualElement>
 
                     <ui:VisualElement style="flex-grow: 1; justify-content: flex-end;">
-                        <ui:Button name="Btn-LeaveAlliance" text="LEAVE ALLIANCE" class="action-button danger-button" />
+                        <ui:Button name="Btn-LeaveAlliance" text="LEAVE ALLIANCE" class="btn-global-base btn-imperial-danger" />
                     </ui:VisualElement>
 
                 </ui:VisualElement>

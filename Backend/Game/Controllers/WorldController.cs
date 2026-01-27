@@ -1,6 +1,8 @@
 ﻿using Application.DTOs;
 using Application.Interfaces.IServices;
+using Domain.StaticData.Generators;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
@@ -15,7 +17,7 @@ namespace Game.Controllers
 
         public WorldController(IWorldService worldService, ILogger<WorldController> logger)
         {
-            _worldService = worldService; 
+            _worldService = worldService;
             _logger = logger;
         }
 
@@ -27,6 +29,17 @@ namespace Game.Controllers
         {
             var activeGameWorlds = await _worldService.ObtainAllActiveGameWorldsAsync();
             return Ok(activeGameWorlds);
+        }
+
+        [HttpGet("chunk")]
+        public async Task<ActionResult<WorldMapChunkResponseDTO>> GetWorldMapChunkData([FromQuery] GetWorldMapChunkDTO dto)
+        {
+            var result = await _worldService.GetWorldMapChunk(dto);
+
+            if (result == null)
+                return NotFound("World not found");
+
+            return Ok(result);
         }
     }
 }

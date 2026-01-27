@@ -38,5 +38,42 @@ namespace Project.Network
             }
         }
 
+        /// <summary>
+        /// Fetches world map data for a specific area using a DTO to define the bounds.
+        /// </summary>
+        public IEnumerator GetWorldMapChunk(GetWorldMapChunkDTO chunkDto, string token, Action<WorldMapChunkResponseDTO> callback)
+        {
+            string queryString = $"?worldId={chunkDto.worldId}&startX={chunkDto.startX}&startY={chunkDto.startY}&width={chunkDto.width}&height={chunkDto.height}";
+            string url = $"{_baseUrl}/chunk{queryString}";
+
+            using (UnityWebRequest request = UnityWebRequest.Get(url))
+            {
+                request.certificateHandler = new BypassCertificateHandler();
+                request.SetRequestHeader("Authorization", "Bearer " + token);
+                request.SetRequestHeader("Accept", "application/json");
+
+                yield return request.SendWebRequest();
+
+                if (request.result == UnityWebRequest.Result.Success)
+                {
+                    try
+                    {
+                        var chunkData = JsonConvert.DeserializeObject<WorldMapChunkResponseDTO>(request.downloadHandler.text);
+                        callback?.Invoke(chunkData);
+                    }
+                    catch (Exception e)
+                    {
+                        Debug.LogError($"[ClientWorldService] JSON Parse Error: {e.Message}");
+                        callback?.Invoke(null);
+                    }
+                }
+                else
+                {
+                    Debug.LogError($"[ClientWorldService] Network Error fetching chunk: {request.error} | {request.downloadHandler.text}");
+                    callback?.Invoke(null);
+                }
+            }
+        }
+
     }
 }

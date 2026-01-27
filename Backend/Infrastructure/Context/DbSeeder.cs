@@ -15,21 +15,23 @@ namespace Infrastructure.Context
     {
         public static async Task SeedAsync(GameContext context, NPCSpawnerService spawner)
         {
-            if (await context.Cities.AnyAsync()) return;
+            if (await context.World.AnyAsync()) return;
 
             Console.WriteLine("--- Seeding World & Initial Data ---");
 
-            // 1. Opret Verden
-            var world = new World("Alpha World", "ALFA", 100, 100);
+            var world = new World
+            {
+                Id = Guid.NewGuid(),
+                Name = "Alpha World",
+                Abbrevation = "ALFA",
+                Width = 1000,
+                Height = 1000,
+                MapSeed = 42069,
+                PlayerCount = 0
+            };
+
             context.World.Add(world);
-
-            // Gem grunddata først, så spawneren kan se at pladsen (50,50) er optaget
             await context.SaveChangesAsync();
-
-            //// 4. Spawn NPC byer omkring spilleren
-            //Console.WriteLine("--- Spawning NPC Cities ---");
-            //await spawner.SpawnInitialNPCsAsync(30, 40); // 30 byer inden for en radius af 40
-
         }
     }
 }

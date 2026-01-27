@@ -1,8 +1,10 @@
 using UnityEngine;
 using UnityEngine.UIElements;
-using Project.Modules.City;
-using Assets.Scripts.Domain.State;
 using System;
+using Project.Modules.City;
+using Project.Network.Models;
+using UnityEngine.SceneManagement;
+using Assets.Scripts.Domain.State;
 
 namespace Project.Modules.UI
 {
@@ -24,6 +26,8 @@ namespace Project.Modules.UI
         private WarehouseCapacityProgressPainter _woodWarehousePainter;
         private WarehouseCapacityProgressPainter _stoneWarehousePainter;
         private WarehouseCapacityProgressPainter _metalWarehousePainter;
+        private WarehouseCapacityProgressPainter _populationUsagePainter;
+        private WarehouseCapacityProgressPainter _ideologyPainter;
 
         private void OnEnable()
         {
@@ -75,11 +79,14 @@ namespace Project.Modules.UI
             _woodWarehousePainter = new WarehouseCapacityProgressPainter(_rootVisualElement.Q<VisualElement>("City-WarehouseBar-Wood"));
             _stoneWarehousePainter = new WarehouseCapacityProgressPainter(_rootVisualElement.Q<VisualElement>("City-WarehouseBar-Stone"));
             _metalWarehousePainter = new WarehouseCapacityProgressPainter(_rootVisualElement.Q<VisualElement>("City-WarehouseBar-Metal"));
+            _populationUsagePainter = new WarehouseCapacityProgressPainter(_rootVisualElement.Q<VisualElement>("City-WarehouseBar-Population"));
+            _ideologyPainter = new WarehouseCapacityProgressPainter(_rootVisualElement.Q<VisualElement>("City-WarehouseBar-Ideology"));
         }
 
         private void HandleMapNavigationRequested()
         {
             Debug.Log("[CityTopBar] Navigation to the world map requested.");
+            SceneManager.LoadScene("WorldMapScene");
         }
 
         private void HandleResourceStateCalculated(CityResourceState currentResourceState)
@@ -121,12 +128,26 @@ namespace Project.Modules.UI
             _woodWarehousePainter?.UpdateFillAmount(state.WoodFillPercentage);
             _stoneWarehousePainter?.UpdateFillAmount(state.StoneFillPercentage);
             _metalWarehousePainter?.UpdateFillAmount(state.MetalFillPercentage);
+
+            float populationFill = state.MaxPopulationCapacity > 0
+                ? (float)state.CurrentPopulationUsage / state.MaxPopulationCapacity
+                : 0f;
+            _populationUsagePainter?.UpdateFillAmount(populationFill);
+
+            _ideologyPainter?.UpdateFillAmount(0f);
         }
 
         private class WarehouseCapacityProgressPainter
         {
             private readonly VisualElement _targetVisualElement;
             private float _currentFillPercentage;
+
+            // Farve-konstanter for at sikre konsistens i det visuelle udtryk
+            private readonly Color _colorBaseBeige = new Color(0.9f, 0.9f, 0.85f);
+            private readonly Color _colorWarningGold = new Color(1.0f, 0.8f, 0.2f); // En varm gul/guld
+            private readonly Color _colorDangerRed = Color.red;
+
+            private const float _dangerThresholdPercentage = 0.95f;
 
             public WarehouseCapacityProgressPainter(VisualElement targetElement)
             {
@@ -145,24 +166,36 @@ namespace Project.Modules.UI
             {
                 var painter2D = context.painter2D;
 
-                // PUNKT 2 FIX: Elementet er 56x56. Center er (28, 28).
                 Vector2 arcCenterPoint = new Vector2(24f, 24f);
-
-                // Radius sat til 25f for at give plads til linjetykkelsen på 3.5f indeni de 56px
                 float arcRadius = 21f;
 
                 painter2D.lineWidth = 3.2f;
                 painter2D.lineCap = LineCap.Round;
 
-                // Baggrundsbue (Semi-transparent mørk)
+                // Baggrundsbue (Statisk mørk bue der indikerer 100% kapacitet)
                 painter2D.strokeColor = new Color(0.12f, 0.12f, 0.12f, 0.5f);
                 painter2D.BeginPath();
                 painter2D.Arc(arcCenterPoint, arcRadius, 135f, 405f, ArcDirection.Clockwise);
                 painter2D.Stroke();
 
-                // Fremskridtsbue (Fra hvid/beige til rød)
-                Color progressColor = Color.Lerp(new Color(0.9f, 0.9f, 0.85f), Color.red, _currentFillPercentage);
-                painter2D.strokeColor = progressColor;
+                // Beregn farve baseret på tærskelværdi
+                Color progressStrokeColor;
+
+                if (_currentFillPercentage < _dangerThresholdPercentage)
+                {
+                    // Normal tilstand: Går fra beige til en mættet guld/gul nuance
+                    // Vi normaliserer turen til guld over de første 95%
+                    float normalizedGoldStep = _currentFillPercentage / _dangerThresholdPercentage;
+                    progressStrokeColor = Color.Lerp(_colorBaseBeige, _colorWarningGold, normalizedGoldStep);
+                }
+                else
+                {
+                    // Danger zone: Hurtigt skift fra guld til rød over de sidste 5%
+                    float normalizedRedStep = (_currentFillPercentage - _dangerThresholdPercentage) / (1.0f - _dangerThresholdPercentage);
+                    progressStrokeColor = Color.Lerp(_colorWarningGold, _colorDangerRed, normalizedRedStep);
+                }
+
+                painter2D.strokeColor = progressStrokeColor;
 
                 painter2D.BeginPath();
                 float calculateEndAngle = 135f + (270f * _currentFillPercentage);

@@ -8,6 +8,7 @@
             <ui:VisualElement class="city-resource-group">
                 <ui:VisualElement class="city-resource-icon-container">
                     <ui:VisualElement class="city-resource-icon-base icon-population" />
+                    <ui:VisualElement name="City-WarehouseBar-Population" class="city-warehouse-capacity-bar" />
                 </ui:VisualElement>
                 <ui:Label name="City-ResourceLabel-PopulationAmount" class="city-resource-label-amount" text="0" />
             </ui:VisualElement>
@@ -53,6 +54,7 @@
             <ui:VisualElement class="city-resource-group">
                 <ui:VisualElement class="city-resource-icon-container">
                     <ui:VisualElement class="city-resource-icon-base icon-ideology" />
+                    <ui:VisualElement name="City-WarehouseBar-Ideology" class="city-warehouse-capacity-bar" />
                 </ui:VisualElement>
                 <ui:Label name="City-ResourceLabel-IdeologyAmount" class="city-resource-label-amount" text="0" />
             </ui:VisualElement>

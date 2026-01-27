@@ -1,8 +1,6 @@
-<?xml version="1.0" encoding="utf-8"?>
 <ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" editor-extension-mode="False">
     <ui:Style src="project://database/Assets/UI/Windows/WindowTheme.uss" />
     <ui:Style src="TownHallWindow.uss" />
-
     <ui:VisualElement name="TownHall-Window-Overlay" picking-mode="Ignore" class="screen-overlay">
         <ui:VisualElement name="TownHall-Window-MainContainer" class="window-frame" style="width: 1000px; height: 750px;">
             
@@ -14,15 +12,15 @@
             <ui:VisualElement style="padding: 20px; flex-grow: 1;">
                 <ui:Label class="flavor-text text-flavor" text="Here you oversee the construction and expansion of your city." />
                 <ui:VisualElement class="divider" style="margin-bottom: 10px;" />
-
+                
                 <ui:ScrollView name="TownHall-Building-List" class="building-grid-view" style="flex-grow: 1;" />
-
-                <ui:VisualElement name="Queue-Section" class="queue-container">
+                
+                <!-- Clean queue section uden boks -->
+                <ui:VisualElement name="Queue-Section" class="queue-section">
                     <ui:Label text="CONSTRUCTION QUEUE" class="queue-header-label" />
-                    <ui:VisualElement class="divider" style="margin-top: 2px; margin-bottom: 5px; opacity: 0.5;" />
                     <ui:ScrollView name="Building-Queue-List" class="queue-scroll-view" mode="Horizontal" />
                 </ui:VisualElement>
-
+                
                 <ui:VisualElement name="Resource-Tooltip" class="resource-tooltip" picking-mode="Ignore">
                     <ui:Label text="CONSTRUCTION COST" class="tooltip-title" />
                     <ui:VisualElement class="tooltip-row">
@@ -42,7 +40,6 @@
                         <ui:Label name="Tip-Time" text="00:00:00" class="tooltip-label" />
                     </ui:VisualElement>
                 </ui:VisualElement>
-
             </ui:VisualElement>
         </ui:VisualElement>
     </ui:VisualElement>

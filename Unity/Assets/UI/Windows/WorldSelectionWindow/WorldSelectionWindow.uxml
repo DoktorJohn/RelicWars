@@ -7,17 +7,17 @@
         <ui:VisualElement name="World-Window-MainContainer" class="window-frame world-main-container">
             
             <ui:VisualElement name="World-Window-Header" class="window-header" style="justify-content: center;">
-                <ui:Label text="Select Realm" class="window-header-label" />
+                <ui:Label text="SELECT WORLD" class="window-header-label" />
             </ui:VisualElement>
 
             <ui:VisualElement class="window-content-container world-content-body">
                 
-                <ui:VisualElement class="player-info-container">
-                    <ui:Label text="Authenticated as:" style="color: white; font-size: 12px;" />
-                    <ui:Label name="Label-Player-Name" text="Unknown Player" class="player-name-label" />
+                <ui:VisualElement class="player-welcome-row">
+                    <ui:Label text="Welcome back, " class="welcome-text-regular" />
+                    <ui:Label name="Label-Player-Name" text="Unknown Player" class="player-name-highlight" />
                 </ui:VisualElement>
 
-                <ui:Label text="AVAILABLE WORLDS" style="color: rgba(165, 125, 50, 0.8); -unity-font-style: bold; font-size: 10px; margin-left: 5px;" />
+                <ui:Label text="AVAILABLE WORLDS" class="section-title-hint" />
                 
                 <ui:ScrollView name="Scroll-World-List" class="world-list-scrollview" />
 

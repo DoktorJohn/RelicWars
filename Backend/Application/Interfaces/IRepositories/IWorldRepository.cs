@@ -12,5 +12,7 @@ namespace Application.Interfaces.IRepositories
     {
         Task<List<World>>? GetAllAsync();
         Task<World?> GetByIdAsync(Guid id);
+        Task<int?> GetWorldSeedAsync(Guid worldId);
+        Task<List<WorldMapObject>> GetObjectsInAreaAsync(Guid worldId, short startX, short startY, byte width, byte height);
     }
 }

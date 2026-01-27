@@ -1,7 +1,15 @@
 /* CityOverviewWindow.uss */
 
+.screen-overlay {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0);
+    justify-content: center;
+    align-items: center;
+}
+
 .overview-main-container {
-    /* Skalerer med skærmen, men max 1000x750 */
     width: 90%;
     max-width: 1000px;
     height: 90%;
@@ -11,84 +19,129 @@
 
 .overview-content-body {
     flex-grow: 1;
-    padding: 15px 25px; /* Lidt mindre padding for at vinde plads */
-    justify-content: space-between; /* Fordeler sektionerne jævnt */
+    padding: 20px;
+    flex-direction: column;
 }
 
+/* 4) Wallet - Centreret indhold uanset tallets længde */
 .overview-global-wallet {
     flex-direction: row;
     justify-content: center;
-    margin-bottom: 10px;
+    margin-bottom: 15px;
     flex-shrink: 0;
 }
 
 .wallet-item {
     flex-direction: row;
     align-items: center;
+    justify-content: center; /* Centrerer alt horisontalt */
     margin: 0 10px;
-    background-color: rgba(0, 0, 0, 0.1);
-    padding: 4px 12px;
-    border-radius: 10px;
+    background-color: rgba(0, 0, 0, 0.15);
+    padding: 8px 20px;
+    border-radius: 8px;
+    border-width: 1px;
+    border-color: var(--c-border);
+    min-width: 180px; /* Sikrer ensartede bokse */
 }
 
+.wallet-item-prefix {
+    color: var(--c-text-muted);
+    font-size: 14px;
+    -unity-font-style: bold;
+    margin-left: 8px; /* Luft efter ikonet */
+}
+
+.wallet-label {
+    color: var(--c-text-header);
+    font-size: 18px;
+    -unity-font-style: bold;
+    margin-left: 5px; /* Lille luft efter kolon */
+    -unity-text-align: middle-left;
+}
+
+/* Økonomi Grid */
 .economy-grid-container {
     flex-direction: row;
     flex-wrap: wrap;
     justify-content: space-between;
-    flex-shrink: 1; /* VIGTIGT: Tillader griddet at blive mindre */
-    min-height: 0; 
+    flex-grow: 1;
+    margin-bottom: 10px;
 }
 
-/* ECONOMY CARD - Kompakt design */
 .economy-card {
-    width: 32%;
-    background-color: rgba(0, 0, 0, 0.06);
+    width: 31%;
+    height: 46%;
+    background-color: rgba(0, 0, 0, 0.08);
     border-width: 1px;
-    border-color: rgba(0, 0, 0, 0.15);
+    border-color: var(--c-border);
     border-radius: 6px;
-    padding: 8px;
-    margin-bottom: 8px;
-    flex-shrink: 1;
+    padding: 10px;
+    margin-bottom: 1%;
 }
 
 .breakdown-row {
     flex-direction: row;
     justify-content: space-between;
-    margin-bottom: 1px;
+    margin-bottom: 2px;
 }
 
-.breakdown-label { color: #443322; font-size: 11px; }
-.breakdown-value { color: #111111; font-size: 11px; -unity-font-style: bold; }
+.breakdown-label { color: #443322; font-size: 13px; -unity-font-style: bold; }
+.breakdown-value { color: #111111; font-size: 13px; -unity-font-style: bold; }
+
 .breakdown-total { 
     color: #004400; 
-    font-size: 13px; 
+    font-size: 15px; 
     -unity-font-style: bold; 
-    margin-top: 4px; 
-    padding-top: 2px;
+    margin-top: 5px; 
+    padding-top: 3px;
     border-top-width: 1px;
-    border-top-color: rgba(0,0,0,0.1);
+    border-top-color: rgba(0,0,0,0.2);
 }
 
+/* Bund paneler - Hævet højde for at undgå clipping (Punkt 2 fix) */
 .bottom-panels-container {
     flex-direction: row;
-    margin-top: 5px;
-    flex-shrink: 0; /* Bund-panelerne skal altid være synlige */
+    height: 140px; 
+    flex-shrink: 0;
 }
 
 .overview-panel {
-    background-color: rgba(0,0,0,0.04);
-    padding: 10px;
+    background-color: rgba(0,0,0,0.05);
+    padding: 15px;
     border-radius: 6px;
     border-width: 1px;
-    border-color: rgba(0,0,0,0.08);
+    border-color: var(--c-border);
 }
 
-.population-panel { flex-grow: 1; margin-right: 8px; }
-.activity-panel { flex-grow: 1; margin-left: 8px; }
+.population-panel { flex-grow: 1; margin-right: 10px; }
+.activity-panel { flex-grow: 1; }
 
-.pop-bar-bg { height: 18px; background-color: rgba(0,0,0,0.15); border-radius: 3px; margin: 6px 0; }
-.pop-sub-label { color: #2B1B10; font-size: 10px; -unity-text-align: middle-center; }
+.status-row { 
+    flex-direction: row; 
+    justify-content: space-between; 
+    align-items: center; /* Holder tekst på linje */
+    margin-bottom: 10px; /* Mere luft mellem rækkerne */
+}
 
-.status-row { flex-direction: row; justify-content: space-between; margin-bottom: 4px; }
-.status-label { color: #2B1B10; font-size: 12px; }
-.status-value { color: #8B4513; font-size: 12px; }
+.pop-bar-bg { 
+    height: 20px; 
+    background-color: rgba(0,0,0,0.2); 
+    border-radius: 4px; 
+    margin: 8px 0; 
+    overflow: hidden; 
+}
+
+.pop-bar-fill { 
+    height: 100%; 
+    background-color: #2e7d32; 
+}
+
+.panel-title {
+    -unity-font-style: bold;
+    font-size: 14px;
+    color: var(--c-text-header);
+    margin-bottom: 8px;
+}
+
+.status-label { color: #2B1B10; font-size: 14px; -unity-font-style: bold; }
+.status-value { color: var(--c-btn-chill-bg); font-size: 14px; -unity-font-style: bold; }

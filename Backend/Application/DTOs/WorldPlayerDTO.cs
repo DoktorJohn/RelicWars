@@ -31,6 +31,7 @@ namespace Application.DTOs
         int CityCount,
         string AllianceName,
         IdeologyTypeEnum Ideology,
-        Guid AllianceId
+        Guid AllianceId,
+        Guid WorldId
     );
 }

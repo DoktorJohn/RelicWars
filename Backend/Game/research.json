@@ -1,162 +1,414 @@
 [
   {
     "Id": "ECON_PROD_1",
-    "Name": "Effektiv Minedrift I",
-    "Description": "\u00D8ger produktionen af alle r\u00E5materialer med 1%",
+    "Name": "Better yield I",
+    "Description": "Wood, stone and metal production increased by 1%",
     "ResearchType": "Economy",
     "ParentId": null,
-    "ResearchPointCost": 100,
+    "ResearchPointCost": 10,
     "ResearchTimeInSeconds": 300,
     "ModifiersInternal": [
       {
         "Tag": "ResourceProduction",
         "Type": "Increased",
         "Value": 0.01,
-        "Source": "Research: Minedrift I"
+        "Source": "Research: Better yield I"
       }
     ],
     "ModifiersThatAffectsThis": []
   },
   {
-    "Id": "ECON_SILVER_1",
-    "Name": "Handelsaftaler",
-    "Description": "\u002B3% bonus til markedspladsens s\u00F8lv-generering",
+    "Id": "ECON_PROD_2",
+    "Name": "Better yield II",
+    "Description": "Wood, stone and metal production increased by 1%",
     "ResearchType": "Economy",
     "ParentId": "ECON_PROD_1",
-    "ResearchPointCost": 250,
+    "ResearchPointCost": 10,
+    "ResearchTimeInSeconds": 300,
+    "ModifiersInternal": [
+      {
+        "Tag": "ResourceProduction",
+        "Type": "Increased",
+        "Value": 0.01,
+        "Source": "Research: Better yield II"
+      }
+    ],
+    "ModifiersThatAffectsThis": []
+  },
+  {
+    "Id": "ECON_PROD_3",
+    "Name": "Better yield III",
+    "Description": "Wood, stone and metal production increased by 2%",
+    "ResearchType": "Economy",
+    "ParentId": "ECON_PROD_2",
+    "ResearchPointCost": 10,
+    "ResearchTimeInSeconds": 300,
+    "ModifiersInternal": [
+      {
+        "Tag": "ResourceProduction",
+        "Type": "Increased",
+        "Value": 0.02,
+        "Source": "Research: Better yield III"
+      }
+    ],
+    "ModifiersThatAffectsThis": []
+  },
+  {
+    "Id": "MARKET_SILVER_1",
+    "Name": "Art of the deal",
+    "Description": "\u002B3% bonus to marketplaces silver generation",
+    "ResearchType": "Economy",
+    "ParentId": "ECON_PROD_1",
+    "ResearchPointCost": 25,
     "ResearchTimeInSeconds": 1200,
+    "ModifiersInternal": [
+      {
+        "Tag": "Market",
+        "Type": "Increased",
+        "Value": 0.03,
+        "Source": "Research: Art of the deal"
+      }
+    ],
+    "ModifiersThatAffectsThis": []
+  },
+  {
+    "Id": "MARKET_MERCHANT_1",
+    "Name": "Phoenican Inspiration",
+    "Description": "\u002B1 to available merchants",
+    "ResearchType": "Economy",
+    "ParentId": "MARKET_SILVER_1",
+    "ResearchPointCost": 30,
+    "ResearchTimeInSeconds": 900,
+    "ModifiersInternal": [
+      {
+        "Tag": "Placeholder",
+        "Type": "Flat",
+        "Value": 1,
+        "Source": "Research: Phoenican Inspiration"
+      }
+    ],
+    "ModifiersThatAffectsThis": []
+  },
+  {
+    "Id": "SILVER_PROD_1",
+    "Name": "Tax Solidarity",
+    "Description": "\u002B3% increased global silver income",
+    "ResearchType": "Economy",
+    "ParentId": "MARKET_MERCHANT_1",
+    "ResearchPointCost": 35,
+    "ResearchTimeInSeconds": 900,
     "ModifiersInternal": [
       {
         "Tag": "Silver",
         "Type": "Increased",
         "Value": 0.03,
-        "Source": "Research: Handelsaftaler"
+        "Source": "Research: Tax Solidarity"
       }
     ],
     "ModifiersThatAffectsThis": []
   },
   {
-    "Id": "ECON_WAREHOUSE_1",
-    "Name": "Struktureret Lager",
-    "Description": "\u00D8ger lagerkapaciteten med 5%",
-    "ResearchType": "Economy",
-    "ParentId": "ECON_PROD_1",
-    "ResearchPointCost": 300,
-    "ResearchTimeInSeconds": 900,
-    "ModifiersInternal": [
-      {
-        "Tag": "WarehouseCapacity",
-        "Type": "Increased",
-        "Value": 0.05,
-        "Source": "Research: Lager"
-      }
-    ],
-    "ModifiersThatAffectsThis": []
-  },
-  {
-    "Id": "MIL_INF_1",
-    "Name": "Skarpe Klinger",
-    "Description": "Infanteri giver 5% mere skade",
+    "Id": "SIEGE_UPKEEP_1",
+    "Name": "Cheaper sieges",
+    "Description": "Upkeep of siege units is decreased by 5%",
     "ResearchType": "War",
     "ParentId": null,
-    "ResearchPointCost": 150,
+    "ResearchPointCost": 25,
     "ResearchTimeInSeconds": 600,
     "ModifiersInternal": [
       {
-        "Tag": "Infantry",
+        "Tag": "Siege",
         "Type": "Increased",
         "Value": 0.05,
-        "Source": "Research: Klinger"
+        "Source": "Research: Cheaper sieges"
       }
     ],
     "ModifiersThatAffectsThis": []
   },
   {
-    "Id": "MIL_SIEGE_1",
-    "Name": "Belejringslogistik",
-    "Description": "Neds\u00E6tter upkeep af belejringsenheder med 5%",
+    "Id": "UNIT_UPKEEP_1",
+    "Name": "Cheaper units",
+    "Description": "Upkeep of all units is decreased by 2%",
     "ResearchType": "War",
     "ParentId": null,
-    "ResearchPointCost": 400,
+    "ResearchPointCost": 35,
+    "ResearchTimeInSeconds": 900,
+    "ModifiersInternal": [
+      {
+        "Tag": "Upkeep",
+        "Type": "Increased",
+        "Value": 0.02,
+        "Source": "Research: Cheaper units"
+      }
+    ],
+    "ModifiersThatAffectsThis": []
+  },
+  {
+    "Id": "SIEGE_DMG_1",
+    "Name": "Sieging Power",
+    "Description": "Siege weapons deal 5% more damage",
+    "ResearchType": "War",
+    "ParentId": "SIEGE_UPKEEP_1",
+    "ResearchPointCost": 40,
     "ResearchTimeInSeconds": 3600,
     "ModifiersInternal": [
       {
         "Tag": "Siege",
-        "Type": "Decreased",
+        "Type": "Increased",
         "Value": 0.05,
-        "Source": "Research: Belejringslogistik"
+        "Source": "Research: Sieging Power"
       }
     ],
     "ModifiersThatAffectsThis": []
   },
   {
-    "Id": "DEF_WALL_1",
-    "Name": "Forst\u00E6rket Murv\u00E6rk",
-    "Description": "\u00D8ger murens forsvarsevne med 10%",
+    "Id": "UNIT_UPKEEP_2",
+    "Name": "Cheaper units",
+    "Description": "Upkeep of all units is decreased by 2%",
     "ResearchType": "War",
-    "ParentId": null,
-    "ResearchPointCost": 300,
-    "ResearchTimeInSeconds": 1800,
+    "ParentId": "MUNIT_UPKEEP_1",
+    "ResearchPointCost": 45,
+    "ResearchTimeInSeconds": 900,
     "ModifiersInternal": [
       {
-        "Tag": "Wall",
+        "Tag": "Upkeep",
         "Type": "Increased",
-        "Value": 0.1,
-        "Source": "Research: Murv\u00E6rk"
+        "Value": 0.02,
+        "Source": "Research: Cheaper units"
       }
     ],
     "ModifiersThatAffectsThis": []
   },
   {
-    "Id": "UTIL_ROADS_1",
-    "Name": "Vejbygning I",
-    "Description": "Bygning af veje er 10% hurtigere",
+    "Id": "SIEGE_TT_1",
+    "Name": "Faster ramming",
+    "Description": "Siege weapons move 2% faster",
+    "ResearchType": "War",
+    "ParentId": "SIEGE_DMG_1",
+    "ResearchPointCost": 55,
+    "ResearchTimeInSeconds": 900,
+    "ModifiersInternal": [
+      {
+        "Tag": "Placeholder",
+        "Type": "Increased",
+        "Value": 0.02,
+        "Source": "Research: Faster ramming"
+      }
+    ],
+    "ModifiersThatAffectsThis": []
+  },
+  {
+    "Id": "UTIL_SUBJ_1",
+    "Name": "City Administration I",
+    "Description": "Subjugation of your cities takes 2.5% more time",
     "ResearchType": "Utility",
     "ParentId": null,
-    "ResearchPointCost": 150,
+    "ResearchPointCost": 20,
     "ResearchTimeInSeconds": 600,
+    "ModifiersInternal": [
+      {
+        "Tag": "Placeholder",
+        "Type": "Increased",
+        "Value": 0.025,
+        "Source": "Research: City Administration I"
+      }
+    ],
+    "ModifiersThatAffectsThis": []
+  },
+  {
+    "Id": "UTIL_RESIST_1",
+    "Name": "Civil Resistance",
+    "Description": "Base resistance after conquering a new city is at 60% instead of 50%",
+    "ResearchType": "Utility",
+    "ParentId": "UTIL_SUBJ_1",
+    "ResearchPointCost": 30,
+    "ResearchTimeInSeconds": 1200,
+    "ModifiersInternal": [
+      {
+        "Tag": "Placeholder",
+        "Type": "Flat",
+        "Value": 0.1,
+        "Source": "Research: Civil Resistance"
+      }
+    ],
+    "ModifiersThatAffectsThis": []
+  },
+  {
+    "Id": "UTIL_BUILD_1",
+    "Name": "Efficient Planning",
+    "Description": "Building takes 5% less time",
+    "ResearchType": "Utility",
+    "ParentId": "UTIL_RESIST_1",
+    "ResearchPointCost": 40,
+    "ResearchTimeInSeconds": 1800,
     "ModifiersInternal": [
       {
         "Tag": "Construction",
         "Type": "Increased",
-        "Value": 0.1,
-        "Source": "Research: Vejbygning I"
+        "Value": 0.05,
+        "Source": "Research: Efficient Planning"
       }
     ],
     "ModifiersThatAffectsThis": []
   },
   {
-    "Id": "UTIL_STUDY_1",
-    "Name": "Videnskabelig Metode",
-    "Description": "\u00D8ger RP generering med 5%",
+    "Id": "UTIL_SUBJ_2",
+    "Name": "City Administration II",
+    "Description": "Subjugation of your cities takes 2.5% more time",
     "ResearchType": "Utility",
-    "ParentId": null,
-    "ResearchPointCost": 500,
-    "ResearchTimeInSeconds": 1500,
+    "ParentId": "UTIL_BUILD_1",
+    "ResearchPointCost": 50,
+    "ResearchTimeInSeconds": 2400,
     "ModifiersInternal": [
       {
-        "Tag": "Research",
+        "Tag": "Placeholder",
         "Type": "Increased",
-        "Value": 0.05,
-        "Source": "Research: Metode"
+        "Value": 0.025,
+        "Source": "Research: City Administration II"
+      }
+    ],
+    "ModifiersThatAffectsThis": []
+  },
+  {
+    "Id": "UTIL_SILVER_1",
+    "Name": "Bureaucratic Efficiency",
+    "Description": "1% increased silver income",
+    "ResearchType": "Utility",
+    "ParentId": "UTIL_SUBJ_2",
+    "ResearchPointCost": 60,
+    "ResearchTimeInSeconds": 3000,
+    "ModifiersInternal": [
+      {
+        "Tag": "Silver",
+        "Type": "Increased",
+        "Value": 0.01,
+        "Source": "Research: Bureaucratic Efficiency"
       }
     ],
     "ModifiersThatAffectsThis": []
   },
   {
     "Id": "UTIL_POP_1",
-    "Name": "Byplanl\u00E6gning",
-    "Description": "\u00D8ger max befolkning med 100",
+    "Name": "Urban Expansion",
+    "Description": "\u002B3% population in all cities",
     "ResearchType": "Utility",
-    "ParentId": null,
-    "ResearchPointCost": 800,
+    "ParentId": "UTIL_SILVER_1",
+    "ResearchPointCost": 75,
     "ResearchTimeInSeconds": 3600,
     "ModifiersInternal": [
       {
         "Tag": "Population",
+        "Type": "Increased",
+        "Value": 0.03,
+        "Source": "Research: Urban Expansion"
+      }
+    ],
+    "ModifiersThatAffectsThis": []
+  },
+  {
+    "Id": "UTIL_ROAD_1",
+    "Name": "Road Maintenance I",
+    "Description": "Building and repairing roads is 10% faster",
+    "ResearchType": "Utility",
+    "ParentId": null,
+    "ResearchPointCost": 20,
+    "ResearchTimeInSeconds": 600,
+    "ModifiersInternal": [
+      {
+        "Tag": "Placeholder",
+        "Type": "Increased",
+        "Value": 0.1,
+        "Source": "Research: Road Maintenance I"
+      }
+    ],
+    "ModifiersThatAffectsThis": []
+  },
+  {
+    "Id": "UTIL_WATCH_1",
+    "Name": "Intelligence Network",
+    "Description": "Watchtowers now list seen units (without exact numbers)",
+    "ResearchType": "Utility",
+    "ParentId": "UTIL_ROAD_1",
+    "ResearchPointCost": 35,
+    "ResearchTimeInSeconds": 1200,
+    "ModifiersInternal": [
+      {
+        "Tag": "Placeholder",
         "Type": "Flat",
-        "Value": 100,
-        "Source": "Research: Byplanl\u00E6gning"
+        "Value": 1,
+        "Source": "Research: Intelligence Network"
+      }
+    ],
+    "ModifiersThatAffectsThis": []
+  },
+  {
+    "Id": "UTIL_ROAD_2",
+    "Name": "Road Maintenance II",
+    "Description": "Building and repairing roads is 10% faster",
+    "ResearchType": "Utility",
+    "ParentId": "UTIL_WATCH_1",
+    "ResearchPointCost": 45,
+    "ResearchTimeInSeconds": 1800,
+    "ModifiersInternal": [
+      {
+        "Tag": "Placeholder",
+        "Type": "Increased",
+        "Value": 0.1,
+        "Source": "Research: Road Maintenance II"
+      }
+    ],
+    "ModifiersThatAffectsThis": []
+  },
+  {
+    "Id": "UTIL_ROAD_COST",
+    "Name": "Paved Foundations",
+    "Description": "Cost of roads is reduced by 5%",
+    "ResearchType": "Utility",
+    "ParentId": "UTIL_ROAD_2",
+    "ResearchPointCost": 55,
+    "ResearchTimeInSeconds": 2400,
+    "ModifiersInternal": [
+      {
+        "Tag": "Placeholder",
+        "Type": "Increased",
+        "Value": 0.05,
+        "Source": "Research: Paved Foundations"
+      }
+    ],
+    "ModifiersThatAffectsThis": []
+  },
+  {
+    "Id": "UTIL_WATCH_RANGE",
+    "Name": "Eagle Eye",
+    "Description": "Watchtowers gain 10% additional vision range",
+    "ResearchType": "Utility",
+    "ParentId": "UTIL_ROAD_COST",
+    "ResearchPointCost": 65,
+    "ResearchTimeInSeconds": 3000,
+    "ModifiersInternal": [
+      {
+        "Tag": "Placeholder",
+        "Type": "Increased",
+        "Value": 0.1,
+        "Source": "Research: Eagle Eye"
+      }
+    ],
+    "ModifiersThatAffectsThis": []
+  },
+  {
+    "Id": "UTIL_ALLIED_SPEED",
+    "Name": "Imperial Messenger Lines",
+    "Description": "Armies are 10% faster from and to allied cities",
+    "ResearchType": "Utility",
+    "ParentId": "UTIL_WATCH_RANGE",
+    "ResearchPointCost": 80,
+    "ResearchTimeInSeconds": 3600,
+    "ModifiersInternal": [
+      {
+        "Tag": "TravelSpeed",
+        "Type": "Increased",
+        "Value": 0.1,
+        "Source": "Research: Imperial Messenger Lines"
       }
     ],
     "ModifiersThatAffectsThis": []

@@ -1,0 +1,173 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c0447c1fa5c046444b15e87edd475822, type: 3}
+  m_Name: Maps
+  m_EditorClassIdentifier: Assembly-CSharp::BiomeVisuals
+  Biomes:
+  - Type: 23
+    TileAsset: {fileID: 11400000, guid: 45120de954cf9a14ca148a02301dd271, type: 2}
+  - Type: 24
+    TileAsset: {fileID: 11400000, guid: 8c45ca10da82afb47b37b4206e21c9c5, type: 2}
+  - Type: 25
+    TileAsset: {fileID: 11400000, guid: 9df8b25dd1ccd2041b38e5d23fc7e7ec, type: 2}
+  - Type: 26
+    TileAsset: {fileID: 11400000, guid: 1c9c5fd70937a244984e1135dc410e9f, type: 2}
+  - Type: 27
+    TileAsset: {fileID: 11400000, guid: df4c7ebe298f46e43bea4bd3490b0299, type: 2}
+  - Type: 28
+    TileAsset: {fileID: 11400000, guid: 380d41fa2434eda428c04f822459f715, type: 2}
+  - Type: 29
+    TileAsset: {fileID: 11400000, guid: 81c97f4a8f6ed8542830bb1e5ebef97a, type: 2}
+  - Type: 30
+    TileAsset: {fileID: 11400000, guid: 1839aa7965c346f47bce9d2d3fa6cfbe, type: 2}
+  - Type: 31
+    TileAsset: {fileID: 11400000, guid: 66df19b66252d5f4e8294081c04ec5eb, type: 2}
+  - Type: 32
+    TileAsset: {fileID: 11400000, guid: ee0ed9dbcdf3d5b42bad97d38b268f87, type: 2}
+  - Type: 33
+    TileAsset: {fileID: 11400000, guid: 6792558c273a8e547adeacb1ca867c0f, type: 2}
+  - Type: 34
+    TileAsset: {fileID: 11400000, guid: 8268b06359461be4cb0d6a2873b919ad, type: 2}
+  - Type: 19
+    TileAsset: {fileID: 11400000, guid: 78ceb6da7a8862f44a34435487db8b3d, type: 2}
+  - Type: 20
+    TileAsset: {fileID: 11400000, guid: 5dae73a34e15a7847b47e5f86879c284, type: 2}
+  - Type: 21
+    TileAsset: {fileID: 11400000, guid: ffb3c5b56ca74c74da78be909ce6c258, type: 2}
+  - Type: 22
+    TileAsset: {fileID: 11400000, guid: 0538912ecc6c82743953e0726f2e2df4, type: 2}
+  - Type: 14
+    TileAsset: {fileID: 11400000, guid: e827d7dead54b1045a697279d61d286f, type: 2}
+  - Type: 15
+    TileAsset: {fileID: 11400000, guid: 2a6567dc6a3e10d4b9759f05f21313ba, type: 2}
+  - Type: 16
+    TileAsset: {fileID: 11400000, guid: f14df87f35a4da345af32b2b0fd2a2bc, type: 2}
+  - Type: 17
+    TileAsset: {fileID: 11400000, guid: 3826e188a072ce147bfc178e6031cea6, type: 2}
+  - Type: 18
+    TileAsset: {fileID: 11400000, guid: b258dca0e2b43844e9081e060d822e9b, type: 2}
+  - Type: 45
+    TileAsset: {fileID: 11400000, guid: 735583913a087a84994bcc58e3f77e29, type: 2}
+  - Type: 46
+    TileAsset: {fileID: 11400000, guid: 4285e5f9d30c4014d8640c6d54d5b635, type: 2}
+  - Type: 47
+    TileAsset: {fileID: 11400000, guid: 65107312275df86479481ca85e663fe1, type: 2}
+  - Type: 48
+    TileAsset: {fileID: 11400000, guid: bbf29b1974fc3ab45b1e4e6ca3c126b1, type: 2}
+  - Type: 49
+    TileAsset: {fileID: 11400000, guid: 3d809c61dd6350b4db8734c4e18ba5c1, type: 2}
+  - Type: 50
+    TileAsset: {fileID: 11400000, guid: 22e290a2f03c23c4ebb776c267197d93, type: 2}
+  - Type: 51
+    TileAsset: {fileID: 11400000, guid: 4e702aa4f2380524a9c615c0a779993f, type: 2}
+  - Type: 52
+    TileAsset: {fileID: 11400000, guid: 540ebd97a6147d244ac58158f2b1df90, type: 2}
+  - Type: 53
+    TileAsset: {fileID: 11400000, guid: 573b1055086905b4ea26943ac510e982, type: 2}
+  - Type: 72
+    TileAsset: {fileID: 11400000, guid: daf497144133c844797dff9ffbb86322, type: 2}
+  - Type: 73
+    TileAsset: {fileID: 11400000, guid: 917a9f6a3ca48cb41a7ef0a3559ee9c0, type: 2}
+  - Type: 74
+    TileAsset: {fileID: 11400000, guid: 0731636dbc4d71c4282f84dbc354a65b, type: 2}
+  - Type: 75
+    TileAsset: {fileID: 11400000, guid: 3ffc91c3780a3924286fceeed915a17f, type: 2}
+  - Type: 76
+    TileAsset: {fileID: 11400000, guid: 9d7cf26875ca0cc4b9ef03396c91d375, type: 2}
+  - Type: 77
+    TileAsset: {fileID: 11400000, guid: 909d195c5f2ed394883a76472a7303b5, type: 2}
+  - Type: 78
+    TileAsset: {fileID: 11400000, guid: 0b80bdd6ecead214b9edf7959d005f75, type: 2}
+  - Type: 0
+    TileAsset: {fileID: 11400000, guid: 8219f33f5ff88244584c5483a1f2397c, type: 2}
+  - Type: 1
+    TileAsset: {fileID: 11400000, guid: d208d2775a6bdcf43a45ceb2d87afe8b, type: 2}
+  - Type: 2
+    TileAsset: {fileID: 11400000, guid: b0d367dc960163e4e8dfb5b0627b0b3f, type: 2}
+  - Type: 3
+    TileAsset: {fileID: 11400000, guid: 91b1dda6771fed94cbf0d3d38d6e3fd9, type: 2}
+  - Type: 4
+    TileAsset: {fileID: 11400000, guid: 3e81d12e1a810284caf126e6fc292cc6, type: 2}
+  - Type: 5
+    TileAsset: {fileID: 11400000, guid: 9b706ccffcc17b8458aa4942b35aa291, type: 2}
+  - Type: 6
+    TileAsset: {fileID: 11400000, guid: be9ee1979ffdd9e4dadcdbf3eb9b0906, type: 2}
+  - Type: 7
+    TileAsset: {fileID: 11400000, guid: 664c1dbd35e9659469cfb6f49828e3ed, type: 2}
+  - Type: 8
+    TileAsset: {fileID: 11400000, guid: 5a6dd55b0e8c8754bbdeb3cf9459e3aa, type: 2}
+  - Type: 9
+    TileAsset: {fileID: 11400000, guid: 17284e4e1c28ac1458be82a6e8bfe207, type: 2}
+  - Type: 10
+    TileAsset: {fileID: 11400000, guid: d530310820283044db041298f4e184ff, type: 2}
+  - Type: 11
+    TileAsset: {fileID: 11400000, guid: 5c2e84e4b8310b24cb95bf054cfae7e8, type: 2}
+  - Type: 12
+    TileAsset: {fileID: 11400000, guid: 077483a350bdcde48966a8bcc312ff66, type: 2}
+  - Type: 13
+    TileAsset: {fileID: 11400000, guid: 9b6770ba9b6e72949a913f10c86a96a1, type: 2}
+  - Type: 54
+    TileAsset: {fileID: 11400000, guid: 0e01445195d896a4fb299498907ab9c9, type: 2}
+  - Type: 55
+    TileAsset: {fileID: 11400000, guid: 571aa50c600fbad4a9c43ba5f5ed14c3, type: 2}
+  - Type: 56
+    TileAsset: {fileID: 11400000, guid: 34df4343c85dc4441a47fde918b2e435, type: 2}
+  - Type: 57
+    TileAsset: {fileID: 11400000, guid: bd52271170a8e304fb676f9b5412c6ad, type: 2}
+  - Type: 58
+    TileAsset: {fileID: 11400000, guid: f40bc39372aabbd4a9fe69d8aa64df27, type: 2}
+  - Type: 59
+    TileAsset: {fileID: 11400000, guid: bf82af1085a4f5c4788d71551ac76b67, type: 2}
+  - Type: 60
+    TileAsset: {fileID: 11400000, guid: 56432492bd3fb6f4f832614ad0ad15a2, type: 2}
+  - Type: 61
+    TileAsset: {fileID: 11400000, guid: f6be6ea2fbc1e544ca066098c17a4cb0, type: 2}
+  - Type: 62
+    TileAsset: {fileID: 11400000, guid: 09edcf3ca7080c5478dbfa42ad6463e9, type: 2}
+  - Type: 63
+    TileAsset: {fileID: 11400000, guid: c71a250e9919c1947a6d72c2bfbae248, type: 2}
+  - Type: 64
+    TileAsset: {fileID: 11400000, guid: d884ed12a301a31498d0160e567d715a, type: 2}
+  - Type: 65
+    TileAsset: {fileID: 11400000, guid: 88a9e2b567ab11140a06ab80180555ea, type: 2}
+  - Type: 66
+    TileAsset: {fileID: 11400000, guid: 4e620a7f02900b8418a9da5fb83c6eeb, type: 2}
+  - Type: 67
+    TileAsset: {fileID: 11400000, guid: f32655bfc3b778946b785fb082d3c151, type: 2}
+  - Type: 68
+    TileAsset: {fileID: 11400000, guid: 013b8a9c787db1c45b84501cec8bbc58, type: 2}
+  - Type: 69
+    TileAsset: {fileID: 11400000, guid: 02790f76a157cf24b84f47769e835786, type: 2}
+  - Type: 70
+    TileAsset: {fileID: 11400000, guid: e38d63ba8b2752142804d008b4892377, type: 2}
+  - Type: 71
+    TileAsset: {fileID: 11400000, guid: c9b5975397195674394cad543722ff02, type: 2}
+  - Type: 35
+    TileAsset: {fileID: 11400000, guid: cf0090af25b4d9848863e6f80b5e40e6, type: 2}
+  - Type: 36
+    TileAsset: {fileID: 11400000, guid: a52512132f496fe45991eaf9338e8882, type: 2}
+  - Type: 37
+    TileAsset: {fileID: 11400000, guid: 09b6f6f5b4cb54f428649e867904bbf5, type: 2}
+  - Type: 38
+    TileAsset: {fileID: 11400000, guid: ae645108a84c0fa4cb75fda03b195725, type: 2}
+  - Type: 39
+    TileAsset: {fileID: 11400000, guid: 5c27e8f26b66b3849bbc9b09971cb9e2, type: 2}
+  - Type: 40
+    TileAsset: {fileID: 11400000, guid: cac0b938fbdb4214dbbba8c6f8f90685, type: 2}
+  - Type: 41
+    TileAsset: {fileID: 11400000, guid: db99c835eb5080d4da4b09565a4904fa, type: 2}
+  - Type: 42
+    TileAsset: {fileID: 11400000, guid: 015a349ccb5853747a58454d2979de34, type: 2}
+  - Type: 43
+    TileAsset: {fileID: 11400000, guid: e088a6f6573b597488f9a9796af7deb8, type: 2}
+  - Type: 44
+    TileAsset: {fileID: 11400000, guid: 5e7207709d26b7b4da256f8918344dfa, type: 2}

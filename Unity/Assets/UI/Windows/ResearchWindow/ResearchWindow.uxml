@@ -3,11 +3,11 @@
     <ui:Style src="project://database/Assets/UI/Windows/WindowTheme.uss" />
     <ui:Style src="ResearchWindow.uss" />
 
-    <ui:VisualElement name="Research-Window-Overlay" class="screen-overlay">
+    <ui:VisualElement name="Research-Window-Overlay" picking-mode="Ignore" class="screen-overlay">
         <ui:VisualElement name="Research-Window-MainContainer" class="window-frame research-main-container">
             
             <ui:VisualElement name="Research-Window-Header" class="window-header">
-                <ui:Label text="TECHNOLOGY &amp; RESEARCH" class="window-header-label" />
+                <ui:Label text="RESEARCH" class="window-header-label" />
                 <ui:Button name="Header-Close-Button" class="window-close-btn" text="x" />
             </ui:VisualElement>
 
@@ -26,7 +26,9 @@
             </ui:VisualElement>
 
             <ui:VisualElement class="research-content-body">
-                <ui:VisualElement name="Research-Tree-Container" class="research-tree-grid" />
+                <ui:ScrollView class="research-scroll-view">
+                    <ui:VisualElement name="Research-Tree-Container" class="research-tree-grid" />
+                </ui:ScrollView>
             </ui:VisualElement>
 
             <ui:VisualElement name="Active-Research-Panel" class="active-research-footer">
@@ -40,7 +42,7 @@
 
                 <ui:VisualElement style="align-items: flex-end;">
                     <ui:Label name="Active-Research-Timer" text="00:00:00" class="active-timer-text" />
-                    <ui:Button name="Button-Cancel-Research" text="CANCEL RESEARCH" class="cancel-research-btn" />
+                    <ui:Button name="Button-Cancel-Research" text="CANCEL RESEARCH" class="btn-global-base btn-imperial-danger" style="height: 35px; font-size: 12px;" />
                 </ui:VisualElement>
             </ui:VisualElement>
 

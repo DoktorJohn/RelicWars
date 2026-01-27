@@ -1,7 +1,7 @@
-/* Assets/UI/Theme/WindowTheme.uss */
+/* Assets/UI/Windows/WindowTheme.uss */
 
 /* ============================================================
-    GLOBAL VARIABLES & FONTS (VIBRANT STONE)
+   GLOBAL VARIABLES & FONTS (VIBRANT STONE)
    ============================================================ */
 :root {
     /* --- ROMAN PALETTE --- */
@@ -13,13 +13,20 @@
     --c-text-header: rgb(110, 20, 20); 
     --c-text-body: rgb(15, 15, 15);
     --c-text-muted: rgb(90, 80, 70);
+    --c-text-highlight: rgb(165, 125, 50);
 
     /* --- IMPERIAL BUTTONS --- */
+    /* Chill / Primary (Red) */
     --c-btn-chill-bg: rgb(155, 45, 35);
     --c-btn-chill-border: rgb(120, 30, 20);
     
+    /* Warn / Danger (Dark Red) */
     --c-btn-warn-bg: rgb(90, 40, 30);
     --c-btn-warn-border: rgb(70, 25, 15);
+
+    /* Action / Success (Green/Gold - NY TILFØJET GLOBAL) */
+    --c-btn-action-bg: rgb(60, 110, 60);
+    --c-btn-action-border: rgb(40, 80, 40);
 
     /* --- FONTS --- */
     --font-header: url("project://database/Assets/TextMesh Pro/Fonts/Cinzel.asset");
@@ -30,7 +37,62 @@
 }
 
 /* ============================================================
-    WINDOW STRUCTURE
+   GLOBAL BUTTON SYSTEM (NYT)
+   ============================================================ */
+
+/* Base styling for ALLE knapper */
+.btn-global-base {
+    height: 42px;
+    border-radius: 4px;
+    border-width: 1px;
+    -unity-font-definition: var(--font-header);
+    -unity-font-style: bold;
+    font-size: 14px;
+    color: white;
+    margin-top: 10px;
+    padding: 5px 15px;
+    transition-duration: 0.1s;
+    justify-content: center;
+    align-items: center;
+}
+
+.btn-global-base:hover {
+    scale: 1.02;
+}
+
+.btn-global-base:active {
+    scale: 0.98;
+}
+
+/* Variant: Success (Create Alliance etc.) */
+.btn-imperial-success {
+    background-color: var(--c-btn-action-bg);
+    border-color: var(--c-btn-action-border);
+}
+.btn-imperial-success:hover {
+    background-color: rgb(80, 140, 80);
+}
+
+/* Variant: Danger (Leave Alliance etc.) */
+.btn-imperial-danger {
+    background-color: var(--c-btn-warn-bg);
+    border-color: var(--c-btn-warn-border);
+}
+.btn-imperial-danger:hover {
+    background-color: rgb(120, 50, 40);
+}
+
+/* Variant: Standard (Close buttons etc.) */
+.btn-imperial-primary {
+    background-color: var(--c-btn-chill-bg);
+    border-color: var(--c-btn-chill-border);
+}
+.btn-imperial-primary:hover {
+    background-color: rgb(180, 60, 50);
+}
+
+/* ============================================================
+   WINDOW STRUCTURE
    ============================================================ */
 .screen-overlay {
     position: absolute; 
@@ -43,13 +105,9 @@
 
 .window-frame {
     position: absolute;
-    /* Farven herunder skinner igennem de 70% transparens i dit billede */
     background-color: var(--c-window-bg);
-    
-    /* BACKGROUND IMAGE SETUP */
     background-image: var(--img-window-background);
     -unity-background-scale-mode: stretch-to-fill;
-
     border-radius: 12px; 
     border-width: 2px;
     border-color: var(--c-border);
@@ -57,7 +115,7 @@
 }
 
 /* ============================================================
-    HEADER & TYPOGRAPHY
+   HEADER & TYPOGRAPHY
    ============================================================ */
 .window-header {
     flex-direction: row; 
@@ -116,7 +174,7 @@
 }
 
 /* ============================================================
-    INPUTS & BUTTONS
+   INPUTS (Generisk)
    ============================================================ */
 .game-input {
     height: 40px;
@@ -131,32 +189,8 @@
     padding-left: 10px;
 }
 
-.btn-base {
-    height: 40px; 
-    border-radius: 6px; 
-    border-width: 1px;
-    -unity-font-definition: var(--font-header);
-    -unity-font-style: bold;
-    font-size: 16px; 
-    color: white; 
-    margin-top: 10px;
-    transition-duration: 0.1s;
-}
-
-.btn-primary {
-    background-color: var(--c-btn-chill-bg);
-    border-color: var(--c-btn-chill-border);
-}
-.btn-primary:hover { 
-    scale: 1.02; 
-    background-color: rgb(175, 55, 45); 
-}
-.btn-primary:active { 
-    scale: 0.98; 
-}
-
 /* ============================================================
-    UTILITY SIZES
+   UTILITY SIZES
    ============================================================ */
 .size-small  { width: 400px; height: 350px; }
 .size-medium { width: 550px; height: 500px; }

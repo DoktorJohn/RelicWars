@@ -3,7 +3,7 @@
     <ui:Style src="project://database/Assets/UI/Windows/WindowTheme.uss" />
     <ui:Style src="CityOverviewWindow.uss" />
 
-    <ui:VisualElement name="Overview-Window-Overlay" class="screen-overlay">
+    <ui:VisualElement name="Overview-Window-Overlay" picking-mode="Ignore" class="screen-overlay">
         <ui:VisualElement name="Overview-Window-MainContainer" class="window-frame overview-main-container">
             
             <ui:VisualElement name="Overview-Window-Header" class="window-header">
@@ -15,25 +15,26 @@
                 
                 <ui:VisualElement class="overview-global-wallet">
                     <ui:VisualElement class="wallet-item">
-                        <ui:VisualElement class="side-bar-icon-base icon-silver" style="width: 20px; height: 20px;" />
+                        <ui:VisualElement class="side-bar-icon-base icon-silver" style="width: 24px; height: 24px; flex-shrink: 0;" />
                         <ui:Label text="SILVER:" class="wallet-item-prefix" />
                         <ui:Label name="Label-Global-Silver" text="0" class="wallet-label" />
                     </ui:VisualElement>
+                    
                     <ui:VisualElement class="wallet-item">
-                        <ui:VisualElement class="side-bar-icon-base icon-research" style="width: 20px; height: 20px;" />
+                        <ui:VisualElement class="side-bar-icon-base icon-research" style="width: 24px; height: 24px; flex-shrink: 0;" />
                         <ui:Label text="RESEARCH:" class="wallet-item-prefix" />
                         <ui:Label name="Label-Global-Research" text="0" class="wallet-label" />
                     </ui:VisualElement>
+                    
                     <ui:VisualElement class="wallet-item">
-                        <ui:VisualElement class="side-bar-icon-base icon-ideology" style="width: 20px; height: 20px;" />
+                        <ui:VisualElement class="side-bar-icon-base icon-ideology" style="width: 24px; height: 24px; flex-shrink: 0;" />
                         <ui:Label text="IDEOLOGY:" class="wallet-item-prefix" />
                         <ui:Label name="Label-Global-Ideology" text="0" class="wallet-label" />
                     </ui:VisualElement>
                 </ui:VisualElement>
 
-                <ui:VisualElement class="divider" style="margin-bottom: 10px; opacity: 0.3;" />
+                <ui:VisualElement class="divider" style="margin-bottom: 15px; opacity: 0.3;" />
 
-                <ui:Label text="ECONOMY &amp; PRODUCTION" class="section-title-label" />
                 <ui:VisualElement name="Economy-Grid-Container" class="economy-grid-container" />
 
                 <ui:VisualElement class="bottom-panels-container">

@@ -33,6 +33,7 @@ namespace Infrastructure.Context
         public DbSet<Research> Researches { get; set; }
         public DbSet<BattleReport> BattleReports { get; set; }
         public DbSet<IdeologyFocus> IdeologyFocuses { get; set; }
+        public DbSet<WorldMapObject> WorldMapObjects { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -76,6 +77,18 @@ namespace Infrastructure.Context
                 .WithMany(c => c.TargetUnitDeployments)
                 .HasForeignKey(ud => ud.TargetCityId)
                 .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<WorldMapObject>(entity =>
+            {
+                entity.HasKey(e => new { e.WorldId, e.X, e.Y });
+
+                entity.HasOne(d => d.World)
+                      .WithMany(p => p.MapObjects)
+                      .HasForeignKey(d => d.WorldId)
+                      .OnDelete(DeleteBehavior.Cascade);
+
+                entity.Property(e => e.Type).HasConversion<byte>();
+            });
 
             base.OnModelCreating(modelBuilder);
         }

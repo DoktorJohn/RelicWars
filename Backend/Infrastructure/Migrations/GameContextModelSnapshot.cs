@@ -385,7 +385,13 @@ namespace Infrastructure.Migrations
                     b.Property<DateTime>("DateLastModified")
                         .HasColumnType("TEXT");
 
+                    b.Property<int>("Height")
+                        .HasColumnType("INTEGER");
+
                     b.Property<bool>("IsDeleted")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("MapSeed")
                         .HasColumnType("INTEGER");
 
                     b.Property<string>("Name")
@@ -395,15 +401,34 @@ namespace Infrastructure.Migrations
                     b.Property<int>("PlayerCount")
                         .HasColumnType("INTEGER");
 
-                    b.Property<int>("XAxis")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<int>("YAxis")
+                    b.Property<int>("Width")
                         .HasColumnType("INTEGER");
 
                     b.HasKey("Id");
 
                     b.ToTable("World");
+                });
+
+            modelBuilder.Entity("Domain.Entities.WorldMapObject", b =>
+                {
+                    b.Property<Guid>("WorldId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<short>("X")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<short>("Y")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<Guid?>("ReferenceEntityId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<byte>("Type")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("WorldId", "X", "Y");
+
+                    b.ToTable("WorldMapObjects");
                 });
 
             modelBuilder.Entity("Domain.User.PlayerProfile", b =>
@@ -878,6 +903,17 @@ namespace Infrastructure.Migrations
                     b.Navigation("ModifiersInternal");
                 });
 
+            modelBuilder.Entity("Domain.Entities.WorldMapObject", b =>
+                {
+                    b.HasOne("Domain.Entities.World", "World")
+                        .WithMany("MapObjects")
+                        .HasForeignKey("WorldId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("World");
+                });
+
             modelBuilder.Entity("Domain.User.WorldPlayer", b =>
                 {
                     b.HasOne("Domain.Entities.Alliance", "Alliance")
@@ -964,6 +1000,11 @@ namespace Infrastructure.Migrations
                     b.Navigation("TargetUnitDeployments");
 
                     b.Navigation("UnitStacks");
+                });
+
+            modelBuilder.Entity("Domain.Entities.World", b =>
+                {
+                    b.Navigation("MapObjects");
                 });
 
             modelBuilder.Entity("Domain.User.PlayerProfile", b =>

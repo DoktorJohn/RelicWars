@@ -19,7 +19,8 @@
     background-image: url('project://database/Assets/UI/TopBarHUD.jpg');
     -unity-background-scale-mode: scale-and-crop;
     background-position: center;
-    -unity-background-image-tint-color: rgba(0, 0, 0, 0.2);
+    /* PUNKT 1 FIX: Matchet med LeftSideBar tint */
+    -unity-background-image-tint-color: rgba(120, 120, 120, 0.3);
 
     border-bottom-width: 5px;
     border-bottom-color: var(--c-hud-border-gold);
@@ -45,7 +46,6 @@
     flex-shrink: 0; 
 }
 
-/* IKONER SKALERET NED (PUNKT 3) */
 .city-resource-icon-container {
     width: 40px;
     height: 40px;
@@ -62,14 +62,14 @@
     flex-shrink: 0;
 }
 
-/* WAREHOUSE BUE (ALIGNMENT FIX) 
-   Vi bruger 48px (ikon 40px + 4px margin på hver side) */
+/* WAREHOUSE BUE (PUNKT 2 FIX) 
+   Flyttet fra -4px til -7px for at give luft til ikonet */
 .city-warehouse-capacity-bar {
     position: absolute;
     width: 48px;
     height: 48px;
     top: -4px;
-    left: -4px;
+    left: -7px; 
 }
 
 .icon-wood { background-image: url('project://database/Assets/UI/Icons/wood.png'); }
@@ -104,4 +104,14 @@
     background-color: rgba(0,0,0,0);
     border-width: 0;
     transition-duration: 0.15s;
+    cursor: link;
 }
+
+.city-top-bar-map-button:hover {
+    scale: 1.05;
+    -unity-background-image-tint-color: rgb(255, 255, 255);
+}
+
+.city-top-bar-map-button:active {
+    scale: 0.95;
+    -unity-background-image-tint-color: rgb(200, 200, 200);

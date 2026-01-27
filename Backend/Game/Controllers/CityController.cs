@@ -35,7 +35,7 @@ namespace WebApi.Controllers
         }
 
         [HttpGet("CityOverviewHUD/{cityIdentifier}")]
-        public async Task<ActionResult<CityControllerGetDetailedCityInformationDTO>> GetCityOverviewHUD(Guid cityIdentifier)
+        public async Task<ActionResult<CityOverviewHUD>> GetCityOverviewHUD(Guid cityIdentifier)
         {
             var detailedInfo = await _cityService.GetCityOverviewHUD(cityIdentifier);
 

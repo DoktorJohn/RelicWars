@@ -3,7 +3,9 @@
 .research-main-container {
     width: 900px;
     height: 700px;
-    /* Ingen background-color override her - brug WindowTheme.uss */
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
 }
 
 /* TABS */
@@ -13,6 +15,7 @@
     background-color: rgba(0, 0, 0, 0.1);
     border-bottom-width: 1px;
     border-bottom-color: rgba(0, 0, 0, 0.2);
+    flex-shrink: 0;
 }
 
 .research-tab-button {
@@ -37,22 +40,32 @@
     background-color: rgba(0, 0, 0, 0.05);
     justify-content: center;
     padding: 0 25px;
+    flex-shrink: 0;
 }
 
 .points-display { flex-direction: row; align-items: center; }
 .points-prefix { color: #2B1B10; -unity-font-style: bold; font-size: 13px; margin-left: 10px; }
 .points-value { color: #8B4513; font-size: 18px; -unity-font-style: bold; margin-left: 8px; }
 
-/* GRID & CARDS */
+/* GRID CONTAINER & BODY */
 .research-content-body {
     flex-grow: 1;
-    padding: 20px;
+    flex-basis: 0; /* Tvinger containeren til at holde sig inden for rammerne */
+    min-height: 0; /* Forhindrer overflow */
+    overflow: hidden;
+    padding: 0; 
+}
+
+.research-scroll-view {
+    flex-grow: 1;
 }
 
 .research-tree-grid {
     flex-direction: row;
     flex-wrap: wrap;
     justify-content: flex-start;
+    padding: 20px; 
+    padding-bottom: 40px;
 }
 
 .research-node {
@@ -76,20 +89,28 @@
 .node-status-text-done { color: #006400; -unity-font-style: bold; font-size: 11px; }
 .node-status-text-locked { color: #777; -unity-font-style: bold; font-size: 11px; }
 
+/* KNAPPER */
 .node-start-button {
-    background-color: #8B4513;
-    color: white;
+    height: 24px;
     font-size: 10px;
-    border-width: 0;
-    padding: 4px 10px;
-    border-radius: 2px;
+    padding: 0 10px;
+    margin-top: 0;
 }
 
-/* STATES */
+.node-button-locked {
+    height: 24px;
+    font-size: 10px;
+    padding: 0 10px;
+    margin-top: 0;
+    background-color: rgba(0, 0, 0, 0.2);
+    border-color: rgba(0, 0, 0, 0.3);
+    color: #888;
+}
+
 .node-completed { border-color: #006400; background-color: rgba(0, 100, 0, 0.05); }
 .node-locked { opacity: 0.5; }
 
-/* FOOTER */
+/* FOOTER - Låst fast */
 .active-research-footer {
     height: 80px;
     background-color: #2B1B10;
@@ -97,15 +118,11 @@
     justify-content: space-between;
     align-items: center;
     padding: 0 25px;
+    flex-shrink: 0; 
+    border-top-width: 2px;
+    border-top-color: #8B4513;
 }
 
 .active-label-hint { color: #AAA; font-size: 11px; }
 .active-research-title { color: #FFD700; font-size: 15px; -unity-font-style: bold; }
 .active-timer-text { color: #64C864; font-size: 18px; -unity-font-style: bold; }
-
-.cancel-research-btn {
-    background-color: #8B0000;
-    color: white;
-    font-size: 10px;
-    border-width: 0;
-}

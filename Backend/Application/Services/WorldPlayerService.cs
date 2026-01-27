@@ -79,7 +79,8 @@ namespace Application.Services
                 cityCount,
                 worldPlayer.Alliance?.Name ?? "Ingen Alliance",
                 worldPlayer.Ideology,
-                worldPlayer.Alliance?.Id ?? Guid.Empty
+                worldPlayer.Alliance?.Id ?? Guid.Empty,
+                worldPlayer.WorldId
             );
         }
 

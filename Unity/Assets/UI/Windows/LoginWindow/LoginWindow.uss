@@ -24,7 +24,7 @@
 }
 
 .input-label {
-    color: rgb(0, 0, 0);
+    color: var(--c-text-body);
     font-size: 13px;
     -unity-font-style: bold;
     margin-bottom: 6px;
@@ -38,48 +38,27 @@
 }
 
 /* Det faktiske input-felt indeni TextField */
-.auth-text-field .unity-base-text-field__input {
+.auth-text-field > .unity-base-text-field__input {
     background-color: rgba(255, 255, 255, 0.8);
-    border-color: rgb(165, 125, 50);
+    border-color: var(--c-border);
     border-width: 2px;
     border-radius: 4px;
     padding: 8px;
-    color: rgb(0, 0, 0);
-    /* FIX: Ændrer musen til en tekst-linje ved hover */
+    color: black;
     cursor: text;
+    -unity-text-align: middle-left;
 }
 
-/* FIX: Centrerer header teksten korrekt */
+/* Focus state for input felter */
+.auth-text-field:focus > .unity-base-text-field__input {
+    border-color: var(--c-btn-action-bg);
+}
+
 .window-header-label {
     flex-grow: 1;
     -unity-text-align: middle-center;
     padding-right: 0;
     margin-right: 0;
-}
-
-.login-button-primary {
-    background-color: rgb(165, 125, 50);
-    color: white;
-    -unity-font-style: bold;
-    padding: 12px;
-    margin-top: 15px;
-    border-width: 0;
-    border-radius: 4px;
-    font-size: 14px;
-}
-
-.login-button-primary:hover {
-    background-color: rgb(195, 155, 80);
-}
-
-.register-button-flat {
-    background-color: rgba(0, 0, 0, 0);
-    color: rgb(80, 60, 20);
-    border-width: 0;
-    margin-top: 10px;
-    font-size: 12px;
-    text-decoration: underline;
-    -unity-font-style: bold;
 }
 
 .status-feedback-label {
@@ -89,4 +68,22 @@
     white-space: normal;
     height: 40px;
     -unity-font-style: bold;
+}
+
+/* NYT: Subtle Text Link Button Styling */
+.btn-text-link {
+    background-color: rgba(0, 0, 0, 0); /* Transparent */
+    border-width: 0;
+    color: rgb(90, 70, 50); /* Diskret mørkebrun */
+    font-size: 12px;
+    -unity-font-style: bold;
+    margin-top: 15px;
+    -unity-text-align: middle-center;
+    cursor: link;
+    transition-duration: 0.1s;
+}
+
+.btn-text-link:hover {
+    color: var(--c-text-highlight); /* Lyser op i guld ved hover */
+    scale: 1.05;
 }

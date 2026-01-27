@@ -24,7 +24,6 @@ namespace Project.Scripts.Modules.UI
         private Label _activeResearchTimerLabel;
         private Button _cancelResearchButton;
 
-        // Tab References
         private Button _tabButtonEconomy;
         private Button _tabButtonWar;
         private Button _tabButtonUtility;
@@ -42,11 +41,14 @@ namespace Project.Scripts.Modules.UI
             }
             else
             {
-                Debug.LogError($"[ResearchWindow] Ugyldig WorldPlayerId: {NetworkManager.Instance.WorldPlayerId}");
+                Debug.LogError($"[ResearchWindow] Ugyldig WorldPlayerId.");
                 return;
             }
 
             InitializeUserInterfaceReferences();
+
+            if (Root != null) Root.pickingMode = PickingMode.Ignore;
+
             InitializeTabNavigation();
             RefreshResearchWindowState();
         }
@@ -112,10 +114,7 @@ namespace Project.Scripts.Modules.UI
 
         private void UpdateResearchPointsDisplay(double currentPoints)
         {
-            if (_researchPointsLabel != null)
-            {
-                _researchPointsLabel.text = currentPoints.ToString("N0");
-            }
+            if (_researchPointsLabel != null) _researchPointsLabel.text = currentPoints.ToString("N0");
         }
 
         private void PopulateResearchTreeVisuals(List<ResearchNodeDTO> nodes)
@@ -123,7 +122,6 @@ namespace Project.Scripts.Modules.UI
             if (_researchTreeContainer == null) return;
             _researchTreeContainer.Clear();
 
-            // Filtrering baseret på den valgte fane
             var filteredNodes = nodes.Where(node => node.ResearchType == _currentSelectedCategory).ToList();
 
             foreach (var node in filteredNodes)
@@ -156,22 +154,35 @@ namespace Project.Scripts.Modules.UI
             {
                 nodeCard.AddToClassList("node-completed");
                 Label completedLabel = new Label("DONE");
-                completedLabel.style.color = new Color(0, 0.4f, 0);
-                completedLabel.style.unityFontStyleAndWeight = FontStyle.Bold;
+                completedLabel.AddToClassList("node-status-text-done");
                 costRow.Add(completedLabel);
             }
             else if (nodeData.IsLocked)
             {
                 nodeCard.AddToClassList("node-locked");
-                Label lockedLabel = new Label("LOCKED");
-                lockedLabel.style.color = Color.gray;
-                costRow.Add(lockedLabel);
+
+                Button lockedBtn = new Button();
+                lockedBtn.text = "LOCKED";
+                lockedBtn.AddToClassList("btn-global-base");
+                lockedBtn.AddToClassList("node-button-locked");
+                lockedBtn.SetEnabled(false);
+                lockedBtn.style.height = 24;
+                lockedBtn.style.fontSize = 10;
+                lockedBtn.style.marginTop = 0;
+                costRow.Add(lockedBtn);
             }
             else
             {
                 Button researchBtn = new Button(() => RequestStartResearch(nodeData.Id));
                 researchBtn.text = "START";
+
+                researchBtn.AddToClassList("btn-global-base");
+                researchBtn.AddToClassList("btn-imperial-success");
+
+                researchBtn.style.height = 24;
                 researchBtn.style.fontSize = 10;
+                researchBtn.style.marginTop = 0;
+
                 researchBtn.SetEnabled(nodeData.CanAfford);
                 costRow.Add(researchBtn);
             }
@@ -182,27 +193,40 @@ namespace Project.Scripts.Modules.UI
 
         private void HandleActiveResearchJobDisplay(ActiveResearchJobDTO activeJob)
         {
-            if (activeJob == null)
-            {
-                if (_activeJobPanel != null) _activeJobPanel.style.display = DisplayStyle.None;
-                return;
-            }
-
+            // RETTELSE: Vi tvinger panelet til ALTID at være synligt (Flex)
             if (_activeJobPanel != null) _activeJobPanel.style.display = DisplayStyle.Flex;
 
-            // Find navnet på den research der er i gang fra cachen
-            var researchInfo = _cachedResearchNodes.FirstOrDefault(n => n.Id == activeJob.ResearchId);
-            if (_activeResearchNameLabel != null)
-                _activeResearchNameLabel.text = researchInfo != null ? researchInfo.Name.ToUpper() : activeJob.ResearchId;
-
-            if (_cancelResearchButton != null)
-            {
-                _cancelResearchButton.clicked -= () => RequestCancelResearch(activeJob.JobId);
-                _cancelResearchButton.clicked += () => RequestCancelResearch(activeJob.JobId);
-            }
-
             if (_activeTimerCoroutine != null) StopCoroutine(_activeTimerCoroutine);
-            _activeTimerCoroutine = StartCoroutine(ExecuteActiveResearchCountdownTimer(activeJob.ExpectedCompletionTime));
+
+            if (activeJob == null)
+            {
+                // Ingen aktiv forskning: Vis "IDLE" og disable knappen
+                if (_activeResearchNameLabel != null) _activeResearchNameLabel.text = "IDLE";
+                if (_activeResearchTimerLabel != null) _activeResearchTimerLabel.text = "--:--:--";
+
+                if (_cancelResearchButton != null)
+                {
+                    _cancelResearchButton.SetEnabled(false);
+                    // Fjerner callbacks for en sikkerheds skyld
+                    _cancelResearchButton.clicked -= null;
+                }
+            }
+            else
+            {
+                // Aktiv forskning: Vis info og enable knappen
+                var researchInfo = _cachedResearchNodes.FirstOrDefault(n => n.Id == activeJob.ResearchId);
+                if (_activeResearchNameLabel != null)
+                    _activeResearchNameLabel.text = researchInfo != null ? researchInfo.Name.ToUpper() : activeJob.ResearchId;
+
+                if (_cancelResearchButton != null)
+                {
+                    _cancelResearchButton.SetEnabled(true);
+                    _cancelResearchButton.clicked -= () => RequestCancelResearch(activeJob.JobId); // Undgå dubletter
+                    _cancelResearchButton.clicked += () => RequestCancelResearch(activeJob.JobId);
+                }
+
+                _activeTimerCoroutine = StartCoroutine(ExecuteActiveResearchCountdownTimer(activeJob.ExpectedCompletionTime));
+            }
         }
 
         private IEnumerator ExecuteActiveResearchCountdownTimer(DateTime completionTime)
@@ -230,30 +254,18 @@ namespace Project.Scripts.Modules.UI
         public void RequestStartResearch(string researchId)
         {
             string jwtToken = NetworkManager.Instance.JwtToken;
-
             StartCoroutine(NetworkManager.Instance.Research.StartResearchProcess(_worldPlayerId, researchId, jwtToken, (success, message) =>
             {
-                if (success)
-                {
-                    RefreshResearchWindowState();
-                }
-                else
-                {
-                    Debug.LogWarning($"[ResearchWindow] Start failed: {message}");
-                }
+                if (success) RefreshResearchWindowState();
             }));
         }
 
         private void RequestCancelResearch(Guid jobId)
         {
             string jwtToken = NetworkManager.Instance.JwtToken;
-
             StartCoroutine(NetworkManager.Instance.Research.CancelActiveResearch(_worldPlayerId, jobId, jwtToken, (success, message) =>
             {
-                if (success)
-                {
-                    RefreshResearchWindowState();
-                }
+                if (success) RefreshResearchWindowState();
             }));
         }
     }

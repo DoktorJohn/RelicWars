@@ -1,10 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <ui:UXML xmlns:ui="UnityEngine.UIElements" editor-extension-mode="False">
-    <ui:VisualElement class="world-entry-container">
+    <ui:VisualElement class="world-entry-row">
         <ui:VisualElement class="world-info-group">
             <ui:Label name="World-Name" text="Realm of Chaos" class="world-name-label" />
             <ui:Label name="World-Stats" text="Players: 120 / 500" class="world-stats-label" />
         </ui:VisualElement>
-        <ui:Button name="Button-Enter" text="ENTER" class="enter-world-button" />
+        
+        <ui:Button name="Button-Enter" text="ENTER" class="btn-global-base btn-imperial-success" />
     </ui:VisualElement>
 </ui:UXML>

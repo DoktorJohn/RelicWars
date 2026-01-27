@@ -36,38 +36,27 @@
     margin-bottom: 5px;
 }
 
-/* NYT: Sikrer at indholdet i scrollviewet fylder hele bredden, så flex-grow virker */
 .tabs-scroll-view .unity-scroll-view__content-container {
     min-width: 100%;
     flex-direction: row;
 }
 
-/* Tab knap style - OPDATERET FOR AUTO-WIDTH */
 .tab-button {
-    /* MAGIC PROPERTY: Får knappen til at vokse og fylde ledig plads */
     flex-grow: 1; 
     width: auto;
-    
     height: 40px; 
-    
-    /* Sikrer at de ikke bliver FOR små, men ellers tilpasser de sig */
     min-width: 100px; 
-    
     padding-left: 5px; padding-right: 5px;
-    
     background-color: rgba(0,0,0,0.1);
     border-width: 1px;
     border-color: var(--c-border);
     border-radius: 4px;
-    
     margin-top: 4px;
     margin-left: 2px; 
     margin-right: 2px;
-    
     color: var(--c-text-body);
     -unity-font-definition: var(--font-header);
     -unity-font-style: bold;
-    
     font-size: 12px; 
 }
 
@@ -146,8 +135,7 @@
     border-width: 2px; border-color: white;
 }
 
-/* --- SPECIFIKT SCROLLBAR FIX TIL TABS --- */
-/* Dette skjuler scrollbaren KUN på tabs-listen, men lader den være på slideren */
+/* Skjuler scrollbar på tabs */
 .tabs-scroll-view .unity-scroller { 
     display: none; 
     height: 0; 

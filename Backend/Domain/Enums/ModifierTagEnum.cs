@@ -15,6 +15,8 @@ namespace Domain.Enums
 
         Infantry, Cavalry, Siege,
         Upkeep, TravelSpeed, Power, Armor, Discipline, Casualties, Wall, LootCapacity,
-        Ideology, IdeologyFocus
+        Ideology, IdeologyFocus,
+
+        Placeholder
     }
 }

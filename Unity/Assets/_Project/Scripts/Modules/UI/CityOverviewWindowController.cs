@@ -29,6 +29,12 @@ namespace Assets._Project.Scripts.Modules.UI
         {
             InitializeUserInterfaceComponentReferences();
 
+            // 1) Tillad interaktion med spillet bag vinduet
+            if (Root != null)
+            {
+                Root.pickingMode = PickingMode.Ignore;
+            }
+
             Guid activeCityIdentifier = (dataPayload is Guid cityGuid) ? cityGuid : NetworkManager.Instance.ActiveCityId ?? Guid.Empty;
             if (activeCityIdentifier == Guid.Empty) return;
 
@@ -71,7 +77,7 @@ namespace Assets._Project.Scripts.Modules.UI
             // 1. Update Global Wallets
             _labelGlobalSilverAmount.text = dataModel.GlobalSilverAmount.ToString("N0");
             _labelGlobalResearchAmount.text = dataModel.GlobalResearchPointsAmount.ToString("N0");
-            _labelGlobalIdeologyAmount.text = dataModel.GlobalIdeologyFocusPointsAmount.ToString("N0"); // NY opdatering
+            _labelGlobalIdeologyAmount.text = dataModel.GlobalIdeologyFocusPointsAmount.ToString("N0");
 
             // 2. Build Economy Grid
             _economyResourceGridContainer.Clear();
@@ -82,10 +88,19 @@ namespace Assets._Project.Scripts.Modules.UI
             AddEconomyResourceCard("RESEARCH", "icon-research", dataModel.ResearchProduction);
             AddEconomyResourceCard("IDEOLOGY", "icon-ideology", dataModel.IdeologyProduction);
 
-            // 3. Update Population Visuals
-            float totalPopulationUsage = dataModel.Population.UsedByBuildings + dataModel.Population.UsedByUnits;
-            float usagePercentageCalculated = (totalPopulationUsage / dataModel.Population.MaxCapacity) * 100f;
-            _populationUsageBarFill.style.width = Length.Percent(usagePercentageCalculated);
+            // 5) Update Population Bar (Fixet logik)
+            if (dataModel.Population.MaxCapacity > 0)
+            {
+                float totalPopulationUsage = (float)dataModel.Population.UsedByBuildings + dataModel.Population.UsedByUnits;
+                float usagePercentageCalculated = (totalPopulationUsage / (float)dataModel.Population.MaxCapacity) * 100f;
+
+                // Vi tvinger bredden via Length.Percent
+                _populationUsageBarFill.style.width = new StyleLength(new Length(Mathf.Clamp(usagePercentageCalculated, 0, 100), LengthUnit.Percent));
+            }
+            else
+            {
+                _populationUsageBarFill.style.width = new StyleLength(new Length(0, LengthUnit.Percent));
+            }
 
             _labelPopulationStatisticalDetails.text = $"Buildings: {dataModel.Population.UsedByBuildings} | Units: {dataModel.Population.UsedByUnits} | Free: {dataModel.Population.FreePopulation}";
 
@@ -101,18 +116,21 @@ namespace Assets._Project.Scripts.Modules.UI
 
             // Card Header
             VisualElement headerRow = new VisualElement();
-            headerRow.AddToClassList("card-resource-title");
+            headerRow.style.flexDirection = FlexDirection.Row;
+            headerRow.style.alignItems = Align.Center;
+            headerRow.style.marginBottom = 5;
 
             VisualElement resourceIcon = new VisualElement();
             resourceIcon.AddToClassList("side-bar-icon-base");
             resourceIcon.AddToClassList(iconCssClass);
-            resourceIcon.style.width = 20;
-            resourceIcon.style.height = 20;
+            resourceIcon.style.width = 22; // Hak større
+            resourceIcon.style.height = 22;
 
             Label resourceTitleLabel = new Label(resourceTitle);
             resourceTitleLabel.style.marginLeft = 10;
-            resourceTitleLabel.style.color = _darkTextColor; // DARK TEXT FIX
+            resourceTitleLabel.style.color = _darkTextColor;
             resourceTitleLabel.style.unityFontStyleAndWeight = FontStyle.Bold;
+            resourceTitleLabel.style.fontSize = 13;
 
             headerRow.Add(resourceIcon);
             headerRow.Add(resourceTitleLabel);
