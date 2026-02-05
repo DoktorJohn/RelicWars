@@ -14,6 +14,16 @@ namespace Infrastructure.Repositories
             _context = context;
         }
 
+        public async Task<List<UnitDeployment>> GetUnitDeploymentsWithStacksByListOfIdsAsync(List<Guid> ids)
+        {
+            return await _context.UnitDeployments
+                .Include(ud => ud.UnitStacks)
+                .Include(ud => ud.OwnerWorldPlayer)
+                    .ThenInclude(ud => ud!.PlayerProfile)
+                .Where(ud => ids.Contains(ud.Id))
+                .ToListAsync();
+        }
+
         public async Task AddAsync(UnitDeployment deployment)
         {
             await _context.UnitDeployments.AddAsync(deployment);
@@ -35,6 +45,15 @@ namespace Infrastructure.Repositories
         public async Task<List<UnitDeployment>> GetActiveDeploymentsAsync()
         {
             return await _context.UnitDeployments.ToListAsync();
+        }
+
+        public async Task<UnitDeployment?> GetByIdAsync(Guid id)
+        {
+            return await _context.UnitDeployments
+                .Include(ud => ud.UnitStacks)
+                .Include(ud => ud.OwnerWorldPlayer)
+                    .ThenInclude(ud => ud!.PlayerProfile)
+                .Where(ud => ud.Id == id).FirstOrDefaultAsync();
         }
     }
 }

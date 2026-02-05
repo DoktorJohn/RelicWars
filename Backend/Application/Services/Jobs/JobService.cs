@@ -1,5 +1,6 @@
 ﻿using Application.Interfaces.IRepositories;
 using Application.Interfaces.IServices;
+using Application.Utility;
 using Domain.Entities;
 using Domain.User;
 using Domain.Workers;
@@ -18,6 +19,7 @@ namespace Application.Services.Jobs
         private readonly ICityRepository _cityRepo;
         private readonly IWorldPlayerService _worldPlayerService;
         private readonly IWorldPlayerRepository _worldPlayerRepo;
+        private readonly CityPointCalculator _cityPointCalculator;
         private readonly ILogger<JobService> _logger;
 
         public JobService(
@@ -25,13 +27,15 @@ namespace Application.Services.Jobs
             ICityRepository cityRepo,
             ILogger<JobService> logger,
             IWorldPlayerRepository userRepo,
-            IWorldPlayerService worldPlayerService)
+            IWorldPlayerService worldPlayerService,
+            CityPointCalculator cityPointCalculator)
         {
             _resourceService = resourceService;
             _cityRepo = cityRepo;
             _logger = logger;
             _worldPlayerRepo = userRepo;
             _worldPlayerService = worldPlayerService;
+            _cityPointCalculator = cityPointCalculator;
         }
 
         public async Task ProcessAsync(BaseJob job)
@@ -82,7 +86,7 @@ namespace Application.Services.Jobs
                 HandleRecruitmentJob(city, recruitmentJob);
             }
 
-            // Gem ændringer for både by og WorldPlayer (pga. Silver-opdatering i Sync)
+            // Gem ændringer for både by og OwnerWorldPlayer (pga. Silver-opdatering i Sync)
             await _cityRepo.UpdateAsync(city);
         }
 
@@ -139,15 +143,22 @@ namespace Application.Services.Jobs
         private void HandleBuildingJob(City city, BuildingJob job)
         {
             var building = city.Buildings.FirstOrDefault(x => x.Type == job.BuildingType);
+
             if (building == null)
             {
-                city.Buildings.Add(new Building { Type = job.BuildingType, Level = job.TargetLevel });
+                building = new Building { Type = job.BuildingType, Level = job.TargetLevel, CityId = city.Id };
+                city.Buildings.Add(building);
             }
             else
             {
                 building.Level = job.TargetLevel;
             }
-            city.Points += 10;
+
+            // Opdater byens samlede points baseret på den nye bygningsstruktur
+            city.Points = _cityPointCalculator.CalculateTotalPointsForCity(city);
+
+            _logger.LogInformation("[JobService] By {CityName} opdateret til {Points} points efter færdiggørelse af {BuildingType} (Level {Level})",
+                city.Name, city.Points, job.BuildingType, job.TargetLevel);
         }
 
         private void HandleRecruitmentJob(City city, RecruitmentJob job)
@@ -168,8 +179,7 @@ namespace Application.Services.Jobs
                     city.UnitStacks.Add(new UnitStack
                     {
                         Type = job.UnitType,
-                        Quantity = unitsToDeliver,
-                        CityId = city.Id
+                        Quantity = unitsToDeliver
                     });
                 }
                 else

@@ -73,7 +73,6 @@ namespace Domain.Enums
         IceMountains_4,
         IceMountains_5,
         IceMountains_6,
-        IceMountains_7,
 
         IceMountainTundraTransition_1,
         IceMountainTundraTransition_2,

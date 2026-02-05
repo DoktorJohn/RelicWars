@@ -1,4 +1,6 @@
-﻿using System;
+﻿using Project.Network.Models;
+using Project.Scripts.Domain.DTOs;
+using System;
 using System.Collections.Generic;
 
 [Serializable]
@@ -26,10 +28,9 @@ public class WorldMapChunkResponseDTO
     public int ChunkY { get; set; }
     public int Width { get; set; }
     public int Height { get; set; }
-
-    public byte[] TerrainData { get; set; }
-
-    public List<WorldMapObjectDTO> MapObjects { get; set; }
+    public List<WorldMapObjectDTO> MapObjects { get; set; } = new();
+    public List<UnitDeploymentDTO> UnitDeployments { get; set; } = new();
+    public List<CityDTO> Cities { get; set; } = new();
 }
 
 public class GetWorldMapChunkDTO

@@ -19,7 +19,7 @@ namespace Infrastructure.Repositories
             _context = context;
         }
 
-        public async Task<List<World>>? GetAllAsync()
+        public async Task<List<World>> GetAllAsync()
         {
             var worlds = await _context.World.ToListAsync();
             return worlds;
@@ -37,16 +37,6 @@ namespace Infrastructure.Repositories
                 .Where(w => w.Id == worldId)
                 .Select(w => (int?)w.MapSeed)
                 .FirstOrDefaultAsync();
-        }
-
-        public async Task<List<WorldMapObject>> GetObjectsInAreaAsync(Guid worldId, short startX, short startY, byte width, byte height)
-        {
-            return await _context.WorldMapObjects
-                .AsNoTracking()
-                .Where(o => o.WorldId == worldId
-                         && o.X >= startX && o.X < startX + width
-                         && o.Y >= startY && o.Y < startY + height)
-                .ToListAsync();
         }
     }
 }

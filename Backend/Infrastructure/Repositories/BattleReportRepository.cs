@@ -21,10 +21,10 @@ namespace Infrastructure.Repositories
             await _context.SaveChangesAsync();
         }
 
-        public async Task<List<BattleReport>> GetByUserIdAsync(Guid userId)
+        public async Task<List<BattleReport>> GetByUserIdAsync(Guid worldPlayerId)
         {
             return await _context.BattleReports
-                .Where(r => r.UserId == userId)
+                .Where(r => r.WorldPlayerId == worldPlayerId)
                 .OrderByDescending(r => r.OccurredAt)
                 .ToListAsync();
         }

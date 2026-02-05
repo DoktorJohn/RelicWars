@@ -61,7 +61,7 @@ namespace Application.Utility
                 {
                     Type = unitType,
                     Quantity = finalQuantityToAdd,
-                    CityId = cityId
+                    StationedCityId = cityId
                 });
             }
 

@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ui:UXML xmlns:ui="UnityEngine.UIElements" editor-extension-mode="False">
+    <ui:Style src="project://database/Assets/UI/HUD/WorldMapUnitDeployment.uss" />
+    
+    <ui:VisualElement name="UnitDeploymentBar-MainContainer" class="UnitDeployment-sidebar-main-container">
+        <ui:VisualElement class="UnitDeployment-sidebar-header">
+            <ui:Label text="ACTIVE EXPEDITIONS" class="UnitDeployment-sidebar-header-label" />
+        </ui:VisualElement>
+        
+        <ui:ScrollView name="UnitDeploymentBar-ScrollView" class="UnitDeployment-sidebar-scrollview" />
+    </ui:VisualElement>
+</ui:UXML>

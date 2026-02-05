@@ -10,11 +10,13 @@ namespace Application.Interfaces.IRepositories
 {
     public interface ICityRepository
     {
+        Task<List<City>> GetCitiesByListOfIdsAsync(List<Guid> ids);
         Task<City?> GetByIdAsync(Guid cityId);
         Task UpdateAsync(City city);
         Task<List<City>> GetAllAsync();
         Task UpdateRangeAsync(List<City> cities);
         Task AddAsync(City city);
         Task<City?> GetCityWithBuildingsByCityIdentifierAsync(Guid cityId);
+        Task<City?> GetByCoordinatesAsync(int x, int y);
     }
 }

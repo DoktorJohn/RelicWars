@@ -21,6 +21,8 @@ namespace Domain.User
         //Navprops
         public List<City> Cities { get; set; } = new();
         public List<Research> CompletedResearches { get; set; } = new();
+        public List<UnitDeployment> UnitDeployments { get; set; } = new();
+        public List<UnitStack> UnitStacks { get; set; } = new();
         public List<Modifier> ModifiersInternal { get; set; } = new();
         public List<ModifierTagEnum> ModifiersThatAffectsThis { get; set; } = new();
 

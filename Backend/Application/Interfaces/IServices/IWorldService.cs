@@ -10,6 +10,6 @@ namespace Application.Interfaces.IServices
     public interface IWorldService
     {
         Task<List<WorldAvailableResponseDTO>> ObtainAllActiveGameWorldsAsync();
-        Task<WorldMapChunkResponseDTO> GetWorldMapChunk(GetWorldMapChunkDTO dto);
+        Task<WorldMapChunkResponseDTO?> GetWorldMapChunk(GetWorldMapChunkDTO dto);
     }
 }

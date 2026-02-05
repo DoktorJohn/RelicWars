@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace Domain.Entities
 {
-    public class WorldMapObject
+    public class WorldMapObject : BaseEntity
     {
         public Guid WorldId { get; set; }
         public short X { get; set; }

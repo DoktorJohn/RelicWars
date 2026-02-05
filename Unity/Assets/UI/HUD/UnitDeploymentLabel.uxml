@@ -1,0 +1,15 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" editor-extension-mode="False">
+    <ui:Style src="project://database/Assets/UI/HUD/UnitDeploymentLabel.uss" />
+
+    <ui:VisualElement name="unit-label-container" class="unit-label-container">
+        
+        <ui:VisualElement name="unit-strength-badge" class="unit-strength-badge">
+            <ui:Label name="unit-strength-text" text="150" class="unit-strength-text" />
+        </ui:VisualElement>
+        
+        <ui:VisualElement name="unit-owner-bar" class="unit-owner-bar">
+            <ui:Label name="unit-owner-text" text="PLAYER_ONE" class="unit-owner-text" />
+        </ui:VisualElement>
+
+    </ui:VisualElement>
+</ui:UXML>

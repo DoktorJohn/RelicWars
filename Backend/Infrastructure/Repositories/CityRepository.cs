@@ -27,12 +27,22 @@ namespace Infrastructure.Repositories
         public async Task<City?> GetCityWithBuildingsByCityIdentifierAsync(Guid cityIdentifier)
         {
             return await _context.Cities
-                .Include(city => city.Buildings) // Needed for TownHall
-                .Include(city => city.WorldPlayer) // Needed for modifiers
+                .Include(city => city.Buildings)
+                .Include(city => city.WorldPlayer)
+                    .ThenInclude(worldPlayer => worldPlayer.PlayerProfile)
+                .Include(city => city.WorldPlayer)
                     .ThenInclude(player => player.ModifiersInternal)
                 .Include(city => city.UnitStacks)
                 .Include(city => city.OriginUnitDeployments)
+                    .ThenInclude(deployment => deployment.UnitStacks)
                 .FirstOrDefaultAsync(city => city.Id == cityIdentifier);
+        }
+
+        public async Task<List<City>> GetCitiesByListOfIdsAsync(List<Guid> ids)
+        {
+            return await _context.Cities
+                .Where(c => ids.Contains(c.Id))
+                .ToListAsync();
         }
 
         public async Task<List<City>> GetAllAsync()
@@ -49,6 +59,15 @@ namespace Infrastructure.Repositories
                     .ThenInclude(playerEntity => playerEntity!.ModifiersInternal)
 
                 .ToListAsync();
+        }
+
+        public async Task<City?> GetByCoordinatesAsync(int x, int y)
+        {
+            return await _context.Cities
+                .Include(city => city.WorldPlayer)
+                    .ThenInclude(player => player!.ModifiersInternal)
+                .Include(city => city.UnitStacks)
+                .FirstOrDefaultAsync(city => city.X == x && city.Y == y);
         }
 
         public async Task UpdateAsync(City city)

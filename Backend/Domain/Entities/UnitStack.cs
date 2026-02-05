@@ -1,5 +1,6 @@
 ﻿using Domain.Abstraction;
 using Domain.Enums;
+using Domain.User;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -12,9 +13,16 @@ namespace Domain.Entities
     {
         public UnitTypeEnum Type { get; set; }
         public int Quantity { get; set; }
-        public Guid CityId { get; set; }
         public List<Modifier> ModifiersInternal { get; set; } = new();
         public List<ModifierTagEnum> ModifiersThatAffectsThis { get; set; } = new();
+
+        //FK
+        public Guid? StationedCityId { get; set; }
+        public City? StationedCity { get; set; }
+        public Guid? UnitDeploymentId { get; set; }
+        public UnitDeployment? UnitDeployment { get; set; }
+        public Guid? WorldPlayerId { get; set; }
+        public WorldPlayer? WorldPlayer { get; set; }
 
         public IEnumerable<Modifier> GetModifiers()
         {

@@ -8,10 +8,19 @@ using System.Threading.Tasks;
 namespace Application.DTOs
 {
 
+    public record CityDTO(
+        Guid Id,
+        string CityName,
+        int X,
+        int Y,
+        int Points
+        );
     public class CityControllerGetDetailedCityInformationDTO
     {
         public Guid CityId { get; set; }
         public string CityName { get; set; } = string.Empty;
+        public int X { get; set; }
+        public int Y { get; set; }
 
         // Ressourcebeholdning
         public double CurrentWoodAmount { get; set; }

@@ -21,7 +21,7 @@ namespace Project.Modules.UI
         private Label _researchAmountLabel;
         private Label _ideologyFocusPointsAmountLabel;
 
-        private Button _mapButton;
+        private Button _navigationButton;
 
         private WarehouseCapacityProgressPainter _woodWarehousePainter;
         private WarehouseCapacityProgressPainter _stoneWarehousePainter;
@@ -43,6 +43,9 @@ namespace Project.Modules.UI
             if (CityStateManager.Instance != null)
             {
                 CityStateManager.Instance.OnResourceStateChanged += HandleResourceStateCalculated;
+
+                UpdateUserInterfaceLabels(CityStateManager.Instance.CurrentResources);
+                UpdateWarehouseVisuals(CityStateManager.Instance.CurrentResources);
             }
         }
 
@@ -67,10 +70,12 @@ namespace Project.Modules.UI
 
         private void InitializeNavigationButtons()
         {
-            _mapButton = _rootVisualElement.Q<Button>("City-TopBar-MapButton");
-            if (_mapButton != null)
+            // Vi genbruger knappen uanset scene-kontekst
+            _navigationButton = _rootVisualElement.Q<Button>("City-TopBar-MapButton");
+            if (_navigationButton != null)
             {
-                _mapButton.clicked += HandleMapNavigationRequested;
+                _navigationButton.clicked -= HandleContextualNavigationRequested;
+                _navigationButton.clicked += HandleContextualNavigationRequested;
             }
         }
 
@@ -83,10 +88,21 @@ namespace Project.Modules.UI
             _ideologyPainter = new WarehouseCapacityProgressPainter(_rootVisualElement.Q<VisualElement>("City-WarehouseBar-Ideology"));
         }
 
-        private void HandleMapNavigationRequested()
+        private void HandleContextualNavigationRequested()
         {
-            Debug.Log("[CityTopBar] Navigation to the world map requested.");
-            SceneManager.LoadScene("WorldMapScene");
+            string currentSceneName = SceneManager.GetActiveScene().name;
+
+            // Hvis vi er på mappet, skal vi "hjem" til byen. Ellers skal vi ud på mappet.
+            if (currentSceneName == "WorldMapScene")
+            {
+                Debug.Log("[CityTopBar] Navigation back to City requested.");
+                SceneManager.LoadScene("CityViewScene");
+            }
+            else
+            {
+                Debug.Log("[CityTopBar] Navigation to World Map requested.");
+                SceneManager.LoadScene("WorldMapScene");
+            }
         }
 
         private void HandleResourceStateCalculated(CityResourceState currentResourceState)
@@ -142,9 +158,8 @@ namespace Project.Modules.UI
             private readonly VisualElement _targetVisualElement;
             private float _currentFillPercentage;
 
-            // Farve-konstanter for at sikre konsistens i det visuelle udtryk
             private readonly Color _colorBaseBeige = new Color(0.9f, 0.9f, 0.85f);
-            private readonly Color _colorWarningGold = new Color(1.0f, 0.8f, 0.2f); // En varm gul/guld
+            private readonly Color _colorWarningGold = new Color(1.0f, 0.8f, 0.2f);
             private readonly Color _colorDangerRed = Color.red;
 
             private const float _dangerThresholdPercentage = 0.95f;
@@ -165,38 +180,30 @@ namespace Project.Modules.UI
             private void OnGenerateVisualContent(MeshGenerationContext context)
             {
                 var painter2D = context.painter2D;
-
                 Vector2 arcCenterPoint = new Vector2(24f, 24f);
                 float arcRadius = 21f;
 
                 painter2D.lineWidth = 3.2f;
                 painter2D.lineCap = LineCap.Round;
 
-                // Baggrundsbue (Statisk mørk bue der indikerer 100% kapacitet)
                 painter2D.strokeColor = new Color(0.12f, 0.12f, 0.12f, 0.5f);
                 painter2D.BeginPath();
                 painter2D.Arc(arcCenterPoint, arcRadius, 135f, 405f, ArcDirection.Clockwise);
                 painter2D.Stroke();
 
-                // Beregn farve baseret på tærskelværdi
                 Color progressStrokeColor;
-
                 if (_currentFillPercentage < _dangerThresholdPercentage)
                 {
-                    // Normal tilstand: Går fra beige til en mættet guld/gul nuance
-                    // Vi normaliserer turen til guld over de første 95%
                     float normalizedGoldStep = _currentFillPercentage / _dangerThresholdPercentage;
                     progressStrokeColor = Color.Lerp(_colorBaseBeige, _colorWarningGold, normalizedGoldStep);
                 }
                 else
                 {
-                    // Danger zone: Hurtigt skift fra guld til rød over de sidste 5%
                     float normalizedRedStep = (_currentFillPercentage - _dangerThresholdPercentage) / (1.0f - _dangerThresholdPercentage);
                     progressStrokeColor = Color.Lerp(_colorWarningGold, _colorDangerRed, normalizedRedStep);
                 }
 
                 painter2D.strokeColor = progressStrokeColor;
-
                 painter2D.BeginPath();
                 float calculateEndAngle = 135f + (270f * _currentFillPercentage);
                 painter2D.Arc(arcCenterPoint, arcRadius, 135f, calculateEndAngle, ArcDirection.Clockwise);

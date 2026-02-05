@@ -128,34 +128,93 @@ namespace Application.Services
                 var globalSnapshot = _resourceService.CalculateGlobalResources(cityEntity.WorldPlayer, currentDateTime);
                 var currentCitySnapshot = _resourceService.CalculateCityResources(cityEntity, currentDateTime);
 
+                var stationedUnitsDto = cityEntity.UnitStacks
+                    .Select(u => new UnitStackDTO(u.Type, u.Quantity))
+                    .ToList();
+
+                var deployedUnitsDto = cityEntity.OriginUnitDeployments
+                    .Select(d => new UnitDeploymentDTO(
+                        d.Id,
+                        d.Name,
+                        d.WorldPlayerId,
+                        d.OriginCityId,
+
+                        new CityDTO(
+                            d.OriginCity.Id,
+                            d.OriginCity.Name,
+                            d.OriginCity.X,
+                            d.OriginCity.Y,
+                            d.OriginCity.Points
+                        ),
+
+                        d.TargetCityId ?? Guid.Empty,
+
+                        d.TargetCity != null
+                            ? new CityDTO(
+                                d.TargetCity.Id,
+                                d.TargetCity.Name,
+                                d.TargetCity.X,
+                                d.TargetCity.Y,
+                                d.TargetCity.Points
+                            )
+                            : null,
+
+                        d.UnitDeploymentMovementStatus,
+                        d.ArrivalTime,
+                        d.NextStepTime,
+                        d.LastStepTime,
+                        d.CurrentX,
+                        d.CurrentY,
+                        d.NextX,
+                        d.NextY,
+                        d.FinalX,
+                        d.FinalY,
+                        d.Mobility,
+                        d.RemainingPathJson ?? "",
+                        d.UnitStacks.Select(us => new UnitStackDTO(us.Type, us.Quantity)).ToList(),
+                        d.OwnerWorldPlayer?.PlayerProfile?.UserName ?? "Ukendt Spiller"
+                    ))
+                    .ToList();
+
                 return new CityControllerGetDetailedCityInformationDTO
                 {
                     CityId = cityEntity.Id,
                     CityName = cityEntity.Name,
+                    X = cityEntity.X,
+                    Y = cityEntity.Y,
+
+                    // Ressource-afrunding og mapping
                     CurrentWoodAmount = Math.Floor(cityEntity.Wood),
                     CurrentStoneAmount = Math.Floor(cityEntity.Stone),
                     CurrentMetalAmount = Math.Floor(cityEntity.Metal),
                     CurrentSilverAmount = Math.Floor(cityEntity.WorldPlayer.Silver),
                     CurrentResearchPoints = Math.Floor(cityEntity.WorldPlayer.ResearchPoints),
                     CurrentIdeologyFocusPoints = Math.Floor(cityEntity.WorldPlayer.IdeologyFocusPoints),
+
+                    // Kapaciteter og produktion
                     MaxWoodCapacity = _cityStatService.GetWarehouseCapacity(cityEntity),
                     MaxStoneCapacity = _cityStatService.GetWarehouseCapacity(cityEntity),
                     MaxMetalCapacity = _cityStatService.GetWarehouseCapacity(cityEntity),
+
                     WoodProductionPerHour = currentCitySnapshot.WoodProductionPerHour,
                     StoneProductionPerHour = currentCitySnapshot.StoneProductionPerHour,
                     MetalProductionPerHour = currentCitySnapshot.MetalProductionPerHour,
+
                     SilverProductionPerHour = globalSnapshot.SilverProductionPerHour,
                     ResearchPointsPerHour = globalSnapshot.ResearchPointsPerHour,
                     IdeologyFocusPointsPerHour = globalSnapshot.IdeologyFocusPointsPerHour,
+
                     CurrentPopulationUsage = _cityStatService.GetCurrentPopulationUsage(cityEntity),
                     MaxPopulationCapacity = _cityStatService.GetMaxPopulation(cityEntity),
+
                     BuildingList = cityEntity.Buildings.Select(b => new CityControllerGetDetailedCityInformationBuildingDTO
                     {
                         BuildingType = b.Type,
                         CurrentLevel = b.Level
                     }).ToList(),
-                    StationedUnits = cityEntity.UnitStacks.Select(u => new UnitStackDTO(u.Type, u.Quantity)).ToList(),
-                    DeployedUnits = cityEntity.OriginUnitDeployments.Select(d => new UnitDeploymentDTO(d.Id, d.UnitType, d.Quantity, d.UnitDeploymentMovementStatus, d.ArrivalTime, d.OriginCityId, d.TargetCityId, d.TargetCity?.Name)).ToList()
+
+                    StationedUnits = stationedUnitsDto,
+                    DeployedUnits = deployedUnitsDto
                 };
             }
 

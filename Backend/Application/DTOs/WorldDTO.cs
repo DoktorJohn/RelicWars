@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Application.DTOs;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -38,10 +39,9 @@ public class WorldMapChunkResponseDTO
     public int ChunkY { get; set; }
     public int Width { get; set; }
     public int Height { get; set; }
-
-    public byte[] TerrainData { get; set; }
-
-    public List<WorldMapObjectDTO> MapObjects { get; set; }
+    public List<WorldMapObjectDTO> MapObjects { get; set; } = new();
+    public List<UnitDeploymentDTO> UnitDeployments { get; set; } = new();
+    public List<CityDTO> Cities { get; set; } = new();
 }
 
 public class GetWorldMapChunkDTO

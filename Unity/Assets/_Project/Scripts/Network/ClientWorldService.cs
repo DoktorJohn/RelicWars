@@ -5,6 +5,7 @@ using UnityEngine;
 using UnityEngine.Networking;
 using Newtonsoft.Json;
 using Project.Network.Helper;
+using Project.Network.Models;
 
 namespace Project.Network
 {
@@ -32,48 +33,45 @@ namespace Project.Network
                 }
                 else
                 {
-                    Debug.LogError($"[World] Fetch Failed: {request.error}");
+                    Debug.LogError($"[World] Fetch Available Worlds Failed: {request.error} - URL: {url}");
                     callback?.Invoke(null);
                 }
             }
         }
 
-        /// <summary>
-        /// Fetches world map data for a specific area using a DTO to define the bounds.
-        /// </summary>
-        public IEnumerator GetWorldMapChunk(GetWorldMapChunkDTO chunkDto, string token, Action<WorldMapChunkResponseDTO> callback)
+        public IEnumerator GetWorldMapChunk(GetWorldMapChunkDTO request, string token, Action<WorldMapChunkResponseDTO> callback)
         {
-            string queryString = $"?worldId={chunkDto.worldId}&startX={chunkDto.startX}&startY={chunkDto.startY}&width={chunkDto.width}&height={chunkDto.height}";
-            string url = $"{_baseUrl}/chunk{queryString}";
+            string url = $"{_baseUrl}/chunk?worldId={request.worldId}&startX={request.startX}&startY={request.startY}&width={request.width}&height={request.height}";
 
-            using (UnityWebRequest request = UnityWebRequest.Get(url))
+            using (UnityWebRequest webRequest = BackendRequestHelper.CreateGetRequest(url, token))
             {
-                request.certificateHandler = new BypassCertificateHandler();
-                request.SetRequestHeader("Authorization", "Bearer " + token);
-                request.SetRequestHeader("Accept", "application/json");
+                yield return webRequest.SendWebRequest();
 
-                yield return request.SendWebRequest();
-
-                if (request.result == UnityWebRequest.Result.Success)
+                if (webRequest.result == UnityWebRequest.Result.Success)
                 {
+                    WorldMapChunkResponseDTO responseData = null;
                     try
                     {
-                        var chunkData = JsonConvert.DeserializeObject<WorldMapChunkResponseDTO>(request.downloadHandler.text);
-                        callback?.Invoke(chunkData);
+                        string json = webRequest.downloadHandler.text;
+                        if (!string.IsNullOrEmpty(json))
+                        {
+                            responseData = JsonConvert.DeserializeObject<WorldMapChunkResponseDTO>(json);
+                        }
                     }
-                    catch (Exception e)
+                    catch (Exception exception)
                     {
-                        Debug.LogError($"[ClientWorldService] JSON Parse Error: {e.Message}");
-                        callback?.Invoke(null);
+                        Debug.LogError($"[ClientWorldService] JSON Deserialization Error: {exception.Message}");
                     }
+
+                    callback?.Invoke(responseData);
                 }
                 else
                 {
-                    Debug.LogError($"[ClientWorldService] Network Error fetching chunk: {request.error} | {request.downloadHandler.text}");
+                    // Vi inkluderer URL'en i fejlen for nemmere debugging fremover
+                    Debug.LogError($"[ClientWorldService] Network Request Failed: {webRequest.error} - URL: {url}");
                     callback?.Invoke(null);
                 }
             }
         }
-
     }
 }

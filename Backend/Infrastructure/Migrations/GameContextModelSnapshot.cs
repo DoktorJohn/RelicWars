@@ -100,7 +100,7 @@ namespace Infrastructure.Migrations
                         .IsRequired()
                         .HasColumnType("TEXT");
 
-                    b.Property<Guid>("UserId")
+                    b.Property<Guid>("WorldPlayerId")
                         .HasColumnType("TEXT");
 
                     b.HasKey("Id");
@@ -114,7 +114,7 @@ namespace Infrastructure.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("TEXT");
 
-                    b.Property<Guid?>("CityId")
+                    b.Property<Guid>("CityId")
                         .HasColumnType("TEXT");
 
                     b.Property<DateTime>("DateCreated")
@@ -189,7 +189,7 @@ namespace Infrastructure.Migrations
                     b.Property<double>("Wood")
                         .HasColumnType("REAL");
 
-                    b.Property<Guid?>("WorldId")
+                    b.Property<Guid>("WorldId")
                         .HasColumnType("TEXT");
 
                     b.Property<Guid?>("WorldPlayerId")
@@ -206,6 +206,9 @@ namespace Infrastructure.Migrations
                     b.HasIndex("WorldId");
 
                     b.HasIndex("WorldPlayerId");
+
+                    b.HasIndex("X", "Y")
+                        .HasDatabaseName("IX_City_Coordinates");
 
                     b.ToTable("Cities");
                 });
@@ -285,14 +288,32 @@ namespace Infrastructure.Migrations
                     b.Property<DateTime>("ArrivalTime")
                         .HasColumnType("TEXT");
 
+                    b.Property<int>("CurrentX")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("CurrentY")
+                        .HasColumnType("INTEGER");
+
                     b.Property<DateTime>("DateCreated")
                         .HasColumnType("TEXT");
 
                     b.Property<DateTime>("DateLastModified")
                         .HasColumnType("TEXT");
 
+                    b.Property<DateTime>("DepartureTime")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("FinalX")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("FinalY")
+                        .HasColumnType("INTEGER");
+
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("INTEGER");
+
+                    b.Property<DateTime>("LastStepTime")
+                        .HasColumnType("TEXT");
 
                     b.Property<double>("LootMetal")
                         .HasColumnType("REAL");
@@ -303,15 +324,31 @@ namespace Infrastructure.Migrations
                     b.Property<double>("LootWood")
                         .HasColumnType("REAL");
 
+                    b.Property<int>("Mobility")
+                        .HasColumnType("INTEGER");
+
                     b.Property<string>("ModifiersThatAffectsThis")
                         .IsRequired()
                         .HasColumnType("TEXT");
 
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("NextStepTime")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("NextX")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("NextY")
+                        .HasColumnType("INTEGER");
+
                     b.Property<Guid>("OriginCityId")
                         .HasColumnType("TEXT");
 
-                    b.Property<int>("Quantity")
-                        .HasColumnType("INTEGER");
+                    b.Property<string>("RemainingPathJson")
+                        .HasColumnType("TEXT");
 
                     b.Property<Guid?>("TargetCityId")
                         .HasColumnType("TEXT");
@@ -319,17 +356,21 @@ namespace Infrastructure.Migrations
                     b.Property<int>("UnitDeploymentMovementStatus")
                         .HasColumnType("INTEGER");
 
-                    b.Property<int>("UnitDeploymentType")
-                        .HasColumnType("INTEGER");
+                    b.Property<Guid>("WorldId")
+                        .HasColumnType("TEXT");
 
-                    b.Property<int>("UnitType")
-                        .HasColumnType("INTEGER");
+                    b.Property<Guid>("WorldPlayerId")
+                        .HasColumnType("TEXT");
 
                     b.HasKey("Id");
 
                     b.HasIndex("OriginCityId");
 
                     b.HasIndex("TargetCityId");
+
+                    b.HasIndex("WorldId");
+
+                    b.HasIndex("WorldPlayerId");
 
                     b.ToTable("UnitDeployments");
                 });
@@ -338,9 +379,6 @@ namespace Infrastructure.Migrations
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("TEXT");
-
-                    b.Property<Guid>("CityId")
                         .HasColumnType("TEXT");
 
                     b.Property<DateTime>("DateCreated")
@@ -359,12 +397,25 @@ namespace Infrastructure.Migrations
                     b.Property<int>("Quantity")
                         .HasColumnType("INTEGER");
 
+                    b.Property<Guid?>("StationedCityId")
+                        .HasColumnType("TEXT");
+
                     b.Property<int>("Type")
                         .HasColumnType("INTEGER");
 
+                    b.Property<Guid?>("UnitDeploymentId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid?>("WorldPlayerId")
+                        .HasColumnType("TEXT");
+
                     b.HasKey("Id");
 
-                    b.HasIndex("CityId");
+                    b.HasIndex("StationedCityId");
+
+                    b.HasIndex("UnitDeploymentId");
+
+                    b.HasIndex("WorldPlayerId");
 
                     b.ToTable("UnitStacks");
                 });
@@ -411,6 +462,25 @@ namespace Infrastructure.Migrations
 
             modelBuilder.Entity("Domain.Entities.WorldMapObject", b =>
                 {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("DateCreated")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("DateLastModified")
+                        .HasColumnType("TEXT");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<Guid?>("ReferenceEntityId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<byte>("Type")
+                        .HasColumnType("INTEGER");
+
                     b.Property<Guid>("WorldId")
                         .HasColumnType("TEXT");
 
@@ -420,13 +490,10 @@ namespace Infrastructure.Migrations
                     b.Property<short>("Y")
                         .HasColumnType("INTEGER");
 
-                    b.Property<Guid?>("ReferenceEntityId")
-                        .HasColumnType("TEXT");
+                    b.HasKey("Id");
 
-                    b.Property<byte>("Type")
-                        .HasColumnType("INTEGER");
-
-                    b.HasKey("WorldId", "X", "Y");
+                    b.HasIndex("WorldId", "X", "Y")
+                        .HasDatabaseName("IX_WorldMapObject_Coordinates");
 
                     b.ToTable("WorldMapObjects");
                 });
@@ -699,16 +766,22 @@ namespace Infrastructure.Migrations
 
             modelBuilder.Entity("Domain.Entities.Building", b =>
                 {
-                    b.HasOne("Domain.Entities.City", null)
+                    b.HasOne("Domain.Entities.City", "City")
                         .WithMany("Buildings")
-                        .HasForeignKey("CityId");
+                        .HasForeignKey("CityId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("City");
                 });
 
             modelBuilder.Entity("Domain.Entities.City", b =>
                 {
                     b.HasOne("Domain.Entities.World", "World")
                         .WithMany()
-                        .HasForeignKey("WorldId");
+                        .HasForeignKey("WorldId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
                     b.HasOne("Domain.User.WorldPlayer", "WorldPlayer")
                         .WithMany("Cities")
@@ -784,6 +857,18 @@ namespace Infrastructure.Migrations
                         .HasForeignKey("TargetCityId")
                         .OnDelete(DeleteBehavior.Restrict);
 
+                    b.HasOne("Domain.Entities.World", "World")
+                        .WithMany()
+                        .HasForeignKey("WorldId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Domain.User.WorldPlayer", "OwnerWorldPlayer")
+                        .WithMany("UnitDeployments")
+                        .HasForeignKey("WorldPlayerId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
                     b.OwnsMany("Domain.Entities.Modifier", "ModifiersInternal", b1 =>
                         {
                             b1.Property<int>("Id")
@@ -820,16 +905,28 @@ namespace Infrastructure.Migrations
 
                     b.Navigation("OriginCity");
 
+                    b.Navigation("OwnerWorldPlayer");
+
                     b.Navigation("TargetCity");
+
+                    b.Navigation("World");
                 });
 
             modelBuilder.Entity("Domain.Entities.UnitStack", b =>
                 {
-                    b.HasOne("Domain.Entities.City", null)
+                    b.HasOne("Domain.Entities.City", "StationedCity")
                         .WithMany("UnitStacks")
-                        .HasForeignKey("CityId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .HasForeignKey("StationedCityId")
+                        .OnDelete(DeleteBehavior.Cascade);
+
+                    b.HasOne("Domain.Entities.UnitDeployment", "UnitDeployment")
+                        .WithMany("UnitStacks")
+                        .HasForeignKey("UnitDeploymentId")
+                        .OnDelete(DeleteBehavior.Cascade);
+
+                    b.HasOne("Domain.User.WorldPlayer", "WorldPlayer")
+                        .WithMany("UnitStacks")
+                        .HasForeignKey("WorldPlayerId");
 
                     b.OwnsMany("Domain.Entities.Modifier", "ModifiersInternal", b1 =>
                         {
@@ -864,6 +961,12 @@ namespace Infrastructure.Migrations
                         });
 
                     b.Navigation("ModifiersInternal");
+
+                    b.Navigation("StationedCity");
+
+                    b.Navigation("UnitDeployment");
+
+                    b.Navigation("WorldPlayer");
                 });
 
             modelBuilder.Entity("Domain.Entities.World", b =>
@@ -1002,6 +1105,11 @@ namespace Infrastructure.Migrations
                     b.Navigation("UnitStacks");
                 });
 
+            modelBuilder.Entity("Domain.Entities.UnitDeployment", b =>
+                {
+                    b.Navigation("UnitStacks");
+                });
+
             modelBuilder.Entity("Domain.Entities.World", b =>
                 {
                     b.Navigation("MapObjects");
@@ -1017,6 +1125,10 @@ namespace Infrastructure.Migrations
                     b.Navigation("Cities");
 
                     b.Navigation("CompletedResearches");
+
+                    b.Navigation("UnitDeployments");
+
+                    b.Navigation("UnitStacks");
                 });
 #pragma warning restore 612, 618
         }

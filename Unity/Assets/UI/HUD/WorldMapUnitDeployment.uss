@@ -1,0 +1,119 @@
+:root {
+    --c-bg-panel: rgba(15, 15, 15, 0.9);
+    --c-gold: #c5a059;
+    --c-gold-dim: #8b6d3a;
+    --c-border: #4a4a4a;
+    --c-text-highlight: #ffce00;
+}
+
+.UnitDeployment-sidebar-main-container {
+    position: absolute;
+    right: 0;
+    top: 100px;
+    bottom: 50px;
+    width: 280px;
+    background-color: var(--c-bg-panel);
+    border-left-width: 1.5px;
+    border-left-color: var(--c-gold);
+}
+
+.UnitDeployment-sidebar-header {
+    background-color: #222;
+    padding: 10px;
+    border-bottom-width: 1px;
+    border-bottom-color: var(--c-gold-dim);
+    align-items: center;
+}
+
+.UnitDeployment-sidebar-header-label {
+    color: var(--c-gold);
+    -unity-font-style: bold;
+    letter-spacing: 1px;
+    font-size: 13px;
+}
+
+.UnitDeployment-sidebar-scrollview {
+    flex-grow: 1;
+    padding: 5px;
+}
+
+/* Entry Styling */
+.UnitDeployment-entry-container {
+    background-color: rgba(255, 255, 255, 0.03);
+    margin-bottom: 5px;
+    border-width: 1px;
+    border-color: rgba(255, 255, 255, 0.05);
+}
+
+.UnitDeployment-entry-header {
+    flex-direction: row;
+    padding: 8px;
+    background-color: rgba(255, 255, 255, 0.02);
+}
+
+.UnitDeployment-entry-header:hover {
+    background-color: rgba(197, 160, 89, 0.1);
+}
+
+.UnitDeployment-name-label {
+    color: #eee;
+    flex-grow: 1;
+    -unity-font-style: bold;
+}
+
+.UnitDeployment-size-badge {
+    color: var(--c-text-highlight);
+    font-size: 10px;
+    -unity-text-align: middle-right;
+}
+
+/* Details Section */
+.UnitDeployment-details-container {
+    padding: 10px;
+    border-top-width: 1px;
+    border-top-color: rgba(255, 255, 255, 0.05);
+    background-color: rgba(0, 0, 0, 0.2);
+    display: none;
+}
+
+.UnitDeployment-details-container.expanded {
+    display: flex;
+}
+
+.detail-row {
+    flex-direction: row;
+    justify-content: space-between;
+    margin-bottom: 3px;
+}
+
+.detail-label {
+    color: #888;
+    font-size: 10px;
+}
+
+.detail-value {
+    color: #ccc;
+    font-size: 10px;
+    -unity-font-style: bold;
+}
+
+.unit-stack-list {
+    margin-top: 8px;
+    padding-top: 5px;
+    border-top-width: 1px;
+    border-top-color: rgba(255, 255, 255, 0.1);
+}
+
+.unit-stack-row {
+    flex-direction: row;
+    justify-content: space-between;
+}
+
+.unit-stack-text {
+    color: #aaa;
+    font-size: 9px;
+}
+
+.hidden {
+    display: none;
+}

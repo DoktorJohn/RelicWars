@@ -85,6 +85,7 @@ var connectionString = builder.Configuration.GetConnectionString("DefaultConnect
 builder.Services.AddDbContext<GameContext>(options => options.UseSqlite(connectionString));
 
 builder.Services.AddScoped<ICityRepository, CityRepository>();
+builder.Services.AddScoped<IWorldMapObjectRepository, WorldMapObjectRepository>();
 builder.Services.AddScoped<IJobRepository, JobRepository>();
 builder.Services.AddScoped<IWorldPlayerRepository, WorldPlayerRepository>();
 builder.Services.AddScoped<IUnitDeploymentRepository, UnitDeploymentRepository>();
@@ -122,6 +123,8 @@ builder.Services.AddScoped<IRankingService, RankingService>();
 builder.Services.AddScoped<IAllianceService, AllianceService>();
 builder.Services.AddScoped<IAllianceRepository, AllianceRepository>();
 builder.Services.AddScoped<IModifierService, ModifierService>();
+builder.Services.AddScoped<IUnitDeploymentService, UnitDeploymentService>();
+builder.Services.AddScoped<CityPointCalculator>();
 
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();

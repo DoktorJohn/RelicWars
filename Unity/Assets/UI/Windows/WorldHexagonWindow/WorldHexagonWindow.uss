@@ -1,0 +1,67 @@
+/* Assets/UI/Windows/WorldUnitDeploymentWindow/WorldUnitDeploymentWindow.uss */
+
+.window-root {
+    position: absolute;
+    /* Vi fjerner faste bredder her, da .window-frame klarer det */
+}
+
+/* Sektioner */
+.deployment-body {
+    padding: 15px;
+    background-color: rgba(0, 0, 0, 0.1);
+}
+
+.info-section {
+    background-color: rgba(0, 0, 0, 0.2);
+    padding: 10px;
+    border-radius: 6px;
+    margin-bottom: 12px;
+    border-width: 1px;
+    border-color: var(--c-border);
+}
+
+.info-text {
+    color: var(--c-text-highlight);
+    -unity-font-definition: var(--font-header);
+    font-size: 14px;
+    margin-bottom: 20px;
+}
+
+/* Enhedsliste */
+.unit-scroll-view {
+    height: 180px;
+    background-color: rgba(0, 0, 0, 0.2);
+    border-radius: 4px;
+    margin-top: 5px;
+    padding: 5px;
+}
+
+.unit-selection-row {
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    padding: 6px;
+    border-bottom-width: 1px;
+    border-bottom-color: rgba(165, 125, 50, 0.3);
+}
+
+.unit-name-label {
+    color: white;
+    -unity-font-style: bold;
+    font-size: 13px;
+}
+
+.unit-available-label {
+    color: var(--c-text-muted);
+    font-size: 10px;
+}
+
+.unit-quantity-field {
+    width: 60px;
+    height: 25px;
+    background-color: rgba(0, 0, 0, 0.3);
+}
+
+.hidden {
+    display: none;
+}

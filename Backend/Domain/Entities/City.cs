@@ -10,10 +10,10 @@ using System.Threading.Tasks;
 
 namespace Domain.Entities
 {
-    public class City : BaseEntity, IModifierProvider
+    public class City : BaseEntity, IModifierProvider, IMapEntity
     {
         public string Name { get; set; } = string.Empty;
-        public int Points { get; set; } = 100;
+        public int Points { get; set; }
 
         //Ressourcer
         public double Wood { get; set; }
@@ -42,8 +42,14 @@ namespace Domain.Entities
         //Foreign key
         public Guid? WorldPlayerId { get; set; }
         public WorldPlayer? WorldPlayer { get; set; }
-        public Guid? WorldId { get; set; }
+        public Guid WorldId { get; set; }
         public World? World { get; set; }
+
+        Guid IMapEntity.Id => Id;
+        int IMapEntity.X => X;
+        int IMapEntity.Y => Y;
+        Guid IMapEntity.WorldId => WorldId;
+        MapObjectTypeEnum IMapEntity.MapObjectType => MapObjectTypeEnum.City;
 
         public IEnumerable<Modifier> GetModifiers()
         {

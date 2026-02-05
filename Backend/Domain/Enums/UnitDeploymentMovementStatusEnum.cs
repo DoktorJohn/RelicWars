@@ -8,6 +8,6 @@ namespace Domain.Enums
 {
     public enum UnitDeploymentMovementStatusEnum
     {
-        Arriving, Stationed, Returning
+        Moving, Stationed
     }
 }

@@ -23,5 +23,8 @@
         Research,
 
         IdeologyFocus,
+
+        Hexagon,
+        UnitDeployment
     }
 }

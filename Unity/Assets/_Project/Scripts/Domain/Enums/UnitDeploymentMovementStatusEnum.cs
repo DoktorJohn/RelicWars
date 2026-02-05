@@ -4,10 +4,10 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Assets._Project.Scripts.Domain.Enums
+namespace Project.Scripts.Domain.Enums
 {
     public enum UnitDeploymentMovementStatusEnum
     {
-        Arriving, Stationed, Returning
+        Moving, Stationed
     }
 }

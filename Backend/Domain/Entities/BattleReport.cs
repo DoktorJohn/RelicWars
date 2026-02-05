@@ -9,10 +9,12 @@ namespace Domain.Entities
 {
     public class BattleReport : BaseEntity
     {
-        public Guid UserId { get; set; } // Hvem skal se rapporten?
         public string Title { get; set; } = string.Empty;
-        public string Body { get; set; } = string.Empty; // Detaljer om tab og loot
+        public string Body { get; set; } = string.Empty;
         public DateTime OccurredAt { get; set; }
         public bool IsRead { get; set; }
+
+        //FK
+        public Guid WorldPlayerId { get; set; }
     }
 }

@@ -7,6 +7,9 @@ using Project.Scripts.Domain.Enums;
 [CreateAssetMenu(menuName = "World/Biome Visuals")]
 public class BiomeVisuals : ScriptableObject
 {
+    [Header("Special Tiles")]
+    public TileBase CityTile;
+
     [System.Serializable]
     public class BiomeBinding
     {

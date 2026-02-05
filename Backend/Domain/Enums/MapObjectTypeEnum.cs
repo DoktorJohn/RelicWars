@@ -6,5 +6,5 @@ using System.Threading.Tasks;
 
 namespace Domain.Enums
 {
-    public enum MapObjectTypeEnum : byte { City }
+    public enum MapObjectTypeEnum : byte { City, UnitDeployment }
 }

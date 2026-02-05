@@ -38,7 +38,7 @@ namespace Game.Controllers
         }
 
         /// <summary>
-        /// Validates credentials and returns JWT token + WorldPlayer references.
+        /// Validates credentials and returns JWT token + OwnerWorldPlayer references.
         /// </summary>
         [HttpPost("login")]
         public async Task<ActionResult<AuthenticationResponse>> Login([FromBody] LoginRequest request)

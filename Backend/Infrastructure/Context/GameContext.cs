@@ -66,11 +66,6 @@ namespace Infrastructure.Context
                 .HasValue<RecruitmentJob>("RecruitmentSpeed")
                 .HasValue<ResearchJob>("Research");
 
-            modelBuilder.Entity<UnitDeployment>()
-                .HasOne(ud => ud.OriginCity)
-                .WithMany(c => c.OriginUnitDeployments)
-                .HasForeignKey(ud => ud.OriginCityId)
-                .OnDelete(DeleteBehavior.Restrict);
 
             modelBuilder.Entity<UnitDeployment>()
                 .HasOne(ud => ud.TargetCity)
@@ -78,9 +73,36 @@ namespace Infrastructure.Context
                 .HasForeignKey(ud => ud.TargetCityId)
                 .OnDelete(DeleteBehavior.Restrict);
 
+            modelBuilder.Entity<UnitDeployment>()
+                .HasOne(ud => ud.OriginCity)
+                .WithMany(c => c.OriginUnitDeployments)
+                .HasForeignKey(ud => ud.OriginCityId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<UnitStack>()
+                .HasOne(us => us.StationedCity)
+                .WithMany(c => c.UnitStacks)
+                .HasForeignKey(us => us.StationedCityId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<UnitStack>()
+                .HasOne(us => us.UnitDeployment)
+                .WithMany(ud => ud.UnitStacks)
+                .HasForeignKey(us => us.UnitDeploymentId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<Building>()
+                .HasOne(b => b.City)
+                .WithMany(c => c.Buildings)
+                .HasForeignKey(b => b.CityId)
+                .OnDelete(DeleteBehavior.Cascade);
+
             modelBuilder.Entity<WorldMapObject>(entity =>
             {
-                entity.HasKey(e => new { e.WorldId, e.X, e.Y });
+                entity.HasKey(e => e.Id);
+
+                entity.HasIndex(e => new { e.WorldId, e.X, e.Y })
+                      .HasDatabaseName("IX_WorldMapObject_Coordinates");
 
                 entity.HasOne(d => d.World)
                       .WithMany(p => p.MapObjects)
@@ -89,6 +111,10 @@ namespace Infrastructure.Context
 
                 entity.Property(e => e.Type).HasConversion<byte>();
             });
+
+            modelBuilder.Entity<City>()
+                .HasIndex(c => new { c.X, c.Y })
+                .HasDatabaseName("IX_City_Coordinates");
 
             base.OnModelCreating(modelBuilder);
         }

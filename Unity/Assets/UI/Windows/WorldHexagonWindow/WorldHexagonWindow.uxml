@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ui:UXML xmlns:ui="UnityEngine.UIElements" editor-extension-mode="False">
+    <ui:Style src="project://database/Assets/UI/Windows/WindowTheme.uss" />
+    <ui:Style src="project://database/Assets/UI/Windows/WorldHexagonWindow/WorldHexagonWindow.uss" />
+    
+    <ui:VisualElement name="Hexagon-Window-MainContainer" class="window-frame strategy-window">
+        
+        <ui:VisualElement name="Hexagon-Window-Header" class="window-header strategy-header">
+            <ui:Label text="PROVINCE INSPECTION" name="Header-Title" class="window-header-label" />
+            <ui:Button name="WorldHexagonWindow-Close-Button" text="×" class="window-close-btn" />
+        </ui:VisualElement>
+
+        <ui:VisualElement class="hexagon-body">
+            <ui:VisualElement class="info-section">
+                <ui:VisualElement class="info-row">
+                    <ui:Label text="LOCATION" class="info-label" />
+                    <ui:Label name="Target-Coordinates-Label" text="0, 0" class="info-value" />
+                </ui:VisualElement>
+                <ui:VisualElement class="info-row">
+                    <ui:Label text="TERRAIN" class="info-label" />
+                    <ui:Label name="Biome-Type-Label" text="UNKNOWN" class="info-value" />
+                </ui:VisualElement>
+            </ui:VisualElement>
+
+            <ui:VisualElement name="Action-Container" class="button-group">
+                <ui:Button name="Btn-Select-Unit" text="SELECT EXPEDITION" class="btn-global-base btn-imperial-success hidden" />
+                <ui:Button name="Btn-Move-Here" text="ORDER MARCH" class="btn-global-base btn-imperial-primary hidden" />
+                <ui:Button name="Btn-Open-Deploy-View" text="DEPLOY TROOPS" class="btn-global-base btn-imperial-primary" />
+            </ui:VisualElement>
+
+            <ui:VisualElement name="Deploy-Unit-View" class="hidden">
+                <ui:Label text="AVAILABLE RESERVES" class="section-title" />
+                <ui:ScrollView name="Unit-List-Container" class="unit-scroll-view" />
+                <ui:Button name="Btn-Confirm-Deployment" text="EXECUTE DEPLOYMENT" class="btn-global-base btn-imperial-success" />
+            </ui:VisualElement>
+        </ui:VisualElement>
+
+    </ui:VisualElement>
+</ui:UXML>

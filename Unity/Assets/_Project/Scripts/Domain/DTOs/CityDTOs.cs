@@ -2,9 +2,21 @@ using System;
 using System.Collections.Generic;
 using Assets._Project.Scripts.Domain.Enums;
 using Assets.Scripts.Domain.Enums;
+using Project.Scripts.Domain.DTOs;
+using Project.Scripts.Domain.Enums;
 
 namespace Project.Network.Models
 {
+    [Serializable]
+    public class CityDTO
+    {
+        public Guid Id { get; set; }
+        public string CityName { get; set; }
+        public int X { get; set; }
+        public int Y { get; set; }
+        public int Points { get; set; }
+    }
+
     [Serializable]
     public class CityOverviewHUDDTO
     {
@@ -75,6 +87,8 @@ namespace Project.Network.Models
     {
         public Guid CityId;
         public string CityName;
+        public int X;
+        public int Y;
 
         // Ressourcer
         public double CurrentWoodAmount;
@@ -108,19 +122,6 @@ namespace Project.Network.Models
     {
         public UnitTypeEnum Type { get; set; }
         public int Quantity { get; set; }
-    }
-
-    [Serializable]
-    public class UnitDeploymentDTO
-    {
-        public Guid Id { get; set; }
-        public UnitTypeEnum Type { get; set; }
-        public int Quantity { get; set; }
-        public UnitDeploymentMovementStatusEnum Status { get; set; }
-        public DateTime? ArrivalTime { get; set; }
-        public Guid OriginCityId { get; set; }
-        public Guid? TargetCityId { get; set; }
-        public string? TargetCityName { get; set; }
     }
 
     [Serializable]

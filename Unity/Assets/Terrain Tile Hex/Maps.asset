@@ -12,6 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c0447c1fa5c046444b15e87edd475822, type: 3}
   m_Name: Maps
   m_EditorClassIdentifier: Assembly-CSharp::BiomeVisuals
+  CityTile: {fileID: 11400000, guid: 72ac554d8dad4624685d8cd563b85950, type: 2}
   Biomes:
   - Type: 23
     TileAsset: {fileID: 11400000, guid: 45120de954cf9a14ca148a02301dd271, type: 2}
@@ -52,9 +53,9 @@ MonoBehaviour:
   - Type: 16
     TileAsset: {fileID: 11400000, guid: f14df87f35a4da345af32b2b0fd2a2bc, type: 2}
   - Type: 17
-    TileAsset: {fileID: 11400000, guid: 3826e188a072ce147bfc178e6031cea6, type: 2}
+    TileAsset: {fileID: 11400000, guid: ec9b05f16954f9b4a82f260bc884e171, type: 2}
   - Type: 18
-    TileAsset: {fileID: 11400000, guid: b258dca0e2b43844e9081e060d822e9b, type: 2}
+    TileAsset: {fileID: 11400000, guid: 04dd8cdb8f8df5c4b8e86c1035ebf841, type: 2}
   - Type: 45
     TileAsset: {fileID: 11400000, guid: 735583913a087a84994bcc58e3f77e29, type: 2}
   - Type: 46
@@ -66,26 +67,24 @@ MonoBehaviour:
   - Type: 49
     TileAsset: {fileID: 11400000, guid: 3d809c61dd6350b4db8734c4e18ba5c1, type: 2}
   - Type: 50
-    TileAsset: {fileID: 11400000, guid: 22e290a2f03c23c4ebb776c267197d93, type: 2}
-  - Type: 51
     TileAsset: {fileID: 11400000, guid: 4e702aa4f2380524a9c615c0a779993f, type: 2}
-  - Type: 52
+  - Type: 51
     TileAsset: {fileID: 11400000, guid: 540ebd97a6147d244ac58158f2b1df90, type: 2}
-  - Type: 53
+  - Type: 52
     TileAsset: {fileID: 11400000, guid: 573b1055086905b4ea26943ac510e982, type: 2}
-  - Type: 72
+  - Type: 71
     TileAsset: {fileID: 11400000, guid: daf497144133c844797dff9ffbb86322, type: 2}
-  - Type: 73
+  - Type: 72
     TileAsset: {fileID: 11400000, guid: 917a9f6a3ca48cb41a7ef0a3559ee9c0, type: 2}
-  - Type: 74
+  - Type: 73
     TileAsset: {fileID: 11400000, guid: 0731636dbc4d71c4282f84dbc354a65b, type: 2}
-  - Type: 75
+  - Type: 74
     TileAsset: {fileID: 11400000, guid: 3ffc91c3780a3924286fceeed915a17f, type: 2}
-  - Type: 76
+  - Type: 75
     TileAsset: {fileID: 11400000, guid: 9d7cf26875ca0cc4b9ef03396c91d375, type: 2}
-  - Type: 77
+  - Type: 76
     TileAsset: {fileID: 11400000, guid: 909d195c5f2ed394883a76472a7303b5, type: 2}
-  - Type: 78
+  - Type: 77
     TileAsset: {fileID: 11400000, guid: 0b80bdd6ecead214b9edf7959d005f75, type: 2}
   - Type: 0
     TileAsset: {fileID: 11400000, guid: 8219f33f5ff88244584c5483a1f2397c, type: 2}
@@ -115,41 +114,41 @@ MonoBehaviour:
     TileAsset: {fileID: 11400000, guid: 077483a350bdcde48966a8bcc312ff66, type: 2}
   - Type: 13
     TileAsset: {fileID: 11400000, guid: 9b6770ba9b6e72949a913f10c86a96a1, type: 2}
-  - Type: 54
+  - Type: 53
     TileAsset: {fileID: 11400000, guid: 0e01445195d896a4fb299498907ab9c9, type: 2}
-  - Type: 55
+  - Type: 54
     TileAsset: {fileID: 11400000, guid: 571aa50c600fbad4a9c43ba5f5ed14c3, type: 2}
-  - Type: 56
+  - Type: 55
     TileAsset: {fileID: 11400000, guid: 34df4343c85dc4441a47fde918b2e435, type: 2}
-  - Type: 57
+  - Type: 56
     TileAsset: {fileID: 11400000, guid: bd52271170a8e304fb676f9b5412c6ad, type: 2}
-  - Type: 58
+  - Type: 57
     TileAsset: {fileID: 11400000, guid: f40bc39372aabbd4a9fe69d8aa64df27, type: 2}
-  - Type: 59
+  - Type: 58
     TileAsset: {fileID: 11400000, guid: bf82af1085a4f5c4788d71551ac76b67, type: 2}
-  - Type: 60
+  - Type: 59
     TileAsset: {fileID: 11400000, guid: 56432492bd3fb6f4f832614ad0ad15a2, type: 2}
-  - Type: 61
+  - Type: 60
     TileAsset: {fileID: 11400000, guid: f6be6ea2fbc1e544ca066098c17a4cb0, type: 2}
-  - Type: 62
+  - Type: 61
     TileAsset: {fileID: 11400000, guid: 09edcf3ca7080c5478dbfa42ad6463e9, type: 2}
-  - Type: 63
+  - Type: 62
     TileAsset: {fileID: 11400000, guid: c71a250e9919c1947a6d72c2bfbae248, type: 2}
-  - Type: 64
+  - Type: 63
     TileAsset: {fileID: 11400000, guid: d884ed12a301a31498d0160e567d715a, type: 2}
-  - Type: 65
+  - Type: 64
     TileAsset: {fileID: 11400000, guid: 88a9e2b567ab11140a06ab80180555ea, type: 2}
-  - Type: 66
+  - Type: 65
     TileAsset: {fileID: 11400000, guid: 4e620a7f02900b8418a9da5fb83c6eeb, type: 2}
-  - Type: 67
+  - Type: 66
     TileAsset: {fileID: 11400000, guid: f32655bfc3b778946b785fb082d3c151, type: 2}
-  - Type: 68
+  - Type: 67
     TileAsset: {fileID: 11400000, guid: 013b8a9c787db1c45b84501cec8bbc58, type: 2}
-  - Type: 69
+  - Type: 68
     TileAsset: {fileID: 11400000, guid: 02790f76a157cf24b84f47769e835786, type: 2}
-  - Type: 70
+  - Type: 69
     TileAsset: {fileID: 11400000, guid: e38d63ba8b2752142804d008b4892377, type: 2}
-  - Type: 71
+  - Type: 70
     TileAsset: {fileID: 11400000, guid: c9b5975397195674394cad543722ff02, type: 2}
   - Type: 35
     TileAsset: {fileID: 11400000, guid: cf0090af25b4d9848863e6f80b5e40e6, type: 2}

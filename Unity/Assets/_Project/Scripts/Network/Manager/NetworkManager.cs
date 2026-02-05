@@ -32,6 +32,7 @@ namespace Project.Network.Manager
         public ClientAllianceService Alliance { get; private set; }
         public ClientMarketPlaceService MarketPlace { get; private set; }
         public ClientResearchService Research { get; private set; }
+        public ClientUnitDeploymentService UnitDeployment { get; private set; }
 
         private void Awake()
         {
@@ -61,6 +62,7 @@ namespace Project.Network.Manager
             Alliance = new ClientAllianceService(_backendBaseUrl);
             MarketPlace = new ClientMarketPlaceService(_backendBaseUrl);
             Research = new ClientResearchService(_backendBaseUrl);
+            UnitDeployment = new ClientUnitDeploymentService(_backendBaseUrl);
 
             Debug.Log("[NetworkManager] Services Initialized.");
         }

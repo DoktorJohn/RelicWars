@@ -7,6 +7,7 @@ using Project.Network.Models;
 using Assets.Scripts.Domain.State;
 using Newtonsoft.Json;
 using Project.Network.Manager;
+using Project.Scripts.Domain.DTOs;
 
 namespace Project.Modules.City
 {
@@ -37,6 +38,10 @@ namespace Project.Modules.City
         public List<UnitStackDTO> CurrentStationedUnits => _currentStationedUnits;
         public List<UnitDeploymentDTO> CurrentActiveDeployments => _currentActiveDeployments;
 
+        public Guid CityId { get; set; }
+        public int HomeCityX { get; private set; }
+        public int HomeCityY { get; private set; }
+
         private bool _isRequestInProgress = false;
         private bool _isDataInitialized = false;
         private Coroutine _activePollingCoroutine;
@@ -51,10 +56,20 @@ namespace Project.Modules.City
             if (Instance == null)
             {
                 Instance = this;
+
+                // Sikr dig at den er i roden, ellers virker DontDestroyOnLoad ikke
+                if (transform.parent != null)
+                {
+                    transform.SetParent(null);
+                }
+
+                DontDestroyOnLoad(gameObject);
                 Debug.Log("[CityStateManager] Global instans initialiseret.");
             }
-            else
+            else if (Instance != this)
             {
+                // Vi sletter kun duplikatet af manager-objektet
+                Debug.Log("[CityStateManager] Duplikat fundet og slettet for at bevare eksisterende instans.");
                 Destroy(gameObject);
             }
         }
@@ -144,6 +159,10 @@ namespace Project.Modules.City
         {
             try
             {
+                this.CityId = detailedInformationDto.CityId;
+                this.HomeCityX = detailedInformationDto.X;
+                this.HomeCityY = detailedInformationDto.Y;
+
                 // 1. Map Ressourcer
                 _currentResourceState.WoodAmount = detailedInformationDto.CurrentWoodAmount;
                 _currentResourceState.WoodMaxCapacity = detailedInformationDto.MaxWoodCapacity;

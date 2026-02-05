@@ -1,6 +1,7 @@
 ﻿using Application.DTOs;
 using Application.Interfaces.IRepositories;
 using Application.Interfaces.IServices;
+using Application.Utility;
 using Domain.Entities;
 using Domain.Enums;
 using Domain.StaticData.Generators;
@@ -16,11 +17,13 @@ namespace Application.Services
 {
     public class WorldPlayerService : IWorldPlayerService
     {
+        private readonly IWorldMapObjectRepository _worldMapObjectRepository;
         private readonly IWorldPlayerRepository _worldPlayerRepository;
         private readonly IPlayerProfileRepository _profileRepository;
         private readonly IRankingService _rankingService;
         private readonly IResourceService _resourceService;
         private readonly IWorldRepository _worldRepo;
+        private readonly CityPointCalculator _cityPointCalculator;
         private readonly ILogger<WorldPlayerService> _logger;
 
         public WorldPlayerService(
@@ -29,7 +32,9 @@ namespace Application.Services
             IRankingService rankingService,
             IResourceService resourceService,
             IWorldRepository worldRepo,
-            ILogger<WorldPlayerService> logger)
+            IWorldMapObjectRepository worldMapObjectRepository,
+            ILogger<WorldPlayerService> logger,
+            CityPointCalculator cityPointCalculator)
         {
             _worldPlayerRepository = worldPlayerRepository;
             _profileRepository = profileRepository;
@@ -37,6 +42,8 @@ namespace Application.Services
             _resourceService = resourceService;
             _worldRepo = worldRepo;
             _logger = logger;
+            _worldMapObjectRepository = worldMapObjectRepository;
+            _cityPointCalculator = cityPointCalculator;
         }
 
         public void UpdateGlobalResourceState(WorldPlayer player, DateTime currentDateTime)
@@ -56,7 +63,7 @@ namespace Application.Services
             var worldPlayer = await _worldPlayerRepository.GetByIdAsync(worldPlayerId);
             if (worldPlayer == null)
             {
-                throw new KeyNotFoundException($"WorldPlayer med ID {worldPlayerId} blev ikke fundet.");
+                throw new KeyNotFoundException($"OwnerWorldPlayer med ID {worldPlayerId} blev ikke fundet.");
             }
 
             int rank = 0;
@@ -138,10 +145,21 @@ namespace Application.Services
 
             targetGameWorld.PlayerCount++;
 
-            var initialPlayerCapitalCity = CreateStartingCity(playerProfileUsername, newlyCreatedWorldParticipation.Id);
+            var initialPlayerCapitalCity = CreateStartingCity(playerProfileUsername, newlyCreatedWorldParticipation.Id, targetWorldId);
             newlyCreatedWorldParticipation.Cities.Add(initialPlayerCapitalCity);
-
             await _worldPlayerRepository.AddAsync(newlyCreatedWorldParticipation);
+
+            var worldMapObject = new WorldMapObject
+            {
+                WorldId = targetWorldId,
+                X = (short)initialPlayerCapitalCity.X,
+                Y = (short)initialPlayerCapitalCity.Y,
+                Type = MapObjectTypeEnum.City,
+                ReferenceEntityId = initialPlayerCapitalCity.Id
+
+            };
+
+            await _worldMapObjectRepository.AddAsync(worldMapObject);
 
 
             return new WorldPlayerJoinResponse(
@@ -159,7 +177,7 @@ namespace Application.Services
             var worldPlayer = await _worldPlayerRepository.GetByIdAsync(request.WorldPlayerId);
 
             if (worldPlayer == null)
-                return new WorldPlayerSelectIdeologyResponse(false, "WorldPlayer not found.");
+                return new WorldPlayerSelectIdeologyResponse(false, "OwnerWorldPlayer not found.");
 
             if (worldPlayer.Ideology != IdeologyTypeEnum.None)
                 return new WorldPlayerSelectIdeologyResponse(false, "Ideology already selected.");
@@ -173,17 +191,22 @@ namespace Application.Services
             return new WorldPlayerSelectIdeologyResponse(true, $"Ideology {request.Ideology} confirmed.");
         }
 
-        private City CreateStartingCity(string userName, Guid worldPlayerId)
+        private City CreateStartingCity(string userName, Guid worldPlayerId, Guid worldId)
         {
             var city = new City
             {
                 Name = $"{userName}'s Capital",
+                WorldId = worldId,
+                WorldPlayerId = worldPlayerId,
+                X = 50,
+                Y = 50,
                 Wood = 500,
                 Stone = 500,
                 Metal = 500,
                 LastResourceUpdate = DateTime.UtcNow,
                 Buildings = new List<Building>()
             };
+
 
             city.Buildings.Add(new Building { Type = BuildingTypeEnum.TownHall, Level = 1 });
             city.Buildings.Add(new Building { Type = BuildingTypeEnum.Warehouse, Level = 1 });
@@ -197,6 +220,7 @@ namespace Application.Services
             city.Buildings.Add(new Building { Type = BuildingTypeEnum.Wall, Level = 1 });
             city.Buildings.Add(new Building { Type = BuildingTypeEnum.Stable, Level = 1 });
             city.Buildings.Add(new Building { Type = BuildingTypeEnum.MarketPlace, Level = 1 });
+            city.Points = _cityPointCalculator.CalculateTotalPointsForCity(city);
 
             return city;
         }

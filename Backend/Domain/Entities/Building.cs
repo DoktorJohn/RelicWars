@@ -15,5 +15,9 @@ namespace Domain.Entities
         public DateTime? TimeOfUpgradeStarted { get; set; }
         public DateTime? TimeOfUpgradeFinished { get; set; }
         public bool IsUpgrading => TimeOfUpgradeFinished.HasValue && TimeOfUpgradeFinished > DateTime.UtcNow;
+
+        //FK
+        public Guid CityId { get; set; }
+        public City? City { get; set; }
     }
 }
