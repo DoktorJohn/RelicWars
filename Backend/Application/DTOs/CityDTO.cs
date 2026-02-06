@@ -92,7 +92,6 @@ namespace Application.DTOs
 
     public record PopulationBreakdownDTO(
         int MaxCapacity,
-        int UsedByBuildings,
         int UsedByUnits,
         int FreePopulation,
         double ModifierBonus           // Ekstra plads fra f.eks. research eller buffs

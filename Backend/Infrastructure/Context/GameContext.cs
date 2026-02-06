@@ -45,7 +45,7 @@ namespace Infrastructure.Context
                 c => c.Aggregate(0, (a, v) => HashCode.Combine(a, v.GetHashCode())),
                 c => c.ToList());
 
-            // Konfiguration af lister med Enums (Nu med Comparer for at fjerne advarsler)
+            // Konfiguration af lister med Enums
             ConfigureEnumListProperty<City>(modelBuilder, e => e.ModifiersThatAffectsThis, enumListConverter, enumListComparer);
             ConfigureEnumListProperty<WorldPlayer>(modelBuilder, e => e.ModifiersThatAffectsThis, enumListConverter, enumListComparer);
             ConfigureEnumListProperty<UnitDeployment>(modelBuilder, e => e.ModifiersThatAffectsThis, enumListConverter, enumListComparer);
@@ -66,30 +66,43 @@ namespace Infrastructure.Context
                 .HasValue<RecruitmentJob>("RecruitmentSpeed")
                 .HasValue<ResearchJob>("Research");
 
+            // --- UNIT DEPLOYMENT KONFIGURATION (Løsning på Multiple Cascade Paths) ---
+            modelBuilder.Entity<UnitDeployment>(entity =>
+            {
+                // FIX: Sæt World relation til Restrict for at undgå multiple cascade paths i SQL Server
+                entity.HasOne(ud => ud.World)
+                    .WithMany()
+                    .HasForeignKey(ud => ud.WorldId)
+                    .OnDelete(DeleteBehavior.Restrict);
 
-            modelBuilder.Entity<UnitDeployment>()
-                .HasOne(ud => ud.TargetCity)
-                .WithMany(c => c.TargetUnitDeployments)
-                .HasForeignKey(ud => ud.TargetCityId)
-                .OnDelete(DeleteBehavior.Restrict);
+                entity.HasOne(ud => ud.TargetCity)
+                    .WithMany(c => c.TargetUnitDeployments)
+                    .HasForeignKey(ud => ud.TargetCityId)
+                    .OnDelete(DeleteBehavior.Restrict);
 
-            modelBuilder.Entity<UnitDeployment>()
-                .HasOne(ud => ud.OriginCity)
-                .WithMany(c => c.OriginUnitDeployments)
-                .HasForeignKey(ud => ud.OriginCityId)
-                .OnDelete(DeleteBehavior.Restrict);
+                entity.HasOne(ud => ud.OriginCity)
+                    .WithMany(c => c.OriginUnitDeployments)
+                    .HasForeignKey(ud => ud.OriginCityId)
+                    .OnDelete(DeleteBehavior.Restrict);
 
-            modelBuilder.Entity<UnitStack>()
-                .HasOne(us => us.StationedCity)
-                .WithMany(c => c.UnitStacks)
-                .HasForeignKey(us => us.StationedCityId)
-                .OnDelete(DeleteBehavior.Cascade);
+                entity.HasOne(ud => ud.OwnerWorldPlayer)
+                    .WithMany(p => p.UnitDeployments)
+                    .HasForeignKey(ud => ud.WorldPlayerId)
+                    .OnDelete(DeleteBehavior.Cascade);
+            });
 
-            modelBuilder.Entity<UnitStack>()
-                .HasOne(us => us.UnitDeployment)
-                .WithMany(ud => ud.UnitStacks)
-                .HasForeignKey(us => us.UnitDeploymentId)
-                .OnDelete(DeleteBehavior.Cascade);
+            modelBuilder.Entity<UnitStack>(entity =>
+            {
+                entity.HasOne(us => us.City)
+                    .WithMany(c => c.UnitStacks)
+                    .HasForeignKey(us => us.CityId)
+                    .OnDelete(DeleteBehavior.Restrict); // FIX: Restrict for at undgå multiple paths fra WorldPlayer
+
+                entity.HasOne(us => us.UnitDeployment)
+                    .WithMany(ud => ud.UnitStacks)
+                    .HasForeignKey(us => us.UnitDeploymentId)
+                    .OnDelete(DeleteBehavior.Cascade); // Vi beholder cascade her, da en hær slettes ofte
+            });
 
             modelBuilder.Entity<Building>()
                 .HasOne(b => b.City)

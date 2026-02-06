@@ -40,7 +40,7 @@ namespace Application.Services
             _unitDataReader = unitDataReader;
         }
 
-        public async Task<UnitDeploymentDTO> DeployUnitsAsync(DeployUnitRequestDTO dto)
+        public async Task<UnitDeploymentDTO> DeployUnitDeploymentAsync(DeployUnitRequestDTO dto)
         {
             var sourceCity = await _cityRepo.GetCityWithBuildingsByCityIdentifierAsync(dto.OriginCityId);
             var worldPlayer = await _worldPlayerRepo.GetByIdAsync(dto.WorldPlayerId);
@@ -159,7 +159,7 @@ namespace Application.Services
             return MapToDTO(deployment);
         }
 
-        public async Task<UnitDeploymentDTO> MoveUnits(MoveUnitRequestDTO dto)
+        public async Task<UnitDeploymentDTO> MoveUnitDeployment(MoveUnitRequestDTO dto)
         {
             var deployment = await _unitDeploymentRepo.GetByIdAsync(dto.UnitDeploymentId);
             if (deployment == null) throw new InvalidOperationException("Hæren blev ikke fundet.");
@@ -217,7 +217,7 @@ namespace Application.Services
             return MapToDTO(deployment);
         }
 
-        public async Task<UnitDeploymentDTO> AbortMovementAsync(Guid unitDeploymentId)
+        public async Task<UnitDeploymentDTO> HaltUnitDeploymentAsync(Guid unitDeploymentId)
         {
             var deployment = await _unitDeploymentRepo.GetByIdAsync(unitDeploymentId);
             if (deployment == null) throw new InvalidOperationException("Hæren blev ikke fundet.");
@@ -252,6 +252,75 @@ namespace Application.Services
 
             return MapToDTO(deployment);
         }
+
+        public async Task<UnitDeploymentDTO> ReturnToOriginCityAsync(Guid unitDeploymentId)
+        {
+            // 1. Hent deployment og valider eksistens
+            var deployment = await _unitDeploymentRepo.GetByIdAsync(unitDeploymentId);
+            if (deployment == null)
+            {
+                throw new InvalidOperationException("Unit Deployment blev ikke fundet.");
+            }
+
+            // 2. Hent OriginCity for at få de præcise koordinater
+            var originCity = deployment.OriginCity;
+            if (originCity == null)
+            {
+                throw new InvalidOperationException("Oprindelsesbyen kunne ikke findes i databasen.");
+            }
+
+            _logger.LogInformation($"Enhed {unitDeploymentId} afbryder nuværende mission og returnerer til {originCity.Name} ({originCity.X}, {originCity.Y})");
+
+            double secondsPerHexagon = 7200.0 / deployment.Mobility;
+
+            // STOP AKTUEL BEVÆGELSE ØJEBLIKKELIGT
+            deployment.NextX = deployment.CurrentX;
+            deployment.NextY = deployment.CurrentY;
+
+            deployment.TargetCityId = null;
+            deployment.TargetCity = null;
+
+            var pathfinder = new HexPathfinder();
+            var homePath = pathfinder.FindPath(deployment.CurrentX, deployment.CurrentY, originCity.X, originCity.Y);
+
+            deployment.FinalX = originCity.X;
+            deployment.FinalY = originCity.Y;
+
+            // OBJEKTIV FIX: Vi sætter altid status til Moving. 
+            // Hvis vi allerede er på (50,50), sætter vi NextStepTime til nu, så workeren straks færdiggør returneringen.
+            deployment.UnitDeploymentMovementStatus = UnitDeploymentMovementStatusEnum.Moving;
+
+            if (homePath == null || homePath.Count == 0)
+            {
+                deployment.RemainingPathJson = JsonSerializer.Serialize(new List<HexCoordinate>());
+                deployment.NextX = deployment.CurrentX;
+                deployment.NextY = deployment.CurrentY;
+                deployment.ArrivalTime = DateTime.UtcNow;
+                deployment.NextStepTime = DateTime.UtcNow; // Trigger worker med det samme
+                deployment.LastStepTime = DateTime.UtcNow;
+            }
+            else
+            {
+                var firstStepHome = homePath[0];
+                deployment.NextX = firstStepHome.X;
+                deployment.NextY = firstStepHome.Y;
+
+                deployment.LastStepTime = DateTime.UtcNow;
+                deployment.NextStepTime = deployment.LastStepTime.AddSeconds(secondsPerHexagon);
+
+                homePath.RemoveAt(0);
+                deployment.RemainingPathJson = JsonSerializer.Serialize(homePath);
+
+                deployment.ArrivalTime = deployment.NextStepTime.AddSeconds(homePath.Count * secondsPerHexagon);
+            }
+
+            await _unitDeploymentRepo.UpdateAsync(deployment);
+
+            _logger.LogInformation($"Unit {deployment.Id} er nu på vej hjem. Forventet ankomst: {deployment.ArrivalTime}");
+
+            return MapToDTO(deployment);
+        }
+
 
         private UnitDeploymentDTO MapToDTO(UnitDeployment deployment)
         {

@@ -13,11 +13,23 @@ namespace Infrastructure.Context
     {
         public GameContext CreateDbContext(string[] args)
         {
+            string configurationPath = Path.Combine(Directory.GetCurrentDirectory(), "..", "game");
+
+            IConfigurationRoot configuration = new ConfigurationBuilder()
+                .SetBasePath(configurationPath)
+                .AddJsonFile("appsettings.json", optional: false)
+                .AddJsonFile("appsettings.Development.json", optional: true)
+                .Build();
+
             var optionsBuilder = new DbContextOptionsBuilder<GameContext>();
+            var connectionString = configuration.GetConnectionString("DefaultConnection");
 
-            string databasePathForDesignDiagnostics = Path.Combine(Directory.GetCurrentDirectory(), "..", "game", "RelicWars_LocalDatabase.db");
+            if (string.IsNullOrEmpty(connectionString))
+            {
+                throw new System.Exception("DefaultConnection connection string kunne ikke findes i /game/appsettings.json");
+            }
 
-            optionsBuilder.UseSqlite($"Data Source={databasePathForDesignDiagnostics}");
+            optionsBuilder.UseSqlServer(connectionString);
 
             return new GameContext(optionsBuilder.Options);
         }

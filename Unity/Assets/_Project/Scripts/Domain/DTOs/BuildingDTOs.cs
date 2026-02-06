@@ -73,7 +73,6 @@ namespace Project.Scripts.Domain.DTOs
     public class HousingProjectionDTO
     {
         public int Level;
-        public int Population; // Antal borgere huset giver plads til
         public bool IsCurrentLevel;
     }
 
@@ -89,18 +88,16 @@ namespace Project.Scripts.Domain.DTOs
         public double WoodCost;
         public double StoneCost;
         public double MetalCost;
-        public int PopulationCost;
         public int ConstructionTimeInSeconds;
 
         // Status-indikatorer (Beregnet i Backend)
         public bool IsCurrentlyUpgrading;
         public bool CanAfford;
-        public bool HasPopulationRoom;
 
         /// <summary>
         /// Samlet vurdering af om spilleren teknisk set kan starte opgraderingen nu.
         /// </summary>
-        public bool MeetsRequirements => CanAfford && HasPopulationRoom && !IsCurrentlyUpgrading;
+        public bool MeetsRequirements => CanAfford && !IsCurrentlyUpgrading;
     }
 
     [Serializable]

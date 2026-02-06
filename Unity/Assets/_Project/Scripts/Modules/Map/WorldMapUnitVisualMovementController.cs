@@ -1,117 +1,56 @@
-﻿using Newtonsoft.Json;
-using Project.Modules.City;
-using Project.Network.Models;
+﻿using UnityEngine;
+using System;
 using Project.Scripts.Domain.DTOs;
 using Project.Scripts.Domain.Enums;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using UnityEngine;
 
 namespace Project.Scripts.Modules.Map
 {
     public class WorldMapUnitVisualMovementController : MonoBehaviour
     {
-        private UnitDeploymentDTO _data;
-        private Vector3 _startWorldPosition;
-        private Vector3 _targetWorldPosition;
+        private UnitDeploymentDTO _unitDeploymentData;
+        private UnityEngine.Tilemaps.Tilemap _worldTilemap;
         private bool _isInitialized = false;
-        private UnityEngine.Tilemaps.Tilemap _tilemap;
-        private DateTime _lastProcessedStepTime = DateTime.MinValue;
 
-        public Guid DeploymentId => _data?.Id ?? Guid.Empty;
-        private List<HexCoordinateDTO> _remainingPath = new List<HexCoordinateDTO>();
-
-        public void InitializeMovement(UnitDeploymentDTO newData, UnityEngine.Tilemaps.Tilemap tilemap)
+        public void InitializeMovement(UnitDeploymentDTO data, UnityEngine.Tilemaps.Tilemap tilemap)
         {
-            _tilemap = tilemap;
-
-            if (_isInitialized && _data != null)
-            {
-                if (newData.LastStepTime == _data.LastStepTime && newData.Status == UnitDeploymentMovementStatusEnum.Moving)
-                {
-                    // Opdater kun non-positional data
-                    _data.UnitStacks = newData.UnitStacks;
-                    _data.WorldPlayerUserName = newData.WorldPlayerUserName;
-                    _data.ArrivalTime = newData.ArrivalTime;
-                    return;
-                }
-            }
-
-            _data = newData;
-            SetupCurrentStep();
+            _worldTilemap = tilemap;
+            _unitDeploymentData = data;
             _isInitialized = true;
-        }
 
-        private void SetupCurrentStep()
-        {
-            if (_tilemap == null || _data == null) return;
-
-            if (_data.Status == UnitDeploymentMovementStatusEnum.Stationed)
-            {
-                var pos = _tilemap.GetCellCenterWorld(new Vector3Int(_data.CurrentX, _data.CurrentY, 0));
-                pos.z = -0.1f;
-                _startWorldPosition = pos;
-                _targetWorldPosition = pos;
-                transform.position = pos;
-                return;
-            }
-
-            _startWorldPosition = _tilemap.GetCellCenterWorld(new Vector3Int(_data.CurrentX, _data.CurrentY, 0));
-            _targetWorldPosition = _tilemap.GetCellCenterWorld(new Vector3Int(_data.NextX, _data.NextY, 0));
-            _startWorldPosition.z = -0.1f;
-            _targetWorldPosition.z = -0.1f;
+            Debug.Log($"<color=cyan>[VisualMovement]</color> Initialiseret for hær: {data.Id} på ({data.CurrentX}, {data.CurrentY})");
+            UpdateVisualPositionToCurrentCoordinates();
         }
 
         private void Update()
         {
-            if (!_isInitialized || _data == null) return;
-
-            if (_data.Status == UnitDeploymentMovementStatusEnum.Moving)
+            if (!_isInitialized || _unitDeploymentData == null || _worldTilemap == null)
             {
-                UpdateVisualPosition();
-
-                if (DateTime.UtcNow >= _data.NextStepTime)
-                {
-                    WorldMapStateManager.Instance.RequestWorldMapChunkData(
-                        (short)_data.CurrentX, (short)_data.CurrentY, 50, 50, true);
-                }
-            }
-            else
-            {
-                var targetPos = _tilemap.GetCellCenterWorld(new Vector3Int(_data.CurrentX, _data.CurrentY, 0));
-                targetPos.z = -0.1f;
-                transform.position = targetPos;
-            }
-        }
-
-        private void UpdateVisualPosition()
-        {
-            long startTicks = _data.LastStepTime.Ticks;
-            long endTicks = _data.NextStepTime.Ticks;
-            long currentTicks = DateTime.UtcNow.Ticks;
-
-            // Hvis server-tiden er i fremtiden (klokkeskæv), clamp til 0
-            if (currentTicks < startTicks)
-            {
-                transform.position = _startWorldPosition;
                 return;
             }
 
-            float t = (endTicks > startTicks)
-                ? Mathf.Clamp01((float)(currentTicks - startTicks) / (endTicks - startTicks))
-                : 1f;
-
-            transform.position = Vector3.Lerp(_startWorldPosition, _targetWorldPosition, t);
+            UpdateVisualPositionToCurrentCoordinates();
         }
 
-        [Serializable]
-        public class HexCoordinateDTO
+        private void UpdateVisualPositionToCurrentCoordinates()
         {
-            public int X { get; set; }
-            public int Y { get; set; }
+            Vector3 worldPosition = _worldTilemap.GetCellCenterWorld(new Vector3Int(
+                _unitDeploymentData.CurrentX,
+                _unitDeploymentData.CurrentY,
+                0
+            ));
+
+            worldPosition.z = -0.1f;
+            transform.position = worldPosition;
+        }
+
+        public Guid GetDeploymentId()
+        {
+            if (_unitDeploymentData == null)
+            {
+                Debug.LogWarning($"<color=red>[VisualMovement]</color> GetDeploymentId kaldt på uinitialiseret controller!");
+                return Guid.Empty;
+            }
+            return _unitDeploymentData.Id;
         }
     }
 }

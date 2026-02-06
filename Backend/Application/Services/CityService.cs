@@ -248,11 +248,9 @@ namespace Application.Services
                         WoodCost = nextConfig.WoodCost,
                         StoneCost = nextConfig.StoneCost,
                         MetalCost = nextConfig.MetalCost,
-                        PopulationCost = nextConfig.PopulationCost,
                         ConstructionTimeInSeconds = (int)nextConfig.BuildTime.TotalSeconds,
                         IsCurrentlyUpgrading = existingBuilding?.IsUpgrading ?? false,
                         CanAfford = canAffordUpgrade,
-                        HasPopulationRoom = availablePopulation >= nextConfig.PopulationCost
                     });
                 }
 
@@ -333,12 +331,10 @@ namespace Application.Services
 
             private PopulationBreakdownDTO CreatePopulationBreakdown(City cityEntity, IEnumerable<BaseJob> activeJobs)
             {
-                int buildingUsage = cityEntity.Buildings.Sum(b => _buildingDataReader.GetConfig<BuildingLevelData>(b.Type, b.Level)?.PopulationCost ?? 0);
                 int unitUsage = cityEntity.UnitStacks.Sum(s => s.Quantity * (_unitDataReader.GetUnit(s.Type)?.PopulationCost ?? 0));
 
                 return new PopulationBreakdownDTO(
                     _cityStatService.GetMaxPopulation(cityEntity),
-                    buildingUsage,
                     unitUsage,
                     _cityStatService.GetAvailablePopulation(cityEntity, activeJobs),
                     0

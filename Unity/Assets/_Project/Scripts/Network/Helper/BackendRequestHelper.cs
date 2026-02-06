@@ -4,10 +4,8 @@ using Newtonsoft.Json;
 
 namespace Project.Network.Helper
 {
-
     public static class BackendRequestHelper
     {
-        // Konfigurerer en POST request med JSON body og Headers
         public static UnityWebRequest CreatePostRequest(string url, object bodyPayload, string jwtToken = null)
         {
             string json = JsonConvert.SerializeObject(bodyPayload);
@@ -22,7 +20,6 @@ namespace Project.Network.Helper
             return request;
         }
 
-        // Konfigurerer en GET request
         public static UnityWebRequest CreateGetRequest(string url, string jwtToken = null)
         {
             var request = UnityWebRequest.Get(url);
@@ -40,13 +37,6 @@ namespace Project.Network.Helper
                 request.SetRequestHeader("Authorization", $"Bearer {jwtToken}");
             }
 
-            // SSL Bypass (Kun til development!)
-            request.certificateHandler = new BypassCertificate();
         }
-    }
-
-    public class BypassCertificate : CertificateHandler
-    {
-        protected override bool ValidateCertificate(byte[] certificateData) => true;
     }
 }

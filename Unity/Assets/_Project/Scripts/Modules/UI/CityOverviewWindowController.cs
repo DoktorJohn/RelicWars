@@ -91,7 +91,7 @@ namespace Assets._Project.Scripts.Modules.UI
             // 5) Update Population Bar (Fixet logik)
             if (dataModel.Population.MaxCapacity > 0)
             {
-                float totalPopulationUsage = (float)dataModel.Population.UsedByBuildings + dataModel.Population.UsedByUnits;
+                float totalPopulationUsage = (float)dataModel.Population.UsedByUnits;
                 float usagePercentageCalculated = (totalPopulationUsage / (float)dataModel.Population.MaxCapacity) * 100f;
 
                 // Vi tvinger bredden via Length.Percent
@@ -102,7 +102,7 @@ namespace Assets._Project.Scripts.Modules.UI
                 _populationUsageBarFill.style.width = new StyleLength(new Length(0, LengthUnit.Percent));
             }
 
-            _labelPopulationStatisticalDetails.text = $"Buildings: {dataModel.Population.UsedByBuildings} | Units: {dataModel.Population.UsedByUnits} | Free: {dataModel.Population.FreePopulation}";
+            _labelPopulationStatisticalDetails.text = $"Units: {dataModel.Population.UsedByUnits} | Free: {dataModel.Population.FreePopulation}";
 
             // 4. Update Queue Activity Status
             ApplyStatusLabelConfiguration(_labelStatusTownHall, dataModel.TownHallStatus.IsBusy, dataModel.TownHallStatus.CurrentBuildingName, dataModel.TownHallStatus.JobsInQueue);

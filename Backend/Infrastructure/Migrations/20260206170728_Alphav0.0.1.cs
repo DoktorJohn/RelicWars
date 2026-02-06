@@ -15,15 +15,15 @@ namespace Infrastructure.Migrations
                 name: "Alliances",
                 columns: table => new
                 {
-                    Id = table.Column<Guid>(type: "TEXT", nullable: false),
-                    Name = table.Column<string>(type: "TEXT", nullable: false),
-                    Tag = table.Column<string>(type: "TEXT", nullable: false),
-                    Description = table.Column<string>(type: "TEXT", nullable: false),
-                    BannerImageUrl = table.Column<string>(type: "TEXT", nullable: false),
-                    MaxPlayers = table.Column<int>(type: "INTEGER", nullable: false),
-                    DateCreated = table.Column<DateTime>(type: "TEXT", nullable: false),
-                    DateLastModified = table.Column<DateTime>(type: "TEXT", nullable: false),
-                    IsDeleted = table.Column<bool>(type: "INTEGER", nullable: false)
+                    Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    Name = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Tag = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Description = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    BannerImageUrl = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    MaxPlayers = table.Column<int>(type: "int", nullable: false),
+                    DateCreated = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    DateLastModified = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    IsDeleted = table.Column<bool>(type: "bit", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -34,15 +34,15 @@ namespace Infrastructure.Migrations
                 name: "BattleReports",
                 columns: table => new
                 {
-                    Id = table.Column<Guid>(type: "TEXT", nullable: false),
-                    Title = table.Column<string>(type: "TEXT", nullable: false),
-                    Body = table.Column<string>(type: "TEXT", nullable: false),
-                    OccurredAt = table.Column<DateTime>(type: "TEXT", nullable: false),
-                    IsRead = table.Column<bool>(type: "INTEGER", nullable: false),
-                    WorldPlayerId = table.Column<Guid>(type: "TEXT", nullable: false),
-                    DateCreated = table.Column<DateTime>(type: "TEXT", nullable: false),
-                    DateLastModified = table.Column<DateTime>(type: "TEXT", nullable: false),
-                    IsDeleted = table.Column<bool>(type: "INTEGER", nullable: false)
+                    Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    Title = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Body = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    OccurredAt = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    IsRead = table.Column<bool>(type: "bit", nullable: false),
+                    WorldPlayerId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    DateCreated = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    DateLastModified = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    IsDeleted = table.Column<bool>(type: "bit", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -53,23 +53,23 @@ namespace Infrastructure.Migrations
                 name: "PlayerProfiles",
                 columns: table => new
                 {
-                    Id = table.Column<Guid>(type: "TEXT", nullable: false),
-                    CreatedAt = table.Column<DateTime>(type: "TEXT", nullable: false),
-                    ModifiedAt = table.Column<DateTime>(type: "TEXT", nullable: false),
-                    UserName = table.Column<string>(type: "TEXT", nullable: true),
-                    NormalizedUserName = table.Column<string>(type: "TEXT", nullable: true),
-                    Email = table.Column<string>(type: "TEXT", nullable: true),
-                    NormalizedEmail = table.Column<string>(type: "TEXT", nullable: true),
-                    EmailConfirmed = table.Column<bool>(type: "INTEGER", nullable: false),
-                    PasswordHash = table.Column<string>(type: "TEXT", nullable: true),
-                    SecurityStamp = table.Column<string>(type: "TEXT", nullable: true),
-                    ConcurrencyStamp = table.Column<string>(type: "TEXT", nullable: true),
-                    PhoneNumber = table.Column<string>(type: "TEXT", nullable: true),
-                    PhoneNumberConfirmed = table.Column<bool>(type: "INTEGER", nullable: false),
-                    TwoFactorEnabled = table.Column<bool>(type: "INTEGER", nullable: false),
-                    LockoutEnd = table.Column<DateTimeOffset>(type: "TEXT", nullable: true),
-                    LockoutEnabled = table.Column<bool>(type: "INTEGER", nullable: false),
-                    AccessFailedCount = table.Column<int>(type: "INTEGER", nullable: false)
+                    Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    ModifiedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    UserName = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    NormalizedUserName = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    Email = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    NormalizedEmail = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    EmailConfirmed = table.Column<bool>(type: "bit", nullable: false),
+                    PasswordHash = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    SecurityStamp = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    ConcurrencyStamp = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    PhoneNumber = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    PhoneNumberConfirmed = table.Column<bool>(type: "bit", nullable: false),
+                    TwoFactorEnabled = table.Column<bool>(type: "bit", nullable: false),
+                    LockoutEnd = table.Column<DateTimeOffset>(type: "datetimeoffset", nullable: true),
+                    LockoutEnabled = table.Column<bool>(type: "bit", nullable: false),
+                    AccessFailedCount = table.Column<int>(type: "int", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -80,16 +80,16 @@ namespace Infrastructure.Migrations
                 name: "World",
                 columns: table => new
                 {
-                    Id = table.Column<Guid>(type: "TEXT", nullable: false),
-                    Name = table.Column<string>(type: "TEXT", nullable: false),
-                    Abbrevation = table.Column<string>(type: "TEXT", nullable: false),
-                    Width = table.Column<int>(type: "INTEGER", nullable: false),
-                    Height = table.Column<int>(type: "INTEGER", nullable: false),
-                    MapSeed = table.Column<int>(type: "INTEGER", nullable: false),
-                    PlayerCount = table.Column<int>(type: "INTEGER", nullable: false),
-                    DateCreated = table.Column<DateTime>(type: "TEXT", nullable: false),
-                    DateLastModified = table.Column<DateTime>(type: "TEXT", nullable: false),
-                    IsDeleted = table.Column<bool>(type: "INTEGER", nullable: false)
+                    Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    Name = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Abbrevation = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Width = table.Column<int>(type: "int", nullable: false),
+                    Height = table.Column<int>(type: "int", nullable: false),
+                    MapSeed = table.Column<int>(type: "int", nullable: false),
+                    PlayerCount = table.Column<int>(type: "int", nullable: false),
+                    DateCreated = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    DateLastModified = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    IsDeleted = table.Column<bool>(type: "bit", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -100,8 +100,8 @@ namespace Infrastructure.Migrations
                 name: "AllianceAlliance",
                 columns: table => new
                 {
-                    AlliancesAtWarId = table.Column<Guid>(type: "TEXT", nullable: false),
-                    AlliancesPactedId = table.Column<Guid>(type: "TEXT", nullable: false)
+                    AlliancesAtWarId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    AlliancesPactedId = table.Column<Guid>(type: "uniqueidentifier", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -116,21 +116,20 @@ namespace Infrastructure.Migrations
                         name: "FK_AllianceAlliance_Alliances_AlliancesPactedId",
                         column: x => x.AlliancesPactedId,
                         principalTable: "Alliances",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
+                        principalColumn: "Id");
                 });
 
             migrationBuilder.CreateTable(
                 name: "AllianceModifiers",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "INTEGER", nullable: false)
-                        .Annotation("Sqlite:Autoincrement", true),
-                    Tag = table.Column<int>(type: "INTEGER", nullable: false),
-                    Type = table.Column<int>(type: "INTEGER", nullable: false),
-                    Value = table.Column<double>(type: "REAL", nullable: false),
-                    Source = table.Column<string>(type: "TEXT", nullable: false),
-                    AllianceId = table.Column<Guid>(type: "TEXT", nullable: false)
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    Tag = table.Column<int>(type: "int", nullable: false),
+                    Type = table.Column<int>(type: "int", nullable: false),
+                    Value = table.Column<double>(type: "float", nullable: false),
+                    Source = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    AllianceId = table.Column<Guid>(type: "uniqueidentifier", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -147,15 +146,15 @@ namespace Infrastructure.Migrations
                 name: "WorldMapObjects",
                 columns: table => new
                 {
-                    Id = table.Column<Guid>(type: "TEXT", nullable: false),
-                    WorldId = table.Column<Guid>(type: "TEXT", nullable: false),
-                    X = table.Column<short>(type: "INTEGER", nullable: false),
-                    Y = table.Column<short>(type: "INTEGER", nullable: false),
-                    Type = table.Column<byte>(type: "INTEGER", nullable: false),
-                    ReferenceEntityId = table.Column<Guid>(type: "TEXT", nullable: true),
-                    DateCreated = table.Column<DateTime>(type: "TEXT", nullable: false),
-                    DateLastModified = table.Column<DateTime>(type: "TEXT", nullable: false),
-                    IsDeleted = table.Column<bool>(type: "INTEGER", nullable: false)
+                    Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    WorldId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    X = table.Column<short>(type: "smallint", nullable: false),
+                    Y = table.Column<short>(type: "smallint", nullable: false),
+                    Type = table.Column<byte>(type: "tinyint", nullable: false),
+                    ReferenceEntityId = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
+                    DateCreated = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    DateLastModified = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    IsDeleted = table.Column<bool>(type: "bit", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -172,13 +171,13 @@ namespace Infrastructure.Migrations
                 name: "WorldModifiers",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "INTEGER", nullable: false)
-                        .Annotation("Sqlite:Autoincrement", true),
-                    Tag = table.Column<int>(type: "INTEGER", nullable: false),
-                    Type = table.Column<int>(type: "INTEGER", nullable: false),
-                    Value = table.Column<double>(type: "REAL", nullable: false),
-                    Source = table.Column<string>(type: "TEXT", nullable: false),
-                    WorldId = table.Column<Guid>(type: "TEXT", nullable: false)
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    Tag = table.Column<int>(type: "int", nullable: false),
+                    Type = table.Column<int>(type: "int", nullable: false),
+                    Value = table.Column<double>(type: "float", nullable: false),
+                    Source = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    WorldId = table.Column<Guid>(type: "uniqueidentifier", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -195,20 +194,20 @@ namespace Infrastructure.Migrations
                 name: "WorldPlayers",
                 columns: table => new
                 {
-                    Id = table.Column<Guid>(type: "TEXT", nullable: false),
-                    Silver = table.Column<double>(type: "REAL", nullable: false),
-                    IdeologyFocusPoints = table.Column<double>(type: "REAL", nullable: false),
-                    ResearchPoints = table.Column<double>(type: "REAL", nullable: false),
-                    Ideology = table.Column<int>(type: "INTEGER", nullable: false),
-                    LastResourceUpdate = table.Column<DateTime>(type: "TEXT", nullable: false),
-                    AllianceRole = table.Column<int>(type: "INTEGER", nullable: false),
-                    ModifiersThatAffectsThis = table.Column<string>(type: "TEXT", nullable: false),
-                    AllianceId = table.Column<Guid>(type: "TEXT", nullable: true),
-                    PlayerProfileId = table.Column<Guid>(type: "TEXT", nullable: false),
-                    WorldId = table.Column<Guid>(type: "TEXT", nullable: false),
-                    DateCreated = table.Column<DateTime>(type: "TEXT", nullable: false),
-                    DateLastModified = table.Column<DateTime>(type: "TEXT", nullable: false),
-                    IsDeleted = table.Column<bool>(type: "INTEGER", nullable: false)
+                    Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    Silver = table.Column<double>(type: "float", nullable: false),
+                    IdeologyFocusPoints = table.Column<double>(type: "float", nullable: false),
+                    ResearchPoints = table.Column<double>(type: "float", nullable: false),
+                    Ideology = table.Column<int>(type: "int", nullable: false),
+                    LastResourceUpdate = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    AllianceRole = table.Column<int>(type: "int", nullable: false),
+                    ModifiersThatAffectsThis = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    AllianceId = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
+                    PlayerProfileId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    WorldId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    DateCreated = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    DateLastModified = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    IsDeleted = table.Column<bool>(type: "bit", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -236,23 +235,23 @@ namespace Infrastructure.Migrations
                 name: "Cities",
                 columns: table => new
                 {
-                    Id = table.Column<Guid>(type: "TEXT", nullable: false),
-                    Name = table.Column<string>(type: "TEXT", nullable: false),
-                    Points = table.Column<int>(type: "INTEGER", nullable: false),
-                    Wood = table.Column<double>(type: "REAL", nullable: false),
-                    Stone = table.Column<double>(type: "REAL", nullable: false),
-                    Metal = table.Column<double>(type: "REAL", nullable: false),
-                    Population = table.Column<int>(type: "INTEGER", nullable: false),
-                    LastResourceUpdate = table.Column<DateTime>(type: "TEXT", nullable: false),
-                    IsNPC = table.Column<bool>(type: "INTEGER", nullable: false),
-                    X = table.Column<int>(type: "INTEGER", nullable: false),
-                    Y = table.Column<int>(type: "INTEGER", nullable: false),
-                    ModifiersThatAffectsThis = table.Column<string>(type: "TEXT", nullable: false),
-                    WorldPlayerId = table.Column<Guid>(type: "TEXT", nullable: true),
-                    WorldId = table.Column<Guid>(type: "TEXT", nullable: false),
-                    DateCreated = table.Column<DateTime>(type: "TEXT", nullable: false),
-                    DateLastModified = table.Column<DateTime>(type: "TEXT", nullable: false),
-                    IsDeleted = table.Column<bool>(type: "INTEGER", nullable: false)
+                    Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    Name = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Points = table.Column<int>(type: "int", nullable: false),
+                    Wood = table.Column<double>(type: "float", nullable: false),
+                    Stone = table.Column<double>(type: "float", nullable: false),
+                    Metal = table.Column<double>(type: "float", nullable: false),
+                    Population = table.Column<int>(type: "int", nullable: false),
+                    LastResourceUpdate = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    IsNPC = table.Column<bool>(type: "bit", nullable: false),
+                    X = table.Column<int>(type: "int", nullable: false),
+                    Y = table.Column<int>(type: "int", nullable: false),
+                    ModifiersThatAffectsThis = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    WorldPlayerId = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
+                    WorldId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    DateCreated = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    DateLastModified = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    IsDeleted = table.Column<bool>(type: "bit", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -274,13 +273,13 @@ namespace Infrastructure.Migrations
                 name: "PlayerModifiers",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "INTEGER", nullable: false)
-                        .Annotation("Sqlite:Autoincrement", true),
-                    Tag = table.Column<int>(type: "INTEGER", nullable: false),
-                    Type = table.Column<int>(type: "INTEGER", nullable: false),
-                    Value = table.Column<double>(type: "REAL", nullable: false),
-                    Source = table.Column<string>(type: "TEXT", nullable: false),
-                    WorldPlayerId = table.Column<Guid>(type: "TEXT", nullable: false)
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    Tag = table.Column<int>(type: "int", nullable: false),
+                    Type = table.Column<int>(type: "int", nullable: false),
+                    Value = table.Column<double>(type: "float", nullable: false),
+                    Source = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    WorldPlayerId = table.Column<Guid>(type: "uniqueidentifier", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -297,14 +296,14 @@ namespace Infrastructure.Migrations
                 name: "Researches",
                 columns: table => new
                 {
-                    Id = table.Column<Guid>(type: "TEXT", nullable: false),
-                    UserId = table.Column<Guid>(type: "TEXT", nullable: false),
-                    ResearchId = table.Column<string>(type: "TEXT", nullable: false),
-                    CompletedAt = table.Column<DateTime>(type: "TEXT", nullable: false),
-                    WorldPlayerId = table.Column<Guid>(type: "TEXT", nullable: true),
-                    DateCreated = table.Column<DateTime>(type: "TEXT", nullable: false),
-                    DateLastModified = table.Column<DateTime>(type: "TEXT", nullable: false),
-                    IsDeleted = table.Column<bool>(type: "INTEGER", nullable: false)
+                    Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    UserId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    ResearchId = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    CompletedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    WorldPlayerId = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
+                    DateCreated = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    DateLastModified = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    IsDeleted = table.Column<bool>(type: "bit", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -320,15 +319,15 @@ namespace Infrastructure.Migrations
                 name: "Buildings",
                 columns: table => new
                 {
-                    Id = table.Column<Guid>(type: "TEXT", nullable: false),
-                    Level = table.Column<int>(type: "INTEGER", nullable: false),
-                    Type = table.Column<int>(type: "INTEGER", nullable: false),
-                    TimeOfUpgradeStarted = table.Column<DateTime>(type: "TEXT", nullable: true),
-                    TimeOfUpgradeFinished = table.Column<DateTime>(type: "TEXT", nullable: true),
-                    CityId = table.Column<Guid>(type: "TEXT", nullable: false),
-                    DateCreated = table.Column<DateTime>(type: "TEXT", nullable: false),
-                    DateLastModified = table.Column<DateTime>(type: "TEXT", nullable: false),
-                    IsDeleted = table.Column<bool>(type: "INTEGER", nullable: false)
+                    Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    Level = table.Column<int>(type: "int", nullable: false),
+                    Type = table.Column<int>(type: "int", nullable: false),
+                    TimeOfUpgradeStarted = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    TimeOfUpgradeFinished = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    CityId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    DateCreated = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    DateLastModified = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    IsDeleted = table.Column<bool>(type: "bit", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -345,13 +344,13 @@ namespace Infrastructure.Migrations
                 name: "CityModifiers",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "INTEGER", nullable: false)
-                        .Annotation("Sqlite:Autoincrement", true),
-                    Tag = table.Column<int>(type: "INTEGER", nullable: false),
-                    Type = table.Column<int>(type: "INTEGER", nullable: false),
-                    Value = table.Column<double>(type: "REAL", nullable: false),
-                    Source = table.Column<string>(type: "TEXT", nullable: false),
-                    CityId = table.Column<Guid>(type: "TEXT", nullable: false)
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    Tag = table.Column<int>(type: "int", nullable: false),
+                    Type = table.Column<int>(type: "int", nullable: false),
+                    Value = table.Column<double>(type: "float", nullable: false),
+                    Source = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    CityId = table.Column<Guid>(type: "uniqueidentifier", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -368,13 +367,13 @@ namespace Infrastructure.Migrations
                 name: "IdeologyFocuses",
                 columns: table => new
                 {
-                    Id = table.Column<Guid>(type: "TEXT", nullable: false),
-                    TimeOfIdeologyStarted = table.Column<DateTime>(type: "TEXT", nullable: true),
-                    TimeOfIdeologyFinished = table.Column<DateTime>(type: "TEXT", nullable: true),
-                    CityId = table.Column<Guid>(type: "TEXT", nullable: false),
-                    DateCreated = table.Column<DateTime>(type: "TEXT", nullable: false),
-                    DateLastModified = table.Column<DateTime>(type: "TEXT", nullable: false),
-                    IsDeleted = table.Column<bool>(type: "INTEGER", nullable: false)
+                    Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    TimeOfIdeologyStarted = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    TimeOfIdeologyFinished = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    CityId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    DateCreated = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    DateLastModified = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    IsDeleted = table.Column<bool>(type: "bit", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -391,24 +390,24 @@ namespace Infrastructure.Migrations
                 name: "Jobs",
                 columns: table => new
                 {
-                    Id = table.Column<Guid>(type: "TEXT", nullable: false),
-                    UserId = table.Column<Guid>(type: "TEXT", nullable: false),
-                    ExecutionTime = table.Column<DateTime>(type: "TEXT", nullable: false),
-                    IsCompleted = table.Column<bool>(type: "INTEGER", nullable: false),
-                    JobType = table.Column<string>(type: "TEXT", maxLength: 21, nullable: false),
-                    BuildingType = table.Column<int>(type: "INTEGER", nullable: true),
-                    CityId = table.Column<Guid>(type: "TEXT", nullable: true),
-                    TargetLevel = table.Column<int>(type: "INTEGER", nullable: true),
-                    UnitType = table.Column<int>(type: "INTEGER", nullable: true),
-                    RecruitmentJob_CityId = table.Column<Guid>(type: "TEXT", nullable: true),
-                    TotalQuantity = table.Column<int>(type: "INTEGER", nullable: true),
-                    CompletedQuantity = table.Column<int>(type: "INTEGER", nullable: true),
-                    SecondsPerUnit = table.Column<double>(type: "REAL", nullable: true),
-                    LastTickTime = table.Column<DateTime>(type: "TEXT", nullable: true),
-                    ResearchId = table.Column<string>(type: "TEXT", nullable: true),
-                    DateCreated = table.Column<DateTime>(type: "TEXT", nullable: false),
-                    DateLastModified = table.Column<DateTime>(type: "TEXT", nullable: false),
-                    IsDeleted = table.Column<bool>(type: "INTEGER", nullable: false)
+                    Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    UserId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    ExecutionTime = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    IsCompleted = table.Column<bool>(type: "bit", nullable: false),
+                    JobType = table.Column<string>(type: "nvarchar(21)", maxLength: 21, nullable: false),
+                    BuildingType = table.Column<int>(type: "int", nullable: true),
+                    CityId = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
+                    TargetLevel = table.Column<int>(type: "int", nullable: true),
+                    UnitType = table.Column<int>(type: "int", nullable: true),
+                    RecruitmentJob_CityId = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
+                    TotalQuantity = table.Column<int>(type: "int", nullable: true),
+                    CompletedQuantity = table.Column<int>(type: "int", nullable: true),
+                    SecondsPerUnit = table.Column<double>(type: "float", nullable: true),
+                    LastTickTime = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    ResearchId = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    DateCreated = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    DateLastModified = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    IsDeleted = table.Column<bool>(type: "bit", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -425,32 +424,32 @@ namespace Infrastructure.Migrations
                 name: "UnitDeployments",
                 columns: table => new
                 {
-                    Id = table.Column<Guid>(type: "TEXT", nullable: false),
-                    Name = table.Column<string>(type: "TEXT", nullable: false),
-                    CurrentX = table.Column<int>(type: "INTEGER", nullable: false),
-                    CurrentY = table.Column<int>(type: "INTEGER", nullable: false),
-                    NextX = table.Column<int>(type: "INTEGER", nullable: false),
-                    NextY = table.Column<int>(type: "INTEGER", nullable: false),
-                    FinalX = table.Column<int>(type: "INTEGER", nullable: false),
-                    FinalY = table.Column<int>(type: "INTEGER", nullable: false),
-                    LootWood = table.Column<double>(type: "REAL", nullable: false),
-                    LootStone = table.Column<double>(type: "REAL", nullable: false),
-                    LootMetal = table.Column<double>(type: "REAL", nullable: false),
-                    Mobility = table.Column<int>(type: "INTEGER", nullable: false),
-                    UnitDeploymentMovementStatus = table.Column<int>(type: "INTEGER", nullable: false),
-                    ArrivalTime = table.Column<DateTime>(type: "TEXT", nullable: false),
-                    DepartureTime = table.Column<DateTime>(type: "TEXT", nullable: false),
-                    LastStepTime = table.Column<DateTime>(type: "TEXT", nullable: false),
-                    NextStepTime = table.Column<DateTime>(type: "TEXT", nullable: false),
-                    RemainingPathJson = table.Column<string>(type: "TEXT", nullable: true),
-                    ModifiersThatAffectsThis = table.Column<string>(type: "TEXT", nullable: false),
-                    TargetCityId = table.Column<Guid>(type: "TEXT", nullable: true),
-                    OriginCityId = table.Column<Guid>(type: "TEXT", nullable: false),
-                    WorldPlayerId = table.Column<Guid>(type: "TEXT", nullable: false),
-                    WorldId = table.Column<Guid>(type: "TEXT", nullable: false),
-                    DateCreated = table.Column<DateTime>(type: "TEXT", nullable: false),
-                    DateLastModified = table.Column<DateTime>(type: "TEXT", nullable: false),
-                    IsDeleted = table.Column<bool>(type: "INTEGER", nullable: false)
+                    Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    Name = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    CurrentX = table.Column<int>(type: "int", nullable: false),
+                    CurrentY = table.Column<int>(type: "int", nullable: false),
+                    NextX = table.Column<int>(type: "int", nullable: false),
+                    NextY = table.Column<int>(type: "int", nullable: false),
+                    FinalX = table.Column<int>(type: "int", nullable: false),
+                    FinalY = table.Column<int>(type: "int", nullable: false),
+                    LootWood = table.Column<double>(type: "float", nullable: false),
+                    LootStone = table.Column<double>(type: "float", nullable: false),
+                    LootMetal = table.Column<double>(type: "float", nullable: false),
+                    Mobility = table.Column<int>(type: "int", nullable: false),
+                    UnitDeploymentMovementStatus = table.Column<int>(type: "int", nullable: false),
+                    ArrivalTime = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    DepartureTime = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    LastStepTime = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    NextStepTime = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    RemainingPathJson = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    ModifiersThatAffectsThis = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    TargetCityId = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
+                    OriginCityId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    WorldPlayerId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    WorldId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    DateCreated = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    DateLastModified = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    IsDeleted = table.Column<bool>(type: "bit", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -478,20 +477,20 @@ namespace Infrastructure.Migrations
                         column: x => x.WorldId,
                         principalTable: "World",
                         principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
+                        onDelete: ReferentialAction.Restrict);
                 });
 
             migrationBuilder.CreateTable(
                 name: "UnitDeploymentModifiers",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "INTEGER", nullable: false)
-                        .Annotation("Sqlite:Autoincrement", true),
-                    Tag = table.Column<int>(type: "INTEGER", nullable: false),
-                    Type = table.Column<int>(type: "INTEGER", nullable: false),
-                    Value = table.Column<double>(type: "REAL", nullable: false),
-                    Source = table.Column<string>(type: "TEXT", nullable: false),
-                    UnitDeploymentId = table.Column<Guid>(type: "TEXT", nullable: false)
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    Tag = table.Column<int>(type: "int", nullable: false),
+                    Type = table.Column<int>(type: "int", nullable: false),
+                    Value = table.Column<double>(type: "float", nullable: false),
+                    Source = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    UnitDeploymentId = table.Column<Guid>(type: "uniqueidentifier", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -508,26 +507,26 @@ namespace Infrastructure.Migrations
                 name: "UnitStacks",
                 columns: table => new
                 {
-                    Id = table.Column<Guid>(type: "TEXT", nullable: false),
-                    Type = table.Column<int>(type: "INTEGER", nullable: false),
-                    Quantity = table.Column<int>(type: "INTEGER", nullable: false),
-                    ModifiersThatAffectsThis = table.Column<string>(type: "TEXT", nullable: false),
-                    StationedCityId = table.Column<Guid>(type: "TEXT", nullable: true),
-                    UnitDeploymentId = table.Column<Guid>(type: "TEXT", nullable: true),
-                    WorldPlayerId = table.Column<Guid>(type: "TEXT", nullable: true),
-                    DateCreated = table.Column<DateTime>(type: "TEXT", nullable: false),
-                    DateLastModified = table.Column<DateTime>(type: "TEXT", nullable: false),
-                    IsDeleted = table.Column<bool>(type: "INTEGER", nullable: false)
+                    Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    Type = table.Column<int>(type: "int", nullable: false),
+                    Quantity = table.Column<int>(type: "int", nullable: false),
+                    ModifiersThatAffectsThis = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    CityId = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
+                    UnitDeploymentId = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
+                    WorldPlayerId = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
+                    DateCreated = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    DateLastModified = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    IsDeleted = table.Column<bool>(type: "bit", nullable: false)
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_UnitStacks", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_UnitStacks_Cities_StationedCityId",
-                        column: x => x.StationedCityId,
+                        name: "FK_UnitStacks_Cities_CityId",
+                        column: x => x.CityId,
                         principalTable: "Cities",
                         principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
+                        onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
                         name: "FK_UnitStacks_UnitDeployments_UnitDeploymentId",
                         column: x => x.UnitDeploymentId,
@@ -545,13 +544,13 @@ namespace Infrastructure.Migrations
                 name: "UnitStackModifiers",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "INTEGER", nullable: false)
-                        .Annotation("Sqlite:Autoincrement", true),
-                    Tag = table.Column<int>(type: "INTEGER", nullable: false),
-                    Type = table.Column<int>(type: "INTEGER", nullable: false),
-                    Value = table.Column<double>(type: "REAL", nullable: false),
-                    Source = table.Column<string>(type: "TEXT", nullable: false),
-                    UnitStackId = table.Column<Guid>(type: "TEXT", nullable: false)
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    Tag = table.Column<int>(type: "int", nullable: false),
+                    Type = table.Column<int>(type: "int", nullable: false),
+                    Value = table.Column<double>(type: "float", nullable: false),
+                    Source = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    UnitStackId = table.Column<Guid>(type: "uniqueidentifier", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -650,9 +649,9 @@ namespace Infrastructure.Migrations
                 column: "UnitStackId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_UnitStacks_StationedCityId",
+                name: "IX_UnitStacks_CityId",
                 table: "UnitStacks",
-                column: "StationedCityId");
+                column: "CityId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_UnitStacks_UnitDeploymentId",

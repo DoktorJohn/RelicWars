@@ -8,19 +8,18 @@ namespace Project.Scripts.Modules.Map
         public Guid DeploymentId { get; private set; }
         public Vector2Int CurrentCoordinates { get; private set; }
 
-        public void InitializeTrigger(Guid deploymentId, int x, int y)
+        public void InitializeTrigger(Guid id, int x, int y)
         {
-            DeploymentId = deploymentId;
+            DeploymentId = id;
             CurrentCoordinates = new Vector2Int(x, y);
 
-            // Debug log så vi kan se i konsollen at ID'et er landet i triggeren
-            if (deploymentId == Guid.Empty)
+            if (id == Guid.Empty)
             {
-                Debug.LogError($"<color=red>[UnitClickTrigger]</color> FEJL: Forsøger at initialisere med tomt ID på {x},{y}!");
+                Debug.LogError($"<color=red>[UnitClickTrigger]</color> Initialiseret med tomt ID på {x},{y}!");
             }
             else
             {
-                Debug.Log($"<color=orange>[UnitClickTrigger]</color> Initialiseret: ID={deploymentId} på {x},{y}");
+                Debug.Log($"<color=orange>[UnitClickTrigger]</color> Klar til klik: {id} på {x},{y}");
             }
         }
     }

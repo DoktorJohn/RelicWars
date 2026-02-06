@@ -140,7 +140,7 @@ namespace Project.Scripts.Modules.UI
                     }
                     else
                     {
-                        bool canAffordUpgrade = building.CanAfford && building.HasPopulationRoom;
+                        bool canAffordUpgrade = building.CanAfford;
                         upgradeExecutionButton.SetEnabled(canAffordUpgrade);
                         upgradeExecutionButton.text = canAffordUpgrade ? "UPGRADE" : "LOCKED";
 

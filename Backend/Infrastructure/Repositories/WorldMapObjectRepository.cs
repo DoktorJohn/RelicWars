@@ -1,5 +1,6 @@
 ﻿using Application.Interfaces.IRepositories;
 using Domain.Entities;
+using Domain.Enums;
 using Infrastructure.Context;
 using Microsoft.EntityFrameworkCore;
 using System;
@@ -17,6 +18,13 @@ namespace Infrastructure.Repositories
         public WorldMapObjectRepository(GameContext context)
         {
             _context = context;
+        }
+
+        public async Task<List<WorldMapObject>> GetObjectsByTypeAsync(Guid id, MapObjectTypeEnum type)
+        {
+            return await _context.WorldMapObjects
+                .AsNoTracking()
+                .Where(x => x.Type == MapObjectTypeEnum.City).ToListAsync();
         }
 
         public async Task<WorldMapObject?> GetCityOnCoordinatesAsync(Guid worldId, short X, short Y)

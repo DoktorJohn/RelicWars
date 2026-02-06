@@ -70,17 +70,12 @@ namespace Application.Services
 
         public int GetCurrentPopulationUsage(City city)
         {
-            int buildingUsage = city.Buildings
-                .Select(b => _buildingData.GetConfig<BuildingLevelData>(b.Type, b.Level))
-                .Where(c => c != null)
-                .Sum(c => c!.PopulationCost);
-
             int unitUsage = city.UnitStacks
                 .Select(s => new { Stack = s, Def = _unitData.GetUnit(s.Type) })
                 .Where(x => x.Def != null)
                 .Sum(x => x.Stack.Quantity * x.Def!.PopulationCost);
 
-            return buildingUsage + unitUsage;
+            return unitUsage;
         }
 
         public int GetAvailablePopulation(City city, IEnumerable<BaseJob> activeJobs)
@@ -95,21 +90,6 @@ namespace Application.Services
                 {
                     var unitDef = _unitData.GetUnit(rJob.UnitType);
                     reservedInQueue += (rJob.TotalQuantity - rJob.CompletedQuantity) * unitDef.PopulationCost;
-                }
-                else if (job is BuildingJob bJob)
-                {
-                    // Vi skal finde ud af, hvor meget EKSTRA pop dette level koster i forhold til det forrige
-                    var nextLevelConfig = _buildingData.GetConfig<BuildingLevelData>(bJob.BuildingType, bJob.TargetLevel);
-
-                    // Hvis det er level 1, trækker vi 0 fra. Ellers trækker vi prisen for level-1 fra.
-                    int previousLevelPop = 0;
-                    if (bJob.TargetLevel > 1)
-                    {
-                        var prevLevelConfig = _buildingData.GetConfig<BuildingLevelData>(bJob.BuildingType, bJob.TargetLevel - 1);
-                        previousLevelPop = prevLevelConfig?.PopulationCost ?? 0;
-                    }
-
-                    reservedInQueue += (nextLevelConfig.PopulationCost - previousLevelPop);
                 }
             }
 

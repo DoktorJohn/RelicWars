@@ -17,8 +17,8 @@ namespace Domain.Entities
         public List<ModifierTagEnum> ModifiersThatAffectsThis { get; set; } = new();
 
         //FK
-        public Guid? StationedCityId { get; set; }
-        public City? StationedCity { get; set; }
+        public Guid? CityId { get; set; }
+        public City? City { get; set; }
         public Guid? UnitDeploymentId { get; set; }
         public UnitDeployment? UnitDeployment { get; set; }
         public Guid? WorldPlayerId { get; set; }

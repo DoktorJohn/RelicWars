@@ -10,7 +10,7 @@ namespace Project.Network.Manager
         public static NetworkManager Instance;
 
         [Header("Configuration")]
-        [SerializeField] private string _backendBaseUrl = "https://127.0.0.1:55286/api";
+        [SerializeField] private string _backendBaseUrl = "https://rorgamebackend-dmfadtcvdabpepd7.francecentral-01.azurewebsites.net/api";
 
         // --- State Management ---
         public string JwtToken { get; private set; }

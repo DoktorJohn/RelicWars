@@ -58,7 +58,6 @@ namespace Project.Network.Models
     public class PopulationBreakdownDTO
     {
         public int MaxCapacity;
-        public int UsedByBuildings;
         public int UsedByUnits;
         public int FreePopulation;
         public double ModifierBonus;

@@ -17,12 +17,12 @@ namespace Game.Controllers
             _logger = logger;
         }
 
-        [HttpPost("deployUnits")]
-        public async Task<IActionResult> DeployUnits([FromBody] DeployUnitRequestDTO dto)
+        [HttpPost("deployUnitDeployment")]
+        public async Task<IActionResult> DeployUnitDeployment([FromBody] DeployUnitRequestDTO dto)
         {
             try
             {
-                var result = await _unitDeploymentService.DeployUnitsAsync(dto);
+                var result = await _unitDeploymentService.DeployUnitDeploymentAsync(dto);
                 return Ok(result);
             }
             catch (InvalidOperationException ex)
@@ -36,12 +36,12 @@ namespace Game.Controllers
             }
         }
 
-        [HttpPost("moveUnits")]
-        public async Task<IActionResult> MoveUnits([FromBody] MoveUnitRequestDTO dto)
+        [HttpPost("moveUnitDeployment")]
+        public async Task<IActionResult> MoveUnitDeployment([FromBody] MoveUnitRequestDTO dto)
         {
             try
             {
-                var result = await _unitDeploymentService.MoveUnits(dto);
+                var result = await _unitDeploymentService.MoveUnitDeployment(dto);
                 return Ok(result);
             }
             catch (InvalidOperationException ex)
@@ -55,12 +55,31 @@ namespace Game.Controllers
             }
         }
 
-        [HttpPost("abortUnits/{id}")]
-        public async Task<IActionResult> AbortUnits(Guid id)
+        [HttpPost("haltUnitDeployment/{id}")]
+        public async Task<IActionResult> HaltUnitDeployment(Guid id)
         {
             try
             {
-                var result = await _unitDeploymentService.AbortMovementAsync(id);
+                var result = await _unitDeploymentService.HaltUnitDeploymentAsync(id);
+                return Ok(result);
+            }
+            catch (InvalidOperationException exception)
+            {
+                return BadRequest(exception.Message);
+            }
+            catch (Exception exception)
+            {
+                _logger.LogError(exception, $"Fejl ved afbrydelse af bevægelse for enhed: {id}");
+                return StatusCode(500, "En intern serverfejl opstod.");
+            }
+        }
+
+        [HttpPost("returnToOriginCity/{id}")]
+        public async Task<IActionResult> ReturnToOriginCity(Guid id)
+        {
+            try
+            {
+                var result = await _unitDeploymentService.ReturnToOriginCityAsync(id);
                 return Ok(result);
             }
             catch (InvalidOperationException exception)

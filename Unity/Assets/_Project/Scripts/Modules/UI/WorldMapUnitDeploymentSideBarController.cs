@@ -1,6 +1,8 @@
 ﻿using Project.Modules.City;
+using Project.Network.Manager;
 using Project.Scripts.Domain.DTOs;
 using Project.Scripts.Domain.Enums;
+using Project.Scripts.Modules.Map;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -13,51 +15,160 @@ namespace Project.Scripts.Modules.UI
     public class WorldMapUnitDeploymentSideBarController : MonoBehaviour
     {
         private VisualElement _rootVisualElement;
+        private VisualElement _mainUnitDeploymentContainer;
         private ScrollView _unitDeploymentScrollView;
 
-        // Vi holder styr på hvilke hære der er "foldet ud" i UI'en
-        private HashSet<Guid> _expandedDeploymentIds = new HashSet<Guid>();
+        private bool _isSidebarMinimized = false;
+        private HashSet<Guid> _expandedUnitDeploymentIds = new HashSet<Guid>();
 
         private void OnEnable()
         {
-            var uiDocument = GetComponent<UIDocument>();
-            if (uiDocument == null) return;
+            var uiDocumentComponent = GetComponent<UIDocument>();
+            if (uiDocumentComponent == null) return;
 
-            _rootVisualElement = uiDocument.rootVisualElement;
+            _rootVisualElement = uiDocumentComponent.rootVisualElement;
+            _mainUnitDeploymentContainer = _rootVisualElement.Q<VisualElement>("UnitDeploymentBar-MainContainer");
             _unitDeploymentScrollView = _rootVisualElement.Q<ScrollView>("UnitDeploymentBar-ScrollView");
+
+            if (_mainUnitDeploymentContainer != null)
+            {
+                _mainUnitDeploymentContainer.RegisterCallback<PointerEnterEvent>(evt =>
+                {
+                    WorldMapInteractionHandler.Instance?.SetMouseOverUI(true);
+                });
+
+                _mainUnitDeploymentContainer.RegisterCallback<PointerLeaveEvent>(evt =>
+                {
+                    WorldMapInteractionHandler.Instance?.SetMouseOverUI(false);
+                });
+            }
+
+            var headerElement = _rootVisualElement.Q<VisualElement>("UnitDeploymentBar-Header");
+            if (headerElement != null)
+            {
+                headerElement.RegisterCallback<ClickEvent>(evt => ExecuteSidebarMinimizeToggle());
+            }
 
             if (CityStateManager.Instance != null)
             {
-                // Vi lytter på opdateringer af spillerens deployments
-                CityStateManager.Instance.OnDeploymentsStateReceived += HandleDeploymentsUpdated;
-
-                // Initial tegn hvis data allerede findes
-                RefreshUnitDeploymentList(CityStateManager.Instance.CurrentActiveDeployments);
+                CityStateManager.Instance.OnDeploymentsStateReceived += HandleUnitDeploymentsStateReceived;
             }
+
+            if (WorldMapStateManager.Instance != null)
+            {
+                WorldMapStateManager.Instance.OnChunkDataReady += HandleWorldMapChunkDataUpdateReceived;
+            }
+
+            RefreshUnitDeploymentList(CityStateManager.Instance?.CurrentActiveDeployments);
         }
 
         private void OnDisable()
         {
             if (CityStateManager.Instance != null)
             {
-                CityStateManager.Instance.OnDeploymentsStateReceived -= HandleDeploymentsUpdated;
+                CityStateManager.Instance.OnDeploymentsStateReceived -= HandleUnitDeploymentsStateReceived;
+            }
+
+            if (WorldMapStateManager.Instance != null)
+            {
+                WorldMapStateManager.Instance.OnChunkDataReady -= HandleWorldMapChunkDataUpdateReceived;
+            }
+
+            WorldMapInteractionHandler.Instance?.SetMouseOverUI(false);
+        }
+
+        private void ExecuteSidebarMinimizeToggle()
+        {
+            _isSidebarMinimized = !_isSidebarMinimized;
+            if (_isSidebarMinimized)
+            {
+                _mainUnitDeploymentContainer.AddToClassList("minimized");
+                WorldMapInteractionHandler.Instance?.SetMouseOverUI(false);
+            }
+            else
+            {
+                _mainUnitDeploymentContainer.RemoveFromClassList("minimized");
             }
         }
 
-        private void HandleDeploymentsUpdated(List<UnitDeploymentDTO> deployments)
+        private void HandleUnitDeploymentsStateReceived(List<UnitDeploymentDTO> deployments)
         {
             RefreshUnitDeploymentList(deployments);
+        }
+
+        private void HandleWorldMapChunkDataUpdateReceived(WorldMapChunkResponseDTO chunkData)
+        {
+            if (chunkData == null || CityStateManager.Instance == null) return;
+
+            var globalDeployments = CityStateManager.Instance.CurrentActiveDeployments;
+            bool stateChanged = false;
+
+            if (chunkData.UnitDeployments != null)
+            {
+                foreach (var mapUnit in chunkData.UnitDeployments)
+                {
+                    if (mapUnit.WorldPlayerId != Guid.Parse(NetworkManager.Instance.WorldPlayerId)) continue;
+
+                    bool isAtHome = mapUnit.Status == UnitDeploymentMovementStatusEnum.Stationed &&
+                                   mapUnit.CurrentX == CityStateManager.Instance.HomeCityX &&
+                                   mapUnit.CurrentY == CityStateManager.Instance.HomeCityY;
+
+                    var existingUnit = globalDeployments.FirstOrDefault(d => d.Id == mapUnit.Id);
+
+                    if (isAtHome)
+                    {
+                        if (existingUnit != null)
+                        {
+                            Debug.Log($"<color=orange>[SideBar Sync]</color> ABSORPTION: Sletter {mapUnit.Id} fra UI (Er nået hjem).");
+                            globalDeployments.Remove(existingUnit);
+                            WorldMapEntityManager.Instance?.RemoveUnitVisualExplicitly(mapUnit.Id);
+                            stateChanged = true;
+                        }
+                        continue;
+                    }
+
+                    if (existingUnit != null)
+                    {
+                        int index = globalDeployments.IndexOf(existingUnit);
+                        globalDeployments[index] = mapUnit;
+                        stateChanged = true;
+                    }
+                    else
+                    {
+                        globalDeployments.Add(mapUnit);
+                        stateChanged = true;
+                    }
+                }
+            }
+
+            var deploymentsToRemove = globalDeployments
+                .Where(d => d.CurrentX >= chunkData.ChunkX && d.CurrentX < chunkData.ChunkX + chunkData.Width &&
+                            d.CurrentY >= chunkData.ChunkY && d.CurrentY < chunkData.ChunkY + chunkData.Height)
+                .Where(d => chunkData.UnitDeployments == null || !chunkData.UnitDeployments.Any(mu => mu.Id == d.Id))
+                .ToList();
+
+            foreach (var toRemove in deploymentsToRemove)
+            {
+                Debug.Log($"<color=red>[SideBar Sync]</color> Server har fjernet hær {toRemove.Id}. Sletter visual.");
+                globalDeployments.Remove(toRemove);
+                WorldMapEntityManager.Instance?.RemoveUnitVisualExplicitly(toRemove.Id);
+                stateChanged = true;
+            }
+
+            if (stateChanged)
+            {
+                RefreshUnitDeploymentList(globalDeployments);
+            }
         }
 
         private void RefreshUnitDeploymentList(List<UnitDeploymentDTO> deployments)
         {
             if (_unitDeploymentScrollView == null) return;
-
             _unitDeploymentScrollView.Clear();
 
             if (deployments == null || deployments.Count == 0)
             {
-                Label emptyLabel = new Label("No active expeditions.");
+                Label emptyLabel = new Label("NO ACTIVE EXPEDITIONS");
                 emptyLabel.AddToClassList("detail-label");
                 emptyLabel.style.marginTop = 20;
                 emptyLabel.style.unityTextAlign = TextAnchor.MiddleCenter;
@@ -65,55 +176,73 @@ namespace Project.Scripts.Modules.UI
                 return;
             }
 
-            foreach (var deployment in deployments)
+            foreach (var deployment in deployments.OrderBy(d => d.WorldPlayerUserName))
             {
-                _unitDeploymentScrollView.Add(CreateUnitDeploymentEntry(deployment));
+                _unitDeploymentScrollView.Add(CreateUnitDeploymentVisualEntry(deployment));
             }
         }
 
-        private VisualElement CreateUnitDeploymentEntry(UnitDeploymentDTO data)
+        private VisualElement CreateUnitDeploymentVisualEntry(UnitDeploymentDTO data)
         {
-            // 1. Container
             VisualElement entryContainer = new VisualElement();
             entryContainer.AddToClassList("UnitDeployment-entry-container");
 
-            // 2. Header (Den linje man altid ser)
             VisualElement headerContainer = new VisualElement();
             headerContainer.AddToClassList("UnitDeployment-entry-header");
 
-            int totalStrength = data.UnitStacks.Sum(s => s.Quantity);
-            Label nameLabel = new Label(data.WorldPlayerUserName.ToUpper());
-            nameLabel.AddToClassList("UnitDeployment-name-label");
+            int totalUnitStrength = data.UnitStacks.Sum(stack => stack.Quantity);
 
-            Label sizeLabel = new Label($"{totalStrength} Units");
-            sizeLabel.AddToClassList("UnitDeployment-size-badge");
+            // Navnebegrænsning: Maks 30 tegn
+            string processedUnitDeploymentName = data.Name.Length > 20
+                ? data.Name.Substring(0, 20) + "..."
+                : data.Name;
 
-            headerContainer.Add(nameLabel);
-            headerContainer.Add(sizeLabel);
+            Label unitNameLabel = new Label(processedUnitDeploymentName.ToUpper());
+            unitNameLabel.AddToClassList("UnitDeployment-name-label");
 
-            // 3. Details (Det der kan foldes ud)
+            Label unitSizeBadgeLabel = new Label($"{totalUnitStrength} UNITS");
+            unitSizeBadgeLabel.AddToClassList("UnitDeployment-size-badge");
+
+            headerContainer.Add(unitNameLabel);
+            headerContainer.Add(unitSizeBadgeLabel);
+
             VisualElement detailsContainer = new VisualElement();
             detailsContainer.AddToClassList("UnitDeployment-details-container");
 
-            if (_expandedDeploymentIds.Contains(data.Id))
+            if (_expandedUnitDeploymentIds.Contains(data.Id))
             {
                 detailsContainer.AddToClassList("expanded");
             }
 
-            // Info rækker
-            detailsContainer.Add(CreateDetailRow("ORIGIN", data.OriginCity?.CityName ?? "Unknown"));
-            detailsContainer.Add(CreateDetailRow("TARGET", data.TargetCity?.CityName ?? $"{data.FinalX}, {data.FinalY}"));
-            detailsContainer.Add(CreateDetailRow("STATUS", data.Status.ToString()));
+            detailsContainer.Add(CreateUnitDeploymentDetailRow("ORIGIN", data.OriginCity?.CityName ?? "UNKNOWN"));
+            detailsContainer.Add(CreateUnitDeploymentDetailRow("LOCATION", $"{data.CurrentX}, {data.CurrentY}"));
+            detailsContainer.Add(CreateUnitDeploymentDetailRow("TARGET", data.TargetCity?.CityName ?? $"{data.FinalX}, {data.FinalY}"));
+            detailsContainer.Add(CreateUnitDeploymentDetailRow("STATUS", data.Status.ToString().ToUpper()));
+
+            detailsContainer.Add(CreateUnitDeploymentDetailRow("NEXT STEP", data.NextStepTime.ToString("HH:mm:ss")));
+            string arrivalTimeString = data.ArrivalTime.HasValue ? data.ArrivalTime.Value.ToString("HH:mm:ss") : "--:--:--";
+            detailsContainer.Add(CreateUnitDeploymentDetailRow("ARRIVAL", arrivalTimeString));
 
             if (data.Status == UnitDeploymentMovementStatusEnum.Moving)
             {
-                detailsContainer.Add(CreateDetailRow("NEXT STEP", data.NextStepTime.ToLocalTime().ToString("HH:mm:ss")));
-                detailsContainer.Add(CreateDetailRow("ARRIVAL", data.ArrivalTime?.ToLocalTime().ToString("HH:mm:ss") ?? "--"));
+                Button abortButton = new Button { text = "ABORT MARCH" };
+                abortButton.AddToClassList("btn-global-base");
+                abortButton.AddToClassList("btn-imperial-danger");
+                abortButton.style.marginTop = 15;
+                abortButton.clicked += () => ExecuteAbortMovementRequest(data.Id);
+                detailsContainer.Add(abortButton);
             }
 
-            // Unit Stacks Liste
-            VisualElement stacksListContainer = new VisualElement();
-            stacksListContainer.AddToClassList("unit-stack-list");
+            Button returnButton = new Button { text = "RETURN TO CITY" };
+            returnButton.AddToClassList("btn-global-base");
+            returnButton.AddToClassList("btn-imperial-primary");
+            returnButton.style.marginTop = 5;
+            returnButton.clicked += () => ExecuteReturnToOriginRequest(data.Id);
+            detailsContainer.Add(returnButton);
+
+            VisualElement unitStackListContainer = new VisualElement();
+            unitStackListContainer.AddToClassList("unit-stack-list");
+
             foreach (var stack in data.UnitStacks)
             {
                 VisualElement stackRow = new VisualElement();
@@ -121,28 +250,28 @@ namespace Project.Scripts.Modules.UI
 
                 Label typeLabel = new Label(stack.Type.ToString());
                 typeLabel.AddToClassList("unit-stack-text");
-
                 Label quantityLabel = new Label(stack.Quantity.ToString());
                 quantityLabel.AddToClassList("unit-stack-text");
 
                 stackRow.Add(typeLabel);
                 stackRow.Add(quantityLabel);
-                stacksListContainer.Add(stackRow);
+                unitStackListContainer.Add(stackRow);
             }
-            detailsContainer.Add(stacksListContainer);
+            detailsContainer.Add(unitStackListContainer);
 
-            // 4. Click Event for Toggle
-            headerContainer.RegisterCallback<ClickEvent>(evt => {
-                if (_expandedDeploymentIds.Contains(data.Id))
+            headerContainer.RegisterCallback<ClickEvent>(evt =>
+            {
+                if (_expandedUnitDeploymentIds.Contains(data.Id))
                 {
-                    _expandedDeploymentIds.Remove(data.Id);
+                    _expandedUnitDeploymentIds.Remove(data.Id);
                     detailsContainer.RemoveFromClassList("expanded");
                 }
                 else
                 {
-                    _expandedDeploymentIds.Add(data.Id);
+                    _expandedUnitDeploymentIds.Add(data.Id);
                     detailsContainer.AddToClassList("expanded");
                 }
+                evt.StopPropagation();
             });
 
             entryContainer.Add(headerContainer);
@@ -151,19 +280,59 @@ namespace Project.Scripts.Modules.UI
             return entryContainer;
         }
 
-        private VisualElement CreateDetailRow(string labelText, string valueText)
+        private void ExecuteAbortMovementRequest(Guid deploymentId)
+        {
+            string authenticationToken = NetworkManager.Instance.JwtToken;
+            StartCoroutine(NetworkManager.Instance.UnitDeployment.AbortMovementUnits(deploymentId, authenticationToken, (updatedDeployment) =>
+            {
+                if (updatedDeployment != null)
+                {
+                    WorldMapStateManager.Instance.UpdateDeploymentInCache(updatedDeployment);
+                }
+            }));
+        }
+
+        private void ExecuteReturnToOriginRequest(Guid deploymentId)
+        {
+            string authenticationToken = NetworkManager.Instance.JwtToken;
+            Debug.Log($"<color=cyan>[SideBar]</color> Bruger klikkede RETURN for {deploymentId}");
+
+            StartCoroutine(NetworkManager.Instance.UnitDeployment.ReturnToOriginCityUnits(deploymentId, authenticationToken, (updatedDeployment) =>
+            {
+                if (updatedDeployment != null)
+                {
+                    bool shouldBeRemoved = updatedDeployment.Status == UnitDeploymentMovementStatusEnum.Stationed &&
+                                         updatedDeployment.CurrentX == CityStateManager.Instance.HomeCityX &&
+                                         updatedDeployment.CurrentY == CityStateManager.Instance.HomeCityY;
+
+                    if (shouldBeRemoved)
+                    {
+                        var globalList = CityStateManager.Instance.CurrentActiveDeployments;
+                        globalList.RemoveAll(d => d.Id == updatedDeployment.Id);
+                        WorldMapEntityManager.Instance?.RemoveUnitVisualExplicitly(updatedDeployment.Id);
+                        RefreshUnitDeploymentList(globalList);
+                    }
+                    else
+                    {
+                        WorldMapStateManager.Instance.UpdateDeploymentInCache(updatedDeployment);
+                    }
+                }
+            }));
+        }
+
+        private VisualElement CreateUnitDeploymentDetailRow(string labelText, string valueText)
         {
             VisualElement rowContainer = new VisualElement();
             rowContainer.AddToClassList("detail-row");
 
-            Label label = new Label(labelText);
-            label.AddToClassList("detail-label");
+            Label titleLabel = new Label(labelText);
+            titleLabel.AddToClassList("detail-label");
 
-            Label value = new Label(valueText);
-            value.AddToClassList("detail-value");
+            Label valueLabel = new Label(valueText);
+            valueLabel.AddToClassList("detail-value");
 
-            rowContainer.Add(label);
-            rowContainer.Add(value);
+            rowContainer.Add(titleLabel);
+            rowContainer.Add(valueLabel);
             return rowContainer;
         }
     }

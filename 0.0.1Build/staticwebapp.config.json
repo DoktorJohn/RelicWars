@@ -1,0 +1,14 @@
+{
+  "navigationFallback": {
+    "rewrite": "/index.html"
+  },
+  "mimeTypes": {
+    ".unityweb": "application/octet-stream",
+    ".wasm.br": "application/wasm",
+    ".js.br": "application/javascript",
+    ".data.br": "application/octet-stream"
+  },
+  "globalHeaders": {
+    "Content-Encoding": "br"
+  }
+}

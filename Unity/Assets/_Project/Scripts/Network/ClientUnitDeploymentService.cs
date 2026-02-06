@@ -27,7 +27,7 @@ namespace Project.Scripts.Network
         /// </summary>
         public IEnumerator DeployUnits(DeployUnitRequestDTO deployUnitRequestDto, string jwtToken, Action<UnitDeploymentDTO> callback)
         {
-            string url = $"{_baseUrl}/deployUnits";
+            string url = $"{_baseUrl}/deployUnitDeployment";
 
             using (UnityWebRequest webRequest = BackendRequestHelper.CreatePostRequest(url, deployUnitRequestDto, jwtToken))
             {
@@ -59,7 +59,7 @@ namespace Project.Scripts.Network
 
         public IEnumerator MoveUnits(MoveUnitRequestDTO moveUnitRequestDto, string jwtToken, Action<UnitDeploymentDTO> callback)
         {
-            string url = $"{_baseUrl}/moveUnits";
+            string url = $"{_baseUrl}/moveUnitDeployment";
 
             using (UnityWebRequest webRequest = BackendRequestHelper.CreatePostRequest(url, moveUnitRequestDto, jwtToken))
             {
@@ -83,6 +83,66 @@ namespace Project.Scripts.Network
                 {
                     string errorDetail = webRequest.downloadHandler?.text;
                     Debug.LogError($"[Hexagon] MoveUnits Error: {webRequest.error} - Detaljer: {errorDetail}");
+                    callback?.Invoke(null);
+                }
+            }
+        }
+
+        public IEnumerator AbortMovementUnits(Guid deploymentId, string jwtToken, Action<UnitDeploymentDTO> callback)
+        {
+            string url = $"{_baseUrl}/haltUnitDeployment/{deploymentId}";
+
+            using (UnityWebRequest webRequest = BackendRequestHelper.CreatePostRequest(url, "", jwtToken))
+            {
+                yield return webRequest.SendWebRequest();
+
+                if (webRequest.result == UnityWebRequest.Result.Success)
+                {
+                    try
+                    {
+                        UnitDeploymentDTO responseData = JsonConvert.DeserializeObject<UnitDeploymentDTO>(webRequest.downloadHandler.text);
+                        Debug.Log($"[Expeditions] March afbrudt for enhed: {deploymentId}");
+                        callback?.Invoke(responseData);
+                    }
+                    catch (Exception exception)
+                    {
+                        Debug.LogError($"[Expeditions] Fejl ved deserialisering af Abort-data: {exception.Message}");
+                        callback?.Invoke(null);
+                    }
+                }
+                else
+                {
+                    Debug.LogError($"[Expeditions] AbortUnits Error: {webRequest.error}");
+                    callback?.Invoke(null);
+                }
+            }
+        }
+
+        public IEnumerator ReturnToOriginCityUnits(Guid deploymentId, string jwtToken, Action<UnitDeploymentDTO> callback)
+        {
+            string url = $"{_baseUrl}/returnToOriginCity/{deploymentId}";
+
+            using (UnityWebRequest webRequest = BackendRequestHelper.CreatePostRequest(url, "", jwtToken))
+            {
+                yield return webRequest.SendWebRequest();
+
+                if (webRequest.result == UnityWebRequest.Result.Success)
+                {
+                    try
+                    {
+                        UnitDeploymentDTO responseData = JsonConvert.DeserializeObject<UnitDeploymentDTO>(webRequest.downloadHandler.text);
+                        Debug.Log($"[Expeditions] Retur-ordre bekræftet for: {deploymentId}");
+                        callback?.Invoke(responseData);
+                    }
+                    catch (Exception exception)
+                    {
+                        Debug.LogError($"[Expeditions] Fejl ved deserialisering af Return-data: {exception.Message}");
+                        callback?.Invoke(null);
+                    }
+                }
+                else
+                {
+                    Debug.LogError($"[Expeditions] ReturnToOrigin Error: {webRequest.error}");
                     callback?.Invoke(null);
                 }
             }

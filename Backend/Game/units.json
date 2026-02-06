@@ -2,16 +2,16 @@
   {
     "Type": "Militia",
     "Category": "Infantry",
-    "Power": 10,
-    "Armor": 5,
+    "Power": 2,
+    "Armor": 1,
     "Reach": 1,
     "Discipline": 2,
-    "Mobility": 3,
+    "Mobility": 2,
     "LootCapacity": 10,
-    "WoodCost": 40,
-    "StoneCost": 0,
-    "MetalCost": 10,
-    "PopulationCost": 1,
+    "WoodCost": 5,
+    "StoneCost": 5,
+    "MetalCost": 0,
+    "PopulationCost": 3,
     "RecruitmentTimeInSeconds": 20,
     "Prerequisites": [
       {
@@ -25,23 +25,23 @@
     ]
   },
   {
-    "Type": "Bowmen",
+    "Type": "MenAtArms",
     "Category": "Infantry",
-    "Power": 12,
-    "Armor": 2,
-    "Reach": 4,
-    "Discipline": 3,
-    "Mobility": 4,
-    "LootCapacity": 20,
-    "WoodCost": 70,
+    "Power": 5,
+    "Armor": 3,
+    "Reach": 1,
+    "Discipline": 5,
+    "Mobility": 2,
+    "LootCapacity": 25,
+    "WoodCost": 10,
     "StoneCost": 0,
     "MetalCost": 5,
-    "PopulationCost": 1,
-    "RecruitmentTimeInSeconds": 35,
+    "PopulationCost": 5,
+    "RecruitmentTimeInSeconds": 110,
     "Prerequisites": [
       {
         "Type": "Barracks",
-        "RequiredLevel": 2
+        "RequiredLevel": 15
       }
     ],
     "ModifiersThatAffectsThis": [
@@ -52,16 +52,16 @@
   {
     "Type": "Spearmen",
     "Category": "Infantry",
-    "Power": 14,
-    "Armor": 8,
-    "Reach": 2,
-    "Discipline": 5,
-    "Mobility": 2,
-    "LootCapacity": 30,
-    "WoodCost": 50,
+    "Power": 4,
+    "Armor": 3,
+    "Reach": 3,
+    "Discipline": 7,
+    "Mobility": 1,
+    "LootCapacity": 15,
+    "WoodCost": 8,
     "StoneCost": 0,
-    "MetalCost": 40,
-    "PopulationCost": 1,
+    "MetalCost": 6,
+    "PopulationCost": 6,
     "RecruitmentTimeInSeconds": 45,
     "Prerequisites": [
       {
@@ -77,16 +77,16 @@
   {
     "Type": "Axemen",
     "Category": "Infantry",
-    "Power": 18,
-    "Armor": 6,
+    "Power": 6,
+    "Armor": 2,
     "Reach": 1,
     "Discipline": 4,
-    "Mobility": 4,
-    "LootCapacity": 5,
-    "WoodCost": 40,
-    "StoneCost": 0,
-    "MetalCost": 80,
-    "PopulationCost": 1,
+    "Mobility": 2,
+    "LootCapacity": 20,
+    "WoodCost": 0,
+    "StoneCost": 10,
+    "MetalCost": 5,
+    "PopulationCost": 7,
     "RecruitmentTimeInSeconds": 55,
     "Prerequisites": [
       {
@@ -102,16 +102,16 @@
   {
     "Type": "Swordsmen",
     "Category": "Infantry",
-    "Power": 20,
-    "Armor": 12,
+    "Power": 7,
+    "Armor": 5,
     "Reach": 1,
-    "Discipline": 7,
-    "Mobility": 3,
-    "LootCapacity": 30,
-    "WoodCost": 30,
-    "StoneCost": 0,
-    "MetalCost": 120,
-    "PopulationCost": 1,
+    "Discipline": 6,
+    "Mobility": 2,
+    "LootCapacity": 20,
+    "WoodCost": 15,
+    "StoneCost": 5,
+    "MetalCost": 20,
+    "PopulationCost": 9,
     "RecruitmentTimeInSeconds": 70,
     "Prerequisites": [
       {
@@ -125,18 +125,43 @@
     ]
   },
   {
-    "Type": "Crossbowmen",
-    "Category": "Infantry",
-    "Power": 24,
-    "Armor": 8,
+    "Type": "Bowmen",
+    "Category": "Ranged",
+    "Power": 4,
+    "Armor": 1,
     "Reach": 4,
-    "Discipline": 6,
-    "Mobility": 2,
-    "LootCapacity": 30,
-    "WoodCost": 90,
+    "Discipline": 3,
+    "Mobility": 3,
+    "LootCapacity": 10,
+    "WoodCost": 12,
     "StoneCost": 0,
-    "MetalCost": 100,
-    "PopulationCost": 1,
+    "MetalCost": 0,
+    "PopulationCost": 5,
+    "RecruitmentTimeInSeconds": 35,
+    "Prerequisites": [
+      {
+        "Type": "Barracks",
+        "RequiredLevel": 2
+      }
+    ],
+    "ModifiersThatAffectsThis": [
+      "Infantry",
+      "Upkeep"
+    ]
+  },
+  {
+    "Type": "Crossbowmen",
+    "Category": "Ranged",
+    "Power": 7,
+    "Armor": 2,
+    "Reach": 4,
+    "Discipline": 4,
+    "Mobility": 2,
+    "LootCapacity": 15,
+    "WoodCost": 15,
+    "StoneCost": 0,
+    "MetalCost": 15,
+    "PopulationCost": 8,
     "RecruitmentTimeInSeconds": 90,
     "Prerequisites": [
       {
@@ -150,43 +175,18 @@
     ]
   },
   {
-    "Type": "MenAtArms",
-    "Category": "Infantry",
-    "Power": 26,
-    "Armor": 18,
-    "Reach": 1,
-    "Discipline": 9,
-    "Mobility": 2,
-    "LootCapacity": 0,
-    "WoodCost": 60,
-    "StoneCost": 0,
-    "MetalCost": 200,
-    "PopulationCost": 2,
-    "RecruitmentTimeInSeconds": 110,
-    "Prerequisites": [
-      {
-        "Type": "Barracks",
-        "RequiredLevel": 15
-      }
-    ],
-    "ModifiersThatAffectsThis": [
-      "Infantry",
-      "Upkeep"
-    ]
-  },
-  {
     "Type": "LightCavalry",
     "Category": "Cavalry",
-    "Power": 18,
-    "Armor": 8,
-    "Reach": 1,
+    "Power": 6,
+    "Armor": 3,
+    "Reach": 2,
     "Discipline": 4,
-    "Mobility": 12,
-    "LootCapacity": 80,
-    "WoodCost": 100,
-    "StoneCost": 0,
-    "MetalCost": 60,
-    "PopulationCost": 2,
+    "Mobility": 6,
+    "LootCapacity": 50,
+    "WoodCost": 10,
+    "StoneCost": 2,
+    "MetalCost": 6,
+    "PopulationCost": 8,
     "RecruitmentTimeInSeconds": 80,
     "Prerequisites": [
       {
@@ -202,16 +202,16 @@
   {
     "Type": "Knights",
     "Category": "Cavalry",
-    "Power": 35,
-    "Armor": 20,
+    "Power": 9,
+    "Armor": 6,
     "Reach": 2,
-    "Discipline": 9,
-    "Mobility": 9,
-    "LootCapacity": 30,
-    "WoodCost": 150,
-    "StoneCost": 0,
-    "MetalCost": 350,
-    "PopulationCost": 3,
+    "Discipline": 7,
+    "Mobility": 5,
+    "LootCapacity": 40,
+    "WoodCost": 5,
+    "StoneCost": 15,
+    "MetalCost": 20,
+    "PopulationCost": 12,
     "RecruitmentTimeInSeconds": 180,
     "Prerequisites": [
       {
@@ -227,16 +227,16 @@
   {
     "Type": "Cataphracts",
     "Category": "Cavalry",
-    "Power": 45,
-    "Armor": 30,
+    "Power": 10,
+    "Armor": 8,
     "Reach": 2,
-    "Discipline": 10,
-    "Mobility": 7,
-    "LootCapacity": 40,
-    "WoodCost": 200,
-    "StoneCost": 0,
-    "MetalCost": 500,
-    "PopulationCost": 4,
+    "Discipline": 9,
+    "Mobility": 3,
+    "LootCapacity": 30,
+    "WoodCost": 15,
+    "StoneCost": 20,
+    "MetalCost": 30,
+    "PopulationCost": 18,
     "RecruitmentTimeInSeconds": 240,
     "Prerequisites": [
       {
@@ -252,16 +252,16 @@
   {
     "Type": "Ballista",
     "Category": "Siege",
-    "Power": 50,
-    "Armor": 5,
+    "Power": 5,
+    "Armor": 1,
     "Reach": 6,
-    "Discipline": 5,
+    "Discipline": 2,
     "Mobility": 1,
     "LootCapacity": 0,
-    "WoodCost": 400,
-    "StoneCost": 0,
-    "MetalCost": 150,
-    "PopulationCost": 3,
+    "WoodCost": 35,
+    "StoneCost": 30,
+    "MetalCost": 10,
+    "PopulationCost": 4,
     "RecruitmentTimeInSeconds": 300,
     "Prerequisites": [
       {
@@ -277,15 +277,15 @@
   {
     "Type": "Catapult",
     "Category": "Siege",
-    "Power": 80,
-    "Armor": 5,
-    "Reach": 5,
-    "Discipline": 5,
+    "Power": 6,
+    "Armor": 2,
+    "Reach": 6,
+    "Discipline": 3,
     "Mobility": 1,
     "LootCapacity": 0,
-    "WoodCost": 600,
-    "StoneCost": 0,
-    "MetalCost": 250,
+    "WoodCost": 40,
+    "StoneCost": 20,
+    "MetalCost": 5,
     "PopulationCost": 5,
     "RecruitmentTimeInSeconds": 450,
     "Prerequisites": [
@@ -302,16 +302,16 @@
   {
     "Type": "Trebuchet",
     "Category": "Siege",
-    "Power": 120,
-    "Armor": 5,
-    "Reach": 8,
-    "Discipline": 5,
-    "Mobility": 0,
+    "Power": 8,
+    "Armor": 3,
+    "Reach": 7,
+    "Discipline": 4,
+    "Mobility": 1,
     "LootCapacity": 0,
-    "WoodCost": 1000,
-    "StoneCost": 0,
-    "MetalCost": 400,
-    "PopulationCost": 8,
+    "WoodCost": 60,
+    "StoneCost": 10,
+    "MetalCost": 0,
+    "PopulationCost": 7,
     "RecruitmentTimeInSeconds": 600,
     "Prerequisites": [
       {
@@ -325,23 +325,23 @@
     ]
   },
   {
-    "Type": "Engineers",
+    "Type": "Cannon",
     "Category": "Siege",
-    "Power": 5,
-    "Armor": 5,
-    "Reach": 1,
-    "Discipline": 10,
-    "Mobility": 5,
+    "Power": 10,
+    "Armor": 4,
+    "Reach": 7,
+    "Discipline": 5,
+    "Mobility": 1,
     "LootCapacity": 0,
-    "WoodCost": 200,
-    "StoneCost": 0,
-    "MetalCost": 100,
-    "PopulationCost": 2,
-    "RecruitmentTimeInSeconds": 150,
+    "WoodCost": 10,
+    "StoneCost": 10,
+    "MetalCost": 60,
+    "PopulationCost": 9,
+    "RecruitmentTimeInSeconds": 900,
     "Prerequisites": [
       {
         "Type": "Workshop",
-        "RequiredLevel": 20
+        "RequiredLevel": 25
       }
     ],
     "ModifiersThatAffectsThis": [
@@ -350,23 +350,23 @@
     ]
   },
   {
-    "Type": "Cannon",
+    "Type": "Engineers",
     "Category": "Siege",
-    "Power": 200,
-    "Armor": 10,
+    "Power": 2,
+    "Armor": 1,
     "Reach": 6,
-    "Discipline": 8,
-    "Mobility": 1,
-    "LootCapacity": 0,
-    "WoodCost": 800,
-    "StoneCost": 0,
-    "MetalCost": 1500,
+    "Discipline": 3,
+    "Mobility": 2,
+    "LootCapacity": 10,
+    "WoodCost": 12,
+    "StoneCost": 12,
+    "MetalCost": 70,
     "PopulationCost": 10,
-    "RecruitmentTimeInSeconds": 900,
+    "RecruitmentTimeInSeconds": 150,
     "Prerequisites": [
       {
         "Type": "Workshop",
-        "RequiredLevel": 25
+        "RequiredLevel": 20
       }
     ],
     "ModifiersThatAffectsThis": [

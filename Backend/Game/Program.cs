@@ -38,15 +38,24 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 
 builder.Services.AddAuthorization();
 
+var allowedOrigins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>();
+
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowUnity", policy =>
     {
-        policy.AllowAnyOrigin()
+        policy.WithOrigins(allowedOrigins!)
               .AllowAnyMethod()
-              .AllowAnyHeader();
+              .AllowAnyHeader()
+              .AllowCredentials();
     });
 });
+
+var connectionString = builder.Configuration.GetConnectionString("DefaultConnection")
+    ?? throw new Exception("ConnectionString 'DefaultConnection' mangler!");
+
+builder.Services.AddDbContext<GameContext>(options =>
+    options.UseSqlServer(connectionString));
 
 string buildingPath = "buildings.json";
 string unitPath = "units.json";
@@ -78,9 +87,8 @@ builder.Services.AddSingleton(buildingReader);
 builder.Services.AddSingleton(unitReader);
 builder.Services.AddSingleton(researchReader);
 builder.Services.AddSingleton(rankingReader);
-
-var connectionString = builder.Configuration.GetConnectionString("DefaultConnection")
-    ?? throw new Exception("ConnectionString 'DefaultConnection' mangler!");
+builder.Services.AddSingleton(ideologyReader);
+builder.Services.AddSingleton(ideologyFocusReader);
 
 builder.Services.AddDbContext<GameContext>(options => options.UseSqlite(connectionString));
 
@@ -138,7 +146,6 @@ using (var scope = app.Services.CreateScope())
     var spawner = scope.ServiceProvider.GetRequiredService<NPCSpawnerService>();
 
     await context.Database.MigrateAsync();
-
     await DbSeeder.SeedAsync(context, spawner);
 }
 
@@ -149,7 +156,7 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
-app.UseCors("AllowUnity"); 
+app.UseCors("AllowUnity");
 
 app.UseAuthentication();
 app.UseAuthorization();

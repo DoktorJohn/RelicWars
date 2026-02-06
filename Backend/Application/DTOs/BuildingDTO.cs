@@ -105,13 +105,11 @@ namespace Application.DTOs
         public double WoodCost { get; set; }
         public double StoneCost { get; set; }
         public double MetalCost { get; set; }
-        public int PopulationCost { get; set; }
         public int ConstructionTimeInSeconds { get; set; }
 
         // Status checks
         public bool IsCurrentlyUpgrading { get; set; }
         public bool CanAfford { get; set; }
-        public bool HasPopulationRoom { get; set; }
-        public bool MeetsRequirements => CanAfford && HasPopulationRoom && !IsCurrentlyUpgrading;
+        public bool MeetsRequirements => CanAfford && !IsCurrentlyUpgrading;
     }
 }

@@ -27,6 +27,7 @@ namespace Infrastructure.Workers
         private readonly IResourceService _resService;
         private readonly IWorldPlayerService _worldPlayerService;
         private readonly ICityStatService _statService;
+        private readonly IUnitDeploymentRepository _unitDeploymentRepo;
         private readonly IModifierService _modifierService;
         private readonly UnitDataReader _unitData;
         private readonly ILogger<UnitDeploymentWorker> _logger;
@@ -42,6 +43,7 @@ namespace Infrastructure.Workers
             ICityStatService statService,
             IModifierService modifierService,
             UnitDataReader unitData,
+            IUnitDeploymentRepository unitDeploymentRepo,
             IWorldMapObjectRepository worldMapObjectRepo,
             ILogger<UnitDeploymentWorker> logger)
         {
@@ -51,6 +53,7 @@ namespace Infrastructure.Workers
             _reportRepo = reportRepo;
             _resService = resService;
             _worldPlayerService = worldPlayerService;
+            _unitDeploymentRepo = unitDeploymentRepo;
             _statService = statService;
             _modifierService = modifierService;
             _unitData = unitData;
@@ -60,162 +63,160 @@ namespace Infrastructure.Workers
 
         public async Task ProcessMilitaryMovementsAsync()
         {
-            var activeDeployments = await _deployRepo.GetActiveDeploymentsAsync();
+            var activeDeployments = await _unitDeploymentRepo.GetActiveDeploymentsAsync();
             var dueMovements = activeDeployments
-                .Where(d => d.UnitDeploymentMovementStatus == UnitDeploymentMovementStatusEnum.Moving
-                         && d.ArrivalTime <= DateTime.UtcNow)
+                .Where(deployment => deployment.UnitDeploymentMovementStatus == UnitDeploymentMovementStatusEnum.Moving
+                                     && deployment.NextStepTime <= DateTime.UtcNow)
                 .ToList();
 
             if (!dueMovements.Any()) return;
 
-
-
-            foreach (var movement in dueMovements)
+            foreach (var deployment in dueMovements)
             {
-                var worldGameObject = await _worldMapObjectRepo.GetWorldMapObjectByReferenceIdAsync(movement.Id);
-
                 try
                 {
-                    movement.CurrentX = movement.NextX;
-                    movement.CurrentY = movement.NextY;
-                    movement.LastStepTime = DateTime.UtcNow;
+                    // 1. Opdater nuværende position
+                    deployment.CurrentX = deployment.NextX;
+                    deployment.CurrentY = deployment.NextY;
+                    deployment.LastStepTime = DateTime.UtcNow;
 
-                    if (worldGameObject != null)
+                    var worldMapObject = await _worldMapObjectRepo.GetWorldMapObjectByReferenceIdAsync(deployment.Id);
+                    if (worldMapObject != null)
                     {
-                        worldGameObject.X = (short)movement.NextX;
-                        worldGameObject.Y = (short)movement.NextY;
-
-                        await _worldMapObjectRepo.UpdateAsync(worldGameObject);
+                        worldMapObject.X = (short)deployment.CurrentX;
+                        worldMapObject.Y = (short)deployment.CurrentY;
+                        await _worldMapObjectRepo.UpdateAsync(worldMapObject);
                     }
 
-                    // 2. Tjek for interaktion på den nye hex (Byer/Fjender)
-                    var cityInHex = await _cityRepo.GetByCoordinatesAsync(movement.CurrentX, movement.CurrentY);
-
+                    // 2. Tjek om vi er landet i en by
+                    var cityInHex = await _cityRepo.GetByCoordinatesAsync(deployment.CurrentX, deployment.CurrentY);
                     if (cityInHex != null)
                     {
-                        bool isOwnCity = cityInHex.WorldPlayerId == movement.WorldPlayerId;
-
-                        if (isOwnCity)
+                        // Hvis vi er i OriginCity, skal enheden opløses og tropperne hjem
+                        if (cityInHex.Id == deployment.OriginCityId)
                         {
-                            await ResolveStationing(movement, cityInHex);
+                            await ResolveUnitReturnToOriginCityAsync(deployment, cityInHex);
                             continue;
                         }
 
-                        else
+                        // Interaktion med fremmede byer
+                        bool isPlayerOwnedCity = cityInHex.WorldPlayerId == deployment.WorldPlayerId;
+                        if (!isPlayerOwnedCity)
                         {
-                            bool unitDestroyed = await HandleInstantCombat(movement, cityInHex);
-                            if (unitDestroyed)
+                            bool wasUnitDestroyed = await HandleInstantCombatInteractionAsync(deployment, cityInHex);
+                            if (wasUnitDestroyed)
                             {
-                                await _worldMapObjectRepo.DeleteByReferenceIdAsync(movement.Id);
+                                await CleanupUnitDeploymentFromWorldAsync(deployment);
                                 continue;
                             }
                         }
                     }
 
-                    // 3. Planlæg næste skridt eller stop marchen
-                    await UpdateMovementPath(movement);
+                    // 3. Planlæg næste skridt
+                    await UpdateMovementPathAndNextStepAsync(deployment);
 
-                    await _deployRepo.UpdateAsync(movement);
+                    await _unitDeploymentRepo.UpdateAsync(deployment);
 
-                    _logger.LogInformation($"Unit {movement.Id} moved to {movement.CurrentX},{movement.CurrentY}");
+                    _logger.LogInformation($"Unit {deployment.Id} processed step to {deployment.CurrentX},{deployment.CurrentY}");
                 }
-                catch (Exception ex)
+                catch (Exception exception)
                 {
-                    _logger.LogError(ex, $"Fejl ved processering af UnitDeployment: {movement.Id}");
+                    _logger.LogError(exception, $"Fejl ved processering af bevægelse for UnitDeployment: {deployment.Id}");
                 }
             }
         }
 
-        private async Task<bool> HandleInstantCombat(UnitDeployment attacker, City targetCity)
+        private async Task ResolveUnitReturnToOriginCityAsync(UnitDeployment unitDeployment, City targetCity)
         {
-            _logger.LogWarning($"Instant kamp simuleret mod {targetCity.Name}");
-            return false;
-        }
+            var originCity = await _cityRepo.GetByIdAsync(targetCity.Id);
+            if (originCity == null) return;
 
-        private async Task UpdateMovementPath(UnitDeployment deployment)
-        {
-            // Er vi nået til den endelige destination?
-            if (deployment.CurrentX == deployment.FinalX && deployment.CurrentY == deployment.FinalY)
-            {
-                deployment.UnitDeploymentMovementStatus = UnitDeploymentMovementStatusEnum.Stationed;
-                deployment.RemainingPathJson = null;
-                return;
-            }
+            _logger.LogInformation($"Unit {unitDeployment.Id} returneret til {originCity.Name}. Starter afrustning.");
 
-            // Ellers skal vi finde næste hop i ruten
-            if (!string.IsNullOrEmpty(deployment.RemainingPathJson))
+            // 1. Overfør loot
+            double warehouseCapacity = _statService.GetWarehouseCapacity(originCity);
+            originCity.Wood = Math.Min(warehouseCapacity, originCity.Wood + unitDeployment.LootWood);
+            originCity.Stone = Math.Min(warehouseCapacity, originCity.Stone + unitDeployment.LootStone);
+            originCity.Metal = Math.Min(warehouseCapacity, originCity.Metal + unitDeployment.LootMetal);
+
+            // 2. Overfør UnitStacks (Merge)
+            foreach (var deploymentStack in unitDeployment.UnitStacks)
             {
-                var path = JsonSerializer.Deserialize<List<HexCoordinate>>(deployment.RemainingPathJson);
-                
-                if (path != null && path.Any())
+                var existingCityStack = originCity.UnitStacks
+                    .FirstOrDefault(stack => stack.Type == deploymentStack.Type);
+
+                if (existingCityStack != null)
                 {
-                    var nextStep = path.First();
-                    path.RemoveAt(0);
-
-                    deployment.NextX = nextStep.X;
-                    deployment.NextY = nextStep.Y;
-                    deployment.RemainingPathJson = JsonSerializer.Serialize(path);
-                    
-                    // Beregn ankomsttid for næste hex (f.eks. 10 sekunder)
-                    // Her kan du gange med modifiers for terræn/hastighed
-                    deployment.ArrivalTime = DateTime.UtcNow.AddSeconds(10); 
+                    existingCityStack.Quantity += deploymentStack.Quantity;
                 }
                 else
                 {
-                    // Stien var tom, men vi er ikke ved FinalX/Y - vi må stoppe her
-                    deployment.UnitDeploymentMovementStatus = UnitDeploymentMovementStatusEnum.Stationed;
+                    originCity.UnitStacks.Add(new UnitStack
+                    {
+                        Id = Guid.NewGuid(),
+                        Type = deploymentStack.Type,
+                        Quantity = deploymentStack.Quantity,
+                        WorldPlayerId = originCity.WorldPlayerId,
+                        CityId = originCity.Id
+                    });
                 }
             }
 
-            await _deployRepo.UpdateAsync(deployment);
+            await _cityRepo.UpdateAsync(originCity);
+            await CleanupUnitDeploymentFromWorldAsync(unitDeployment);
+
+            _logger.LogInformation($"Unit {unitDeployment.Id} færdigbehandlet og fjernet fra kortet.");
         }
 
-        private async Task ResolveStationing(UnitDeployment dep, City city)
+        private async Task UpdateMovementPathAndNextStepAsync(UnitDeployment unitDeployment)
         {
-            var stationedCity = await _cityRepo.GetByIdAsync(city.Id);
-
-            if (stationedCity != null)
+            if (unitDeployment.CurrentX == unitDeployment.FinalX && unitDeployment.CurrentY == unitDeployment.FinalY)
             {
-                double capacity = _statService.GetWarehouseCapacity(stationedCity);
-
-                stationedCity.Wood = Math.Min(capacity, stationedCity.Wood + dep.LootWood);
-                stationedCity.Stone = Math.Min(capacity, stationedCity.Stone + dep.LootStone);
-                stationedCity.Metal = Math.Min(capacity, stationedCity.Metal + dep.LootMetal);
-
-                // Her skal du også merge UnitStacks ind i byens stacks hvis nødvendigt
-                // (Logik udeladt for korthed)
-
-                await _cityRepo.UpdateAsync(stationedCity);
-
-                // VIGTIGT: Fjern hæren fra kortet og slet deployment-entiteten
-                await _worldMapObjectRepo.DeleteByReferenceIdAsync(dep.Id);
-                await _deployRepo.DeleteAsync(dep);
-
-                _logger.LogInformation($"Unit {dep.Id} stationed in city {city.Name} and removed from map.");
+                unitDeployment.UnitDeploymentMovementStatus = UnitDeploymentMovementStatusEnum.Stationed;
+                unitDeployment.RemainingPathJson = null;
+                unitDeployment.NextX = unitDeployment.CurrentX;
+                unitDeployment.NextY = unitDeployment.CurrentY;
+                return;
             }
-        }
 
-
-        private async Task GenerateReport(City target, List<UnitDeployment> attackers, CombatResult res, bool win, double w, double s, double m)
-        {
-            string lootTxt = win ? $"\nLOOT: Wood: {Math.Floor(w)}, Stone: {Math.Floor(s)}, Metal: {Math.Floor(m)}" : "";
-            string body = $"--- BATTLE REPORT: {target.Name} ---\n" +
-                          $"Result: {(win ? "VICTORY" : "DEFEAT")}" +
-                          lootTxt +
-                          $"\nLosses: Attackers: {res.AttackerLosses.Sum(l => l.Quantity)} | Defenders: {res.DefenderLosses.Sum(l => l.Quantity)}";
-
-            var origin = await _cityRepo.GetByIdAsync(attackers.First().WorldPlayerId);
-            if (origin?.WorldPlayerId != null)
+            if (!string.IsNullOrEmpty(unitDeployment.RemainingPathJson))
             {
-                await _reportRepo.AddAsync(new BattleReport
+                var pathSteps = JsonSerializer.Deserialize<List<HexCoordinate>>(unitDeployment.RemainingPathJson);
+
+                if (pathSteps != null && pathSteps.Any())
                 {
-                    WorldPlayerId = origin.WorldPlayerId.Value,
-                    Title = $"Attack on {target.Name}",
-                    Body = body,
-                    OccurredAt = DateTime.UtcNow,
-                    IsRead = false
-                });
+                    var nextStep = pathSteps.First();
+                    pathSteps.RemoveAt(0);
+
+                    unitDeployment.NextX = nextStep.X;
+                    unitDeployment.NextY = nextStep.Y;
+                    unitDeployment.RemainingPathJson = JsonSerializer.Serialize(pathSteps);
+
+                    double secondsPerHexagon = 7200.0 / Math.Max(1, unitDeployment.Mobility);
+                    unitDeployment.NextStepTime = DateTime.UtcNow.AddSeconds(secondsPerHexagon);
+                    unitDeployment.ArrivalTime = unitDeployment.NextStepTime.AddSeconds(pathSteps.Count * secondsPerHexagon);
+                }
+                else
+                {
+                    unitDeployment.UnitDeploymentMovementStatus = UnitDeploymentMovementStatusEnum.Stationed;
+                }
             }
+            else
+            {
+                unitDeployment.UnitDeploymentMovementStatus = UnitDeploymentMovementStatusEnum.Stationed;
+            }
+        }
+
+        private async Task CleanupUnitDeploymentFromWorldAsync(UnitDeployment unitDeployment)
+        {
+            await _worldMapObjectRepo.DeleteByReferenceIdAsync(unitDeployment.Id);
+            await _unitDeploymentRepo.DeleteAsync(unitDeployment);
+        }
+
+        private async Task<bool> HandleInstantCombatInteractionAsync(UnitDeployment attacker, City targetCity)
+        {
+            _logger.LogWarning($"Kamp simuleret for {attacker.Id} mod {targetCity.Name}");
+            return false;
         }
     }
 }

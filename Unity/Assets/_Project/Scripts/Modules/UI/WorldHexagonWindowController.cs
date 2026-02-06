@@ -29,185 +29,207 @@ namespace Project.Modules.UI.Windows.Implementations
 
         [SerializeField] private VisualTreeAsset _unitRowTemplate;
 
-        private VisualElement _deployView;
-        private VisualElement _actionContainer;
-        private ScrollView _unitListContainer;
+        private VisualElement _unitDeploymentViewContainer;
+        private VisualElement _primaryActionContainer;
+        private ScrollView _availableUnitsScrollView;
 
-        private MapInteractionPayload _currentPayload;
-        private List<UnitSelectionDTO> _selectedUnits = new List<UnitSelectionDTO>();
+        private MapInteractionPayload _currentInteractionPayload;
+        private List<UnitSelectionDTO> _currentlySelectedUnitsToDeploy = new List<UnitSelectionDTO>();
 
         public override void OnOpen(object dataPayload)
         {
-            if (dataPayload is MapInteractionPayload payload)
+            if (dataPayload is MapInteractionPayload interactionPayload)
             {
-                _currentPayload = payload;
+                _currentInteractionPayload = interactionPayload;
 
                 CacheRequiredVisualElements();
-                InitialPositioning();
-                UpdateDisplayInfo();
-                RefreshContextualButtons();
-                ResetDeploymentView();
+                InitializeInteractionBlockingEvents();
+                ApplyInitialWindowPositioning();
+                UpdateHexagonDisplayInformation();
+                RefreshContextualActionButtons();
+                ResetDeploymentViewToDefaultState();
+            }
+        }
+
+        private void OnDisable()
+        {
+            // OBJEKTIV FIX: Vi sikrer at vi altid frigiver interaktionen når vinduet lukkes
+            if (WorldMapInteractionHandler.Instance != null)
+            {
+                WorldMapInteractionHandler.Instance.SetMouseOverUI(false);
+            }
+        }
+
+        private void InitializeInteractionBlockingEvents()
+        {
+            if (MainContainer != null)
+            {
+                // Vi tvinger InteractionHandler til at blokere for kortet så længe musen er over vinduet
+                MainContainer.RegisterCallback<PointerEnterEvent>(evt =>
+                {
+                    WorldMapInteractionHandler.Instance?.SetMouseOverUI(true);
+                });
+
+                MainContainer.RegisterCallback<PointerLeaveEvent>(evt =>
+                {
+                    WorldMapInteractionHandler.Instance?.SetMouseOverUI(false);
+                });
             }
         }
 
         private void CacheRequiredVisualElements()
         {
-            _deployView = Root.Q<VisualElement>("Deploy-Unit-View");
-            _actionContainer = Root.Q<VisualElement>("Action-Container");
-            _unitListContainer = Root.Q<ScrollView>("Unit-List-Container");
-
-            // Header-Close-Button bliver automatisk håndteret af din BaseWindow.Initialize 
-            // så længe navnet i UXML matcher {WindowName}-Close-Button.
+            _unitDeploymentViewContainer = Root.Q<VisualElement>("Deploy-Unit-View");
+            _primaryActionContainer = Root.Q<VisualElement>("Action-Container");
+            _availableUnitsScrollView = Root.Q<ScrollView>("Unit-List-Container");
         }
 
-        private void InitialPositioning()
+        private void ApplyInitialWindowPositioning()
         {
-            // Sætter vinduet til klik-positionen én gang ved åbning.
-            // Din DragManipulator vil derefter overtage styringen herfra.
-            Vector2 clickPos = _currentPayload.ScreenClickPosition;
+            Vector2 initialClickPosition = _currentInteractionPayload.ScreenClickPosition;
 
-            // Vi sikrer at vinduet ikke spawner uden for skærmen
-            float x = Mathf.Clamp(clickPos.x, 0, Screen.width - 350);
-            float y = Mathf.Clamp(clickPos.y, 0, Screen.height - 400);
+            // Clamp positionen så vinduet ikke falder uden for skærmens kanter
+            float calculatedXPosition = Mathf.Clamp(initialClickPosition.x, 0, Screen.width - 350);
+            float calculatedYPosition = Mathf.Clamp(initialClickPosition.y, 0, Screen.height - 400);
 
-            MainContainer.style.left = x;
-            MainContainer.style.top = y;
+            MainContainer.style.left = calculatedXPosition;
+            MainContainer.style.top = calculatedYPosition;
         }
 
-        private void UpdateDisplayInfo()
+        private void UpdateHexagonDisplayInformation()
         {
-            Root.Q<Label>("Target-Coordinates-Label").text = $"{_currentPayload.Coordinates.x} , {_currentPayload.Coordinates.y}";
-            Root.Q<Label>("Biome-Type-Label").text = _currentPayload.BiomeName.Replace("_", " ").ToUpper();
+            Root.Q<Label>("Target-Coordinates-Label").text = $"{_currentInteractionPayload.Coordinates.x} , {_currentInteractionPayload.Coordinates.y}";
+            Root.Q<Label>("Biome-Type-Label").text = _currentInteractionPayload.BiomeName.Replace("_", " ").ToUpper();
         }
 
-        private void RefreshContextualButtons()
+        private void RefreshContextualActionButtons()
         {
-            var selectBtn = Root.Q<Button>("Btn-Select-Unit");
-            var moveBtn = Root.Q<Button>("Btn-Move-Here");
-            var deployTriggerBtn = Root.Q<Button>("Btn-Open-Deploy-View");
+            var selectExpeditionButton = Root.Q<Button>("Btn-Select-Unit");
+            var orderMarchButton = Root.Q<Button>("Btn-Move-Here");
+            var openDeployViewButton = Root.Q<Button>("Btn-Open-Deploy-View");
 
-            if (_currentPayload.DeploymentIdOnTile.HasValue && _currentPayload.IsPlayerOwned)
+            if (_currentInteractionPayload.DeploymentIdOnTile.HasValue && _currentInteractionPayload.IsPlayerOwned)
             {
-                selectBtn.RemoveFromClassList("hidden");
-                selectBtn.clicked -= HandleSelectUnit;
-                selectBtn.clicked += HandleSelectUnit;
+                selectExpeditionButton.RemoveFromClassList("hidden");
+                selectExpeditionButton.clicked -= HandleSelectExpeditionAction;
+                selectExpeditionButton.clicked += HandleSelectExpeditionAction;
             }
-            else selectBtn.AddToClassList("hidden");
+            else selectExpeditionButton.AddToClassList("hidden");
 
-            if (WorldMapInteractionHandler.Instance.HasActiveSelection && !_currentPayload.DeploymentIdOnTile.HasValue)
+            if (WorldMapInteractionHandler.Instance.HasActiveSelection && !_currentInteractionPayload.DeploymentIdOnTile.HasValue)
             {
-                moveBtn.RemoveFromClassList("hidden");
-                moveBtn.clicked -= HandleMoveOrder;
-                moveBtn.clicked += HandleMoveOrder;
+                orderMarchButton.RemoveFromClassList("hidden");
+                orderMarchButton.clicked -= HandleOrderMarchAction;
+                orderMarchButton.clicked += HandleOrderMarchAction;
             }
-            else moveBtn.AddToClassList("hidden");
+            else orderMarchButton.AddToClassList("hidden");
 
-            deployTriggerBtn.clicked -= SwitchToDeployMode;
-            deployTriggerBtn.clicked += SwitchToDeployMode;
+            openDeployViewButton.clicked -= HandleSwitchToDeploymentModeAction;
+            openDeployViewButton.clicked += HandleSwitchToDeploymentModeAction;
         }
 
-        private void ResetDeploymentView()
+        private void ResetDeploymentViewToDefaultState()
         {
-            _deployView.AddToClassList("hidden");
-            _actionContainer.RemoveFromClassList("hidden");
+            _unitDeploymentViewContainer.AddToClassList("hidden");
+            _primaryActionContainer.RemoveFromClassList("hidden");
         }
 
-        private void SwitchToDeployMode()
+        private void HandleSwitchToDeploymentModeAction()
         {
-            _actionContainer.AddToClassList("hidden");
-            _deployView.RemoveFromClassList("hidden");
-            PopulateUnitList();
+            _primaryActionContainer.AddToClassList("hidden");
+            _unitDeploymentViewContainer.RemoveFromClassList("hidden");
+            PopulateAvailableUnitsList();
         }
 
-        private void PopulateUnitList()
+        private void PopulateAvailableUnitsList()
         {
-            _unitListContainer.Clear();
-            _selectedUnits.Clear();
+            _availableUnitsScrollView.Clear();
+            _currentlySelectedUnitsToDeploy.Clear();
 
-            var availableStacks = CityStateManager.Instance.CurrentStationedUnits;
+            var stationedUnitsInCity = CityStateManager.Instance.CurrentStationedUnits;
 
-            if (availableStacks == null || availableStacks.Count == 0)
+            if (stationedUnitsInCity == null || stationedUnitsInCity.Count == 0)
             {
-                // FIX: Korrekt måde at tilføje classList i Unity C#
-                Label emptyLabel = new Label("No reserves available in city.");
-                emptyLabel.AddToClassList("info-text");
-                emptyLabel.style.marginTop = 20;
-                emptyLabel.style.unityTextAlign = TextAnchor.MiddleCenter;
-                _unitListContainer.Add(emptyLabel);
+                Label emptyReservesLabel = new Label("No reserves available in city.");
+                emptyReservesLabel.AddToClassList("info-text");
+                emptyReservesLabel.style.marginTop = 20;
+                emptyReservesLabel.style.unityTextAlign = TextAnchor.MiddleCenter;
+                _availableUnitsScrollView.Add(emptyReservesLabel);
                 return;
             }
 
-            foreach (var stack in availableStacks)
+            foreach (var unitStack in stationedUnitsInCity)
             {
-                VisualElement row = _unitRowTemplate.Instantiate();
-                row.Q<Label>("Unit-Name").text = stack.Type.ToString();
-                row.Q<Label>("Available-Amount").text = $"In City: {stack.Quantity}";
+                VisualElement unitSelectionRow = _unitRowTemplate.Instantiate();
+                unitSelectionRow.Q<Label>("Unit-Name").text = unitStack.Type.ToString();
+                unitSelectionRow.Q<Label>("Available-Amount").text = $"In City: {unitStack.Quantity}";
 
-                var inputField = row.Q<TextField>("Input-Amount");
+                var quantityInputField = unitSelectionRow.Q<TextField>("Input-Amount");
+                quantityInputField.RegisterCallback<FocusEvent>(evt => quantityInputField.SelectAll());
 
-                // Gør det lettere at bruge: Vælg alt tekst når man klikker
-                inputField.RegisterCallback<FocusEvent>(evt => inputField.SelectAll());
-
-                inputField.RegisterValueChangedCallback(evt => {
-                    if (int.TryParse(evt.newValue, out int amount))
+                quantityInputField.RegisterValueChangedCallback(evt => {
+                    if (int.TryParse(evt.newValue, out int parsedAmount))
                     {
-                        amount = Mathf.Clamp(amount, 0, stack.Quantity);
-                        _selectedUnits.RemoveAll(u => u.Type == stack.Type);
-                        if (amount > 0) _selectedUnits.Add(new UnitSelectionDTO { Type = stack.Type, Quantity = amount });
+                        parsedAmount = Mathf.Clamp(parsedAmount, 0, unitStack.Quantity);
+                        _currentlySelectedUnitsToDeploy.RemoveAll(selection => selection.Type == unitStack.Type);
+                        if (parsedAmount > 0)
+                        {
+                            _currentlySelectedUnitsToDeploy.Add(new UnitSelectionDTO { Type = unitStack.Type, Quantity = parsedAmount });
+                        }
                     }
                 });
 
-                _unitListContainer.Add(row);
+                _availableUnitsScrollView.Add(unitSelectionRow);
             }
 
-            var confirmBtn = Root.Q<Button>("Btn-Confirm-Deployment");
-            confirmBtn.clicked -= HandleDeployConfirm;
-            confirmBtn.clicked += HandleDeployConfirm;
+            var confirmDeploymentButton = Root.Q<Button>("Btn-Confirm-Deployment");
+            confirmDeploymentButton.clicked -= HandleConfirmDeploymentAction;
+            confirmDeploymentButton.clicked += HandleConfirmDeploymentAction;
         }
 
-        private void HandleSelectUnit()
+        private void HandleSelectExpeditionAction()
         {
-            WorldMapInteractionHandler.Instance.SetSelectedDeployment(_currentPayload.DeploymentIdOnTile.Value);
+            WorldMapInteractionHandler.Instance.SetSelectedDeployment(_currentInteractionPayload.DeploymentIdOnTile.Value);
             Close();
         }
 
-        private void HandleMoveOrder()
+        private void HandleOrderMarchAction()
         {
-            var unitId = WorldMapInteractionHandler.Instance.SelectedDeploymentId.Value;
-            var request = new MoveUnitRequestDTO
+            var selectedUnitIdentifier = WorldMapInteractionHandler.Instance.SelectedDeploymentId.Value;
+            var marchOrderRequest = new MoveUnitRequestDTO
             {
-                UnitDeploymentId = unitId,
-                TargetX = _currentPayload.Coordinates.x,
-                TargetY = _currentPayload.Coordinates.y
+                UnitDeploymentId = selectedUnitIdentifier,
+                TargetX = _currentInteractionPayload.Coordinates.x,
+                TargetY = _currentInteractionPayload.Coordinates.y
             };
 
-            StartCoroutine(NetworkManager.Instance.UnitDeployment.MoveUnits(request, NetworkManager.Instance.JwtToken, (res) => {
-                if (res != null)
+            StartCoroutine(NetworkManager.Instance.UnitDeployment.MoveUnits(marchOrderRequest, NetworkManager.Instance.JwtToken, (response) => {
+                if (response != null)
                 {
-                    WorldMapStateManager.Instance.UpdateDeploymentInCache(res);
+                    WorldMapStateManager.Instance.UpdateDeploymentInCache(response);
                     WorldMapInteractionHandler.Instance.ClearSelection();
                     Close();
                 }
             }));
         }
 
-        private void HandleDeployConfirm()
+        private void HandleConfirmDeploymentAction()
         {
-            if (!_selectedUnits.Any()) return;
+            if (!_currentlySelectedUnitsToDeploy.Any()) return;
 
-            var request = new DeployUnitRequestDTO
+            var deploymentRequest = new DeployUnitRequestDTO
             {
                 OriginCityId = CityStateManager.Instance.CityId,
-                TargetX = _currentPayload.Coordinates.x,
-                TargetY = _currentPayload.Coordinates.y,
-                UnitsToDeploy = _selectedUnits,
+                TargetX = _currentInteractionPayload.Coordinates.x,
+                TargetY = _currentInteractionPayload.Coordinates.y,
+                UnitsToDeploy = _currentlySelectedUnitsToDeploy,
                 WorldPlayerId = Guid.Parse(NetworkManager.Instance.WorldPlayerId)
             };
 
-            StartCoroutine(NetworkManager.Instance.UnitDeployment.DeployUnits(request, NetworkManager.Instance.JwtToken, (res) => {
-                if (res != null)
+            StartCoroutine(NetworkManager.Instance.UnitDeployment.DeployUnits(deploymentRequest, NetworkManager.Instance.JwtToken, (response) => {
+                if (response != null)
                 {
-                    WorldMapStateManager.Instance.RequestWorldMapChunkData((short)res.CurrentX, (short)res.CurrentY, 50, 50, true);
+                    WorldMapStateManager.Instance.RequestWorldMapChunkData((short)response.CurrentX, (short)response.CurrentY, 50, 50, true);
                     Close();
                 }
             }));

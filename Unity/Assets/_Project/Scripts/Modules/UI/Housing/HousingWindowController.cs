@@ -103,11 +103,6 @@ namespace Project.Modules.UI.Windows.Implementations
             levelValueLabel.AddToClassList("row-label");
             tableRowContainer.Add(levelValueLabel);
 
-            // Population Label
-            Label populationValueLabel = new Label($"{housingProjectionData.Population:N0}");
-            populationValueLabel.AddToClassList("row-label");
-            tableRowContainer.Add(populationValueLabel);
-
             _housingStatisticsScrollView.Add(tableRowContainer);
         }
     }

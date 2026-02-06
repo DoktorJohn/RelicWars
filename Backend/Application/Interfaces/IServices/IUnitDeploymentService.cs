@@ -9,8 +9,9 @@ namespace Application.Interfaces.IServices
 {
     public interface IUnitDeploymentService
     {
-        Task<UnitDeploymentDTO> DeployUnitsAsync(DeployUnitRequestDTO dto);
-        Task<UnitDeploymentDTO> MoveUnits(MoveUnitRequestDTO dto);
-        Task<UnitDeploymentDTO> AbortMovementAsync(Guid unitDeploymentId);
+        Task<UnitDeploymentDTO> DeployUnitDeploymentAsync(DeployUnitRequestDTO dto);
+        Task<UnitDeploymentDTO> MoveUnitDeployment(MoveUnitRequestDTO dto);
+        Task<UnitDeploymentDTO> HaltUnitDeploymentAsync(Guid unitDeploymentId);
+        Task<UnitDeploymentDTO> ReturnToOriginCityAsync(Guid unitDeploymentId);
     }
 }

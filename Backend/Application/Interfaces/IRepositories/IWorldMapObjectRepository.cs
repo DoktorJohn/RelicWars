@@ -1,4 +1,5 @@
 ﻿using Domain.Entities;
+using Domain.Enums;
 using Domain.User;
 using System;
 using System.Collections.Generic;
@@ -17,5 +18,6 @@ namespace Application.Interfaces.IRepositories
         Task DeleteByReferenceIdAsync(Guid referenceEntityId);
         Task UpdateAsync(WorldMapObject worldMapObject);
         Task<WorldMapObject?> GetCityOnCoordinatesAsync(Guid worldId, short X, short Y);
+        Task<List<WorldMapObject>> GetObjectsByTypeAsync(Guid id, MapObjectTypeEnum type);
     }
 }

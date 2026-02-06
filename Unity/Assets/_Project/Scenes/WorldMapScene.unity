@@ -672,6 +672,7 @@ MonoBehaviour:
   NeedTopBar: 1
   NeedLeftSideBar: 1
   NeedUnitStackIdeology: 0
+  NeedUnitDeploymentSideBar: 1
 --- !u!4 &1558872993
 Transform:
   m_ObjectHideFlags: 0
@@ -697,6 +698,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1649493900}
   - component: {fileID: 1649493899}
+  - component: {fileID: 1649493901}
   m_Layer: 0
   m_Name: MapRenderer
   m_TagString: Untagged
@@ -718,18 +720,12 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::WorldMapRenderer
   _chunkWidth: 50
   _chunkHeight: 50
-  _cameraUpdateCheckFrequencySeconds: 0.5
-  _forcedDataRefreshIntervalSeconds: 10
+  _cameraUpdateCheckFrequency: 0.5
   MainCamera: {fileID: 1097704287}
   TargetTilemap: {fileID: 2050413617}
   HighlightTilemap: {fileID: 1749960710}
   SelectionFrameTile: {fileID: 11400000, guid: dbce8e63125b6b14da9130ca425506a4, type: 2}
   VisualConfig: {fileID: 11400000, guid: 963f9222b836ad449b3622a124f7f432, type: 2}
-  _cityPrefab: {fileID: 7219419925859750668, guid: 258046971f6eaf845b6bf32dc5cab2b2, type: 3}
-  _unitDeploymentPrefab: {fileID: 1241472217021017828, guid: e9e1b3697be51cd4abd7f556aee01ef1, type: 3}
-  _objectContainer: {fileID: 1995729848}
-  _cityLabelSortingOrder: 10
-  _unitDeploymentLabelSortingOrder: 20
 --- !u!4 &1649493900
 Transform:
   m_ObjectHideFlags: 0
@@ -745,6 +741,25 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1649493901
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1649493898}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f6defc18d7ef1ea41941aa2415a0caba, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Assets._Project.Scripts.Modules.Map.WorldMapEntityManager
+  _cityPrefab: {fileID: 7219419925859750668, guid: 258046971f6eaf845b6bf32dc5cab2b2, type: 3}
+  _unitDeploymentPrefab: {fileID: 1241472217021017828, guid: e9e1b3697be51cd4abd7f556aee01ef1, type: 3}
+  _objectContainer: {fileID: 1995729848}
+  _cityLabelSortingOrder: 10
+  _unitDeploymentLabelSortingOrder: 20
+  _unitLayerName: Units
+  TerrainTilemap: {fileID: 2050413617}
 --- !u!1 &1749960709
 GameObject:
   m_ObjectHideFlags: 0

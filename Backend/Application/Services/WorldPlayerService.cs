@@ -11,6 +11,7 @@ using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Security.Cryptography;
 using System.Threading.Tasks;
 
 namespace Application.Services
@@ -25,6 +26,7 @@ namespace Application.Services
         private readonly IWorldRepository _worldRepo;
         private readonly CityPointCalculator _cityPointCalculator;
         private readonly ILogger<WorldPlayerService> _logger;
+        private readonly Random _randomGenerator = new Random();
 
         public WorldPlayerService(
             IWorldPlayerRepository worldPlayerRepository,
@@ -132,6 +134,9 @@ namespace Application.Services
                 );
             }
 
+            // Beregn spawn koordinater baseret på eksisterende byer i verdenen
+            var spawnCoordinates = await CalculateNextAlphaTestSpawnCoordinatesAsync(targetWorldId);
+
             var newlyCreatedWorldParticipation = new WorldPlayer
             {
                 Id = Guid.NewGuid(),
@@ -145,7 +150,13 @@ namespace Application.Services
 
             targetGameWorld.PlayerCount++;
 
-            var initialPlayerCapitalCity = CreateStartingCity(playerProfileUsername, newlyCreatedWorldParticipation.Id, targetWorldId);
+            var initialPlayerCapitalCity = CreateStartingCity(
+                playerProfileUsername,
+                newlyCreatedWorldParticipation.Id,
+                targetWorldId,
+                spawnCoordinates.X,
+                spawnCoordinates.Y);
+
             newlyCreatedWorldParticipation.Cities.Add(initialPlayerCapitalCity);
             await _worldPlayerRepository.AddAsync(newlyCreatedWorldParticipation);
 
@@ -156,11 +167,11 @@ namespace Application.Services
                 Y = (short)initialPlayerCapitalCity.Y,
                 Type = MapObjectTypeEnum.City,
                 ReferenceEntityId = initialPlayerCapitalCity.Id
-
             };
 
             await _worldMapObjectRepository.AddAsync(worldMapObject);
 
+            _logger.LogInformation("Player {Username} spawned at coordinates {X},{Y}", playerProfileUsername, spawnCoordinates.X, spawnCoordinates.Y);
 
             return new WorldPlayerJoinResponse(
                 ConnectionSuccessful: true,
@@ -191,22 +202,79 @@ namespace Application.Services
             return new WorldPlayerSelectIdeologyResponse(true, $"Ideology {request.Ideology} confirmed.");
         }
 
-        private City CreateStartingCity(string userName, Guid worldPlayerId, Guid worldId)
+        private async Task<(int X, int Y)> CalculateNextAlphaTestSpawnCoordinatesAsync(Guid worldId)
+        {
+            // Hent alle eksisterende byer på kortet for at tjekke distancer
+            var existingCities = await _worldMapObjectRepository.GetObjectsByTypeAsync(worldId, MapObjectTypeEnum.City);
+
+            // Regel 1: Første by på serveren er altid 50,50
+            if (existingCities == null || !existingCities.Any())
+            {
+                return (50, 50);
+            }
+
+            int attempts = 0;
+            while (attempts < 500) // Sikkerheds-loop for at undgå uendelige beregninger
+            {
+                attempts++;
+
+                // Regel 2: Vælg en tilfældig eksisterende by som udgangspunkt for det nye spawn
+                int randomIndex = _randomGenerator.Next(0, existingCities.Count());
+                var anchorCity = existingCities.ElementAt(randomIndex);
+
+                // Regel 3: Generer offset inden for 3-6 (Next er eksklusiv øvre grænse, så 3, 7)
+                int offsetX = _randomGenerator.Next(3, 7);
+                int offsetY = _randomGenerator.Next(3, 7);
+
+                // Tilfældig retning (positiv eller negativ)
+                if (_randomGenerator.Next(0, 2) == 0) offsetX *= -1;
+                if (_randomGenerator.Next(0, 2) == 0) offsetY *= -1;
+
+                int candidateX = anchorCity.X + offsetX;
+                int candidateY = anchorCity.Y + offsetY;
+
+                // Regel 4: Valider mod ALLE byer. Må aldrig være inden for 2 x og 2 y.
+                // Det betyder at afstanden i både X og Y skal være mindst 3 til samtlige byer.
+                bool isPositionValid = true;
+                foreach (var otherCity in existingCities)
+                {
+                    int distanceX = Math.Abs(candidateX - otherCity.X);
+                    int distanceY = Math.Abs(candidateY - otherCity.Y);
+
+                    // Hvis vi er inden for 2 felter på begge akser, er det en kollision med sikkerhedszonen
+                    if (distanceX <= 2 && distanceY <= 2)
+                    {
+                        isPositionValid = false;
+                        break;
+                    }
+                }
+
+                if (isPositionValid)
+                {
+                    return (candidateX, candidateY);
+                }
+            }
+
+            // Fallback hvis clusteret er totalt proppet (ekstremt usandsynligt i alpha)
+            _logger.LogWarning("[WorldPlayerService] Kunne ikke finde valid cluster-plads efter 500 forsøg. Ekspanderer søgning.");
+            return (50 + attempts, 50 + attempts);
+        }
+
+        private City CreateStartingCity(string userName, Guid worldPlayerId, Guid worldId, int x, int y)
         {
             var city = new City
             {
                 Name = $"{userName}'s Capital",
                 WorldId = worldId,
                 WorldPlayerId = worldPlayerId,
-                X = 50,
-                Y = 50,
+                X = x,
+                Y = y,
                 Wood = 500,
                 Stone = 500,
                 Metal = 500,
                 LastResourceUpdate = DateTime.UtcNow,
                 Buildings = new List<Building>()
             };
-
 
             city.Buildings.Add(new Building { Type = BuildingTypeEnum.TownHall, Level = 1 });
             city.Buildings.Add(new Building { Type = BuildingTypeEnum.Warehouse, Level = 1 });
@@ -220,6 +288,7 @@ namespace Application.Services
             city.Buildings.Add(new Building { Type = BuildingTypeEnum.Wall, Level = 1 });
             city.Buildings.Add(new Building { Type = BuildingTypeEnum.Stable, Level = 1 });
             city.Buildings.Add(new Building { Type = BuildingTypeEnum.MarketPlace, Level = 1 });
+
             city.Points = _cityPointCalculator.CalculateTotalPointsForCity(city);
 
             return city;

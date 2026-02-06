@@ -17,6 +17,8 @@ namespace Infrastructure.Repositories
         public async Task<List<UnitDeployment>> GetUnitDeploymentsWithStacksByListOfIdsAsync(List<Guid> ids)
         {
             return await _context.UnitDeployments
+                .Include(ud => ud.OriginCity)
+                .Include(ud => ud.TargetCity)
                 .Include(ud => ud.UnitStacks)
                 .Include(ud => ud.OwnerWorldPlayer)
                     .ThenInclude(ud => ud!.PlayerProfile)
@@ -44,12 +46,19 @@ namespace Infrastructure.Repositories
 
         public async Task<List<UnitDeployment>> GetActiveDeploymentsAsync()
         {
-            return await _context.UnitDeployments.ToListAsync();
+            return await _context.UnitDeployments
+                .Include(ud => ud.OriginCity)
+                .Include(ud => ud.TargetCity)
+                .Include(ud => ud.UnitStacks)
+                .Include(ud => ud.OwnerWorldPlayer)
+                .ToListAsync();
         }
 
         public async Task<UnitDeployment?> GetByIdAsync(Guid id)
         {
             return await _context.UnitDeployments
+                .Include(ud => ud.OriginCity)
+                .Include(ud => ud.TargetCity)
                 .Include(ud => ud.UnitStacks)
                 .Include(ud => ud.OwnerWorldPlayer)
                     .ThenInclude(ud => ud!.PlayerProfile)

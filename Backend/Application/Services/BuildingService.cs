@@ -72,15 +72,6 @@ namespace Application.Services
 
             var config = _buildingDataReader.GetConfig<BuildingLevelData>(type, nextLevel);
 
-            // --- POPULATION CHECK ---
-            int availablePop = _statService.GetAvailablePopulation(city, activeJobs);
-            int currentPopCost = currentLevel > 0
-                ? _buildingDataReader.GetConfig<BuildingLevelData>(type, currentLevel).PopulationCost
-                : 0;
-            int additionalNeeded = config.PopulationCost - currentPopCost;
-
-            if (additionalNeeded > availablePop)
-                return new BuildingResult(false, $"Mangler population: {additionalNeeded - availablePop} flere frie borgere påkrævet.");
 
             // --- PREREQUISITES ---
             foreach (var req in config.Prerequisites)
