@@ -2,13 +2,24 @@
   "navigationFallback": {
     "rewrite": "/index.html"
   },
+  "routes": [
+    {
+      "route": "/Build/*.br",
+      "headers": {
+        "Content-Encoding": "br"
+      }
+    },
+    {
+      "route": "/Build/*.unityweb",
+      "headers": {
+        "Content-Encoding": "br"
+      }
+    }
+  ],
   "mimeTypes": {
-    ".unityweb": "application/octet-stream",
     ".wasm.br": "application/wasm",
     ".js.br": "application/javascript",
-    ".data.br": "application/octet-stream"
-  },
-  "globalHeaders": {
-    "Content-Encoding": "br"
+    ".data.br": "application/octet-stream",
+    ".unityweb": "application/octet-stream"
   }
 }
