@@ -15,13 +15,24 @@ namespace Infrastructure.Context
         {
             public GameContext CreateDbContext(string[] args)
             {
-                // Finder stien til Game-projektet
-                string gameProjectPath = Path.GetFullPath(Path.Combine(Directory.GetCurrentDirectory(), "..", "Game"));
+                // 1. Find miljøet (Development eller Production)
+                string environmentName = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") ?? "Production";
 
+                // 2. Find stien til Game-projektet for at læse appsettings
+                string currentDirectory = Directory.GetCurrentDirectory();
+                string gameProjectPath = Path.GetFullPath(Path.Combine(currentDirectory, "..", "Game"));
+
+                if (currentDirectory.EndsWith("Game"))
+                {
+                    gameProjectPath = currentDirectory;
+                }
+
+                // 3. Konfigurations-setup
                 IConfigurationRoot configuration = new ConfigurationBuilder()
                     .SetBasePath(gameProjectPath)
                     .AddJsonFile("appsettings.json", optional: false)
-                    .AddJsonFile("appsettings.Development.json", optional: true)
+                    .AddJsonFile($"appsettings.{environmentName}.json", optional: true)
+                    .AddEnvironmentVariables()
                     .Build();
 
                 var optionsBuilder = new DbContextOptionsBuilder<GameContext>();
@@ -29,21 +40,13 @@ namespace Infrastructure.Context
 
                 if (string.IsNullOrEmpty(connectionString))
                 {
-                    throw new Exception("DefaultConnection connection string kunne ikke findes!");
+                    throw new Exception($"GameContextFactory: Forbindelsesstrengen 'DefaultConnection' blev ikke fundet for: {environmentName}");
                 }
 
-                // Fix for "to databaser" problemet: 
-                // Hvis vi bruger SQLite lokalt, tvinger vi stien til altid at pege på Game-mappen
-                if (connectionString.Contains(".db") || connectionString.Contains("Data Source"))
-                {
-                    string dbFileName = connectionString.Split('=')[1];
-                    string absoluteDbPath = Path.Combine(gameProjectPath, dbFileName);
-                    optionsBuilder.UseSqlite($"Data Source={absoluteDbPath}");
-                }
-                else
-                {
-                    optionsBuilder.UseSqlServer(connectionString);
-                }
+                // 4. Vi bruger nu udelukkende SQL Server (LocalDB eller Azure)
+                optionsBuilder.UseSqlServer(connectionString);
+
+                Console.WriteLine($"[EF-FACTORY] Genererer migration til SQL SERVER (Miljø: {environmentName})");
 
                 return new GameContext(optionsBuilder.Options);
             }

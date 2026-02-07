@@ -9,12 +9,10 @@
 .building-grid-view .unity-scroll-view__content-container {
     flex-direction: row; 
     flex-wrap: wrap;     
-    /* FIX: Centrerer kortene så afstanden til venstre og højre er ens */
     justify-content: center;
     align-items: flex-start;
     padding-left: 0;
     padding-right: 0;
-    /* FIX: Mindre padding-bottom er nu nok, da layoutet er mere stabilt */
     padding-bottom: 25px; 
     min-width: 100%;
 }
@@ -26,8 +24,6 @@
 
 /* --- BUILDING CARD --- */
 .building-card {
-    /* 3 kort á 290px + margin (16px hver) = 918px. 
-       I et 1000px vindue (960px efter padding) giver det 21px luft i hver side vha. justify-content: center */
     width: 290px;
     height: 90px;
     margin: 8px; 
@@ -46,14 +42,15 @@
     scale: 1.02;
 }
 
+/* FIX: Fjernet border-bottom-width som skabte "ghost line" buggen */
 .card-header {
     flex-direction: row;
     justify-content: space-between;
     align-items: center;
-    border-bottom-width: 1px;
-    border-bottom-color: rgba(255, 255, 255, 0.1);
     padding-bottom: 5px;
     margin-bottom: 5px;
+    /* Vi fjerner den hvide 1px border her, da den ofte "bløder" igennem layoutet */
+    border-bottom-width: 0;
 }
 
 .card-name {
@@ -75,10 +72,9 @@
     height: 32px;
 }
 
-/* --- QUEUE SECTION (Kompakteret for at give plads til griddet) --- */
+/* --- QUEUE SECTION --- */
 .queue-section {
     margin-top: 0;
-    /* FIX: Reduceret min-height for at give mere plads til bygnings-grid */
     min-height: 135px; 
     width: 100%;
     flex-shrink: 0; 
@@ -90,7 +86,7 @@
 .queue-header-label {
     -unity-font-definition: var(--font-header);
     color: var(--c-text-header);
-    font-size: 20px; /* Reduceret fra 22px */
+    font-size: 20px; 
     -unity-font-style: bold;
     letter-spacing: 2px;
     margin-bottom: 10px;
@@ -100,13 +96,13 @@
 
 .queue-scroll-view {
     flex-grow: 1;
-    height: 100px; /* Reduceret fra 120px */
+    height: 100px;
 }
 
-/* --- QUEUE ITEM CARD (Kompakteret vertikalt) --- */
+/* --- QUEUE ITEM CARD --- */
 .queue-item-card {
     width: 182px; 
-    height: 95px; /* Reduceret fra 115px for at redde griddet ovenover */
+    height: 95px; 
     margin-right: 10px;
     background-color: rgba(0, 0, 0, 0.5);
     border-width: 2px;
@@ -167,29 +163,60 @@
     -unity-font-style: bold;
 }
 
-/* --- TOOLTIP --- */
+/* --- TOOLTIP (Forbedret Layout & Synlighed) --- */
 .resource-tooltip {
     position: absolute;
-    width: 240px;
-    background-color: rgba(25, 22, 20, 0.98); 
+    width: 260px;
+    background-color: rgba(10, 10, 10, 0.99); 
     border-width: 2px;
     border-color: var(--c-border);
     border-radius: 8px;
-    padding: 12px;
+    padding: 15px;
     display: none; 
     z-index: 999;
+    picking-mode: ignore; 
 }
 
 .tooltip-title {
     -unity-font-definition: var(--font-header);
     color: var(--c-text-highlight);
-    font-size: 13px;
-    margin-bottom: 10px;
-    padding-bottom: 6px;
+    font-size: 14px;
+    margin-bottom: 12px;
+    padding-bottom: 8px;
     border-bottom-width: 1px;
-    border-bottom-color: rgba(165, 125, 50, 0.3);
+    border-bottom-color: rgba(165, 125, 50, 0.5);
     -unity-text-align: middle-center;
     -unity-font-style: bold;
+    letter-spacing: 1px;
+}
+
+.tooltip-row {
+    flex-direction: row;
+    justify-content: space-between; 
+    align-items: center;
+    margin-bottom: 6px;
+    width: 100%;
+}
+
+.tooltip-label {
+    -unity-font-definition: var(--font-body);
+    font-size: 13px;
+    -unity-font-style: bold;
+    /* Farven herover bliver overskrevet af UXML inline styles ( Wood/Stone/Metal ) */
+}
+
+/* High-contrast tekst til tallene for optimal læsbarhed */
+#Tip-Wood, #Tip-Stone, #Tip-Metal, #Tip-Time {
+    color: #FFFFFF; 
+    -unity-font-definition: var(--font-body);
+    font-size: 13px;
+    -unity-font-style: bold;
+    -unity-text-align: middle-right;
+    flex-grow: 1;
+}
+
+#Tip-Time {
+    color: #90D890; /* Lys grøn for tid */
 }
 
 /* --- TEXTS --- */

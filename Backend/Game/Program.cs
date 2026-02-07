@@ -58,14 +58,16 @@ Console.WriteLine($"DEBUG: Bruger forbindelsesstreng: {connectionString}");
 
 builder.Services.AddDbContext<GameContext>(options =>
 {
-    if (builder.Environment.IsDevelopment())
+    options.UseSqlServer(connectionString, sqlOptions =>
     {
-        options.UseSqlite(connectionString);
-    }
-    else
-    {
-        options.UseSqlServer(connectionString);
-    }
+        if (!builder.Environment.IsDevelopment())
+        {
+            sqlOptions.EnableRetryOnFailure(
+                maxRetryCount: 5,
+                maxRetryDelay: TimeSpan.FromSeconds(10),
+                errorNumbersToAdd: null);
+        }
+    });
 });
 
 string buildingPath = "buildings.json";
