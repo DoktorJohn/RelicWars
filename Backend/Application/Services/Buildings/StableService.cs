@@ -83,17 +83,24 @@ namespace Application.Services.Buildings
                 if (unitStaticData == null || unitStaticData.Category != UnitCategoryEnum.Cavalry) continue;
 
                 double calculatedRecruitmentTimePerUnit = await _recruitmentTimeCalculationService.CalculateFinalRecruitmentTimeAsync(userId, cityEntity, unitStaticData);
-                int currentUnitInventoryCount = cityEntity.UnitStacks.FirstOrDefault(stack => stack.Type == unitTypeCandidate)?.Quantity ?? 0;
+                int alreadyOwnedCount = cityEntity.UnitStacks.FirstOrDefault(stack => stack.Type == unitTypeCandidate)?.Quantity ?? 0;
                 bool isUnitTypeUnlocked = currentBuildingLevel > 0;
 
                 stableResponse.AvailableUnits.Add(new StableUnitInfoDTO
                 {
                     UnitType = unitTypeCandidate,
                     UnitName = unitStaticData.Type.ToString(),
-                    CurrentInventoryCount = currentUnitInventoryCount,
+                    AlreadyOwnedCount = alreadyOwnedCount,
                     CostWood = unitStaticData.WoodCost,
                     CostStone = unitStaticData.StoneCost,
                     CostMetal = unitStaticData.MetalCost,
+                    Power = unitStaticData.Power,
+                    Armor = unitStaticData.Armor,
+                    Discipline = unitStaticData.Discipline,
+                    Mobility = unitStaticData.Mobility,
+                    Reach = unitStaticData.Reach,
+                    LootCapacity = unitStaticData.LootCapacity,
+                    PopulationCost = unitStaticData.PopulationCost,
                     RecruitmentTimeInSeconds = (int)calculatedRecruitmentTimePerUnit,
                     IsUnlocked = isUnitTypeUnlocked
                 });

@@ -87,18 +87,26 @@ namespace Application.Services.Buildings
                 if (unitStaticData == null || unitStaticData.Category != UnitCategoryEnum.Siege) continue;
 
                 double calculatedRecruitmentTimePerUnit = await _recruitmentCalculationService.CalculateFinalRecruitmentTimeAsync(userId, cityEntity, unitStaticData);
-                int currentUnitInventoryCount = cityEntity.UnitStacks.FirstOrDefault(stack => stack.Type == unitTypeCandidate)?.Quantity ?? 0;
+                int alreadyOwnedCount = cityEntity.UnitStacks.FirstOrDefault(stack => stack.Type == unitTypeCandidate)?.Quantity ?? 0;
+                bool isUnitTypeUnlocked = currentBuildingLevel > 0;
 
                 workshopResponse.AvailableUnits.Add(new WorkshopUnitInfoDTO
                 {
                     UnitType = unitTypeCandidate,
                     UnitName = unitStaticData.Type.ToString(),
-                    CurrentInventoryCount = currentUnitInventoryCount,
+                    AlreadyOwnedCount = alreadyOwnedCount,
                     CostWood = unitStaticData.WoodCost,
                     CostStone = unitStaticData.StoneCost,
                     CostMetal = unitStaticData.MetalCost,
+                    Power = unitStaticData.Power,
+                    Armor = unitStaticData.Armor,
+                    Discipline = unitStaticData.Discipline,
+                    Mobility = unitStaticData.Mobility,
+                    Reach = unitStaticData.Reach,
+                    LootCapacity = unitStaticData.LootCapacity,
+                    PopulationCost = unitStaticData.PopulationCost,
                     RecruitmentTimeInSeconds = (int)calculatedRecruitmentTimePerUnit,
-                    IsUnlocked = currentBuildingLevel > 0
+                    IsUnlocked = isUnitTypeUnlocked
                 });
             }
 

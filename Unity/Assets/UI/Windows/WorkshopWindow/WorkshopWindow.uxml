@@ -1,54 +1,151 @@
-<?xml version="1.0" encoding="utf-8"?>
-<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" editor-extension-mode="False">
-    
-    <ui:Style src="project://database/Assets/UI/Windows/WindowTheme.uss" />
-    <ui:Style src="project://database/Assets/UI/Windows/WorkshopWindow/WorkshopWindow.uss" />
+<ui:UXML xmlns:ui="UnityEngine.UIElements"
+         xmlns:uie="UnityEditor.UIElements"
+         editor-extension-mode="False">
 
-    <ui:VisualElement name="Workshop-Window-Overlay" picking-mode="Ignore" class="screen-overlay">
-        
-        <ui:VisualElement name="Workshop-Window-MainContainer" class="window-frame size-large">
-            
-            <ui:VisualElement name="Workshop-Window-Header" class="window-header">
-                <ui:Label name="Lbl-Title" class="window-header-label" text="WORKSHOP" />
-                <ui:Button name="Header-Close-Button" class="window-close-btn" text="×" />
+    <ui:Style src="project://database/Assets/UI/Windows/WindowTheme.uss" />
+    <ui:Style src="project://database/Assets/UI/Windows/BarracksWindow/BarracksWindow.uss" />
+
+    <ui:VisualElement name="Workshop-Window-Overlay"
+                      picking-mode="Ignore"
+                      class="screen-overlay">
+
+        <ui:VisualElement name="Workshop-Window-MainContainer"
+                          class="window-frame size-large">
+
+            <!-- HEADER -->
+            <ui:VisualElement name="Workshop-Window-Header"
+                              class="window-header">
+                <ui:Label name="Lbl-Title"
+                          class="window-header-label"
+                          text="WORKSHOP" />
+                <ui:Button name="Header-Close-Button"
+                           class="window-close-btn"
+                           text="x" />
             </ui:VisualElement>
-            
-            <ui:VisualElement style="padding: 20px; flex-grow: 1;">
-                
-                <ui:Label text="SELECT SIEGE ENGINE" class="section-label" />
+
+            <ui:VisualElement class="window-body">
+
+                <!-- SELECT UNIT TYPE -->
+                <ui:Label text="SELECT CONSTRUCTION TYPE"
+                          class="section-label" />
+
                 <ui:VisualElement class="tabs-wrapper">
-                    <ui:ScrollView name="Tabs-Scroll-Container" mode="Horizontal" class="tabs-scroll-view" />
+                    <ui:ScrollView name="Tabs-Scroll-Container"
+                                   mode="Horizontal"
+                                   horizontal-scroller-visibility="Auto"
+                                   vertical-scroller-visibility="Hidden"
+                                   class="tabs-scroll-view" />
                 </ui:VisualElement>
 
-                <ui:VisualElement class="divider" style="margin-top: 10px; margin-bottom: 10px;" />
+                <ui:VisualElement class="divider" />
 
-                <ui:VisualElement name="Detail-View-Container" class="detail-container">
-                    
-                    <ui:Label name="Lbl-UnitName" class="unit-name-large" text="Battering Ram" />
-                    <ui:Label name="Lbl-OwnedCount" class="text-subtitle" text="Owned: 0" style="margin-bottom: 15px;" />
+                <!-- DETAIL VIEW -->
+                <ui:VisualElement name="Detail-View-Container"
+                                  class="detail-container">
 
-                    <ui:Label name="Lbl-Flavor" class="flavor-text text-flavor" text="..." />
+                    <ui:VisualElement class="detail-split">
 
-                    <ui:VisualElement class="cost-box">
-                        <ui:Label text="CONSTRUCTION COST" class="section-label-small" />
-                        <ui:Label name="Lbl-CostString" class="text-body" text="Wood: 200 | Stone: 100 | Time: 60s" style="margin-top: 5px;" />
-                    </ui:VisualElement>
+                        <!-- LEFT SIDE -->
+                        <ui:VisualElement class="detail-left">
+                            <ui:VisualElement class="unit-title-row">
+                                <ui:Label name="Lbl-UnitName"
+                                          class="unit-name-large" />
+                                <ui:Label name="Lbl-OwnedCount"
+                                          class="unit-owned-badge" />
+                            </ui:VisualElement>
 
-                    <ui:VisualElement class="controls-area">
-                        <ui:Label text="QUANTITY" class="section-label-small" />
-                        
-                        <ui:VisualElement class="slider-row">
-                            <ui:SliderInt name="Slider-Quantity" low-value="1" high-value="100" class="game-slider" style="flex-grow: 1; margin-right: 10px;" />
-                            <ui:IntegerField name="Input-Quantity" class="game-input-number" style="width: 80px;" />
+                            <ui:Label name="Lbl-Flavor"
+                                      class="flavor-text" />
                         </ui:VisualElement>
 
-                        <ui:Button name="Btn-Recruit" class="btn-global-base btn-imperial-success" text="CONSTRUCT ENGINES" style="height: 50px; margin-top: 15px;" />
+                        <!-- RIGHT SIDE -->
+                        <ui:VisualElement class="detail-right">
+                            <ui:VisualElement class="stats-grid">
+
+                                <ui:VisualElement class="stat-column">
+                                    <ui:VisualElement class="stat-row">
+                                        <ui:Label text="POWER" class="stat-label"/>
+                                        <ui:Label name="Stat-Power" class="stat-value"/>
+                                    </ui:VisualElement>
+                                    <ui:VisualElement class="stat-row">
+                                        <ui:Label text="ARMOR" class="stat-label"/>
+                                        <ui:Label name="Stat-Armor" class="stat-value"/>
+                                    </ui:VisualElement>
+                                    <ui:VisualElement class="stat-row">
+                                        <ui:Label text="REACH" class="stat-label"/>
+                                        <ui:Label name="Stat-Reach" class="stat-value"/>
+                                    </ui:VisualElement>
+                                    <ui:VisualElement class="stat-row">
+                                        <ui:Label text="POP" class="stat-label"/>
+                                        <ui:Label name="Stat-Pop" class="stat-value"/>
+                                    </ui:VisualElement>
+                                </ui:VisualElement>
+
+                                <ui:VisualElement class="stat-column">
+                                    <ui:VisualElement class="stat-row">
+                                        <ui:Label text="DISCIPLINE" class="stat-label"/>
+                                        <ui:Label name="Stat-Discipline" class="stat-value"/>
+                                    </ui:VisualElement>
+                                    <ui:VisualElement class="stat-row">
+                                        <ui:Label text="MOBILITY" class="stat-label"/>
+                                        <ui:Label name="Stat-Mobility" class="stat-value"/>
+                                    </ui:VisualElement>
+                                    <ui:VisualElement class="stat-row">
+                                        <ui:Label text="LOOT" class="stat-label"/>
+                                        <ui:Label name="Stat-Loot" class="stat-value"/>
+                                    </ui:VisualElement>
+                                    <ui:VisualElement class="stat-row">
+                                        <ui:Label text="TIME" class="stat-label"/>
+                                        <ui:Label name="Stat-Time" class="stat-value"/>
+                                    </ui:VisualElement>
+                                </ui:VisualElement>
+
+                            </ui:VisualElement>
+                        </ui:VisualElement>
+
+                    </ui:VisualElement>
+
+                    <!-- ACTION BOX -->
+                    <ui:VisualElement class="action-box">
+                        <ui:VisualElement class="cost-info">
+                            <ui:Label text="CONSTRUCTION COST"
+                                      class="section-label-small" />
+                            <ui:Label name="Lbl-CostString"
+                                      class="cost-text" />
+                        </ui:VisualElement>
+
+                        <ui:VisualElement class="recruitment-controls">
+                            <ui:VisualElement class="slider-container">
+                                <ui:SliderInt name="Slider-Quantity"
+                                              low-value="1"
+                                              high-value="100"
+                                              class="game-slider" />
+                                <ui:IntegerField name="Input-Quantity"
+                                                 class="game-input-number" />
+                            </ui:VisualElement>
+
+                            <ui:Button name="Btn-Recruit"
+                                       class="btn-global-base btn-imperial-success recruit-execute-btn"
+                                       text="CONSTRUCT" />
+                        </ui:VisualElement>
                     </ui:VisualElement>
 
                 </ui:VisualElement>
 
+                <!-- QUEUE -->
+                <ui:VisualElement name="Queue-Section"
+                                  class="queue-section">
+                    <ui:Label name="Queue-Header-Label"
+                              text="CONSTRUCTION QUEUE (0/5)"
+                              class="section-label" />
+                    <ui:ScrollView name="Recruitment-Queue-List"
+                                   class="queue-scroll-view"
+                                   mode="Horizontal"
+                                   horizontal-scroller-visibility="Auto"
+                                   vertical-scroller-visibility="Hidden" />
+                </ui:VisualElement>
+
             </ui:VisualElement>
-            
         </ui:VisualElement>
     </ui:VisualElement>
 </ui:UXML>

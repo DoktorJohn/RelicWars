@@ -1,4 +1,4 @@
-using UnityEngine;
+﻿using UnityEngine;
 using UnityEngine.UIElements;
 using System;
 using System.Collections.Generic;
@@ -7,6 +7,7 @@ using Project.Network.Manager;
 using Assets.Scripts.Domain.Enums;
 using Project.Scripts.Domain.DTOs;
 using Project.Modules.City;
+using System.Collections;
 
 namespace Project.Modules.UI.Windows.Implementations
 {
@@ -16,265 +17,327 @@ namespace Project.Modules.UI.Windows.Implementations
         protected override string VisualContainerName => "Stable-Window-MainContainer";
         protected override string HeaderName => "Stable-Window-Header";
 
-        // UI References
-        private Label _levelLabel;
-        private ScrollView _tabsContainer;
+        // UI – Containers
+        private ScrollView _unitTabsScrollContainer;
+        private VisualElement _recruitmentQueueListContainer;
 
-        // Detail View Elements
-        private Label _lblUnitName;
-        private Label _lblOwnedCount;
-        private Label _lblFlavor;
-        private Label _lblCostString;
+        // UI – Detail View
+        private Label _labelUnitName;
+        private Label _labelOwnedCountBadge;
+        private Label _labelUnitFlavorText;
+        private Label _labelTotalCostString;
 
-        private SliderInt _quantitySlider;
-        private IntegerField _quantityInput;
-        private Button _recruitBtn;
+        // UI – Stats (STABLE viser kun et subset, men DTO er fuld)
+        private Label _labelStatPowerValue;
+        private Label _labelStatArmorValue;
+        private Label _labelStatDisciplineValue;
+        private Label _labelStatMobilityValue;
+        private Label _labelStatReachValue;
+        private Label _labelStatLootValue;
+        private Label _labelStatPopulationValue;
+        private Label _labelStatRecruitmentTimeValue;
 
-        // Data State
-        private Guid _currentCityId;
-        private StableUnitInfoDTO _selectedUnit; // Note: Stable DTO
-        private List<Button> _tabButtons = new List<Button>();
+        // UI – Controls
+        private SliderInt _quantityAdjustmentSlider;
+        private IntegerField _quantityAdjustmentInput;
+        private Button _executeRecruitButton;
+        private Label _queueHeaderSummaryLabel;
+
+        // State
+        private Guid _currentActiveCityId;
+        private StableUnitInfoDTO _currentlySelectedUnitData;
+        private readonly List<Button> _activeTabButtons = new();
 
         public override void OnOpen(object dataPayload)
         {
+            InitializeUserInterfaceReferences();
+
+            _currentActiveCityId = dataPayload is Guid id
+                ? id
+                : NetworkManager.Instance.ActiveCityId ?? Guid.Empty;
+
+            if (_currentActiveCityId == Guid.Empty)
+                return;
+
+            ExecuteRefreshStableData();
+        }
+
+        private void InitializeUserInterfaceReferences()
+        {
             var closeBtn = Root.Q<Button>("Header-Close-Button");
-            if (closeBtn != null) { closeBtn.clicked -= Close; closeBtn.clicked += Close; }
-
-            _levelLabel = Root.Q<Label>("Lbl-Level");
-            _tabsContainer = Root.Q<ScrollView>("Tabs-Scroll-Container");
-
-            _lblUnitName = Root.Q<Label>("Lbl-UnitName");
-            _lblOwnedCount = Root.Q<Label>("Lbl-OwnedCount");
-            _lblFlavor = Root.Q<Label>("Lbl-Flavor");
-            _lblCostString = Root.Q<Label>("Lbl-CostString");
-
-            _quantitySlider = Root.Q<SliderInt>("Slider-Quantity");
-            _quantityInput = Root.Q<IntegerField>("Input-Quantity");
-            _recruitBtn = Root.Q<Button>("Btn-Recruit");
-
-            if (_quantitySlider != null && _quantityInput != null)
+            if (closeBtn != null)
             {
-                _quantitySlider.RegisterValueChangedCallback(evt =>
-                {
-                    if (_quantityInput.value != evt.newValue)
-                        _quantityInput.value = evt.newValue;
-
-                    UpdateRecruitButtonText(evt.newValue);
-                    UpdateCostLabel(evt.newValue);
-                });
-
-                _quantityInput.RegisterValueChangedCallback(evt =>
-                {
-                    int clamped = Mathf.Clamp(evt.newValue, _quantitySlider.lowValue, _quantitySlider.highValue);
-                    if (clamped != evt.newValue) _quantityInput.SetValueWithoutNotify(clamped);
-
-                    if (_quantitySlider.value != clamped)
-                        _quantitySlider.value = clamped;
-                });
+                closeBtn.clicked -= Close;
+                closeBtn.clicked += Close;
             }
 
-            if (_recruitBtn != null)
-            {
-                _recruitBtn.clicked -= OnRecruitClicked;
-                _recruitBtn.clicked += OnRecruitClicked;
-            }
+            _unitTabsScrollContainer = Root.Q<ScrollView>("Tabs-Scroll-Container");
 
-            _currentCityId = (dataPayload is Guid id) ? id : NetworkManager.Instance.ActiveCityId ?? Guid.Empty;
-            if (_currentCityId == Guid.Empty) return;
+            _labelUnitName = Root.Q<Label>("Lbl-UnitName");
+            _labelOwnedCountBadge = Root.Q<Label>("Lbl-OwnedCount");
+            _labelUnitFlavorText = Root.Q<Label>("Lbl-Flavor");
+            _labelTotalCostString = Root.Q<Label>("Lbl-CostString");
 
-            RefreshData();
+            // Stats – disse findes i UXML (samme navne som Barracks)
+            _labelStatPowerValue = Root.Q<Label>("Stat-Power");
+            _labelStatArmorValue = Root.Q<Label>("Stat-Armor");
+            _labelStatDisciplineValue = Root.Q<Label>("Stat-Discipline");
+            _labelStatMobilityValue = Root.Q<Label>("Stat-Mobility");
+            _labelStatReachValue = Root.Q<Label>("Stat-Reach");
+            _labelStatLootValue = Root.Q<Label>("Stat-Loot");
+            _labelStatPopulationValue = Root.Q<Label>("Stat-Pop");
+            _labelStatRecruitmentTimeValue = Root.Q<Label>("Stat-Time");
+
+            _quantityAdjustmentSlider = Root.Q<SliderInt>("Slider-Quantity");
+            _quantityAdjustmentInput = Root.Q<IntegerField>("Input-Quantity");
+            _executeRecruitButton = Root.Q<Button>("Btn-Recruit");
+
+            _recruitmentQueueListContainer = Root.Q<VisualElement>("Recruitment-Queue-List");
+            _queueHeaderSummaryLabel = Root.Q<Label>("Queue-Header-Label");
+
+            SetupInteractionEventHandlers();
         }
 
-        private void RefreshData()
+        private void SetupInteractionEventHandlers()
         {
-            string token = NetworkManager.Instance.JwtToken;
-            // Uses Stable endpoint
-            StartCoroutine(NetworkManager.Instance.Stable.GetStableOverviewInformation(_currentCityId, token, (stableData) =>
+            _quantityAdjustmentSlider?.RegisterValueChangedCallback(evt =>
             {
-                if (stableData != null)
-                {
-                    UpdateUI(stableData);
-                }
-            }));
+                if (_quantityAdjustmentInput.value != evt.newValue)
+                    _quantityAdjustmentInput.value = evt.newValue;
+
+                UpdateExecuteButtonDynamicText(evt.newValue);
+                UpdateCalculatedCostDisplay(evt.newValue);
+            });
+
+            _quantityAdjustmentInput?.RegisterValueChangedCallback(evt =>
+            {
+                int clamped = Mathf.Clamp(
+                    evt.newValue,
+                    _quantityAdjustmentSlider.lowValue,
+                    _quantityAdjustmentSlider.highValue
+                );
+
+                if (clamped != evt.newValue)
+                    _quantityAdjustmentInput.SetValueWithoutNotify(clamped);
+
+                if (_quantityAdjustmentSlider.value != clamped)
+                    _quantityAdjustmentSlider.value = clamped;
+            });
+
+            _executeRecruitButton.clicked -= OnRecruitExecutionRequested;
+            _executeRecruitButton.clicked += OnRecruitExecutionRequested;
         }
 
-        private void UpdateUI(StableFullViewDTO data)
+        private void ExecuteRefreshStableData()
         {
-            if (_levelLabel != null)
-                _levelLabel.text = data.BuildingLevel > 0 ? $"Level {data.BuildingLevel}" : "Not Constructed";
-
-            if (_tabsContainer != null)
-            {
-                _tabsContainer.Clear();
-                _tabButtons.Clear();
-
-                if (data.AvailableUnits != null && data.AvailableUnits.Count > 0)
-                {
-                    foreach (var unit in data.AvailableUnits)
+            StartCoroutine(
+                NetworkManager.Instance.Stable.GetStableOverviewInformation(
+                    _currentActiveCityId,
+                    NetworkManager.Instance.JwtToken,
+                    data =>
                     {
-                        CreateTab(unit);
+                        if (data != null)
+                            SynchronizeUserInterfaceWithData(data);
                     }
-
-                    if (_selectedUnit == null || !data.AvailableUnits.Any(u => u.UnitType == _selectedUnit.UnitType))
-                    {
-                        SelectUnit(data.AvailableUnits[0]);
-                    }
-                    else
-                    {
-                        var refreshedUnit = data.AvailableUnits.First(u => u.UnitType == _selectedUnit.UnitType);
-                        SelectUnit(refreshedUnit);
-                    }
-                }
-            }
+                )
+            );
         }
 
-        private void CreateTab(StableUnitInfoDTO unit)
+        private void SynchronizeUserInterfaceWithData(StableFullViewDTO data)
         {
-            Button tab = new Button();
-            tab.text = unit.UnitName;
-            tab.AddToClassList("tab-button");
-            tab.clicked += () => SelectUnit(unit);
+            _unitTabsScrollContainer.Clear();
+            _activeTabButtons.Clear();
 
-            _tabsContainer.Add(tab);
-            _tabButtons.Add(tab);
-        }
+            if (data.AvailableUnits == null || data.AvailableUnits.Count == 0)
+                return;
 
-        private void SelectUnit(StableUnitInfoDTO unit)
-        {
-            _selectedUnit = unit;
-
-            foreach (var btn in _tabButtons)
+            foreach (var unit in data.AvailableUnits)
             {
-                if (btn.text == unit.UnitName) btn.AddToClassList("tab-button-active");
-                else btn.RemoveFromClassList("tab-button-active");
+                var tab = new Button { text = unit.UnitName.ToUpper() };
+                tab.AddToClassList("tab-button");
+                tab.clicked += () => ApplyUnitSelection(unit);
+
+                _unitTabsScrollContainer.Add(tab);
+                _activeTabButtons.Add(tab);
             }
 
-            if (_lblUnitName != null) _lblUnitName.text = unit.UnitName;
-            if (_lblOwnedCount != null) _lblOwnedCount.text = $"In Army: {unit.CurrentInventoryCount}";
-            if (_lblFlavor != null) _lblFlavor.text = GetFlavorText(unit.UnitType);
+            ApplyUnitSelection(
+                _currentlySelectedUnitData == null
+                    ? data.AvailableUnits[0]
+                    : data.AvailableUnits.FirstOrDefault(u => u.UnitType == _currentlySelectedUnitData.UnitType)
+                      ?? data.AvailableUnits[0]
+            );
 
-            // BEREGN MAX BASERET P� RESSOURCER
-            int maxAffordable = CalculateMaxAffordableAmount(unit);
+            PopulateActiveRecruitmentQueue(data.RecruitmentQueue);
+        }
 
-            if (_quantitySlider != null && _quantityInput != null)
+        private void ApplyUnitSelection(StableUnitInfoDTO unit)
+        {
+            _currentlySelectedUnitData = unit;
+
+            foreach (var btn in _activeTabButtons)
             {
-                _quantitySlider.lowValue = 1;
-
-                // Max affordable capped at 1000, but minimum 1 to keep UI functional
-                _quantitySlider.highValue = Mathf.Max(1, maxAffordable);
-
-                int startValue = maxAffordable > 0 ? 1 : 0;
-
-                _quantitySlider.value = startValue;
-                _quantityInput.value = startValue;
-
-                bool canRecruit = unit.IsUnlocked && maxAffordable > 0;
-
-                _quantitySlider.SetEnabled(canRecruit);
-                _quantityInput.SetEnabled(canRecruit);
-                _recruitBtn.SetEnabled(canRecruit);
-
-                if (!unit.IsUnlocked)
-                {
-                    _recruitBtn.text = "LOCKED (Low Level)";
-                }
-                else if (maxAffordable == 0)
-                {
-                    _recruitBtn.text = "NOT ENOUGH RESOURCES";
-                }
+                if (btn.text == unit.UnitName.ToUpper())
+                    btn.AddToClassList("tab-button-active");
                 else
-                {
-                    UpdateRecruitButtonText(startValue);
-                }
+                    btn.RemoveFromClassList("tab-button-active");
             }
 
-            UpdateCostLabel(_quantitySlider != null ? _quantitySlider.value : 1);
+            _labelUnitName.text = unit.UnitName.ToUpper();
+            _labelOwnedCountBadge.text = $"OWNED: {unit.AlreadyOwnedCount}";
+            _labelUnitFlavorText.text = "Elite cavalry bred for speed and shock impact.";
+
+            // Stats – kun dem UI har
+            _labelStatPowerValue.text = unit.Power.ToString();
+            _labelStatArmorValue.text = unit.Armor.ToString();
+            _labelStatDisciplineValue.text = unit.Discipline.ToString();
+            _labelStatMobilityValue.text = unit.Mobility.ToString();
+            _labelStatReachValue.text = unit.Reach.ToString();
+            _labelStatLootValue.text = unit.LootCapacity.ToString();
+            _labelStatPopulationValue.text = unit.PopulationCost.ToString();
+            _labelStatRecruitmentTimeValue.text =
+                TimeSpan.FromSeconds(unit.RecruitmentTimeInSeconds)
+                        .ToString(@"hh\:mm\:ss");
+
+            int maxPossible = CalculateMaximumAffordableUnitQuantity(unit);
+
+            // 🔒 Definér gyldigt interval
+            _quantityAdjustmentSlider.lowValue = 1;
+            _quantityAdjustmentSlider.highValue = Mathf.Max(1, maxPossible);
+
+            // 🔒 Start altid på 1 hvis muligt
+            int startValue = maxPossible > 0 ? 1 : 0;
+
+            // 🔒 Sæt BEGGE uden callbacks
+            _quantityAdjustmentSlider.SetValueWithoutNotify(startValue);
+            _quantityAdjustmentInput.SetValueWithoutNotify(startValue);
+
+            // 🔓 Enable/disable korrekt
+            bool canConstruct = unit.IsUnlocked && maxPossible > 0;
+
+            _quantityAdjustmentSlider.SetEnabled(canConstruct);
+            _quantityAdjustmentInput.SetEnabled(canConstruct);
+            _executeRecruitButton.SetEnabled(canConstruct);
+
+            // 🔄 Opdatér UI-tekst
+            UpdateCalculatedCostDisplay(startValue);
+            UpdateExecuteButtonDynamicText(startValue);
         }
 
-        private int CalculateMaxAffordableAmount(StableUnitInfoDTO unit)
+        private void PopulateActiveRecruitmentQueue(List<RecruitmentQueueItemDTO> queue)
         {
-            if (CityStateManager.Instance == null) return 999;
+            _recruitmentQueueListContainer.Clear();
+
+            int count = queue?.Count ?? 0;
+            _queueHeaderSummaryLabel.text = $"CONSTRUCTION QUEUE ({count}/5)";
+
+            if (count == 0)
+            {
+                Label empty = new Label("WORKSHOP IS CURRENTLY IDLE");
+                empty.AddToClassList("queue-empty-label");
+                _recruitmentQueueListContainer.Add(empty);
+                return;
+            }
+
+            foreach (var item in queue)
+            {
+                VisualElement card = new VisualElement();
+                card.AddToClassList("recruitment-item-card");
+
+                card.Add(new Label(item.UnitType.ToString().ToUpper()) { name = "q-title" });
+                card.Add(new Label($"QTY: {item.Amount}") { name = "q-amount" });
+
+                Label timer = new Label("--:--:--");
+                timer.AddToClassList("queue-item-timer");
+
+                card.Add(timer);
+                _recruitmentQueueListContainer.Add(card);
+
+                StartCoroutine(
+                    ExecuteUpdateQueueTimerCountdown(timer, item.TimeRemainingSeconds)
+                );
+            }
+        }
+
+
+        private int CalculateMaximumAffordableUnitQuantity(StableUnitInfoDTO unit)
+        {
+            if (CityStateManager.Instance == null) return 0;
 
             var resources = CityStateManager.Instance.CurrentResources;
 
-            int maxWood = unit.CostWood > 0
-                ? (int)(resources.WoodAmount / unit.CostWood)
-                : 9999;
+            // --- Resource caps ---
+            int woodCap = unit.CostWood > 0 ? (int)(resources.WoodAmount / unit.CostWood) : int.MaxValue;
+            int stoneCap = unit.CostStone > 0 ? (int)(resources.StoneAmount / unit.CostStone) : int.MaxValue;
+            int metalCap = unit.CostMetal > 0 ? (int)(resources.MetalAmount / unit.CostMetal) : int.MaxValue;
 
-            int maxStone = unit.CostStone > 0
-                ? (int)(resources.StoneAmount / unit.CostStone)
-                : 9999;
-
-            int maxMetal = unit.CostMetal > 0
-                ? (int)(resources.MetalAmount / unit.CostMetal)
-                : 9999;
-
-            int maxAffordable = Mathf.Min(maxWood, Mathf.Min(maxStone, maxMetal));
-            return Mathf.Min(maxAffordable, 1000); // Tech cap
-        }
-
-        private void UpdateCostLabel(int quantity)
-        {
-            if (_selectedUnit == null || _lblCostString == null) return;
-
-            long totalWood = (long)_selectedUnit.CostWood * quantity;
-            long totalStone = (long)_selectedUnit.CostStone * quantity;
-            long totalMetal = (long)_selectedUnit.CostMetal * quantity;
-            long totalTime = (long)_selectedUnit.RecruitmentTimeInSeconds * quantity;
-
-            _lblCostString.text = $"Wood: {totalWood}  |  Stone: {totalStone}  |  Metal: {totalMetal}  |  Time: {totalTime}s";
-
-            if (CityStateManager.Instance != null)
+            // --- Population cap ---
+            int populationCap = int.MaxValue;
+            if (unit.PopulationCost > 0)
             {
-                var res = CityStateManager.Instance.CurrentResources;
-                bool canAfford = res.WoodAmount >= totalWood && res.StoneAmount >= totalStone && res.MetalAmount >= totalMetal;
-                _lblCostString.style.color = canAfford ? new StyleColor(new Color(0.1f, 0.1f, 0.1f)) : new StyleColor(Color.red);
+                populationCap = resources.FreePopulation / unit.PopulationCost;
             }
+
+            // --- Final cap ---
+            return Mathf.Max(
+                0,
+                Mathf.Min(
+                    Mathf.Min(woodCap, Mathf.Min(stoneCap, metalCap)),
+                    Mathf.Min(populationCap, 100)
+                )
+            );
         }
 
-        private void UpdateRecruitButtonText(int amount)
+        private IEnumerator ExecuteUpdateQueueTimerCountdown(Label label, double seconds)
         {
-            if (_recruitBtn == null || _selectedUnit == null) return;
-            _recruitBtn.text = $"RECRUIT {amount} {(_selectedUnit.UnitName.ToUpper())}";
-        }
+            float remaining = (float)seconds;
 
-        private void OnRecruitClicked()
-        {
-            if (_selectedUnit == null) return;
-
-            int amount = _quantityInput.value;
-            if (amount <= 0) return;
-
-            string token = NetworkManager.Instance.JwtToken;
-            _recruitBtn.SetEnabled(false);
-
-            StartCoroutine(NetworkManager.Instance.Stable.RecruitUnits(_currentCityId, _selectedUnit.UnitType, amount, token, (success, message) =>
+            while (remaining > 0 && label != null)
             {
-                _recruitBtn.SetEnabled(true);
-
-                if (success)
-                {
-                    Debug.Log($"<color=green>[Stable] SUCCESS:</color> {message}");
-                    if (CityStateManager.Instance != null)
-                        CityStateManager.Instance.InitiateResourceRefresh(_currentCityId);
-
-                    RefreshData();
-                }
-                else
-                {
-                    Debug.LogError($"<color=red>[Stable] FAILED:</color> {message}");
-                }
-            }));
-        }
-
-        private string GetFlavorText(UnitTypeEnum type)
-        {
-            switch (type)
-            {
-                // Note: Ensure your Enum actually has these types, otherwise default to generic
-                //case UnitTypeEnum.Cavalry: return "Swift riders ideal for raiding resources and flanking enemy lines.";
-                default: return "A powerful mounted unit.";
+                label.text = TimeSpan.FromSeconds(remaining).ToString(@"hh\:mm\:ss");
+                yield return new WaitForSeconds(1);
+                remaining--;
             }
+
+            if (label != null)
+                label.text = "READY";
+
+            ExecuteRefreshStableData();
+        }
+
+        private void UpdateCalculatedCostDisplay(int amount)
+        {
+            long wood = (long)_currentlySelectedUnitData.CostWood * amount;
+            long stone = (long)_currentlySelectedUnitData.CostStone * amount;
+            long metal = (long)_currentlySelectedUnitData.CostMetal * amount;
+
+            _labelTotalCostString.text = $"Wood: {wood} | Stone: {stone} | Metal: {metal}";
+        }
+
+        private void UpdateExecuteButtonDynamicText(int amount)
+        {
+            _executeRecruitButton.text = $"RECRUIT {amount} {_currentlySelectedUnitData.UnitName.ToUpper()}";
+        }
+
+        private void OnRecruitExecutionRequested()
+        {
+            _executeRecruitButton.SetEnabled(false);
+            int amount = _quantityAdjustmentInput.value;
+
+            StartCoroutine(
+                NetworkManager.Instance.Stable.RecruitUnits(
+                    _currentActiveCityId,
+                    _currentlySelectedUnitData.UnitType,
+                    amount,
+                    NetworkManager.Instance.JwtToken,
+                    (success, _) =>
+                    {
+                        _executeRecruitButton.SetEnabled(true);
+                        if (success)
+                            ExecuteRefreshStableData();
+                    }
+                )
+            );
         }
     }
 }

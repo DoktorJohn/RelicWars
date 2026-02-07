@@ -7,10 +7,14 @@ public class CameraEdgePan : MonoBehaviour
     [SerializeField] private Camera _associatedCamera;
 
     [Header("Bevægelse Indstillinger (Pan)")]
-    [SerializeField] private float _panSpeed = 15f;
-    [SerializeField] private float _edgeBoundary = 25f;
+    [SerializeField] private float _panSpeed = 3f;
 
-    [Header("Zoom Indstillinger (Hurtigere)")]
+    // Objektiv OBS: 150f er en meget stor grænse. 
+    // Hvis den ignorerer UI, vil den panorerer så snart musen er i nærheden af vinduet.
+    // Overvej at sætte denne til 10-20 for en mere præcis "Edge" følelse.
+    [SerializeField] private float _edgeBoundary = 20f;
+
+    [Header("Zoom Indstillinger")]
     [Range(1f, 50f)]
     [SerializeField] private float _zoomSensitivity = 15f;
     [SerializeField] private float _zoomInterpolationSpeed = 50f;
@@ -43,17 +47,24 @@ public class CameraEdgePan : MonoBehaviour
     private void ExecuteCameraPanLogic()
     {
         if (Mouse.current == null) return;
-        if (WorldMapInteractionHandler.Instance != null && WorldMapInteractionHandler.Instance.IsMouseOverUI) return;
+
+        // FIX: Vi fjerner checken for IsMouseOverUI her. 
+        // Det gør at kameraet ALTID lytter til skærmens kanter, uanset om der er vinduer.
 
         Vector2 mousePosition = Mouse.current.position.ReadValue();
         Vector3 currentPosition = transform.position;
         float moveX = 0f;
         float moveY = 0f;
 
+        // Pan mod højre
         if (mousePosition.x >= Screen.width - _edgeBoundary) moveX += _panSpeed * Time.deltaTime;
-        if (mousePosition.x <= _edgeBoundary) moveX -= _panSpeed * Time.deltaTime;
+        // Pan mod venstre
+        else if (mousePosition.x <= _edgeBoundary) moveX -= _panSpeed * Time.deltaTime;
+
+        // Pan mod top
         if (mousePosition.y >= Screen.height - _edgeBoundary) moveY += _panSpeed * Time.deltaTime;
-        if (mousePosition.y <= _edgeBoundary) moveY -= _panSpeed * Time.deltaTime;
+        // Pan mod bund
+        else if (mousePosition.y <= _edgeBoundary) moveY -= _panSpeed * Time.deltaTime;
 
         Vector3 newPosition = currentPosition + new Vector3(moveX, moveY, 0);
 
@@ -69,6 +80,9 @@ public class CameraEdgePan : MonoBehaviour
     private void ExecuteCameraZoomLogic()
     {
         if (Mouse.current == null) return;
+
+        // VIGTIGT: Vi BEHOLDER checken for Zoom.
+        // Hvis du fjerner den her, vil kortet zoome ind/ud når du scroller i din enhedsliste.
         if (WorldMapInteractionHandler.Instance != null && WorldMapInteractionHandler.Instance.IsMouseOverUI) return;
 
         float scrollDelta = Mouse.current.scroll.ReadValue().y;

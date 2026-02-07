@@ -14,6 +14,32 @@ namespace Application.DTOs
         public int Amount { get; set; }
     }
 
+    public class WorkshopFullViewDTO
+    {
+        public int BuildingLevel { get; set; }
+        public List<WorkshopUnitInfoDTO> AvailableUnits { get; set; } = new();
+        public List<RecruitmentQueueItemDTO> RecruitmentQueue { get; set; } = new();
+    }
+
+    public class WorkshopUnitInfoDTO
+    {
+        public UnitTypeEnum UnitType { get; set; }
+        public string UnitName { get; set; }
+        public int AlreadyOwnedCount { get; set; }
+        public int CostWood { get; set; }
+        public int CostStone { get; set; }
+        public int CostMetal { get; set; }
+        public int Power { get; set; }
+        public int Armor { get; set; }
+        public int Discipline { get; set; }
+        public int Mobility { get; set; }
+        public int Reach { get; set; }
+        public int LootCapacity { get; set; }
+        public int PopulationCost { get; set; }
+        public int RecruitmentTimeInSeconds { get; set; }
+        public bool IsUnlocked { get; set; }
+    }
+
     public class StableFullViewDTO
     {
         public int BuildingLevel { get; set; }
@@ -26,10 +52,17 @@ namespace Application.DTOs
     {
         public UnitTypeEnum UnitType { get; set; }
         public string UnitName { get; set; } = string.Empty;
-        public int CurrentInventoryCount { get; set; }
+        public int AlreadyOwnedCount { get; set; }
         public int CostWood { get; set; }
         public int CostStone { get; set; }
         public int CostMetal { get; set; }
+        public int Power { get; set; }
+        public int Armor { get; set; }
+        public int Discipline { get; set; }
+        public int Mobility { get; set; }
+        public int Reach { get; set; }
+        public int LootCapacity { get; set; }
+        public int PopulationCost { get; set; }
         public int RecruitmentTimeInSeconds { get; set; }
         public bool IsUnlocked { get; set; }
     }
@@ -47,10 +80,17 @@ namespace Application.DTOs
     {
         public UnitTypeEnum UnitType { get; set; }
         public string UnitName { get; set; }
-        public int CurrentInventoryCount { get; set; }
+        public int AlreadyOwnedCount { get; set; }
         public int CostWood { get; set; }
         public int CostStone { get; set; }
         public int CostMetal { get; set; }
+        public int Power { get; set; }
+        public int Armor { get; set; }
+        public int Discipline { get; set; }
+        public int Mobility { get; set; }
+        public int Reach { get; set; }
+        public int LootCapacity { get; set; }
+        public int PopulationCost { get; set; }
         public int RecruitmentTimeInSeconds { get; set; }
         public bool IsUnlocked { get; set; }
     }

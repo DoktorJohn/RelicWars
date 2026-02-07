@@ -18,7 +18,10 @@ namespace Project.Network
             _baseUrl = baseUrl;
         }
 
-        public IEnumerator GetStableOverviewInformation(Guid cityId, string token, Action<StableFullViewDTO> callback)
+        public IEnumerator GetStableOverviewInformation(
+    Guid cityId,
+    string token,
+    Action<StableFullViewDTO> callback)
         {
             string url = $"{_baseUrl}/militarybuilding/{cityId}/stableOverview";
 
@@ -31,22 +34,36 @@ namespace Project.Network
 
                 yield return request.SendWebRequest();
 
-                if (request.result == UnityWebRequest.Result.Success)
+                if (request.result != UnityWebRequest.Result.Success)
                 {
-                    try
-                    {
-                        var data = JsonConvert.DeserializeObject<StableFullViewDTO>(request.downloadHandler.text);
-                        callback?.Invoke(data);
-                    }
-                    catch (Exception e)
-                    {
-                        Debug.LogError($"[ClientStableService] JSON Error: {e.Message}");
-                        callback?.Invoke(null);
-                    }
+                    Debug.LogError($"[StableService] NETWORK ERROR: {request.error}");
+                    callback?.Invoke(null);
+                    yield break;
                 }
-                else
+
+                string json = request.downloadHandler.text;
+
+                Debug.Log("[StableService] RAW JSON:");
+                Debug.Log(json);
+
+                try
                 {
-                    Debug.LogError($"[ClientStableService] Network Error: {request.error}");
+                    var data = JsonConvert.DeserializeObject<StableFullViewDTO>(json);
+
+                    Debug.Log("[StableService] DESERIALIZE OK");
+                    Debug.Log($"BuildingLevel: {data?.BuildingLevel}");
+                    Debug.Log($"AvailableUnits null? {data?.AvailableUnits == null}");
+                    Debug.Log($"RecruitmentQueue null? {data?.RecruitmentQueue == null}");
+
+                    callback?.Invoke(data);
+                }
+                catch (Exception e)
+                {
+                    Debug.LogError("[StableService] JSON DESERIALIZE FAILED");
+                    Debug.LogError(e); // 👈 FULD STACKTRACE
+                    Debug.LogError("[StableService] RAW JSON WAS:");
+                    Debug.LogError(json);
+
                     callback?.Invoke(null);
                 }
             }

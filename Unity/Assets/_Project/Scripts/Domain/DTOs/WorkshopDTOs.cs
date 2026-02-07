@@ -20,10 +20,17 @@ namespace Project.Scripts.Domain.DTOs
     {
         public UnitTypeEnum UnitType;
         public string UnitName;
-        public int CurrentInventoryCount;
+        public int AlreadyOwnedCount;
         public int CostWood;
         public int CostStone;
         public int CostMetal;
+        public int Power;
+        public int Armor;
+        public int Discipline;
+        public int Mobility;
+        public int Reach;
+        public int LootCapacity;
+        public int PopulationCost;
         public int RecruitmentTimeInSeconds;
         public bool IsUnlocked;
     }

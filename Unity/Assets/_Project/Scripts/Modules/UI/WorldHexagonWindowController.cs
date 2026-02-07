@@ -44,7 +44,10 @@ namespace Project.Modules.UI.Windows.Implementations
 
                 CacheRequiredVisualElements();
                 InitializeInteractionBlockingEvents();
-                ApplyInitialWindowPositioning();
+
+                // Vi ændrer metoden her til at fokusere på centret
+                ApplyCenterWindowPositioning();
+
                 UpdateHexagonDisplayInformation();
                 RefreshContextualActionButtons();
                 ResetDeploymentViewToDefaultState();
@@ -53,7 +56,6 @@ namespace Project.Modules.UI.Windows.Implementations
 
         private void OnDisable()
         {
-            // OBJEKTIV FIX: Vi sikrer at vi altid frigiver interaktionen når vinduet lukkes
             if (WorldMapInteractionHandler.Instance != null)
             {
                 WorldMapInteractionHandler.Instance.SetMouseOverUI(false);
@@ -64,7 +66,6 @@ namespace Project.Modules.UI.Windows.Implementations
         {
             if (MainContainer != null)
             {
-                // Vi tvinger InteractionHandler til at blokere for kortet så længe musen er over vinduet
                 MainContainer.RegisterCallback<PointerEnterEvent>(evt =>
                 {
                     WorldMapInteractionHandler.Instance?.SetMouseOverUI(true);
@@ -84,16 +85,25 @@ namespace Project.Modules.UI.Windows.Implementations
             _availableUnitsScrollView = Root.Q<ScrollView>("Unit-List-Container");
         }
 
-        private void ApplyInitialWindowPositioning()
+        private void ApplyCenterWindowPositioning()
         {
-            Vector2 initialClickPosition = _currentInteractionPayload.ScreenClickPosition;
+            // Vi bruger IStyle til at manipulere CSS værdierne direkte fra koden.
+            // Ved at sætte positionen til 50% og translate til -50%, opnår vi 
+            // perfekt centrering uanset vinduets bredde og højde.
+            IStyle style = MainContainer.style;
 
-            // Clamp positionen så vinduet ikke falder uden for skærmens kanter
-            float calculatedXPosition = Mathf.Clamp(initialClickPosition.x, 0, Screen.width - 350);
-            float calculatedYPosition = Mathf.Clamp(initialClickPosition.y, 0, Screen.height - 400);
+            style.left = new Length(50, LengthUnit.Percent);
+            style.top = new Length(50, LengthUnit.Percent);
 
-            MainContainer.style.left = calculatedXPosition;
-            MainContainer.style.top = calculatedYPosition;
+            // Translate flytter elementet tilbage med halvdelen af dets egen størrelse.
+            style.translate = new Translate(
+                new Length(-50, LengthUnit.Percent),
+                new Length(-50, LengthUnit.Percent),
+                0
+            );
+
+            // Vi sikrer os at positionen er Absolute så den ikke påvirkes af andre elementer
+            style.position = Position.Absolute;
         }
 
         private void UpdateHexagonDisplayInformation()

@@ -491,8 +491,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::CameraEdgePan
   _associatedCamera: {fileID: 1097704287}
   _panSpeed: 3
-  _edgeBoundary: 20
-  _zoomSensitivity: 2
+  _edgeBoundary: 100
+  _zoomSensitivity: 1
   _zoomInterpolationSpeed: 50
   _minOrthographicSize: 5
   _maxOrthographicSize: 25
@@ -720,7 +720,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::WorldMapRenderer
   _chunkWidth: 50
   _chunkHeight: 50
-  _cameraUpdateCheckFrequency: 0.5
+  _cameraUpdateCheckInterval: 0.5
   MainCamera: {fileID: 1097704287}
   TargetTilemap: {fileID: 2050413617}
   HighlightTilemap: {fileID: 1749960710}

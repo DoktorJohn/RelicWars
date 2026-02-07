@@ -1,7 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <ui:UXML xmlns:ui="UnityEngine.UIElements" editor-extension-mode="False">
     <ui:VisualElement class="unit-selection-row">
-        <ui:VisualElement class="unit-info-container">
+        
+        <ui:VisualElement class="unit-info-container" style="flex-grow: 1;">
             <ui:Label name="Unit-Name" text="Archer" class="unit-name-label" />
             <ui:Label name="Available-Amount" text="In City: 150" class="unit-available-label" />
         </ui:VisualElement>
@@ -9,5 +10,6 @@
         <ui:VisualElement class="unit-input-container">
             <ui:TextField name="Input-Amount" value="0" class="unit-quantity-field" />
         </ui:VisualElement>
+        
     </ui:VisualElement>
 </ui:UXML>

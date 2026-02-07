@@ -16,24 +16,7 @@ namespace Application.DTOs
     bool IsUpgrading
 );
 
-    public class WorkshopFullViewDTO
-    {
-        public int BuildingLevel { get; set; }
-        public List<WorkshopUnitInfoDTO> AvailableUnits { get; set; } = new();
-        public List<RecruitmentQueueItemDTO> RecruitmentQueue { get; set; } = new();
-    }
-
-    public class WorkshopUnitInfoDTO
-    {
-        public UnitTypeEnum UnitType { get; set; }
-        public string UnitName { get; set; }
-        public int CurrentInventoryCount { get; set; }
-        public int CostWood { get; set; }
-        public int CostStone { get; set; }
-        public int CostMetal { get; set; }
-        public int RecruitmentTimeInSeconds { get; set; }
-        public bool IsUnlocked { get; set; }
-    }
+    
     public class WarehouseProjectionDTO
     {
         public int Level { get; set; }

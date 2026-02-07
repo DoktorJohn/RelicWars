@@ -1,142 +1,353 @@
-/* Assets/UI/Windows/BarracksWindow/BarracksWindow.uss */
-
-/* --- GENERAL LABELS --- */
-.section-label {
-    -unity-font-definition: var(--font-header);
-    color: var(--c-text-header); 
-    font-size: 16px;
-    -unity-font-style: bold;
-    margin-bottom: 5px;
-    letter-spacing: 1px;
+﻿/* ============================================================
+   WINDOW BODY
+   ============================================================ */
+.window-body {
+    padding: 10px;
+    flex-grow: 1;
+    overflow: hidden;
+    flex-direction: column;
 }
 
-.section-label-small {
-    -unity-font-definition: var(--font-body);
-    color: var(--c-text-muted);
-    font-size: 10px;
-    -unity-font-style: bold;
-    letter-spacing: 1px;
+/* ============================================================
+   TABS SYSTEM
+   ============================================================ */
+.tabs-wrapper {
+    height: 52px;
+    background-color: rgba(0,0,0,0.1);
+    border-radius: 6px;
+    margin-bottom: 8px;
+    padding: 6px;
+    flex-shrink: 0;
+}
+
+.tabs-scroll-view {
+    flex-direction: row;
+    flex-wrap: nowrap;
+}
+
+.tab-button {
+    height: 36px;
+    min-width: 120px;
+    background-color: rgba(0,0,0,0.2);
+    border-width: 1px;
+    border-color: var(--c-border);
+    color: var(--c-text-body);
+    -unity-font-definition: var(--font-header);
+    margin-right: 6px;
+    font-size: 12px;
+}
+
+.tab-button-active {
+    background-color: var(--c-btn-chill-bg);
+    border-color: var(--c-text-highlight);
+    color: white;
+}
+
+/* ============================================================
+   DIVIDER
+   ============================================================ */
+.divider {
+    height: 1px;
+    background-color: var(--c-border);
+    margin: 6px 0;
+    flex-shrink: 0;
+}
+
+/* ============================================================
+   DETAIL CONTAINER
+   ============================================================ */
+.detail-container {
+    flex-grow: 1;
+    overflow: hidden;
+    flex-direction: column;
+}
+
+/* -------- SPLIT LAYOUT -------- */
+.detail-split {
+    flex-direction: row;
+    margin-bottom: 8px;
+}
+
+.detail-left {
+    flex-basis: 45%;
+    padding-right: 12px;
+}
+
+.detail-right {
+    flex-basis: 55%;
+}
+
+/* -------- TITLES -------- */
+.unit-title-row {
+    flex-direction: row;
+    align-items: center;
+    justify-content: flex-start;
+    margin-bottom: 4px;
 }
 
 .unit-name-large {
     -unity-font-definition: var(--font-header);
     color: var(--c-text-header);
-    font-size: 32px;
+    font-size: 22px;
     -unity-font-style: bold;
-    -unity-text-align: middle-center;
 }
 
-/* --- TABS SYSTEM --- */
-.tabs-wrapper {
-    height: 50px; 
-    background-color: rgba(0,0,0,0.05);
-    border-radius: 6px;
-    border-width: 1px;
-    border-color: rgba(0,0,0,0.1);
-    margin-bottom: 5px;
-}
-
-.tabs-scroll-view .unity-scroll-view__content-container {
-    min-width: 100%;
-    flex-direction: row;
-}
-
-.tab-button {
-    flex-grow: 1; 
-    width: auto;
-    height: 40px; 
-    min-width: 100px; 
-    padding-left: 5px; padding-right: 5px;
-    background-color: rgba(0,0,0,0.1);
-    border-width: 1px;
-    border-color: var(--c-border);
-    border-radius: 4px;
-    margin-top: 4px;
-    margin-left: 2px; 
-    margin-right: 2px;
-    color: var(--c-text-body);
-    -unity-font-definition: var(--font-header);
-    -unity-font-style: bold;
-    font-size: 12px; 
-}
-
-.tab-button:hover {
-    background-color: rgba(255,255,255,0.1);
-}
-
-.tab-button-active {
-    background-color: var(--c-btn-chill-bg);
-    border-color: var(--c-btn-chill-border);
+.unit-owned-badge {
+    background-color: var(--c-border);
     color: white;
-}
-
-/* --- DETAIL VIEW AREAS --- */
-.detail-container {
-    flex-grow: 1;
-    justify-content: flex-start;
-    align-items: center; 
-}
-
-.detail-container > .unit-name-large {
-    margin-top: 10px;
-}
-.detail-container > .text-subtitle {
-    margin-bottom: 15px;
-}
-
-.cost-box {
-    width: 100%; 
-    background-color: rgba(0,0,0,0.06);
-    border-radius: 6px;
-    padding: 15px;
-    margin-top: 10px;
-    margin-bottom: 20px;
-    align-items: center;
-    border-width: 1px;
-    border-color: rgba(0,0,0,0.05);
-}
-
-.controls-area {
-    width: 100%; 
-    background-color: rgba(0,0,0,0.03);
-    border-radius: 6px;
-    padding: 15px;
+    padding: 3px 8px;
+    border-radius: 4px;
+    font-size: 10px;
+    margin-left: 10px;
+    -unity-font-style: bold;
 }
 
 .flavor-text {
-    width: 100%; 
-    padding-left: 20px; padding-right: 20px;
+    -unity-font-definition: var(--font-body);
+    color: var(--c-text-muted);
+    -unity-font-style: italic;
+    text-align: left;
+    font-size: 11px;
 }
 
-.slider-row {
+/* ============================================================
+   STATS GRID
+   ============================================================ */
+.stats-grid {
+    flex-direction: row;
+    width: 100%;
+    background-color: rgba(0,0,0,0.05);
+    padding: 8px;
+    border-radius: 6px;
+}
+
+.stat-column {
+    flex-grow: 1;
+    padding: 0 6px;
+}
+
+.stat-row {
     flex-direction: row;
     align-items: center;
-    margin-top: 5px;
+    height: 20px;
+    border-bottom-width: 1px;
+    border-bottom-color: rgba(165, 125, 50, 0.1);
 }
 
-/* --- INPUT & SLIDER OVERRIDES --- */
-.game-input-number > .unity-integer-field__input {
-    background-color: rgba(0,0,0,0.1);
-    border-width: 1px; border-color: var(--c-border);
-    border-radius: 4px;
+.stat-label {
+    width: 85px;
+    font-size: 10px;
+    color: var(--c-text-muted);
+    -unity-font-style: bold;
+}
+
+.stat-value {
+    width: 32px;
+    font-size: 11px;
     color: var(--c-text-body);
+    -unity-font-style: bold;
+    -unity-text-align: middle-right;
+}
+
+/* ============================================================
+   ACTION BOX
+   ============================================================ */
+.action-box {
+    width: 100%;
+    background-color: rgba(0,0,0,0.03);
+    padding: 12px;
+    border-radius: 6px;
+    border-width: 1px;
+    border-color: var(--c-border);
+    margin-bottom: 8px;
+}
+
+/* -------- COST INFO -------- */
+.cost-info {
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 8px;
+}
+
+.section-label-small {
+    font-size: 11px;
+    color: var(--c-text-muted);
+    -unity-font-style: bold;
+    margin-bottom: 2px;
     -unity-text-align: middle-center;
-    height: 35px;
 }
 
-.game-slider .unity-base-slider__tracker {
-    background-color: rgba(0,0,0,0.2);
-    height: 4px;
-}
-.game-slider .unity-base-slider__dragger {
-    background-color: var(--c-border);
-    width: 20px; height: 20px;
-    border-radius: 10px;
-    border-width: 2px; border-color: white;
+.cost-text {
+    font-size: 14px; /* ⬆ +2 */
+    color: var(--c-text-highlight);
+    -unity-text-align: middle-center;
 }
 
-/* Skjuler scrollbar p� tabs */
-.tabs-scroll-view .unity-scroller { 
-    display: none; 
-    height: 0; 
+/* ============================================================
+   RECRUIT CONTROLS
+   ============================================================ */
+.recruitment-controls {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.slider-container {
+    flex-direction: row;
+    align-items: center;
+    flex-grow: 1;
+    margin-right: 14px;
+}
+
+/* -------- SLIDER (GREEN DRAGGER) -------- */
+.game-slider {
+    flex-grow: 1;
+    height: 22px;
+    margin-right: 10px;
+}
+
+.game-slider .unity-slider__track {
+    height: 6px;
+    background-color: rgba(0,0,0,0.25);
+    border-radius: 3px;
+}
+
+.game-slider .unity-slider__dragger {
+    width: 18px;
+    height: 18px;
+    background-color: var(--c-btn-action-bg);       /* 🟢 GREEN */
+    border-color: var(--c-btn-action-border);
+    border-width: 1px;
+    border-radius: 9px;
+}
+
+.game-slider .unity-slider__dragger:hover {
+    background-color: rgb(80, 140, 80);
+}
+
+/* -------- INPUT -------- */
+.game-input-number {
+    width: 72px;
+    min-width: 72px;
+    height: 38px;
+    font-size: 14px;
+    justify-content: center;
+}
+
+.game-input-number .unity-text-input {
+    height: 100%;
+    padding-top: 4px;
+    padding-bottom: 4px;
+    -unity-text-align: middle-center;
+    line-height: 18px;
+}
+
+/* -------- STATIC BUTTON -------- */
+.recruit-execute-btn {
+    height: 40px;
+    width: 200px;
+    min-width: 200px;
+    max-width: 200px;
+    font-size: 12px;
+    white-space: nowrap;
+    text-align: center;
+}
+
+/* ============================================================
+   QUEUE SECTION
+   ============================================================ */
+.queue-section {
+    border-top-width: 1px;
+    border-top-color: var(--c-border);
+    padding-top: 10px;
+    flex-shrink: 0;
+    height: 180px;
+    background-color: rgba(0,0,0,0.02);
+}
+
+/* ---- ScrollView ---- */
+.queue-scroll-view {
+    height: 130px;
+    overflow: hidden;              /* 🔒 ingen global overflow */
+}
+
+/* 🔑 DEN VIGTIGSTE REGEL */
+.queue-scroll-view > .unity-scroll-view__content-container {
+    flex-direction: row;
+    align-items: center;
+    min-width: 100%;               /* 🔒 clamp content til viewport */
+    width: 100%;
+}
+
+/* Skjul scrollbars helt (Unity-style) */
+.queue-scroll-view .unity-scroller {
+    display: none;
+    height: 0;
+}
+
+.recruitment-item-card {
+    min-width: 150px;
+    height: 110px;
+
+    background-color: rgba(0,0,0,0.18);
+    border-width: 1px;
+    border-color: var(--c-border);
+    border-radius: 6px;
+
+    margin-right: 8px;
+    padding: 8px;
+
+    justify-content: space-between;
+
+    box-shadow: 0 2px 4px rgba(0,0,0,0.25);
+}
+
+/* ---- Card content ---- */
+.recruitment-item-card #q-title {
+    font-size: 11px;
+    color: var(--c-text-header);
+    -unity-font-style: bold;
+    -unity-text-align: middle-center;
+    margin-bottom: 4px;
+}
+
+.recruitment-item-card #q-amount {
+    font-size: 10px;
+    color: var(--c-text-muted);
+    -unity-text-align: middle-center;
+    margin-bottom: 6px;
+}
+
+.queue-item-timer {
+    font-size: 12px;
+    color: var(--c-text-highlight);
+    -unity-font-style: bold;
+    -unity-text-align: middle-center;
+
+    padding-top: 4px;
+    border-top-width: 1px;
+    border-top-color: rgba(255,255,255,0.1);
+}
+
+/* ============================================================
+   EMPTY STATE
+   ============================================================ */
+
+.queue-empty-label {
+    width: 100%;
+    -unity-text-align: middle-center;
+    color: var(--c-text-muted);
+    font-size: 11px;
+    -unity-font-style: italic;
+    opacity: 0.8;
+}
+
+/* ============================================================
+   SECTION LABELS
+   ============================================================ */
+.section-label {
+    font-size: 11px;
+    color: var(--c-text-muted);
+    -unity-font-style: bold;
+    margin-bottom: 4px;
 }
