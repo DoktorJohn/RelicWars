@@ -11,6 +11,10 @@ namespace Project.Network.Manager
 
         [Header("Configuration")]
         [SerializeField] private string _backendBaseUrl = "https://rorgamebackend-dmfadtcvdabpepd7.francecentral-01.azurewebsites.net/api";
+        [SerializeField] private string _localBackendUrl = "https://localhost:55286/api";
+        private string _activeBackendUrl;
+
+
 
         // --- State Management ---
         public string JwtToken { get; private set; }
@@ -40,7 +44,9 @@ namespace Project.Network.Manager
             {
                 Instance = this;
                 DontDestroyOnLoad(gameObject);
+                ConfigureBackendUrl();
                 InitializeServices();
+
             }
             else
             {
@@ -48,23 +54,36 @@ namespace Project.Network.Manager
             }
         }
 
+        private void ConfigureBackendUrl()
+        {
+#if UNITY_EDITOR
+            _activeBackendUrl = _localBackendUrl;
+            Debug.Log($"<color=green>NetworkManager:</color> Bruger LOKAL backend: {_activeBackendUrl}");
+#else
+            // Hvis det er en build (WebGL), brug Azure backend
+            _activeBackendUrl = _backendBaseUrl;
+            Debug.Log($"<color=blue>NetworkManager:</color> Bruger AZURE backend: {_activeBackendUrl}");
+#endif
+        }
+
         private void InitializeServices()
         {
-            Auth = new ClientAuthService(_backendBaseUrl);
-            World = new ClientWorldService(_backendBaseUrl);
-            City = new ClientCityService(_backendBaseUrl);
-            Building = new ClientBuildingService(_backendBaseUrl);
-            Barracks = new ClientBarracksService(_backendBaseUrl);
-            Stable = new ClientStableService(_backendBaseUrl);
-            Workshop = new ClientWorkshopService(_backendBaseUrl);
-            Ranking = new ClientRankingService(_backendBaseUrl);
-            WorldPlayer = new ClientWorldPlayerService(_backendBaseUrl);
-            Alliance = new ClientAllianceService(_backendBaseUrl);
-            MarketPlace = new ClientMarketPlaceService(_backendBaseUrl);
-            Research = new ClientResearchService(_backendBaseUrl);
-            UnitDeployment = new ClientUnitDeploymentService(_backendBaseUrl);
+            // Vi skal bruge _activeBackendUrl her, ellers ignorerer koden din ConfigureBackendUrl logik
+            Auth = new ClientAuthService(_activeBackendUrl);
+            World = new ClientWorldService(_activeBackendUrl);
+            City = new ClientCityService(_activeBackendUrl);
+            Building = new ClientBuildingService(_activeBackendUrl);
+            Barracks = new ClientBarracksService(_activeBackendUrl);
+            Stable = new ClientStableService(_activeBackendUrl);
+            Workshop = new ClientWorkshopService(_activeBackendUrl);
+            Ranking = new ClientRankingService(_activeBackendUrl);
+            WorldPlayer = new ClientWorldPlayerService(_activeBackendUrl);
+            Alliance = new ClientAllianceService(_activeBackendUrl);
+            MarketPlace = new ClientMarketPlaceService(_activeBackendUrl);
+            Research = new ClientResearchService(_activeBackendUrl);
+            UnitDeployment = new ClientUnitDeploymentService(_activeBackendUrl);
 
-            Debug.Log("[NetworkManager] Services Initialized.");
+            Debug.Log($"[NetworkManager] Services Initialized pointing to: {_activeBackendUrl}");
         }
 
         // --- Public Methods til UI ---

@@ -2,7 +2,6 @@
 using Project.Modules.UI;
 using System;
 using System.Collections;
-using UnityEngine;
 using Project.Network.Manager;
 using UnityEngine.UIElements;
 using Project.Scripts.Domain.DTOs;
@@ -25,6 +24,7 @@ namespace Project.Scripts.Modules.UI
         private VisualElement _mainWindowContainer;
         private ScrollView _buildingGridScrollView;
         private VisualElement _constructionQueueContainer;
+        private Label _queueHeaderLabel;
 
         // Tooltip Elements
         private VisualElement _resourceTooltipContainer;
@@ -34,12 +34,12 @@ namespace Project.Scripts.Modules.UI
         private Label _tooltipConstructionTimeLabel;
 
         private Guid _activeCityId;
+        private int _currentQueueCount = 0;
 
         public override void OnOpen(object dataPayload)
         {
             InitializeUserInterfaceReferences();
 
-            // Skjul vindue indtil data er hentet (Anti-flicker)
             if (_mainWindowContainer != null) _mainWindowContainer.style.display = DisplayStyle.None;
 
             _activeCityId = (dataPayload is Guid id) ? id : NetworkManager.Instance.ActiveCityId ?? Guid.Empty;
@@ -62,7 +62,6 @@ namespace Project.Scripts.Modules.UI
             if (_resourceTooltipContainer != null)
                 _resourceTooltipContainer.style.display = DisplayStyle.None;
 
-            // Header close button
             var closeWindowButton = Root.Q<Button>("Header-Close-Button");
             if (closeWindowButton != null)
             {
@@ -72,42 +71,39 @@ namespace Project.Scripts.Modules.UI
 
             _buildingGridScrollView = Root.Q<ScrollView>("TownHall-Building-List");
             _constructionQueueContainer = Root.Q<VisualElement>("Building-Queue-List");
+            _queueHeaderLabel = Root.Q<Label>("Queue-Header-Label");
         }
 
         private void ExecuteRefreshTownHallContent(Guid cityIdentifier)
         {
             string authenticationToken = NetworkManager.Instance.JwtToken;
 
-            // Vi bruger en counter til at tjekke hvornår begge server-kald er færdige
-            int pendingRequests = 2;
-
-            void CheckIfReady()
-            {
-                pendingRequests--;
-                if (pendingRequests <= 0 && _mainWindowContainer != null)
-                {
-                    _mainWindowContainer.style.display = DisplayStyle.Flex;
-                }
-            }
-
-            // 1. Hent tilgængelige bygninger
-            StartCoroutine(NetworkManager.Instance.City.GetTownHallAvailableBuildings(cityIdentifier, authenticationToken, (availableBuildings) =>
-            {
-                if (_buildingGridScrollView != null && availableBuildings != null)
-                {
-                    PopulateBuildingGrid(availableBuildings, cityIdentifier);
-                }
-                CheckIfReady();
-            }));
-
-            // 2. Hent byggekøen
+            // Vi henter køen først for at kende antallet (x/5) før vi tegner knapperne
             StartCoroutine(NetworkManager.Instance.Building.GetBuildingQueue(cityIdentifier, authenticationToken, (currentQueue) =>
             {
+                _currentQueueCount = currentQueue?.Count ?? 0;
+
+                if (_queueHeaderLabel != null)
+                {
+                    _queueHeaderLabel.text = $"CONSTRUCTION QUEUE ({_currentQueueCount}/5)";
+                }
+
                 if (_constructionQueueContainer != null && currentQueue != null)
                 {
                     PopulateConstructionQueue(currentQueue);
                 }
-                CheckIfReady();
+
+                // Når køen er hentet, henter vi bygningerne
+                StartCoroutine(NetworkManager.Instance.City.GetTownHallAvailableBuildings(cityIdentifier, authenticationToken, (availableBuildings) =>
+                {
+                    if (_buildingGridScrollView != null && availableBuildings != null)
+                    {
+                        PopulateBuildingGrid(availableBuildings, cityIdentifier);
+                    }
+
+                    if (_mainWindowContainer != null)
+                        _mainWindowContainer.style.display = DisplayStyle.Flex;
+                }));
             }));
         }
 
@@ -129,14 +125,20 @@ namespace Project.Scripts.Modules.UI
 
                 if (upgradeExecutionButton != null)
                 {
-                    // Tilføj globale knap-klasser
                     upgradeExecutionButton.AddToClassList("btn-global-base");
 
                     if (building.IsCurrentlyUpgrading)
                     {
                         upgradeExecutionButton.text = "UPGRADING";
                         upgradeExecutionButton.SetEnabled(false);
-                        upgradeExecutionButton.AddToClassList("btn-imperial-primary"); // Rød/Neutral
+                        upgradeExecutionButton.AddToClassList("btn-imperial-primary");
+                    }
+                    else if (_currentQueueCount >= 5)
+                    {
+                        // Krav A: Vis "QUEUE FULL" hvis der er 5 ting i gang
+                        upgradeExecutionButton.text = "QUEUE FULL";
+                        upgradeExecutionButton.SetEnabled(false);
+                        upgradeExecutionButton.AddToClassList("btn-imperial-danger");
                     }
                     else
                     {
@@ -145,17 +147,17 @@ namespace Project.Scripts.Modules.UI
                         upgradeExecutionButton.text = canAffordUpgrade ? "UPGRADE" : "LOCKED";
 
                         if (canAffordUpgrade)
-                            upgradeExecutionButton.AddToClassList("btn-imperial-success"); // Grøn
+                            upgradeExecutionButton.AddToClassList("btn-imperial-success");
                         else
-                            upgradeExecutionButton.AddToClassList("btn-imperial-danger"); // Mørk/Låst
+                            upgradeExecutionButton.AddToClassList("btn-imperial-danger");
                     }
 
-                    var buildingType = building.BuildingType;
-                    upgradeExecutionButton.clicked += () => ExecuteUpgradeRequest(cityIdentifier, buildingType);
+                    var bType = building.BuildingType;
+                    upgradeExecutionButton.clicked += () => ExecuteUpgradeRequest(cityIdentifier, bType);
 
-                    upgradeExecutionButton.RegisterCallback<MouseEnterEvent>(mouseEvent => ShowResourceUpgradeTooltip(mouseEvent, building));
-                    upgradeExecutionButton.RegisterCallback<MouseLeaveEvent>(mouseEvent => HideResourceUpgradeTooltip());
-                    upgradeExecutionButton.RegisterCallback<MouseMoveEvent>(mouseEvent => UpdateResourceUpgradeTooltipPosition(mouseEvent));
+                    upgradeExecutionButton.RegisterCallback<MouseEnterEvent>(evt => ShowResourceUpgradeTooltip(evt, building));
+                    upgradeExecutionButton.RegisterCallback<MouseLeaveEvent>(evt => HideResourceUpgradeTooltip());
+                    upgradeExecutionButton.RegisterCallback<MouseMoveEvent>(evt => UpdateResourceUpgradeTooltipPosition(evt));
                 }
 
                 _buildingGridScrollView.Add(buildingCardInstance);
@@ -176,38 +178,32 @@ namespace Project.Scripts.Modules.UI
 
             foreach (var job in constructionJobs)
             {
-                // Main card container
                 VisualElement queueItemElement = new VisualElement();
                 queueItemElement.AddToClassList("queue-item-card");
 
-                // Header (navn og level)
-                VisualElement headerContainer = new VisualElement();
-                headerContainer.AddToClassList("queue-item-header");
+                VisualElement infoContainer = new VisualElement();
+                infoContainer.AddToClassList("queue-item-info-container");
 
-                Label jobTitleLabel = new Label(job.Type.ToString());
+                Label jobTitleLabel = new Label(job.Type.ToString().ToUpper());
                 jobTitleLabel.AddToClassList("queue-item-title");
 
-                // Level upgrade display (LVL 2 ↑ 3)
                 VisualElement levelContainer = new VisualElement();
                 levelContainer.AddToClassList("queue-item-level");
 
-                int currentLevel = job.Level - 1; // Fordi Level er den nye level efter upgrade
-                int newLevel = job.Level;
-
+                int currentLevel = job.Level - 1;
                 Label currentLevelLabel = new Label($"LVL {currentLevel}");
                 Label arrowLabel = new Label("↑");
                 arrowLabel.AddToClassList("queue-level-arrow");
-                Label newLevelLabel = new Label($"{newLevel}");
+                Label newLevelLabel = new Label($"{job.Level}");
                 newLevelLabel.AddToClassList("queue-level-new");
 
                 levelContainer.Add(currentLevelLabel);
                 levelContainer.Add(arrowLabel);
                 levelContainer.Add(newLevelLabel);
 
-                headerContainer.Add(jobTitleLabel);
-                headerContainer.Add(levelContainer);
+                infoContainer.Add(jobTitleLabel);
+                infoContainer.Add(levelContainer);
 
-                // Footer (tid)
                 VisualElement footerContainer = new VisualElement();
                 footerContainer.AddToClassList("queue-item-footer");
 
@@ -216,12 +212,10 @@ namespace Project.Scripts.Modules.UI
 
                 footerContainer.Add(timerDisplayLabel);
 
-                // Byg strukturen
-                queueItemElement.Add(headerContainer);
+                queueItemElement.Add(infoContainer);
                 queueItemElement.Add(footerContainer);
                 _constructionQueueContainer.Add(queueItemElement);
 
-                // Start timer
                 if (job.UpgradeFinished.HasValue)
                 {
                     StartCoroutine(UpdateConstructionTimerLabel(timerDisplayLabel, job.UpgradeFinished.Value));
@@ -248,14 +242,13 @@ namespace Project.Scripts.Modules.UI
 
         private void ExecuteUpgradeRequest(Guid cityId, BuildingTypeEnum buildingType)
         {
-            StartCoroutine(NetworkManager.Instance.Building.UpgradeBuilding(cityId, buildingType, NetworkManager.Instance.JwtToken, (requestSuccess, responseMessage) =>
+            StartCoroutine(NetworkManager.Instance.Building.UpgradeBuilding(cityId, buildingType, NetworkManager.Instance.JwtToken, (success, msg) =>
             {
-                if (requestSuccess)
+                if (success)
                 {
                     if (Project.Modules.City.CityStateManager.Instance != null)
-                    {
                         Project.Modules.City.CityStateManager.Instance.InitiateResourceRefresh(cityId);
-                    }
+
                     ExecuteRefreshTownHallContent(cityId);
                 }
             }));
@@ -265,12 +258,12 @@ namespace Project.Scripts.Modules.UI
         {
             if (_resourceTooltipContainer == null) return;
 
-            if (_tooltipWoodAmountLabel != null) _tooltipWoodAmountLabel.text = buildingData.WoodCost.ToString("N0");
-            if (_tooltipStoneAmountLabel != null) _tooltipStoneAmountLabel.text = buildingData.StoneCost.ToString("N0");
-            if (_tooltipMetalAmountLabel != null) _tooltipMetalAmountLabel.text = buildingData.MetalCost.ToString("N0");
+            _tooltipWoodAmountLabel.text = buildingData.WoodCost.ToString("N0");
+            _tooltipStoneAmountLabel.text = buildingData.StoneCost.ToString("N0");
+            _tooltipMetalAmountLabel.text = buildingData.MetalCost.ToString("N0");
 
-            TimeSpan constructionDuration = TimeSpan.FromSeconds(buildingData.ConstructionTimeInSeconds);
-            if (_tooltipConstructionTimeLabel != null) _tooltipConstructionTimeLabel.text = constructionDuration.ToString(@"hh\:mm\:ss");
+            TimeSpan duration = TimeSpan.FromSeconds(buildingData.ConstructionTimeInSeconds);
+            _tooltipConstructionTimeLabel.text = duration.ToString(@"hh\:mm\:ss");
 
             _resourceTooltipContainer.style.display = DisplayStyle.Flex;
             UpdateResourceUpgradeTooltipPosition(mouseEnterEvent);
@@ -279,9 +272,9 @@ namespace Project.Scripts.Modules.UI
         private void UpdateResourceUpgradeTooltipPosition(IMouseEvent mouseEvent)
         {
             if (_resourceTooltipContainer == null || _resourceTooltipContainer.style.display == DisplayStyle.None) return;
-            Vector2 localPositionInParent = _resourceTooltipContainer.parent.WorldToLocal(mouseEvent.mousePosition);
-            _resourceTooltipContainer.style.left = localPositionInParent.x + 20f;
-            _resourceTooltipContainer.style.top = localPositionInParent.y + 20f;
+            Vector2 pos = _resourceTooltipContainer.parent.WorldToLocal(mouseEvent.mousePosition);
+            _resourceTooltipContainer.style.left = pos.x + 20f;
+            _resourceTooltipContainer.style.top = pos.y + 20f;
         }
 
         private void HideResourceUpgradeTooltip()

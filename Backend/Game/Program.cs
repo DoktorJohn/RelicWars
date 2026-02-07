@@ -54,8 +54,19 @@ builder.Services.AddCors(options =>
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection")
     ?? throw new Exception("ConnectionString 'DefaultConnection' mangler!");
 
+Console.WriteLine($"DEBUG: Bruger forbindelsesstreng: {connectionString}");
+
 builder.Services.AddDbContext<GameContext>(options =>
-    options.UseSqlServer(connectionString));
+{
+    if (builder.Environment.IsDevelopment())
+    {
+        options.UseSqlite(connectionString);
+    }
+    else
+    {
+        options.UseSqlServer(connectionString);
+    }
+});
 
 string buildingPath = "buildings.json";
 string unitPath = "units.json";
@@ -90,7 +101,6 @@ builder.Services.AddSingleton(rankingReader);
 builder.Services.AddSingleton(ideologyReader);
 builder.Services.AddSingleton(ideologyFocusReader);
 
-builder.Services.AddDbContext<GameContext>(options => options.UseSqlite(connectionString));
 
 builder.Services.AddScoped<ICityRepository, CityRepository>();
 builder.Services.AddScoped<IWorldMapObjectRepository, WorldMapObjectRepository>();

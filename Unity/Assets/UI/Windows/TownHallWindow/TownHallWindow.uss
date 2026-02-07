@@ -1,17 +1,21 @@
-﻿/* Assets/UI/Windows/TownHallWindow/TownHallWindow.uss */
-
+﻿/* --- BUILDING GRID SECTION --- */
 .building-grid-view {
     flex-grow: 1;
-    margin-bottom: 20px;
+    flex-basis: 0; 
+    margin-bottom: 5px;
+    overflow: hidden;
 }
 
 .building-grid-view .unity-scroll-view__content-container {
     flex-direction: row; 
     flex-wrap: wrap;     
-    justify-content: flex-start;
+    /* FIX: Centrerer kortene så afstanden til venstre og højre er ens */
+    justify-content: center;
     align-items: flex-start;
-    padding-left: 10px;
-    padding-bottom: 20px;
+    padding-left: 0;
+    padding-right: 0;
+    /* FIX: Mindre padding-bottom er nu nok, da layoutet er mere stabilt */
+    padding-bottom: 25px; 
     min-width: 100%;
 }
 
@@ -22,10 +26,11 @@
 
 /* --- BUILDING CARD --- */
 .building-card {
+    /* 3 kort á 290px + margin (16px hver) = 918px. 
+       I et 1000px vindue (960px efter padding) giver det 21px luft i hver side vha. justify-content: center */
     width: 290px;
     height: 90px;
     margin: 8px; 
-    
     background-color: rgba(0, 0, 0, 0.2);
     border-width: 1px;
     border-color: rgba(165, 125, 50, 0.3);
@@ -41,7 +46,6 @@
     scale: 1.02;
 }
 
-/* --- CARD HEADER --- */
 .card-header {
     flex-direction: row;
     justify-content: space-between;
@@ -66,39 +70,114 @@
     -unity-font-style: bold;
 }
 
-/* --- UPGRADE BUTTON --- */
 .card-upgrade-button {
     width: 100%;
     height: 32px;
-    margin-top: 0; /* Override global btn margin */
 }
 
-/* --- FLAVOR TEXT --- */
-.text-flavor {
+/* --- QUEUE SECTION (Kompakteret for at give plads til griddet) --- */
+.queue-section {
+    margin-top: 0;
+    /* FIX: Reduceret min-height for at give mere plads til bygnings-grid */
+    min-height: 135px; 
+    width: 100%;
+    flex-shrink: 0; 
+    border-top-width: 1px;
+    border-top-color: rgba(165, 125, 50, 0.3);
+    padding-top: 8px;
+}
+
+.queue-header-label {
+    -unity-font-definition: var(--font-header);
+    color: var(--c-text-header);
+    font-size: 20px; /* Reduceret fra 22px */
+    -unity-font-style: bold;
+    letter-spacing: 2px;
+    margin-bottom: 10px;
+    -unity-text-outline-width: 0.4px;
+    -unity-text-outline-color: var(--c-text-header);
+}
+
+.queue-scroll-view {
+    flex-grow: 1;
+    height: 100px; /* Reduceret fra 120px */
+}
+
+/* --- QUEUE ITEM CARD (Kompakteret vertikalt) --- */
+.queue-item-card {
+    width: 182px; 
+    height: 95px; /* Reduceret fra 115px for at redde griddet ovenover */
+    margin-right: 10px;
+    background-color: rgba(0, 0, 0, 0.5);
+    border-width: 2px;
+    border-color: var(--c-border);
+    border-radius: 6px;
+    padding: 8px;
+    justify-content: space-between;
+}
+
+.queue-item-card:last-child {
+    margin-right: 0;
+}
+
+.queue-item-info-container {
+    flex-direction: column;
+    justify-content: flex-start;
+    align-items: flex-start;
+    margin-bottom: 3px;
+    padding-bottom: 3px;
+    border-bottom-width: 1px;
+    border-bottom-color: rgba(165, 125, 50, 0.3);
+}
+
+.queue-item-title {
+    -unity-font-definition: var(--font-header);
+    color: var(--c-text-header);
+    font-size: 13px;
+    -unity-font-style: bold;
+    height: 18px;
+    -unity-text-align: middle-left;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    overflow: hidden;
+    width: 100%;
+}
+
+.queue-item-level {
     -unity-font-definition: var(--font-body);
     color: var(--c-text-muted);
-    font-size: 14px;
-    -unity-font-style: italic;
-    margin-bottom: 8px;
+    font-size: 11px;
+    -unity-font-style: bold;
+    flex-direction: row;
+    align-items: center;
+    height: 16px;
 }
 
-/* --- DIVIDER --- */
-.divider {
-    height: 1px;
-    background-color: var(--c-border);
-    opacity: 0.4;
+.queue-level-arrow {
+    color: #90D890;
+    font-size: 11px;
+    margin-left: 3px;
+    margin-right: 3px;
+}
+
+.queue-item-time {
+    -unity-font-definition: var(--font-body);
+    color: #90D890;
+    font-size: 15px;
+    -unity-font-style: bold;
 }
 
 /* --- TOOLTIP --- */
 .resource-tooltip {
     position: absolute;
     width: 240px;
-    background-color: rgba(35, 32, 30, 0.98); 
+    background-color: rgba(25, 22, 20, 0.98); 
     border-width: 2px;
     border-color: var(--c-border);
     border-radius: 8px;
     padding: 12px;
     display: none; 
+    z-index: 999;
 }
 
 .tooltip-title {
@@ -111,137 +190,27 @@
     border-bottom-color: rgba(165, 125, 50, 0.3);
     -unity-text-align: middle-center;
     -unity-font-style: bold;
-    letter-spacing: 1px;
 }
 
-.tooltip-row {
-    flex-direction: row;
-    justify-content: space-between;
-    margin-bottom: 4px;
-}
-
-.tooltip-label {
-    -unity-font-definition: var(--font-body);
-    color: white;
-    font-size: 13px;
-}
-
-/* --- QUEUE SECTION (CLEAN - INGEN BOKS) --- */
-.queue-section {
-    margin-top: 15px;
-    min-height: 120px;
-}
-
-.queue-header-label {
-    -unity-font-definition: var(--font-header);
-    color: var(--c-text-header);
-    font-size: 14px;
-    -unity-font-style: bold;
-    letter-spacing: 2px;
-    margin-bottom: 12px;
-    opacity: 1;
-}
-
-.queue-scroll-view {
-    flex-grow: 1;
-    min-height: 100px;
-}
-
-/* Horizontal scroll content */
-.queue-scroll-view .unity-scroll-view__content-container {
-    flex-direction: row;
-    align-items: flex-start;
-    padding: 4px 0;
-}
-
-/* --- QUEUE ITEM CARD (ENDNU MØRKERE & STØRRE FONT) --- */
-.queue-item-card {
-    width: 200px;
-    height: 90px;
-    margin-right: 12px;
-    background-color: rgba(0, 0, 0, 0.5);
-    border-width: 2px;
-    border-color: var(--c-border);
-    border-radius: 6px;
-    padding: 12px;
-    justify-content: space-between;
-    transition-duration: 0.1s;
-    overflow: hidden; /* Forhindrer overflow */
-}
-
-.queue-item-card:hover {
-    background-color: rgba(0, 0, 0, 0.6);
-    border-color: var(--c-text-highlight);
-    scale: 1.02;
-}
-
-/* Header row (navn og level) */
-.queue-item-header {
-    flex-direction: row;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 8px;
-    padding-bottom: 6px;
-    border-bottom-width: 1px;
-    border-bottom-color: rgba(165, 125, 50, 0.4);
-    overflow: hidden; /* Forhindrer overflow i header */
-}
-
-.queue-item-title {
-    -unity-font-definition: var(--font-header);
-    color: var(--c-text-header);
-    font-size: 15px; /* Lidt mindre */
-    -unity-font-style: bold;
-    flex-shrink: 1; /* Tillader navn at shrink */
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-}
-
-/* Level upgrade display (LVL 2 ↑ 3) */
-.queue-item-level {
+/* --- TEXTS --- */
+.text-flavor {
     -unity-font-definition: var(--font-body);
     color: var(--c-text-muted);
-    font-size: 13px; /* Lidt mindre */
-    -unity-font-style: bold;
-    flex-direction: row;
-    align-items: center;
-    flex-shrink: 0; /* Level container shrinks ikke */
-    white-space: nowrap; /* Forhindrer line break */
+    font-size: 16px; 
+    -unity-font-style: italic; 
+    margin-bottom: 8px;
 }
 
-.queue-level-arrow {
-    color: #90D890;
-    font-size: 14px; /* Lidt mindre pil */
-    margin-left: 2px;
-    margin-right: 2px;
-}
-
-.queue-level-new {
-    color: #90D890;
-    font-size: 13px;
-}
-
-/* Footer (tid) */
-.queue-item-footer {
-    flex-direction: row;
-    justify-content: flex-start;
-    align-items: center;
-}
-
-.queue-item-time {
-    -unity-font-definition: var(--font-body);
-    color: #90D890;
-    font-size: 17px;
-    -unity-font-style: bold;
-}
-
-/* Empty state */
 .queue-empty-label {
     -unity-font-definition: var(--font-body);
     color: var(--c-text-muted);
-    font-size: 12px;
-    -unity-font-style: italic;
-    -unity-text-align: middle-left;
+    font-size: 18px; 
+    -unity-font-style: bold; 
     margin-top: 5px;
+}
+
+.divider {
+    height: 1px;
+    background-color: var(--c-border);
+    opacity: 0.4;
 }

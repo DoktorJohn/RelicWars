@@ -221,41 +221,72 @@ namespace Application.Services
             public async Task<List<AvailableBuildingDTO>> GetAvailableBuildingsForTownHallAsync(Guid cityIdentifier)
             {
                 var cityEntity = await _cityRepository.GetCityWithBuildingsByCityIdentifierAsync(cityIdentifier);
-                if (cityEntity == null) return new List<AvailableBuildingDTO>();
+                if (cityEntity == null)
+                {
+                    _logger.LogWarning("GetAvailableBuildingsForTownHallAsync: City med identifier {CityId} blev ikke fundet.", cityIdentifier);
+                    return new List<AvailableBuildingDTO>();
+                }
+
+                // Hent alle aktive bygge-jobs for at beregne det "reelle" niveau efter køen
+                List<BuildingJob> activeBuildingConstructionJobs = await _jobRepository.GetBuildingJobsAsync(cityIdentifier);
 
                 var currentCitySnapshot = _resourceService.CalculateCityResources(cityEntity, DateTime.UtcNow);
+
+                // Vi sender en tom liste af jobs med her, da vi i denne DTO fokuserer på de statiske krav
                 int availablePopulation = _cityStatService.GetAvailablePopulation(cityEntity, new List<BaseJob>());
 
                 var availableBuildingsResponse = new List<AvailableBuildingDTO>();
 
-                foreach (var buildingType in Enum.GetValues<BuildingTypeEnum>())
+                foreach (BuildingTypeEnum buildingType in Enum.GetValues<BuildingTypeEnum>())
                 {
-                    var existingBuilding = cityEntity.Buildings.FirstOrDefault(b => b.Type == buildingType);
-                    int nextLevel = (existingBuilding?.Level ?? 0) + 1;
+                    // Find den nuværende bygning i databasen
+                    Building? existingBuilding = cityEntity.Buildings.FirstOrDefault(b => b.Type == buildingType);
+                    int databaseLevel = existingBuilding?.Level ?? 0;
 
-                    var nextConfig = _buildingDataReader.GetConfig<BuildingLevelData>(buildingType, nextLevel);
-                    if (nextConfig == null) continue;
+                    // Tjek om der ligger opgraderinger i køen for denne bygningstype
+                    // Vi tager det højeste niveau fra køen, hvis der er flere (hvis din arkitektur tillader det)
+                    BuildingJob? pendingJobForThisBuilding = activeBuildingConstructionJobs
+                        .Where(job => job.BuildingType == buildingType)
+                        .OrderByDescending(job => job.TargetLevel)
+                        .FirstOrDefault();
 
-                    bool canAffordUpgrade = currentCitySnapshot.Wood >= nextConfig.WoodCost &&
-                                            currentCitySnapshot.Stone >= nextConfig.StoneCost &&
-                                            currentCitySnapshot.Metal >= nextConfig.MetalCost;
+                    // Det "effektive" niveau er det niveau bygningen har, når køen er tom.
+                    // Hvis der er et job i køen til Lvl 2, er det effektive niveau 2.
+                    int effectiveCurrentLevel = pendingJobForThisBuilding != null
+                        ? pendingJobForThisBuilding.TargetLevel
+                        : databaseLevel;
+
+                    // Næste opgradering vi skal vise data for (f.eks. Lvl 3, hvis Lvl 2 er i kø)
+                    int targetUpgradeLevel = effectiveCurrentLevel + 1;
+
+                    BuildingLevelData? nextLevelConfiguration = _buildingDataReader.GetConfig<BuildingLevelData>(buildingType, targetUpgradeLevel);
+
+                    // Hvis der ikke er konfiguration for næste niveau, er bygningen fuldt udbygget
+                    if (nextLevelConfiguration == null) continue;
+
+                    bool canAffordUpgrade = currentCitySnapshot.Wood >= nextLevelConfiguration.WoodCost &&
+                                           currentCitySnapshot.Stone >= nextLevelConfiguration.StoneCost &&
+                                           currentCitySnapshot.Metal >= nextLevelConfiguration.MetalCost;
 
                     availableBuildingsResponse.Add(new AvailableBuildingDTO
                     {
                         BuildingType = buildingType,
                         BuildingName = buildingType.ToString(),
-                        CurrentLevel = existingBuilding?.Level ?? 0,
-                        WoodCost = nextConfig.WoodCost,
-                        StoneCost = nextConfig.StoneCost,
-                        MetalCost = nextConfig.MetalCost,
-                        ConstructionTimeInSeconds = (int)nextConfig.BuildTime.TotalSeconds,
-                        IsCurrentlyUpgrading = existingBuilding?.IsUpgrading ?? false,
+                        CurrentLevel = databaseLevel, // Vi viser stadig det faktiske niveau i UI-teksten
+                        WoodCost = nextLevelConfiguration.WoodCost,
+                        StoneCost = nextLevelConfiguration.StoneCost,
+                        MetalCost = nextLevelConfiguration.MetalCost,
+                        ConstructionTimeInSeconds = (int)nextLevelConfiguration.BuildTime.TotalSeconds,
+                        // Bygningen er "IsCurrentlyUpgrading" hvis enten entiteten siger det, eller der ligger et job
+                        IsCurrentlyUpgrading = existingBuilding?.IsUpgrading ?? (pendingJobForThisBuilding != null),
                         CanAfford = canAffordUpgrade,
                     });
                 }
 
                 return availableBuildingsResponse;
             }
+
+
 
             public async Task UpdateCityPointsAsync(Guid cityIdentifier)
             {

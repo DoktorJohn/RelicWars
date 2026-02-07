@@ -9,29 +9,44 @@ using System.Threading.Tasks;
 
 namespace Infrastructure.Context
 {
-    public class GameContextFactory : IDesignTimeDbContextFactory<GameContext>
+    namespace Infrastructure.Context
     {
-        public GameContext CreateDbContext(string[] args)
+        public class GameContextFactory : IDesignTimeDbContextFactory<GameContext>
         {
-            string configurationPath = Path.Combine(Directory.GetCurrentDirectory(), "..", "game");
-
-            IConfigurationRoot configuration = new ConfigurationBuilder()
-                .SetBasePath(configurationPath)
-                .AddJsonFile("appsettings.json", optional: false)
-                .AddJsonFile("appsettings.Development.json", optional: true)
-                .Build();
-
-            var optionsBuilder = new DbContextOptionsBuilder<GameContext>();
-            var connectionString = configuration.GetConnectionString("DefaultConnection");
-
-            if (string.IsNullOrEmpty(connectionString))
+            public GameContext CreateDbContext(string[] args)
             {
-                throw new System.Exception("DefaultConnection connection string kunne ikke findes i /game/appsettings.json");
+                // Finder stien til Game-projektet
+                string gameProjectPath = Path.GetFullPath(Path.Combine(Directory.GetCurrentDirectory(), "..", "Game"));
+
+                IConfigurationRoot configuration = new ConfigurationBuilder()
+                    .SetBasePath(gameProjectPath)
+                    .AddJsonFile("appsettings.json", optional: false)
+                    .AddJsonFile("appsettings.Development.json", optional: true)
+                    .Build();
+
+                var optionsBuilder = new DbContextOptionsBuilder<GameContext>();
+                var connectionString = configuration.GetConnectionString("DefaultConnection");
+
+                if (string.IsNullOrEmpty(connectionString))
+                {
+                    throw new Exception("DefaultConnection connection string kunne ikke findes!");
+                }
+
+                // Fix for "to databaser" problemet: 
+                // Hvis vi bruger SQLite lokalt, tvinger vi stien til altid at pege på Game-mappen
+                if (connectionString.Contains(".db") || connectionString.Contains("Data Source"))
+                {
+                    string dbFileName = connectionString.Split('=')[1];
+                    string absoluteDbPath = Path.Combine(gameProjectPath, dbFileName);
+                    optionsBuilder.UseSqlite($"Data Source={absoluteDbPath}");
+                }
+                else
+                {
+                    optionsBuilder.UseSqlServer(connectionString);
+                }
+
+                return new GameContext(optionsBuilder.Options);
             }
-
-            optionsBuilder.UseSqlServer(connectionString);
-
-            return new GameContext(optionsBuilder.Options);
         }
     }
 }

@@ -1,0 +1,7 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" editor-extension-mode="False">
+    <ui:Style src="project://database/Assets/UI/HUD/GlobalUI.uss" />
+    
+    <ui:VisualElement name="GlobalOverlay-Container" class="overlay-screen-container" picking-mode="Ignore">
+        <ui:Label name="GlobalOverlay-VersionLabel" class="version-label" text="EDITOR PREVIEW" picking-mode="Ignore" />
+    </ui:VisualElement>
+</ui:UXML>

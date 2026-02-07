@@ -1,0 +1,32 @@
+/* GlobalVersionOverlay.uss */
+
+.overlay-screen-container {
+    /* Fylder hele skærmen */
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    
+    /* Placerer indholdet (vores label) i bunden til højre */
+    justify-content: flex-end;
+    align-items: flex-end;
+    
+    /* Vigtigt: Gør at vi kan klikke på spillet bagved teksten */
+    picking-mode: ignore; 
+}
+
+.version-label {
+    margin-right: 20px;
+    margin-bottom: 20px;
+    
+    color: rgba(255, 255, 255, 0.4);
+    font-size: 14px;
+    -unity-font-style: bold;
+    
+    /* Giver teksten en sort kant så den kan læses på alle baggrunde */
+    -unity-text-outline-width: 0.5px;
+    -unity-text-outline-color: rgba(0, 0, 0, 0.8);
+    
+    letter-spacing: 1px;
+    white-space: nowrap;
+    picking-mode: ignore;
+}

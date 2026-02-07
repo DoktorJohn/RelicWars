@@ -64,32 +64,34 @@ namespace Domain.StaticData.Generators
             // Silver bonus data fra din tabel (omregnet til decimalværdier)
             var silverBonusData = new double[]
             {
-        0.00, 0.02, 0.04, 0.06, 0.08, 0.10, 0.12, 0.15, 0.18, 0.21,
-        0.25, 0.28, 0.33, 0.37, 0.42, 0.47, 0.52, 0.56, 0.60, 0.66
+                0.00, 0.02, 0.04, 0.06, 0.08, 0.10, 0.12, 0.15, 0.18, 0.21,
+                0.25, 0.28, 0.33, 0.37, 0.42, 0.47, 0.52, 0.56, 0.60, 0.66
             };
 
+            // Statisk data baseret på dine nye værdier. 
+            // Format: (BuildTime i minutter, Wood/Timber, Stone, Metal/Ore)
             var manualData = new (double minutes, int wood, int stone, int metal)[]
             {
-                (10, 6, 14, 0),          // Lvl 1
-                (15, 6, 21, 6),          // Lvl 2
-                (20, 26, 26, 0),         // Lvl 3
-                (30, 24, 57, 0),         // Lvl 4
-                (40, 24, 73, 24),        // Lvl 5
-                (60, 52, 71, 52),        // Lvl 6
-                (90, 60, 120, 60),       // Lvl 7
-                (135, 68, 205, 68),      // Lvl 8
-                (180, 138, 184, 138),    // Lvl 9
-                (270, 149, 298, 149),    // Lvl 10
-                (360, 150, 450, 150),    // Lvl 11
-                (540, 305, 407, 305),    // Lvl 12
-                (720, 396, 528, 396),    // Lvl 13
-                (990, 557, 576, 557),    // Lvl 14
-                (1260, 630, 840, 630),   // Lvl 15
-                (1710, 843, 869, 843),   // Lvl 16
-                (2160, 912, 1216, 912),  // Lvl 17
-                (2700, 1184, 1220, 1184),// Lvl 18
-                (3240, 1248, 1664, 1248),// Lvl 19
-                (4320, 1584, 1632, 1584) // Lvl 20
+                (1.25, 6, 14, 0),          // Lvl 1
+                (1.875, 6, 21, 6),         // Lvl 2
+                (2.5, 26, 26, 0),          // Lvl 3
+                (3.75, 24, 57, 0),         // Lvl 4
+                (5, 24, 73, 24),           // Lvl 5
+                (7.5, 52, 71, 52),         // Lvl 6 (0.125h)
+                (11.25, 60, 120, 60),      // Lvl 7 (0.1875h)
+                (16.875, 68, 205, 68),     // Lvl 8 (0.28125h)
+                (22.5, 138, 184, 138),     // Lvl 9 (0.375h)
+                (33.75, 149, 298, 149),    // Lvl 10 (0.5625h)
+                (45, 150, 450, 150),       // Lvl 11 (0.75h)
+                (67.5, 305, 407, 305),     // Lvl 12 (1.125h)
+                (90, 396, 528, 396),       // Lvl 13 (1.5h)
+                (123.75, 557, 576, 557),   // Lvl 14 (2.0625h)
+                (157.5, 630, 840, 630),    // Lvl 15 (2.625h)
+                (213.75, 843, 869, 843),   // Lvl 16 (3.5625h)
+                (270, 912, 1216, 912),     // Lvl 17 (4.5h)
+                (337.5, 1184, 1220, 1184), // Lvl 18 (5.625h)
+                (405, 1248, 1664, 1248),   // Lvl 19 (6.75h)
+                (540, 1584, 1632, 1584)    // Lvl 20 (9h)
             };
 
             for (int currentLvl = 1; currentLvl <= 20; currentLvl++)
@@ -106,18 +108,9 @@ namespace Domain.StaticData.Generators
                     MetalCost = data.metal
                 };
 
-                // 1. Construction Modifier (Eksisterende)
                 townHallEntry.ModifiersThatAffectsThis.Add(ModifierTagEnum.Construction);
-                townHallEntry.ModifiersInternal.Add(new Modifier
-                {
-                    Tag = ModifierTagEnum.Construction,
-                    Type = ModifierTypeEnum.Increased,
-                    Value = (currentLvl * 0.10),
-                    Source = $"TownHall Level {currentLvl}"
-                });
-
-                // 2. Silver Modifier (Ny)
                 townHallEntry.ModifiersThatAffectsThis.Add(ModifierTagEnum.Silver);
+
                 townHallEntry.ModifiersInternal.Add(new Modifier
                 {
                     Tag = ModifierTagEnum.Silver,
@@ -136,37 +129,37 @@ namespace Domain.StaticData.Generators
         {
             var progressionLevels = new List<object>();
 
-            // Produktionsværdier pr. time (Lvl 1 - 20) fra din tabel
+            // Produktionsværdier pr. time (Lvl 1 - 20)
             var hourlyProductionData = new int[]
             {
-        20, 27, 35, 45, 55, 67, 80, 97, 115, 132,
-        150, 185, 220, 260, 300, 350, 400, 460, 520, 600
+                20, 27, 35, 45, 55, 67, 80, 97, 115, 132,
+                150, 185, 220, 260, 300, 350, 400, 460, 520, 600
             };
 
             // Statisk data (BuildTime i minutter, Wood/Timber, Stone, Metal/Ore)
             // Rækkefølge: Minutes, Wood, Stone, Metal
             var costAndTimeManualData = new (double minutes, int wood, int stone, int metal)[]
             {
-                (5, 6, 14, 0),           // Lvl 1
-                (7.5, 6, 21, 6),         // Lvl 2
-                (10, 26, 26, 0),         // Lvl 3
-                (15, 24, 57, 0),         // Lvl 4
-                (20, 24, 73, 24),        // Lvl 5
-                (40, 52, 71, 52),        // Lvl 6
-                (60, 60, 120, 60),       // Lvl 7
-                (90, 68, 205, 68),       // Lvl 8
-                (120, 138, 184, 138),    // Lvl 9
-                (180, 149, 298, 149),    // Lvl 10
-                (240, 150, 450, 150),    // Lvl 11
-                (360, 305, 407, 305),    // Lvl 12
-                (480, 396, 528, 396),    // Lvl 13
-                (660, 557, 576, 557),    // Lvl 14
-                (840, 630, 840, 630),    // Lvl 15
-                (1140, 843, 869, 843),   // Lvl 16
-                (1440, 912, 1216, 912),  // Lvl 17
-                (1800, 1184, 1220, 1184),// Lvl 18
-                (2160, 1248, 1664, 1248),// Lvl 19
-                (2880, 1584, 1632, 1584) // Lvl 20
+                (0.625, 6, 14, 0),          // Lvl 1
+                (0.9375, 6, 21, 6),         // Lvl 2
+                (1.25, 26, 26, 0),          // Lvl 3
+                (1.875, 24, 57, 0),         // Lvl 4
+                (2.5, 24, 73, 24),          // Lvl 5
+                (5.0, 52, 71, 52),          // Lvl 6
+                (7.5, 60, 120, 60),         // Lvl 7 (0.125h)
+                (11.25, 68, 205, 68),       // Lvl 8 (0.1875h)
+                (15.0, 184, 138, 138),      // Lvl 9 (0.25h)
+                (22.5, 149, 298, 149),      // Lvl 10 (0.375h)
+                (30.0, 150, 450, 150),      // Lvl 11 (0.5h)
+                (45.0, 305, 407, 305),      // Lvl 12 (0.75h)
+                (60.0, 396, 528, 396),      // Lvl 13 (1h)
+                (82.5, 557, 576, 557),      // Lvl 14 (1.375h)
+                (105.0, 630, 840, 630),     // Lvl 15 (1.75h)
+                (142.5, 843, 869, 843),     // Lvl 16 (2.375h)
+                (180.0, 912, 1216, 912),    // Lvl 17 (3h)
+                (225.0, 1184, 1220, 1184),  // Lvl 18 (3.75h)
+                (270.0, 1248, 1664, 1248),  // Lvl 19 (4.5h)
+                (360.0, 1584, 1632, 1584)   // Lvl 20 (6h)
             };
 
             for (int currentLvl = 1; currentLvl <= 20; currentLvl++)
@@ -186,7 +179,7 @@ namespace Domain.StaticData.Generators
 
                 resourceEntry.ModifiersThatAffectsThis.Add(ModifierTagEnum.ResourceProduction);
 
-                // Mapping af produktion baseret på bygningstype
+                // Mapping af produktion og specifikke tags baseret på bygningstype
                 if (resourceEntry is TimberCampLevelData timberData)
                 {
                     resourceEntry.ModifiersThatAffectsThis.Add(ModifierTagEnum.Wood);
@@ -220,50 +213,53 @@ namespace Domain.StaticData.Generators
                 0.16, 0.19, 0.22, 0.25, 0.28, 0.31, 0.34, 0.37, 0.40, 0.43
             };
 
-            var manualData = new (double minutes, int wood, int stone, int metal)[]
+            // Statisk data baseret på din tabel
+            // Format: (BuildTime i minutter, Wood/Timber, Stone, Metal/Ore)
+            var manualHousingData = new (double minutes, int wood, int stone, int metal)[]
             {
-                (3, 6, 14, 0),           // Lvl 1
-                (5, 6, 21, 6),           // Lvl 2
-                (6, 26, 26, 0),          // Lvl 3
-                (9, 24, 57, 0),          // Lvl 4
-                (12, 24, 73, 24),        // Lvl 5
-                (30, 52, 71, 52),        // Lvl 6
-                (60, 60, 120, 60),       // Lvl 7
-                (90, 68, 205, 68),       // Lvl 8
-                (120, 138, 184, 138),    // Lvl 9
-                (180, 149, 298, 149),    // Lvl 10
-                (240, 150, 450, 150),    // Lvl 11
-                (360, 305, 407, 305),    // Lvl 12
-                (480, 396, 528, 396),    // Lvl 13
-                (660, 557, 576, 557),    // Lvl 14
-                (840, 630, 840, 630),    // Lvl 15
-                (1140, 843, 869, 843),   // Lvl 16
-                (1440, 912, 1216, 912),  // Lvl 17
-                (1800, 1184, 1220, 1184),// Lvl 18
-                (2160, 1248, 1664, 1248),// Lvl 19
-                (2880, 1584, 1632, 1584) // Lvl 20
+                (0.375, 6, 14, 0),          // Lvl 1
+                (0.625, 6, 21, 6),          // Lvl 2
+                (0.75, 26, 26, 0),           // Lvl 3
+                (1.125, 24, 57, 0),          // Lvl 4
+                (1.5, 24, 73, 24),           // Lvl 5
+                (3.75, 52, 71, 52),          // Lvl 6
+                (7.5, 60, 120, 60),          // Lvl 7 (0.125h)
+                (11.25, 68, 205, 68),        // Lvl 8 (0.1875h)
+                (15, 138, 184, 138),         // Lvl 9 (0.25h)
+                (22.5, 149, 298, 149),       // Lvl 10 (0.375h)
+                (30, 150, 450, 150),         // Lvl 11 (0.5h)
+                (45, 305, 407, 305),         // Lvl 12 (0.75h)
+                (60, 396, 528, 396),         // Lvl 13 (1h)
+                (82.5, 557, 576, 557),       // Lvl 14 (1.375h)
+                (105, 630, 840, 630),        // Lvl 15 (1.75h)
+                (142.5, 843, 869, 843),      // Lvl 16 (2.375h)
+                (180, 912, 1216, 912),       // Lvl 17 (3h)
+                (225, 1184, 1220, 1184),     // Lvl 18 (3.75h)
+                (270, 1248, 1664, 1248),     // Lvl 19 (4.5h)
+                (360, 1584, 1632, 1584)      // Lvl 20 (6h)
             };
 
             for (int currentLvl = 1; currentLvl <= 20; currentLvl++)
             {
-                var data = manualData[currentLvl - 1];
+                var data = manualHousingData[currentLvl - 1];
 
-                // Population logik: 3000 i lvl 20
+                // Population logik: Giver plads til flere indbyggere
                 int calculatedPopulation = (currentLvl == 20) ? 3000 : (int)(80 * Math.Pow(currentLvl, 1.21));
 
                 var housingEntry = new HousingLevelData
                 {
                     Level = currentLvl,
                     Points = CalculatePointValueForLevel(currentLvl, 0.85),
+                    BuildTime = TimeSpan.FromMinutes(data.minutes),
                     WoodCost = data.wood,
                     StoneCost = data.stone,
                     MetalCost = data.metal,
                     Population = calculatedPopulation,
-                    BuildTime = TimeSpan.FromMinutes(data.minutes),
+
                     ModifiersThatAffectsThis = { ModifierTagEnum.Population, ModifierTagEnum.Silver }
                 };
 
-                // Tilføjelse af Silver Modifier
+                // Silver Modifier (Skatteindkomst baseret på befolkningens størrelse)
                 housingEntry.ModifiersInternal.Add(new Modifier
                 {
                     Tag = ModifierTagEnum.Silver,
@@ -278,75 +274,90 @@ namespace Domain.StaticData.Generators
             return progressionLevels;
         }
 
-        private static List<object> GenerateRecruitmentData<T>(BuildingTypeEnum recruitmentType) where T : BuildingLevelData, new()
+        private static List<object> GenerateRecruitmentData<T>(BuildingTypeEnum recruitmentBuildingType) where T : BuildingLevelData, new()
         {
             var progressionLevels = new List<object>();
 
-            var sharedCostData = new (int wood, int stone, int metal)[]
+            // Ressource-omkostninger (Deles af alle tre bygningstyper)
+            // Format: Wood/Timber, Stone, Metal/Ore
+            var sharedResourceCostData = new (int wood, int stone, int metal)[]
             {
-                (6, 14, 0),        // Lvl 1
-                (6, 21, 6),        // Lvl 2
-                (26, 26, 0),       // Lvl 3
-                (24, 57, 0),       // Lvl 4
-                (24, 73, 24),      // Lvl 5
-                (52, 71, 52),      // Lvl 6
-                (60, 120, 60),     // Lvl 7
-                (68, 205, 68),     // Lvl 8
-                (138, 184, 138),   // Lvl 9
-                (149, 298, 149),   // Lvl 10
-                (150, 450, 150),   // Lvl 11
-                (305, 407, 305),   // Lvl 12
-                (396, 528, 396),   // Lvl 13
-                (557, 576, 557),   // Lvl 14
-                (630, 840, 630),   // Lvl 15
-                (843, 869, 843),   // Lvl 16
-                (912, 1216, 912),  // Lvl 17
-                (1184, 1220, 1184),// Lvl 18
-                (1248, 1664, 1248),// Lvl 19
-                (1584, 1632, 1584) // Lvl 20
+                (6, 14, 0),         // Lvl 1
+                (6, 21, 6),         // Lvl 2
+                (26, 26, 0),        // Lvl 3
+                (24, 57, 0),        // Lvl 4
+                (24, 73, 24),       // Lvl 5
+                (52, 71, 52),       // Lvl 6
+                (60, 120, 60),      // Lvl 7
+                (68, 205, 68),      // Lvl 8
+                (138, 184, 138),    // Lvl 9
+                (149, 298, 149),    // Lvl 10
+                (150, 450, 150),    // Lvl 11
+                (305, 407, 305),    // Lvl 12
+                (396, 528, 396),    // Lvl 13
+                (557, 576, 557),    // Lvl 14
+                (630, 840, 630),    // Lvl 15
+                (843, 869, 843),    // Lvl 16
+                (912, 1216, 912),   // Lvl 17
+                (1184, 1220, 1184), // Lvl 18
+                (1248, 1664, 1248), // Lvl 19
+                (1584, 1632, 1584)  // Lvl 20
             };
 
-            var barracksStablesTimeData = new double[]
+            // Byggetid i minutter for Barracks og Stables
+            var barracksAndStablesTimeData = new double[]
             {
-                10, 15, 20, 30, 40, 60, 90, 135, 180, 270,
-                360, 540, 720, 990, 1200, 1710, 2160, 2700, 2880, 3600
+                1.25, 1.875, 2.5, 3.75, 5, 7.5, 11.25, 16.875, 22.5, 33.75,
+                45, 67.5, 90, 123.75, 150, 213.75, 270, 337.5, 360, 450
             };
 
+            // Byggetid i minutter for Workshop
             var workshopTimeData = new double[]
             {
-                15, 22, 30, 45, 60, 120, 180, 270, 360, 480,
-                600, 840, 1080, 1440, 2160, 2880, 3600, 4320, 5040, 5760
+                1.875, 2.75, 3.75, 5.625, 7.5, 15, 22.5, 33.75, 45, 60,
+                75, 105, 135, 180, 270, 360, 450, 540, 630, 720
             };
 
             for (int currentLvl = 1; currentLvl <= 20; currentLvl++)
             {
-                var costs = sharedCostData[currentLvl - 1];
-                double minutes = (recruitmentType == BuildingTypeEnum.Workshop)
+                var costs = sharedResourceCostData[currentLvl - 1];
+
+                // Vælg korrekt byggetid baseret på bygningstype
+                double buildMinutes = (recruitmentBuildingType == BuildingTypeEnum.Workshop)
                     ? workshopTimeData[currentLvl - 1]
-                    : barracksStablesTimeData[currentLvl - 1];
+                    : barracksAndStablesTimeData[currentLvl - 1];
 
                 var recruitmentEntry = new T
                 {
                     Level = currentLvl,
                     Points = CalculatePointValueForLevel(currentLvl, 1.0),
-                    BuildTime = TimeSpan.FromMinutes(minutes),
+                    BuildTime = TimeSpan.FromMinutes(buildMinutes),
                     WoodCost = costs.wood,
                     StoneCost = costs.stone,
                     MetalCost = costs.metal,
-                    ModifiersThatAffectsThis = { ModifierTagEnum.RecruitmentSpeed }
                 };
 
-                if (recruitmentEntry is BarracksLevelData) recruitmentEntry.ModifiersThatAffectsThis.Add(ModifierTagEnum.Infantry);
-                else if (recruitmentEntry is StableLevelData) recruitmentEntry.ModifiersThatAffectsThis.Add(ModifierTagEnum.Cavalry);
-                else if (recruitmentEntry is WorkshopLevelData) recruitmentEntry.ModifiersThatAffectsThis.Add(ModifierTagEnum.Siege);
+                // Standard tags for rekrutterings-funktionalitet
+                recruitmentEntry.ModifiersThatAffectsThis.Add(ModifierTagEnum.RecruitmentSpeed);
 
+                // Specifikke tags baseret på enhedskategorier
+                if (recruitmentEntry is BarracksLevelData)
+                    recruitmentEntry.ModifiersThatAffectsThis.Add(ModifierTagEnum.Infantry);
+                else if (recruitmentEntry is StableLevelData)
+                    recruitmentEntry.ModifiersThatAffectsThis.Add(ModifierTagEnum.Cavalry);
+                else if (recruitmentEntry is WorkshopLevelData)
+                    recruitmentEntry.ModifiersThatAffectsThis.Add(ModifierTagEnum.Siege);
+
+                // Beregning af rekrutteringsbonus (eksponentiel vækst mod niveau 20)
+                // Formel: Value = (Level / 20.0)^1.7
                 double calculatedModifierValue = Math.Pow(currentLvl / 20.0, 1.7);
+
                 recruitmentEntry.ModifiersInternal.Add(new Modifier
                 {
                     Tag = ModifierTagEnum.RecruitmentSpeed,
                     Type = ModifierTypeEnum.Increased,
                     Value = calculatedModifierValue,
-                    Source = $"{recruitmentType} Level {currentLvl}"
+                    Source = $"{recruitmentBuildingType} Level {currentLvl}"
                 });
 
                 progressionLevels.Add(recruitmentEntry);
@@ -354,40 +365,39 @@ namespace Domain.StaticData.Generators
 
             return progressionLevels;
         }
-
         private static List<object> GenerateUniversityData()
         {
             var progressionLevels = new List<object>();
 
-            // Statisk data (BuildTime i minutter, Wood/Timber, Stone, Metal/Ore)
-            // Rækkefølge: Minutes, Wood, Stone, Metal
-            var manualData = new (double minutes, int wood, int stone, int metal)[]
+            // Statisk data baseret på dine specifikationer
+            // Format: (BuildTime i minutter, Wood/Timber, Stone, Metal/Ore)
+            var manualUniversityData = new (double minutes, int wood, int stone, int metal)[]
             {
-                (15, 6, 14, 0),          // Lvl 1
-                (22, 6, 21, 6),          // Lvl 2
-                (30, 26, 26, 0),         // Lvl 3
-                (45, 24, 57, 0),         // Lvl 4
-                (60, 24, 73, 24),        // Lvl 5
-                (120, 52, 71, 52),       // Lvl 6
-                (180, 60, 120, 60),      // Lvl 7
-                (270, 68, 205, 68),      // Lvl 8
-                (360, 138, 184, 138),    // Lvl 9
-                (480, 149, 298, 149),    // Lvl 10
-                (600, 150, 450, 150),    // Lvl 11
-                (840, 305, 407, 305),    // Lvl 12
-                (1080, 396, 528, 396),   // Lvl 13
-                (1440, 557, 576, 557),   // Lvl 14
-                (2160, 630, 840, 630),   // Lvl 15
-                (2880, 843, 869, 843),   // Lvl 16
-                (3600, 912, 1216, 912),  // Lvl 17
-                (4320, 1184, 1220, 1184),// Lvl 18
-                (5040, 1248, 1664, 1248),// Lvl 19
-                (5760, 1584, 1632, 1584) // Lvl 20
+                (1.875, 6, 14, 0),          // Lvl 1
+                (2.75, 6, 21, 6),           // Lvl 2
+                (3.75, 26, 26, 0),          // Lvl 3
+                (5.625, 24, 57, 0),         // Lvl 4
+                (7.5, 24, 73, 24),          // Lvl 5 (0.125h)
+                (15, 52, 71, 52),           // Lvl 6 (0.25h)
+                (22.5, 60, 120, 60),        // Lvl 7 (0.375h)
+                (33.75, 68, 205, 68),       // Lvl 8 (0.5625h)
+                (45, 138, 184, 138),        // Lvl 9 (0.75h)
+                (60, 149, 298, 149),        // Lvl 10 (1h)
+                (75, 150, 450, 150),        // Lvl 11 (1.25h)
+                (105, 305, 407, 305),       // Lvl 12 (1.75h)
+                (135, 396, 528, 396),       // Lvl 13 (2.25h)
+                (180, 557, 576, 557),       // Lvl 14 (3h)
+                (270, 630, 840, 630),       // Lvl 15 (4.5h)
+                (360, 843, 869, 843),       // Lvl 16 (6h)
+                (450, 912, 1216, 912),      // Lvl 17 (7.5h)
+                (540, 1184, 1220, 1184),    // Lvl 18 (9h)
+                (630, 1248, 1664, 1248),    // Lvl 19 (10.5h)
+                (720, 1584, 1632, 1584)     // Lvl 20 (12h)
             };
 
             for (int currentLvl = 1; currentLvl <= 20; currentLvl++)
             {
-                var data = manualData[currentLvl - 1];
+                var data = manualUniversityData[currentLvl - 1];
 
                 var universityEntry = new UniversityLevelData
                 {
@@ -398,10 +408,12 @@ namespace Domain.StaticData.Generators
                     StoneCost = data.stone,
                     MetalCost = data.metal,
 
-                    ProductionPerHour = currentLvl * 2,
-
-                    ModifiersThatAffectsThis = { ModifierTagEnum.Research }
+                    // Basal forskningsproduktion pr. niveau
+                    ProductionPerHour = currentLvl * 2
                 };
+
+                // University påvirker forskningshastighed og låser op for teknologier
+                universityEntry.ModifiersThatAffectsThis.Add(ModifierTagEnum.Research);
 
                 progressionLevels.Add(universityEntry);
             }
@@ -413,42 +425,42 @@ namespace Domain.StaticData.Generators
         {
             var progressionLevels = new List<object>();
 
-            // Silver produktion (Flat rate) fra din tabel (Lvl 1 - 20)
+            // Silver produktion (Flat rate) pr. time (Lvl 1 - 20)
             var silverProductionData = new double[]
             {
                 400, 600, 800, 1000, 1250, 1500, 1800, 2150, 2450, 2825,
                 3200, 3600, 4000, 4450, 4900, 5400, 5900, 6550, 7000, 7500
             };
 
-            // Statisk data (BuildTime i minutter, Wood/Timber, Stone, Metal/Ore)
-            // Rækkefølge: Minutes, Wood, Stone, Metal
-            var costAndTimeManualData = new (double minutes, int wood, int stone, int metal)[]
+            // Statisk data baseret på din tabel
+            // Format: (BuildTime i minutter, Wood/Timber, Stone, Metal/Ore)
+            var manualMarketPlaceData = new (double minutes, int wood, int stone, int metal)[]
             {
-                (5, 6, 14, 0),           // Lvl 1
-                (7.5, 6, 21, 6),         // Lvl 2
-                (10, 26, 26, 0),         // Lvl 3
-                (15, 24, 57, 0),         // Lvl 4
-                (20, 24, 73, 24),        // Lvl 5
-                (40, 52, 71, 52),        // Lvl 6
-                (60, 60, 120, 60),       // Lvl 7
-                (90, 68, 205, 68),       // Lvl 8
-                (120, 138, 184, 138),    // Lvl 9
-                (180, 149, 298, 149),    // Lvl 10
-                (240, 150, 450, 150),    // Lvl 11
-                (360, 305, 407, 305),    // Lvl 12
-                (480, 396, 528, 396),    // Lvl 13
-                (660, 557, 576, 557),    // Lvl 14
-                (840, 630, 840, 630),    // Lvl 15
-                (1140, 843, 869, 843),   // Lvl 16
-                (1440, 912, 1216, 912),  // Lvl 17
-                (1800, 1184, 1220, 1184),// Lvl 18
-                (2160, 1248, 1664, 1248),// Lvl 19
-                (2880, 1584, 1632, 1584) // Lvl 20
+                (0.625, 6, 14, 0),          // Lvl 1
+                (0.9375, 6, 21, 6),         // Lvl 2
+                (1.25, 26, 26, 0),          // Lvl 3
+                (1.875, 24, 57, 0),         // Lvl 4
+                (2.5, 24, 73, 24),          // Lvl 5
+                (5.0, 52, 71, 52),          // Lvl 6
+                (7.5, 60, 120, 60),         // Lvl 7 (0.125h)
+                (11.25, 68, 205, 68),       // Lvl 8 (0.1875h)
+                (15.0, 138, 184, 138),      // Lvl 9 (0.25h)
+                (22.5, 149, 298, 149),      // Lvl 10 (0.375h)
+                (30.0, 150, 450, 150),      // Lvl 11 (0.5h)
+                (45.0, 305, 407, 305),      // Lvl 12 (0.75h)
+                (60.0, 396, 528, 396),      // Lvl 13 (1h)
+                (82.5, 557, 576, 557),      // Lvl 14 (1.375h)
+                (105.0, 630, 840, 630),     // Lvl 15 (1.75h)
+                (142.5, 843, 869, 843),     // Lvl 16 (2.375h)
+                (180.0, 912, 1216, 912),    // Lvl 17 (3h)
+                (225.0, 1184, 1220, 1184),  // Lvl 18 (3.75h)
+                (270.0, 1248, 1664, 1248),  // Lvl 19 (4.5h)
+                (360.0, 1584, 1632, 1584)   // Lvl 20 (6h)
             };
 
             for (int currentLvl = 1; currentLvl <= 20; currentLvl++)
             {
-                var data = costAndTimeManualData[currentLvl - 1];
+                var data = manualMarketPlaceData[currentLvl - 1];
                 double currentSilverValue = silverProductionData[currentLvl - 1];
 
                 var marketPlaceEntry = new MarketPlaceLevelData
@@ -461,15 +473,15 @@ namespace Domain.StaticData.Generators
                     BuildTime = TimeSpan.FromMinutes(data.minutes),
 
                     ModifiersInternal = new List<Modifier>
-                    {
-                        new Modifier
-                        {
-                            Tag = ModifierTagEnum.Silver,
-                            Type = ModifierTypeEnum.Flat,
-                            Value = currentSilverValue,
-                            Source = "MarketPlace Building"
-                        }
-                    },
+            {
+                new Modifier
+                {
+                    Tag = ModifierTagEnum.Silver,
+                    Type = ModifierTypeEnum.Flat,
+                    Value = currentSilverValue,
+                    Source = $"MarketPlace Level {currentLvl}"
+                }
+            },
 
                     ModifiersThatAffectsThis = { ModifierTagEnum.Silver }
                 };
@@ -484,43 +496,41 @@ namespace Domain.StaticData.Generators
         {
             var progressionLevels = new List<object>();
 
-            // Statisk data (BuildTime i minutter, Wood/Timber, Stone, Metal/Ore)
-            // Rækkefølge i manualData: Minutes, Wood, Stone, Metal
-            var manualData = new (double minutes, int wood, int stone, int metal)[]
+            // Statisk data baseret på din tabel
+            // Format: (BuildTime i minutter, Wood/Timber, Stone, Metal/Ore)
+            var manualWarehouseData = new (double minutes, int wood, int stone, int metal)[]
             {
-                (5, 6, 14, 0),           // Lvl 1
-                (7.5, 6, 21, 6),         // Lvl 2
-                (10, 26, 26, 0),         // Lvl 3
-                (15, 24, 57, 0),         // Lvl 4
-                (20, 24, 73, 24),        // Lvl 5
-                (40, 52, 71, 52),        // Lvl 6
-                (60, 60, 120, 60),       // Lvl 7
-                (90, 68, 205, 68),       // Lvl 8
-                (120, 138, 184, 138),    // Lvl 9
-                (180, 149, 298, 149),    // Lvl 10
-                (240, 150, 450, 150),    // Lvl 11
-                (360, 305, 407, 305),    // Lvl 12
-                (480, 396, 528, 396),    // Lvl 13
-                (660, 557, 576, 557),    // Lvl 14
-                (840, 630, 840, 630),    // Lvl 15
-                (1140, 843, 869, 843),   // Lvl 16
-                (1440, 912, 1216, 912),  // Lvl 17
-                (1800, 1184, 1220, 1184),// Lvl 18
-                (2160, 1248, 1664, 1248),// Lvl 19
-                (2880, 1584, 1632, 1584) // Lvl 20
+                (0.625, 6, 14, 0),          // Lvl 1
+                (0.9375, 6, 21, 6),         // Lvl 2
+                (1.25, 26, 26, 0),          // Lvl 3
+                (1.875, 24, 57, 0),         // Lvl 4
+                (2.5, 24, 73, 24),          // Lvl 5
+                (5.0, 52, 71, 52),          // Lvl 6
+                (7.5, 60, 120, 60),         // Lvl 7 (0.125h)
+                (11.25, 68, 205, 68),       // Lvl 8 (0.1875h)
+                (15.0, 138, 184, 138),      // Lvl 9 (0.25h)
+                (22.5, 149, 298, 149),      // Lvl 10 (0.375h)
+                (30.0, 150, 450, 150),      // Lvl 11 (0.5h)
+                (45.0, 305, 407, 305),      // Lvl 12 (0.75h)
+                (60.0, 396, 528, 396),      // Lvl 13 (1h)
+                (82.5, 557, 576, 557),      // Lvl 14 (1.375h)
+                (105.0, 630, 840, 630),     // Lvl 15 (1.75h)
+                (142.5, 843, 869, 843),     // Lvl 16 (2.375h)
+                (180.0, 912, 1216, 912),    // Lvl 17 (3h)
+                (225.0, 1184, 1220, 1184),  // Lvl 18 (3.75h)
+                (270.0, 1248, 1664, 1248),  // Lvl 19 (4.5h)
+                (360.0, 1584, 1632, 1584)   // Lvl 20 (6h)
             };
 
-            // Beregning af den nye kapacitets-kurve:
-            // For at starte på ~250 og ende på 15.974 bruger vi formlen:
-            // Capacity = BaseCapacity * Level^Exponent
+            // Beregning af kapacitets-kurve
             double baseStorageCapacity = 250.0;
             double capacityProgressionExponent = 1.3875;
 
             for (int currentLvl = 1; currentLvl <= 20; currentLvl++)
             {
-                var data = manualData[currentLvl - 1];
+                var data = manualWarehouseData[currentLvl - 1];
 
-                // Beregn kapacitet. Vi tvinger den præcise værdi i lvl 20.
+                // Beregn kapacitet med faste ankre i start og slut
                 int calculatedCapacity;
                 if (currentLvl == 1)
                 {
@@ -555,33 +565,35 @@ namespace Domain.StaticData.Generators
         {
             var progressionLevels = new List<object>();
 
-            var manualData = new (double minutes, int wood, int stone, int metal)[]
+            // Statisk data baseret på din tabel
+            // Format: (BuildTime i minutter, Wood/Timber, Stone, Metal/Ore)
+            var manualWallData = new (double minutes, int wood, int stone, int metal)[]
             {
-                (15, 6, 14, 0),          // Lvl 1
-                (22, 6, 21, 6),          // Lvl 2
-                (30, 26, 26, 0),         // Lvl 3
-                (45, 24, 57, 0),         // Lvl 4
-                (60, 24, 73, 24),        // Lvl 5
-                (90, 52, 71, 52),        // Lvl 6 (1.5h)
-                (120, 60, 120, 60),      // Lvl 7 (2h)
-                (180, 68, 205, 68),      // Lvl 8 (3h)
-                (240, 138, 184, 138),    // Lvl 9 (4h)
-                (360, 149, 298, 149),    // Lvl 10 (6h)
-                (480, 150, 450, 150),    // Lvl 11 (8h)
-                (660, 305, 407, 305),    // Lvl 12 (11h)
-                (840, 396, 528, 396),    // Lvl 13 (14h)
-                (1140, 557, 576, 557),   // Lvl 14 (19h)
-                (1440, 630, 840, 630),   // Lvl 15 (24h)
-                (1800, 843, 869, 843),   // Lvl 16 (30h)
-                (2160, 912, 1216, 912),  // Lvl 17 (36h)
-                (2880, 1184, 1220, 1184),// Lvl 18 (48h)
-                (3600, 1248, 1664, 1248),// Lvl 19 (60h)
-                (4320, 1584, 1632, 1584) // Lvl 20 (72h)
+                (1.875, 6, 14, 0),          // Lvl 1
+                (2.75, 6, 21, 6),           // Lvl 2
+                (3.75, 26, 26, 0),          // Lvl 3
+                (5.625, 24, 57, 0),         // Lvl 4
+                (7.5, 24, 73, 24),          // Lvl 5 (0.125h)
+                (11.25, 52, 71, 52),        // Lvl 6 (0.1875h)
+                (15, 60, 120, 60),          // Lvl 7 (0.25h)
+                (22.5, 68, 205, 68),        // Lvl 8 (0.375h)
+                (30, 138, 184, 138),        // Lvl 9 (0.5h)
+                (45, 149, 298, 149),        // Lvl 10 (0.75h)
+                (60, 150, 450, 150),        // Lvl 11 (1h)
+                (82.5, 305, 407, 305),      // Lvl 12 (1.375h)
+                (105, 396, 528, 396),       // Lvl 13 (1.75h)
+                (142.5, 557, 576, 557),     // Lvl 14 (2.375h)
+                (180, 630, 840, 630),       // Lvl 15 (3h)
+                (225, 843, 869, 843),       // Lvl 16 (3.75h)
+                (270, 912, 1216, 912),      // Lvl 17 (4.5h)
+                (360, 1184, 1220, 1184),    // Lvl 18 (6h)
+                (450, 1248, 1664, 1248),    // Lvl 19 (7.5h)
+                (540, 1584, 1632, 1584)     // Lvl 20 (9h)
             };
 
             for (int currentLvl = 1; currentLvl <= 20; currentLvl++)
             {
-                var data = manualData[currentLvl - 1];
+                var data = manualWallData[currentLvl - 1];
 
                 var wallEntry = new WallLevelData
                 {
@@ -591,9 +603,11 @@ namespace Domain.StaticData.Generators
                     WoodCost = data.wood,
                     StoneCost = data.stone,
                     MetalCost = data.metal,
+
                     ModifiersThatAffectsThis = { ModifierTagEnum.Wall }
                 };
 
+                // Forsvarsbonus modifier (Typisk brugt til at øge byens defensive styrke)
                 wallEntry.ModifiersInternal.Add(new Modifier
                 {
                     Tag = ModifierTagEnum.Wall,
