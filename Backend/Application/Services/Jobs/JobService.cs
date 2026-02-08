@@ -19,6 +19,7 @@ namespace Application.Services.Jobs
         private readonly ICityRepository _cityRepo;
         private readonly IWorldPlayerService _worldPlayerService;
         private readonly IWorldPlayerRepository _worldPlayerRepo;
+        private readonly IJobRepository _jobRepo;
         private readonly CityPointCalculator _cityPointCalculator;
         private readonly ILogger<JobService> _logger;
 
@@ -27,6 +28,7 @@ namespace Application.Services.Jobs
             ICityRepository cityRepo,
             ILogger<JobService> logger,
             IWorldPlayerRepository userRepo,
+            IJobRepository jobRepo, // Tilføjet til constructoren
             IWorldPlayerService worldPlayerService,
             CityPointCalculator cityPointCalculator)
         {
@@ -34,13 +36,15 @@ namespace Application.Services.Jobs
             _cityRepo = cityRepo;
             _logger = logger;
             _worldPlayerRepo = userRepo;
+            _jobRepo = jobRepo; // Mappet korrekt
             _worldPlayerService = worldPlayerService;
             _cityPointCalculator = cityPointCalculator;
         }
 
         public async Task ProcessAsync(BaseJob job)
         {
-            // Vi bruger Pattern Matching til at bestemme om jobbet er bundet til en by eller er globalt
+            _logger.LogInformation("[JobService] Starter processering af {JobType} med ID {JobId}", job.GetType().Name, job.Id);
+
             switch (job)
             {
                 case BuildingJob buildingJob:
@@ -69,49 +73,59 @@ namespace Application.Services.Jobs
             var city = await _cityRepo.GetByIdAsync(cityId);
             if (city == null)
             {
-                _logger.LogError("Job kunne ikke processeres. Byen {OriginCityId} findes ikke.", cityId);
+                _logger.LogError("Job {JobId} fejlede. Byen {CityId} findes ikke.", job.Id, cityId);
                 return;
             }
 
-            // FÆLLES LOGIK FOR BYER: Opdater ressourcer frem til jobbets eksekveringstid
             SyncResourcesToJobCompletion(city, job.ExecutionTime);
 
             if (job is BuildingJob buildingJob)
             {
                 HandleBuildingJob(city, buildingJob);
-                job.IsCompleted = true;
+                job.IsCompleted = true; // Markeres som færdig her
             }
             else if (job is RecruitmentJob recruitmentJob)
             {
                 HandleRecruitmentJob(city, recruitmentJob);
+                // Status for RecruitmentJob sættes inde i HandleRecruitmentJob da det kan være delvist færdigt
             }
 
-            // Gem ændringer for både by og OwnerWorldPlayer (pga. Silver-opdatering i Sync)
+            // 1. Gem byens tilstand (inkl. de nye bygninger/units)
             await _cityRepo.UpdateAsync(city);
+
+            // 2. VIGTIG FIX: Vi skal nu også gemme jobbets status i databasen
+            await _jobRepo.UpdateAsync(job);
+
+            _logger.LogInformation("[JobService] By-relateret job {JobId} er færdigbehandlet og gemt.", job.Id);
         }
 
         /// <summary>
         /// Håndterer processeringen af globale jobs knyttet til spilleren (Forskning).
         /// </summary>
-        private async Task ExecuteGlobalResearchJobProcessing(ResearchJob researchJob)
+        private async Task ExecuteGlobalResearchJobProcessing(ResearchJob activeResearchJob)
         {
-            var user = await _worldPlayerRepo.GetByIdWithResearchAsync(researchJob.UserId);
-            if (user == null)
+            // Vi henter spilleren inklusiv deres nuværende research-liste
+            var targetPlayer = await _worldPlayerRepo.GetByIdWithResearchAsync(activeResearchJob.WorldPlayerId);
+
+            if (targetPlayer == null)
             {
-                _logger.LogError("Research kunne ikke færdiggøres. Bruger {UserId} ikke fundet.", researchJob.UserId);
+                _logger.LogError("Kritisk fejl: ResearchJob {JobId} fejlede, da WorldPlayer {PlayerId} ikke blev fundet.", activeResearchJob.Id, activeResearchJob.WorldPlayerId);
                 return;
             }
 
-            // Vi delegerer selve research-logikken til hjælperen
-            CompleteResearchForPlayer(user, researchJob);
+            CompleteResearchForPlayer(targetPlayer, activeResearchJob);
 
-            // Gemmer den globale spiller-tilstand
-            await _worldPlayerRepo.UpdateAsync(user);
+            // 1. Opdater spillerens CompletedResearches liste
+            await _worldPlayerRepo.UpdateAsync(targetPlayer);
+
+            // 2. FIX: Markér jobbet som færdigt i databasen så det ikke kører igen
+            await _jobRepo.UpdateAsync(activeResearchJob);
+
+            _logger.LogInformation("[JobService] Research {ResearchId} gemt for spiller {PlayerId}.", activeResearchJob.ResearchId, targetPlayer.Id);
         }
 
         private void SyncResourcesToJobCompletion(City city, DateTime executionTime)
         {
-            // 1. LOKALE RESSOURCER: Brug CalculateCityResources for Wood, Stone, Metal
             var citySnapshot = _resourceService.CalculateCityResources(city, executionTime);
 
             city.Wood = citySnapshot.Wood;
@@ -119,25 +133,29 @@ namespace Application.Services.Jobs
             city.Metal = citySnapshot.Metal;
             city.LastResourceUpdate = executionTime;
 
-            // 2. GLOBALE RESSOURCER: Deleger ansvaret til WorldPlayerService (Silver, Research, Ideology)
             if (city.WorldPlayer != null)
             {
                 _worldPlayerService.UpdateGlobalResourceState(city.WorldPlayer, executionTime);
             }
-
-            _logger.LogInformation("[JobService] Synkronisering fuldført for by {CityName} til tidspunkt {Time}", city.Name, executionTime);
         }
 
-        private void CompleteResearchForPlayer(WorldPlayer user, ResearchJob job)
+        private void CompleteResearchForPlayer(WorldPlayer player, ResearchJob finishedJob)
         {
-            user.CompletedResearches.Add(new Research
+            // FIX FOR 0000... GUID BUG:
+            // Vi sikrer at WorldPlayerId bliver sat eksplicit på det nye objekt.
+            var completedResearchEntry = new Research
             {
-                ResearchId = job.ResearchId,
+                WorldPlayerId = player.Id, // EF bruger nu denne til foreign key
+                ResearchId = finishedJob.ResearchId,
                 CompletedAt = DateTime.UtcNow
-            });
+            };
 
-            job.IsCompleted = true;
-            _logger.LogInformation("Bruger {UserId} færdiggjort research: {ResearchId}", user.Id, job.ResearchId);
+            player.CompletedResearches.Add(completedResearchEntry);
+
+            // Jobbet markeres som færdigt (skal gemmes via _jobRepo bagefter)
+            finishedJob.IsCompleted = true;
+
+            _logger.LogDebug("Research entry oprettet for {ResearchId} tilkoblet WorldPlayer {PlayerId}", finishedJob.ResearchId, player.Id);
         }
 
         private void HandleBuildingJob(City city, BuildingJob job)
@@ -154,11 +172,7 @@ namespace Application.Services.Jobs
                 building.Level = job.TargetLevel;
             }
 
-            // Opdater byens samlede points baseret på den nye bygningsstruktur
             city.Points = _cityPointCalculator.CalculateTotalPointsForCity(city);
-
-            _logger.LogInformation("[JobService] By {CityName} opdateret til {Points} points efter færdiggørelse af {BuildingType} (Level {Level})",
-                city.Name, city.Points, job.BuildingType, job.TargetLevel);
         }
 
         private void HandleRecruitmentJob(City city, RecruitmentJob job)
@@ -176,11 +190,7 @@ namespace Application.Services.Jobs
                 var stack = city.UnitStacks.FirstOrDefault(x => x.Type == job.UnitType);
                 if (stack == null)
                 {
-                    city.UnitStacks.Add(new UnitStack
-                    {
-                        Type = job.UnitType,
-                        Quantity = unitsToDeliver
-                    });
+                    city.UnitStacks.Add(new UnitStack { Type = job.UnitType, Quantity = unitsToDeliver });
                 }
                 else
                 {
@@ -191,6 +201,7 @@ namespace Application.Services.Jobs
                 job.LastTickTime = job.LastTickTime.AddSeconds(unitsToDeliver * job.SecondsPerUnit);
             }
 
+            // Markér som færdig hvis vi er i mål
             if (job.CompletedQuantity >= job.TotalQuantity)
             {
                 job.IsCompleted = true;

@@ -24,7 +24,6 @@ namespace Project.Scripts.Network
 
             using (UnityWebRequest request = UnityWebRequest.Get(url))
             {
-                request.certificateHandler = new BypassCertificateHandler();
                 request.SetRequestHeader("Authorization", "Bearer " + jwtToken);
 
                 yield return request.SendWebRequest();
@@ -49,7 +48,6 @@ namespace Project.Scripts.Network
             using (UnityWebRequest request = new UnityWebRequest(url, "POST"))
             {
                 request.downloadHandler = new DownloadHandlerBuffer();
-                request.certificateHandler = new BypassCertificateHandler();
                 request.SetRequestHeader("Authorization", "Bearer " + jwtToken);
 
                 yield return request.SendWebRequest();
@@ -72,7 +70,6 @@ namespace Project.Scripts.Network
             using (UnityWebRequest request = new UnityWebRequest(url, "POST"))
             {
                 request.downloadHandler = new DownloadHandlerBuffer();
-                request.certificateHandler = new BypassCertificateHandler();
                 request.SetRequestHeader("Authorization", "Bearer " + jwtToken);
 
                 yield return request.SendWebRequest();

@@ -27,11 +27,14 @@ namespace Infrastructure.Repositories
         public async Task<City?> GetCityWithBuildingsByCityIdentifierAsync(Guid cityIdentifier)
         {
             return await _context.Cities
+                .AsSplitQuery()
                 .Include(city => city.Buildings)
                 .Include(city => city.WorldPlayer)
                     .ThenInclude(worldPlayer => worldPlayer.PlayerProfile)
                 .Include(city => city.WorldPlayer)
                     .ThenInclude(player => player.ModifiersInternal)
+                .Include(city => city.WorldPlayer)
+                    .ThenInclude(player => player.CompletedResearches)
                 .Include(city => city.UnitStacks)
                 .Include(city => city.OriginUnitDeployments)
                     .ThenInclude(deployment => deployment.UnitStacks)

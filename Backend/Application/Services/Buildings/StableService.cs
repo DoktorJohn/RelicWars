@@ -45,35 +45,6 @@ namespace Application.Services.Buildings
                 BuildingLevel = currentBuildingLevel
             };
 
-            // 1. Hent og filtrer Jobs til Køen (Kun Cavalry)
-            var allActiveJobs = await _jobRepo.GetRecruitmentJobsAsync(cityId);
-            var recruitmentJobsForStable = allActiveJobs.OfType<RecruitmentJob>()
-                .OrderBy(job => job.ExecutionTime)
-                .ToList();
-
-            foreach (var recruitmentJob in recruitmentJobsForStable)
-            {
-                if (recruitmentJob.UnitType == UnitTypeEnum.None) continue;
-
-                var unitInformation = _unitDataReader.GetUnit(recruitmentJob.UnitType);
-
-                // FILTER: Vis kun kavaleri i staldens kø
-                if (unitInformation.Category != UnitCategoryEnum.Cavalry) continue;
-
-                int remainingUnitsInJob = recruitmentJob.TotalQuantity - recruitmentJob.CompletedQuantity;
-                double timeUntilNextUnitCalculatedInSeconds = Math.Max(0, (recruitmentJob.ExecutionTime - DateTime.UtcNow).TotalSeconds);
-                double totalRemainingTimeInSeconds = timeUntilNextUnitCalculatedInSeconds + ((remainingUnitsInJob - 1) * recruitmentJob.SecondsPerUnit);
-
-                stableResponse.RecruitmentQueue.Add(new RecruitmentQueueItemDTO
-                {
-                    QueueId = recruitmentJob.Id,
-                    UnitType = recruitmentJob.UnitType,
-                    Amount = remainingUnitsInJob,
-                    TimeRemainingSeconds = totalRemainingTimeInSeconds,
-                    TotalDurationSeconds = (int)(recruitmentJob.TotalQuantity * recruitmentJob.SecondsPerUnit)
-                });
-            }
-
             // 2. Hent tilgængelige enheder til rekruttering (Kun Cavalry)
             foreach (UnitTypeEnum unitTypeCandidate in Enum.GetValues(typeof(UnitTypeEnum)))
             {

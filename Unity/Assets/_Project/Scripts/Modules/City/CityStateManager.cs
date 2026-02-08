@@ -21,6 +21,11 @@ namespace Project.Modules.City
 
         // --- Events ---
         public event Action<CityResourceState> OnResourceStateChanged;
+        public event Action<List<BuildingDTO>> OnBuildingQueueChanged;
+        public event Action<List<RecruitmentQueueItemDTO>> OnBarracksQueueChanged;
+        public event Action<List<RecruitmentQueueItemDTO>> OnStableQueueChanged;
+        public event Action<List<RecruitmentQueueItemDTO>> OnWorkshopQueueChanged;
+
         public event Action<List<CityControllerGetDetailedCityInformationBuildingDTO>> OnBuildingStateReceived;
         public event Action<List<UnitStackDTO>> OnTroopsStateReceived;
         public event Action<List<UnitDeploymentDTO>> OnDeploymentsStateReceived;
@@ -30,13 +35,24 @@ namespace Project.Modules.City
 
         // --- Intern Tilstand ---
         private CityResourceState _currentResourceState = new CityResourceState();
+        private List<BuildingDTO> _currentBuildingQueue = new List<BuildingDTO>();
         private List<UnitStackDTO> _currentStationedUnits = new List<UnitStackDTO>();
         private List<UnitDeploymentDTO> _currentActiveDeployments = new List<UnitDeploymentDTO>();
 
+        private List<RecruitmentQueueItemDTO> _currentBarracksQueue = new List<RecruitmentQueueItemDTO>();
+        private List<RecruitmentQueueItemDTO> _currentStableQueue = new List<RecruitmentQueueItemDTO>();
+        private List<RecruitmentQueueItemDTO> _currentWorkshopQueue = new List<RecruitmentQueueItemDTO>();
+
+
         // --- Public Properties ---
         public CityResourceState CurrentResources => _currentResourceState;
+        public List<BuildingDTO> CurrentBuildingQueue => _currentBuildingQueue;
         public List<UnitStackDTO> CurrentStationedUnits => _currentStationedUnits;
         public List<UnitDeploymentDTO> CurrentActiveDeployments => _currentActiveDeployments;
+
+        public List<RecruitmentQueueItemDTO> CurrentBarracksQueue => _currentBarracksQueue;
+        public List<RecruitmentQueueItemDTO> CurrentStableQueue => _currentStableQueue;
+        public List<RecruitmentQueueItemDTO> CurrentWorkshopQueue => _currentWorkshopQueue;
 
         public Guid CityId { get; set; }
         public int HomeCityX { get; private set; }
@@ -57,7 +73,6 @@ namespace Project.Modules.City
             {
                 Instance = this;
 
-                // Sikr dig at den er i roden, ellers virker DontDestroyOnLoad ikke
                 if (transform.parent != null)
                 {
                     transform.SetParent(null);
@@ -68,8 +83,7 @@ namespace Project.Modules.City
             }
             else if (Instance != this)
             {
-                // Vi sletter kun duplikatet af manager-objektet
-                Debug.Log("[CityStateManager] Duplikat fundet og slettet for at bevare eksisterende instans.");
+                Debug.Log("[CityStateManager] Duplikat fundet og slettet.");
                 Destroy(gameObject);
             }
         }
@@ -81,9 +95,6 @@ namespace Project.Modules.City
             ExecuteLocalResourceExtrapolationPerFrame();
         }
 
-        /// <summary>
-        /// Beregner den visuelle vækst i ressourcer lokalt på klienten (Client-side prediction).
-        /// </summary>
         private void ExecuteLocalResourceExtrapolationPerFrame()
         {
             double secondsPassedSinceLastFrame = Time.deltaTime;
@@ -110,6 +121,7 @@ namespace Project.Modules.City
 
         public void InitiateResourceRefresh(Guid cityIdentifier)
         {
+            Debug.Log($"[CityStateManager] InitiateResourceRefresh kaldet for by: {cityIdentifier}");
             if (_activePollingCoroutine != null)
             {
                 StopCoroutine(_activePollingCoroutine);
@@ -122,34 +134,49 @@ namespace Project.Modules.City
         {
             while (true)
             {
-                yield return StartCoroutine(PerformDetailedCityInformationNetworkRequestCoroutine(cityIdentifier));
+                Debug.Log("[CityStateManager] Starter planlagt netværks-polling...");
+                yield return StartCoroutine(PerformFullCityStateSyncCoroutine(cityIdentifier));
                 yield return new WaitForSeconds(_networkSynchronizationIntervalInSeconds);
             }
         }
 
-        private IEnumerator PerformDetailedCityInformationNetworkRequestCoroutine(Guid cityIdentifier)
+        private IEnumerator PerformFullCityStateSyncCoroutine(Guid cityIdentifier)
         {
             if (_isRequestInProgress) yield break;
-
-            if (NetworkManager.Instance == null)
-            {
-                Debug.LogError("[CityStateManager] NetworkManager mangler!");
-                yield break;
-            }
-
             _isRequestInProgress = true;
+
             string token = NetworkManager.Instance.JwtToken;
 
+            // 1. Hent Detailed Info
             yield return StartCoroutine(NetworkManager.Instance.City.GetDetailedCityInfo(cityIdentifier, token, (cityInfo) =>
             {
-                if (cityInfo != null)
+                if (cityInfo != null) HandleDetailedCityInformationResponseAndMapToState(cityInfo);
+            }));
+
+            // 2. Hent Bygningskø
+            yield return StartCoroutine(NetworkManager.Instance.Building.GetBuildingQueue(cityIdentifier, token, (queue) =>
+            {
+                if (queue != null)
                 {
-                    HandleDetailedCityInformationResponseAndMapToState(cityInfo);
+                    _currentBuildingQueue = queue;
+                    OnBuildingQueueChanged?.Invoke(_currentBuildingQueue);
                 }
-                else
-                {
-                    Debug.LogWarning("[CityStateManager] Kunne ikke hente by-data (NULL response).");
-                }
+            }));
+
+            // 3. Hent rekrutteringskø
+            yield return StartCoroutine(NetworkManager.Instance.Barracks.GetRecruitmentQueue(cityIdentifier, token, (queue) => {
+                _currentBarracksQueue = queue;
+                OnBarracksQueueChanged?.Invoke(queue);
+            }));
+
+            yield return StartCoroutine(NetworkManager.Instance.Stable.GetRecruitmentQueue(cityIdentifier, token, (queue) => {
+                _currentStableQueue = queue;
+                OnStableQueueChanged?.Invoke(queue);
+            }));
+
+            yield return StartCoroutine(NetworkManager.Instance.Workshop.GetRecruitmentQueue(cityIdentifier, token, (queue) => {
+                _currentWorkshopQueue = queue;
+                OnWorkshopQueueChanged?.Invoke(queue);
             }));
 
             _isRequestInProgress = false;
@@ -159,11 +186,22 @@ namespace Project.Modules.City
         {
             try
             {
+                Debug.Log($"[CityStateManager] MODTAGET DATA fra server for {detailedInformationDto.CityName}. Analyserer tilstand...");
+
+                // Log befolkning før overskrivning
+                Debug.Log($"[STATE-SYNC] Population før: USED={_currentResourceState.CurrentPopulationUsage}, MAX={_currentResourceState.MaxPopulationCapacity}");
+                Debug.Log($"[STATE-SYNC] Population fra server: USED={detailedInformationDto.CurrentPopulationUsage}, MAX={detailedInformationDto.MaxPopulationCapacity}");
+
+                if (_currentResourceState.CurrentPopulationUsage != detailedInformationDto.CurrentPopulationUsage)
+                {
+                    Debug.LogWarning($"[DEBUG-POPULATION] AFVIGELSE FUNDET! Lokal: {_currentResourceState.CurrentPopulationUsage} vs Server: {detailedInformationDto.CurrentPopulationUsage}");
+                }
+
                 this.CityId = detailedInformationDto.CityId;
                 this.HomeCityX = detailedInformationDto.X;
                 this.HomeCityY = detailedInformationDto.Y;
 
-                // 1. Map Ressourcer
+                // Opdatering af ressourcer
                 _currentResourceState.WoodAmount = detailedInformationDto.CurrentWoodAmount;
                 _currentResourceState.WoodMaxCapacity = detailedInformationDto.MaxWoodCapacity;
                 _currentResourceState.WoodProductionPerHour = detailedInformationDto.WoodProductionPerHour;
@@ -179,6 +217,7 @@ namespace Project.Modules.City
                 _currentResourceState.SilverAmount = detailedInformationDto.CurrentSilverAmount;
                 _currentResourceState.SilverProductionPerHour = detailedInformationDto.SilverProductionPerHour;
 
+                // Befolknings-mapping
                 _currentResourceState.CurrentPopulationUsage = detailedInformationDto.CurrentPopulationUsage;
                 _currentResourceState.MaxPopulationCapacity = detailedInformationDto.MaxPopulationCapacity;
 
@@ -188,39 +227,44 @@ namespace Project.Modules.City
                 _currentResourceState.IdeologyFocusPointsAmount = detailedInformationDto.CurrentIdeologyFocusPoints;
                 _currentResourceState.IdeologyFocusPointsProductionPerHour = detailedInformationDto.IdeologyFocusPointsPerHour;
 
-                // 2. Map Bygningsliste
-                if (detailedInformationDto.BuildingList != null)
-                {
-                    OnBuildingStateReceived?.Invoke(detailedInformationDto.BuildingList);
-                }
+                if (detailedInformationDto.BuildingList != null) OnBuildingStateReceived?.Invoke(detailedInformationDto.BuildingList);
 
-                // 3. Map Tropper (Garnison)
                 _currentStationedUnits = detailedInformationDto.StationedUnits ?? new List<UnitStackDTO>();
                 OnTroopsStateReceived?.Invoke(_currentStationedUnits);
 
-                // 4. Map Deployments (Hær-bevægelser)
                 _currentActiveDeployments = detailedInformationDto.DeployedUnits ?? new List<UnitDeploymentDTO>();
                 OnDeploymentsStateReceived?.Invoke(_currentActiveDeployments);
 
                 _isDataInitialized = true;
                 OnResourceStateChanged?.Invoke(_currentResourceState);
 
-                Debug.Log($"[CityStateManager] Synkronisering fuldført for {detailedInformationDto.CityName}. Tropper: {_currentStationedUnits.Count}, Deployments: {_currentActiveDeployments.Count}");
+                Debug.Log($"[CityStateManager] Synkronisering fuldført. Ny tilstand anvendt.");
             }
             catch (Exception exception)
             {
-                Debug.LogError($"[CityStateManager] Kritisk fejl ved mapping af data: {exception.Message}");
+                Debug.LogError($"[CityStateManager] Kritisk fejl ved mapping af data: {exception.Message}\n{exception.StackTrace}");
             }
         }
 
         public void DeductResourcesLocally(double wood, double stone, double metal, double silver = 0, double research = 0, double ideology = 0)
         {
+            Debug.Log($"[CityStateManager] DeductResourcesLocally kaldet. Trækker Wood:{wood}, Stone:{stone}, Metal:{metal}");
             _currentResourceState.WoodAmount -= wood;
             _currentResourceState.StoneAmount -= stone;
             _currentResourceState.MetalAmount -= metal;
             _currentResourceState.SilverAmount -= silver;
             _currentResourceState.ResearchPointsAmount -= research;
             _currentResourceState.IdeologyFocusPointsAmount -= ideology;
+
+            OnResourceStateChanged?.Invoke(_currentResourceState);
+        }
+
+        public void UpdatePopulationState(int updatedUsage, int updatedMax)
+        {
+            Debug.Log($"[CityStateManager] UpdatePopulationState kaldet MANUELT. Ny Usage: {updatedUsage}, Ny Max: {updatedMax}");
+
+            _currentResourceState.CurrentPopulationUsage = updatedUsage;
+            _currentResourceState.MaxPopulationCapacity = updatedMax;
 
             OnResourceStateChanged?.Invoke(_currentResourceState);
         }

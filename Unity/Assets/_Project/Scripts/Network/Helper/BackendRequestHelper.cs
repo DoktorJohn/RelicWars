@@ -20,6 +20,19 @@ namespace Project.Network.Helper
             return request;
         }
 
+        public static UnityWebRequest CreateGetWithBodyRequest(string url, object bodyPayload, string jwtToken = null)
+        {
+            string json = JsonConvert.SerializeObject(bodyPayload);
+            var request = new UnityWebRequest(url, "GET");
+            byte[] bodyRaw = Encoding.UTF8.GetBytes(json);
+
+            request.uploadHandler = new UploadHandlerRaw(bodyRaw);
+            request.downloadHandler = new DownloadHandlerBuffer();
+
+            SetStandardHeaders(request, jwtToken);
+
+            return request;
+        }
         public static UnityWebRequest CreateGetRequest(string url, string jwtToken = null)
         {
             var request = UnityWebRequest.Get(url);

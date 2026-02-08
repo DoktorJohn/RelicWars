@@ -1,4 +1,5 @@
-﻿using Assets.Scripts.Domain.Enums;
+﻿using Assets._Project.Scripts.Domain.Enums;
+using Assets.Scripts.Domain.Enums;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -24,10 +25,18 @@ namespace Project.Scripts.Domain.DTOs
         public int Amount;
     }
 
-    // Ny hjælpe-DTO til at læse { "Message": "..." } fra backenden
     [Serializable]
-    public class BackendMessageDTO
+    public class RecruitmentResult
     {
-        public string Message;
+        public bool Success { get; set; }
+        public string Message { get; set; }
     }
+
+    public class GetRecruitmentQueueItemsDTO
+    {
+        public Guid CityId { get; set; }
+        public List<UnitCategoryEnum> UnitCategories { get; set; } = new();
+    }
+
+
 }

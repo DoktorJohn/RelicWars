@@ -22,9 +22,6 @@ namespace Project.Network.Models
     {
         public Guid CityId;
         public string CityName;
-        public double GlobalSilverAmount;
-        public double GlobalResearchPointsAmount;
-        public double GlobalIdeologyFocusPointsAmount;
 
         public ResourceOverviewDTO Wood;
         public ResourceOverviewDTO Stone;
@@ -40,7 +37,6 @@ namespace Project.Network.Models
     [Serializable]
     public class ResourceOverviewDTO
     {
-        public double CurrentAmount;
         public double MaxCapacity;
         public ProductionBreakdownDTO Production;
     }
@@ -58,8 +54,6 @@ namespace Project.Network.Models
     public class PopulationBreakdownDTO
     {
         public int MaxCapacity;
-        public int UsedByUnits;
-        public int FreePopulation;
         public double ModifierBonus;
     }
 

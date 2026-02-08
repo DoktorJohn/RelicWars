@@ -49,65 +49,119 @@ namespace Application.Services
             _recruitmentTimeCalculationService = recruitmentTimeCalculationService;
         }
 
-        public async Task<BuildingResult> QueueRecruitmentAsync(Guid userId, Guid cityId, UnitTypeEnum type, int quantity)
+        public async Task<RecruitmentResult> QueueRecruitmentAsync(Guid userId, Guid cityId, UnitTypeEnum type, int quantity)
         {
-            if (quantity <= 0) return new BuildingResult(false, "Antal skal være større end 0.");
-
+            // 1. Hent entiteten for byen
             var cityEntity = await _cityRepository.GetByIdAsync(cityId);
-            if (cityEntity == null || cityEntity.WorldPlayer == null)
+            if (cityEntity == null)
             {
-                return new BuildingResult(false, "Byen eller ejeren blev ikke fundet.");
+                return new RecruitmentResult(false, "Den forespurgte by blev ikke fundet.");
             }
 
             var unitStaticData = _unitDataReader.GetUnit(type);
             var currentDateTime = DateTime.UtcNow;
 
-            List<BaseJob> activeJobsInCity = new();
-            var recruitmentJobs = await _jobRepository.GetRecruitmentJobsAsync(cityId);
-            var buildingJobs = await _jobRepository.GetBuildingJobsAsync(cityId);
-            activeJobsInCity.AddRange(recruitmentJobs);
-            activeJobsInCity.AddRange(buildingJobs);
+            // 2. Saml alle aktive jobs for at beregne nuværende befolkningskapacitet
+            List<BaseJob> activeJobsInCity = new List<BaseJob>();
+            var existingRecruitmentJobs = await _jobRepository.GetRecruitmentJobsAsync(cityId);
+            var existingBuildingJobs = await _jobRepository.GetBuildingJobsAsync(cityId);
 
-            int availablePopulationCalculated = _cityStatService.GetAvailablePopulation(cityEntity, activeJobsInCity);
-            int totalPopulationRequired = quantity * unitStaticData.PopulationCost;
+            activeJobsInCity.AddRange(existingRecruitmentJobs);
+            activeJobsInCity.AddRange(existingBuildingJobs);
 
-            if (totalPopulationRequired > availablePopulationCalculated)
-                return new BuildingResult(false, $"Ikke nok boliger. Kræver {totalPopulationRequired}, har {availablePopulationCalculated}.");
+            // 3. Valider om der er tilstrækkelig ledig population
+            int currentlyAvailablePopulation = _cityStatService.GetAvailablePopulation(cityEntity, activeJobsInCity);
+            int totalPopulationRequiredForRequest = quantity * unitStaticData.PopulationCost;
 
-            _worldPlayerService.UpdateGlobalResourceState(cityEntity.WorldPlayer, currentDateTime);
-
-            var citySnapshot = _resourceService.CalculateCityResources(cityEntity, currentDateTime);
-
-            if (citySnapshot.Wood < (unitStaticData.WoodCost * quantity) ||
-                citySnapshot.Stone < (unitStaticData.StoneCost * quantity) ||
-                citySnapshot.Metal < (unitStaticData.MetalCost * quantity))
+            if (quantity <= 0)
             {
-                return new BuildingResult(false, "Ikke nok ressourcer i byens lager.");
+                return new RecruitmentResult(false, "Antallet af enheder skal være positivt.");
             }
 
+            if (totalPopulationRequiredForRequest > currentlyAvailablePopulation)
+            {
+                return new RecruitmentResult(false, $"Utilstrækkelig boligkapacitet. Kræver {totalPopulationRequiredForRequest}, men der er kun {currentlyAvailablePopulation} ledig.");
+            }
+
+            // 4. Opdater ressourcetilstand (Globalt og lokalt) før fratrækning
+            _worldPlayerService.UpdateGlobalResourceState(cityEntity.WorldPlayer, currentDateTime);
+            var cityResourceSnapshot = _resourceService.CalculateCityResources(cityEntity, currentDateTime);
+
+            // 5. Valider om byen har råd til rekrutteringen
+            double totalWoodCost = unitStaticData.WoodCost * quantity;
+            double totalStoneCost = unitStaticData.StoneCost * quantity;
+            double totalMetalCost = unitStaticData.MetalCost * quantity;
+
+            if (cityResourceSnapshot.Wood < totalWoodCost ||
+                cityResourceSnapshot.Stone < totalStoneCost ||
+                cityResourceSnapshot.Metal < totalMetalCost)
+            {
+                return new RecruitmentResult(false, "Byen mangler de nødvendige råmaterialer til denne rekruttering.");
+            }
+
+            // 6. Beregn endelig træningstid baseret på modifiers og træk ressourcerne
             double calculatedSecondsPerUnit = await _recruitmentTimeCalculationService.CalculateFinalRecruitmentTimeAsync(userId, cityEntity, unitStaticData);
 
-            cityEntity.Wood = citySnapshot.Wood - (unitStaticData.WoodCost * quantity);
-            cityEntity.Stone = citySnapshot.Stone - (unitStaticData.StoneCost * quantity);
-            cityEntity.Metal = citySnapshot.Metal - (unitStaticData.MetalCost * quantity);
-
+            cityEntity.Wood = cityResourceSnapshot.Wood - totalWoodCost;
+            cityEntity.Stone = cityResourceSnapshot.Stone - totalStoneCost;
+            cityEntity.Metal = cityResourceSnapshot.Metal - totalMetalCost;
             cityEntity.LastResourceUpdate = currentDateTime;
 
+            // 7. Persister ændringer til databasen
             await _cityRepository.UpdateAsync(cityEntity);
 
-            await _jobRepository.AddAsync(new RecruitmentJob
+            // 8. Opret og gem selve rekrutterings-jobbet
+            var recruitmentJob = new RecruitmentJob
             {
-                UserId = userId,
+                WorldPlayerId = userId,
                 CityId = cityId,
                 UnitType = type,
                 TotalQuantity = quantity,
                 SecondsPerUnit = calculatedSecondsPerUnit,
                 LastTickTime = currentDateTime,
                 ExecutionTime = currentDateTime.AddSeconds(calculatedSecondsPerUnit),
-                CompletedQuantity = 0
-            });
+                CompletedQuantity = 0,
+                IsCompleted = false
+            };
 
-            return new BuildingResult(true, $"Træning af {quantity}x {type} startet i {cityEntity.Name}.");
+            await _jobRepository.AddAsync(recruitmentJob);
+
+            // 9. Returner resultatet (Uden populationstallet da det nu håndteres via DetailedCityInfo synkronisering)
+            return new RecruitmentResult(true, $"Træning af {quantity} er påbegyndt i {cityEntity.Name}.");
+        }
+
+
+        public async Task<List<RecruitmentQueueItemDTO>> GetRecruitmentQueueAsync(GetRecruitmentQueueItemsDTO dto)
+        {
+
+            var allActiveJobs = await _jobRepository.GetRecruitmentJobsAsync(dto.CityId);
+            var queueItemDTO = new List<RecruitmentQueueItemDTO>();
+
+
+            foreach (var recruitmentJob in allActiveJobs)
+            {
+                if (recruitmentJob.UnitType == UnitTypeEnum.None) continue;
+
+                var unitInformation = _unitDataReader.GetUnit(recruitmentJob.UnitType);
+
+                if (!dto.UnitCategories.Contains(unitInformation.Category)) continue;
+
+                int remainingUnitsInJob = recruitmentJob.TotalQuantity - recruitmentJob.CompletedQuantity;
+                double timeUntilNextUnitCalculatedInSeconds = Math.Max(0, (recruitmentJob.ExecutionTime - DateTime.UtcNow).TotalSeconds);
+                double totalRemainingTimeInSeconds = timeUntilNextUnitCalculatedInSeconds + ((remainingUnitsInJob - 1) * recruitmentJob.SecondsPerUnit);
+
+                queueItemDTO.Add(new RecruitmentQueueItemDTO
+                {
+                    QueueId = recruitmentJob.Id,
+                    UnitType = recruitmentJob.UnitType,
+                    Amount = remainingUnitsInJob,
+                    TimeRemainingSeconds = totalRemainingTimeInSeconds,
+                    TotalDurationSeconds = (int)(recruitmentJob.TotalQuantity * recruitmentJob.SecondsPerUnit)
+                });
+            }
+
+            return queueItemDTO;
+
         }
     }
 }

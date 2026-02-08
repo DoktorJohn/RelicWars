@@ -27,7 +27,7 @@ namespace Project.Modules.UI.Windows.Implementations
         private Label _labelUnitFlavorText;
         private Label _labelTotalCostString;
 
-        // UI – Stats Grid (SAMME FELTER SOM BARRACKS – SELV HVIS DU IKKE BRUGER DEM ENDNU)
+        // UI – Stats Grid
         private Label _labelStatPowerValue;
         private Label _labelStatArmorValue;
         private Label _labelStatDisciplineValue;
@@ -43,7 +43,7 @@ namespace Project.Modules.UI.Windows.Implementations
         private Button _executeRecruitButton;
         private Label _queueHeaderSummaryLabel;
 
-        // State
+        // State Data
         private Guid _currentActiveCityId;
         private WorkshopUnitInfoDTO _currentlySelectedUnitData;
         private readonly List<Button> _activeTabButtons = new();
@@ -52,15 +52,36 @@ namespace Project.Modules.UI.Windows.Implementations
         {
             InitializeUserInterfaceReferences();
 
-            _currentActiveCityId =
-                dataPayload is Guid id
-                    ? id
-                    : NetworkManager.Instance.ActiveCityId ?? Guid.Empty;
+            _currentActiveCityId = dataPayload is Guid id
+                ? id
+                : NetworkManager.Instance.ActiveCityId ?? Guid.Empty;
 
             if (_currentActiveCityId == Guid.Empty)
                 return;
 
-            ExecuteRefreshWorkshopData();
+            // 1. Abonner på CityStateManager for centraliseret kø-styring
+            if (CityStateManager.Instance != null)
+            {
+                CityStateManager.Instance.OnWorkshopQueueChanged += HandleRecruitmentQueueUpdated;
+
+                // Render den nuværende kø fra manageren med det samme
+                HandleRecruitmentQueueUpdated(CityStateManager.Instance.CurrentWorkshopQueue);
+
+                // Trigger en fuld synkronisering af byens tilstand (DetailedInfo + Alle militære køer)
+                CityStateManager.Instance.InitiateResourceRefresh(_currentActiveCityId);
+            }
+
+            // 2. Hent bygningsspecifikke data (Tilgængelige Siege enheder og tabs)
+            ExecuteRefreshWorkshopBuildingData();
+        }
+
+        private void OnDisable()
+        {
+            // VIGTIGT: Fjern event-abonnement for at undgå fejl når vinduet er lukket
+            if (CityStateManager.Instance != null)
+            {
+                CityStateManager.Instance.OnWorkshopQueueChanged -= HandleRecruitmentQueueUpdated;
+            }
         }
 
         private void InitializeUserInterfaceReferences()
@@ -73,13 +94,11 @@ namespace Project.Modules.UI.Windows.Implementations
             }
 
             _unitTabsScrollContainer = Root.Q<ScrollView>("Tabs-Scroll-Container");
-
             _labelUnitName = Root.Q<Label>("Lbl-UnitName");
             _labelOwnedCountBadge = Root.Q<Label>("Lbl-OwnedCount");
             _labelUnitFlavorText = Root.Q<Label>("Lbl-Flavor");
             _labelTotalCostString = Root.Q<Label>("Lbl-CostString");
 
-            // Stats (samme navne som Barracks UXML)
             _labelStatPowerValue = Root.Q<Label>("Stat-Power");
             _labelStatArmorValue = Root.Q<Label>("Stat-Armor");
             _labelStatDisciplineValue = Root.Q<Label>("Stat-Discipline");
@@ -112,18 +131,9 @@ namespace Project.Modules.UI.Windows.Implementations
 
             _quantityAdjustmentInput?.RegisterValueChangedCallback(evt =>
             {
-                int clamped =
-                    Mathf.Clamp(
-                        evt.newValue,
-                        _quantityAdjustmentSlider.lowValue,
-                        _quantityAdjustmentSlider.highValue
-                    );
-
-                if (clamped != evt.newValue)
-                    _quantityAdjustmentInput.SetValueWithoutNotify(clamped);
-
-                if (_quantityAdjustmentSlider.value != clamped)
-                    _quantityAdjustmentSlider.value = clamped;
+                int clamped = Mathf.Clamp(evt.newValue, _quantityAdjustmentSlider.lowValue, _quantityAdjustmentSlider.highValue);
+                if (clamped != evt.newValue) _quantityAdjustmentInput.SetValueWithoutNotify(clamped);
+                if (_quantityAdjustmentSlider.value != clamped) _quantityAdjustmentSlider.value = clamped;
             });
 
             if (_executeRecruitButton != null)
@@ -133,33 +143,36 @@ namespace Project.Modules.UI.Windows.Implementations
             }
         }
 
-        private void ExecuteRefreshWorkshopData()
+        private void HandleRecruitmentQueueUpdated(List<RecruitmentQueueItemDTO> updatedQueue)
+        {
+            // Opdater den visuelle kø baseret på data fra manageren
+            PopulateActiveRecruitmentQueue(updatedQueue);
+
+            // Genberegn økonomiske caps (Ressourcer eller population kan have ændret sig siden sidst)
+            if (_currentlySelectedUnitData != null)
+            {
+                ApplyUnitSelection(_currentlySelectedUnitData);
+            }
+        }
+
+        private void ExecuteRefreshWorkshopBuildingData()
         {
             string token = NetworkManager.Instance.JwtToken;
 
-            StartCoroutine(
-                NetworkManager.Instance.Workshop.GetWorkshopOverviewInformation(
-                    _currentActiveCityId,
-                    token,
-                    data =>
-                    {
-                        if (data != null)
-                            SynchronizeUserInterfaceWithData(data);
-                    }
-                )
-            );
+            StartCoroutine(NetworkManager.Instance.Workshop.GetWorkshopOverviewInformation(_currentActiveCityId, token, (data) =>
+            {
+                if (data != null) SynchronizeAvailableUnitsTabs(data.AvailableUnits);
+            }));
         }
 
-        private void SynchronizeUserInterfaceWithData(WorkshopFullViewDTO workshopData)
+        private void SynchronizeAvailableUnitsTabs(List<WorkshopUnitInfoDTO> availableUnits)
         {
             _unitTabsScrollContainer.Clear();
             _activeTabButtons.Clear();
 
-            if (workshopData.AvailableUnits == null ||
-                workshopData.AvailableUnits.Count == 0)
-                return;
+            if (availableUnits == null || availableUnits.Count == 0) return;
 
-            foreach (var unit in workshopData.AvailableUnits)
+            foreach (var unit in availableUnits)
             {
                 Button tabButton = new Button { text = unit.UnitName.ToUpper() };
                 tabButton.AddToClassList("tab-button");
@@ -170,19 +183,9 @@ namespace Project.Modules.UI.Windows.Implementations
             }
 
             if (_currentlySelectedUnitData == null)
-            {
-                ApplyUnitSelection(workshopData.AvailableUnits[0]);
-            }
+                ApplyUnitSelection(availableUnits[0]);
             else
-            {
-                ApplyUnitSelection(
-                    workshopData.AvailableUnits.FirstOrDefault(
-                        u => u.UnitType == _currentlySelectedUnitData.UnitType
-                    ) ?? workshopData.AvailableUnits[0]
-                );
-            }
-
-            PopulateActiveRecruitmentQueue(workshopData.RecruitmentQueue);
+                ApplyUnitSelection(availableUnits.FirstOrDefault(u => u.UnitType == _currentlySelectedUnitData.UnitType) ?? availableUnits[0]);
         }
 
         private void ApplyUnitSelection(WorkshopUnitInfoDTO unitData)
@@ -191,17 +194,14 @@ namespace Project.Modules.UI.Windows.Implementations
 
             foreach (var btn in _activeTabButtons)
             {
-                if (btn.text == unitData.UnitName.ToUpper())
-                    btn.AddToClassList("tab-button-active");
-                else
-                    btn.RemoveFromClassList("tab-button-active");
+                if (btn.text == unitData.UnitName.ToUpper()) btn.AddToClassList("tab-button-active");
+                else btn.RemoveFromClassList("tab-button-active");
             }
 
             _labelUnitName.text = unitData.UnitName.ToUpper();
             _labelOwnedCountBadge.text = $"OWNED: {unitData.AlreadyOwnedCount}";
             _labelUnitFlavorText.text = GetUnitFlavorText(unitData.UnitType);
 
-            // Stats (samme mapping som Barracks – data findes i DTO)
             _labelStatPowerValue.text = unitData.Power.ToString();
             _labelStatArmorValue.text = unitData.Armor.ToString();
             _labelStatDisciplineValue.text = unitData.Discipline.ToString();
@@ -209,31 +209,22 @@ namespace Project.Modules.UI.Windows.Implementations
             _labelStatReachValue.text = unitData.Reach.ToString();
             _labelStatLootValue.text = unitData.LootCapacity.ToString();
             _labelStatPopulationValue.text = unitData.PopulationCost.ToString();
-            _labelStatRecruitmentTimeValue.text =
-                TimeSpan.FromSeconds(unitData.RecruitmentTimeInSeconds)
-                        .ToString(@"hh\:mm\:ss");
+            _labelStatRecruitmentTimeValue.text = TimeSpan.FromSeconds(unitData.RecruitmentTimeInSeconds).ToString(@"hh\:mm\:ss");
 
             int maxPossible = CalculateMaximumAffordableUnitQuantity(unitData);
 
-            // 🔒 Definér gyldigt interval
             _quantityAdjustmentSlider.lowValue = 1;
             _quantityAdjustmentSlider.highValue = Mathf.Max(1, maxPossible);
 
-            // 🔒 Start altid på 1 hvis muligt
             int startValue = maxPossible > 0 ? 1 : 0;
-
-            // 🔒 Sæt BEGGE uden callbacks
             _quantityAdjustmentSlider.SetValueWithoutNotify(startValue);
             _quantityAdjustmentInput.SetValueWithoutNotify(startValue);
 
-            // 🔓 Enable/disable korrekt
             bool canConstruct = unitData.IsUnlocked && maxPossible > 0;
-
             _quantityAdjustmentSlider.SetEnabled(canConstruct);
             _quantityAdjustmentInput.SetEnabled(canConstruct);
             _executeRecruitButton.SetEnabled(canConstruct);
 
-            // 🔄 Opdatér UI-tekst
             UpdateCalculatedCostDisplay(startValue);
             UpdateExecuteButtonDynamicText(startValue);
         }
@@ -241,42 +232,37 @@ namespace Project.Modules.UI.Windows.Implementations
         private void PopulateActiveRecruitmentQueue(List<RecruitmentQueueItemDTO> queueItems)
         {
             _recruitmentQueueListContainer.Clear();
-
             int count = queueItems?.Count ?? 0;
             _queueHeaderSummaryLabel.text = $"CONSTRUCTION QUEUE ({count}/5)";
 
             if (count == 0)
             {
-                Label empty = new Label("WORKSHOP IS CURRENTLY IDLE");
-                empty.AddToClassList("queue-empty-label");
-                _recruitmentQueueListContainer.Add(empty);
+                Label emptyLabel = new Label("WORKSHOP IS CURRENTLY IDLE");
+                emptyLabel.AddToClassList("queue-empty-label");
+                _recruitmentQueueListContainer.Add(emptyLabel);
                 return;
             }
 
             foreach (var item in queueItems)
             {
-                VisualElement card = new VisualElement();
-                card.AddToClassList("recruitment-item-card");
+                VisualElement queueCard = new VisualElement();
+                queueCard.AddToClassList("recruitment-item-card");
 
-                card.Add(new Label(item.UnitType.ToString().ToUpper()) { name = "q-title" });
-                card.Add(new Label($"QTY: {item.Amount}") { name = "q-amount" });
+                queueCard.Add(new Label(item.UnitType.ToString().ToUpper()) { name = "q-title" });
+                queueCard.Add(new Label($"QTY: {item.Amount}") { name = "q-amount" });
 
-                Label timer = new Label("--:--:--");
-                timer.AddToClassList("queue-item-timer");
+                Label timerLabel = new Label("--:--:--");
+                timerLabel.AddToClassList("queue-item-timer");
+                queueCard.Add(timerLabel);
 
-                card.Add(timer);
-                _recruitmentQueueListContainer.Add(card);
-
-                StartCoroutine(
-                    ExecuteUpdateQueueTimerCountdown(timer, item.TimeRemainingSeconds)
-                );
+                _recruitmentQueueListContainer.Add(queueCard);
+                StartCoroutine(ExecuteUpdateQueueTimerCountdown(timerLabel, item.TimeRemainingSeconds));
             }
         }
 
         private IEnumerator ExecuteUpdateQueueTimerCountdown(Label label, double seconds)
         {
             float remaining = (float)seconds;
-
             while (remaining > 0 && label != null)
             {
                 label.text = TimeSpan.FromSeconds(remaining).ToString(@"hh\:mm\:ss");
@@ -285,84 +271,67 @@ namespace Project.Modules.UI.Windows.Implementations
             }
 
             if (label != null)
+            {
                 label.text = "READY";
-
-            ExecuteRefreshWorkshopData();
+                // Når en konstruktion er færdig, beder vi manageren om at refreshe for at opdatere antal owned units overalt
+                CityStateManager.Instance.InitiateResourceRefresh(_currentActiveCityId);
+            }
         }
 
         private int CalculateMaximumAffordableUnitQuantity(WorkshopUnitInfoDTO unit)
         {
             if (CityStateManager.Instance == null) return 0;
-
             var resources = CityStateManager.Instance.CurrentResources;
 
-            // --- Resource caps ---
             int woodCap = unit.CostWood > 0 ? (int)(resources.WoodAmount / unit.CostWood) : int.MaxValue;
             int stoneCap = unit.CostStone > 0 ? (int)(resources.StoneAmount / unit.CostStone) : int.MaxValue;
             int metalCap = unit.CostMetal > 0 ? (int)(resources.MetalAmount / unit.CostMetal) : int.MaxValue;
+            int populationCap = unit.PopulationCost > 0 ? resources.FreePopulation / unit.PopulationCost : int.MaxValue;
 
-            // --- Population cap ---
-            int populationCap = int.MaxValue;
-            if (unit.PopulationCost > 0)
-            {
-                populationCap = resources.FreePopulation / unit.PopulationCost;
-            }
-
-            // --- Final cap ---
-            return Mathf.Max(
-                0,
-                Mathf.Min(
-                    Mathf.Min(woodCap, Mathf.Min(stoneCap, metalCap)),
-                    Mathf.Min(populationCap, 100)
-                )
-            );
+            return Mathf.Max(0, Mathf.Min(Mathf.Min(woodCap, Mathf.Min(stoneCap, metalCap)), Mathf.Min(populationCap, 100)));
         }
 
         private void UpdateCalculatedCostDisplay(int amount)
         {
-            if (_currentlySelectedUnitData == null)
-                return;
-
-            long wood = (long)_currentlySelectedUnitData.CostWood * amount;
-            long stone = (long)_currentlySelectedUnitData.CostStone * amount;
-            long metal = (long)_currentlySelectedUnitData.CostMetal * amount;
-
-            _labelTotalCostString.text =
-                $"Wood: {wood} | Stone: {stone} | Metal: {metal}";
+            if (_currentlySelectedUnitData == null) return;
+            _labelTotalCostString.text = $"Wood: {(long)_currentlySelectedUnitData.CostWood * amount} | Stone: {(long)_currentlySelectedUnitData.CostStone * amount} | Metal: {(long)_currentlySelectedUnitData.CostMetal * amount}";
         }
 
         private void UpdateExecuteButtonDynamicText(int amount)
         {
-            if (_currentlySelectedUnitData == null)
-                return;
-
-            _executeRecruitButton.text =
-                $"CONSTRUCT {amount} {_currentlySelectedUnitData.UnitName.ToUpper()}";
+            if (_currentlySelectedUnitData == null) return;
+            _executeRecruitButton.text = $"CONSTRUCT {amount} {_currentlySelectedUnitData.UnitName.ToUpper()}";
         }
 
         private void OnRecruitExecutionRequested()
         {
             _executeRecruitButton.SetEnabled(false);
+            int amountToRecruit = _quantityAdjustmentInput.value;
 
-            int amount = _quantityAdjustmentInput.value;
+            // VIGTIG FIX: Vi kalder nu den korrekte Workshop service
+            StartCoroutine(NetworkManager.Instance.Workshop.RecruitUnits(
+                _currentActiveCityId,
+                _currentlySelectedUnitData.UnitType,
+                amountToRecruit,
+                NetworkManager.Instance.JwtToken,
+                (recruitmentResult) => {
 
-            StartCoroutine(
-                NetworkManager.Instance.Workshop.RecruitUnits(
-                    _currentActiveCityId,
-                    _currentlySelectedUnitData.UnitType,
-                    amount,
-                    NetworkManager.Instance.JwtToken,
-                    (success, _) =>
+                    _executeRecruitButton.SetEnabled(true);
+
+                    if (recruitmentResult.Success)
                     {
-                        _executeRecruitButton.SetEnabled(true);
-                        if (success)
+                        // Fortæl manageren at tilstanden skal opdateres (trækker ressourcer og opdaterer køer)
+                        // Dette trigger HandleRecruitmentQueueUpdated automatisk.
+                        if (CityStateManager.Instance != null)
                         {
-                            CityStateManager.Instance?.InitiateResourceRefresh(_currentActiveCityId);
-                            ExecuteRefreshWorkshopData();
+                            CityStateManager.Instance.InitiateResourceRefresh(_currentActiveCityId);
                         }
                     }
-                )
-            );
+                    else
+                    {
+                        Debug.LogError($"[WorkshopWindow] Construction failed: {recruitmentResult.Message}");
+                    }
+                }));
         }
 
         private string GetUnitFlavorText(UnitTypeEnum type)

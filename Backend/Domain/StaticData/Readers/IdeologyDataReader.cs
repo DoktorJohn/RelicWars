@@ -6,12 +6,13 @@ using System.Text;
 using System.Text.Json.Serialization;
 using System.Text.Json;
 using System.Threading.Tasks;
+using Domain.Enums;
 
 namespace Domain.StaticData.Readers
 {
     public class IdeologyDataReader
     {
-        private Dictionary<string, IdeologyData> _ideologies = new();
+        private Dictionary<IdeologyTypeEnum, IdeologyData> _ideologies = new();
 
         public void Load(string path)
         {
@@ -25,13 +26,14 @@ namespace Domain.StaticData.Readers
             };
 
             var list = JsonSerializer.Deserialize<List<IdeologyData>>(json, options) ?? new();
-            _ideologies = list.ToDictionary(r => r.Name);
+
+            _ideologies = list.ToDictionary(r => r.IdeologyType);
         }
 
-        public IdeologyData GetIdeology(string name)
+        public IdeologyData GetIdeology(IdeologyTypeEnum type)
         {
-            if (_ideologies.TryGetValue(name, out var ideology)) return ideology;
-            throw new Exception($"Ideology {name} ikke fundet!");
+            if (_ideologies.TryGetValue(type, out var ideology)) return ideology;
+            throw new Exception($"Ideology {type} ikke fundet!");
         }
 
         public List<IdeologyData> GetAll() => _ideologies.Values.ToList();

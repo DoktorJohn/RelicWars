@@ -23,7 +23,6 @@ namespace Project.Network
 
             using (UnityWebRequest request = UnityWebRequest.Get(url))
             {
-                request.certificateHandler = new BypassCertificateHandler();
                 request.SetRequestHeader("Authorization", "Bearer " + token);
                 request.SetRequestHeader("Content-Type", "application/json");
                 request.timeout = 10;

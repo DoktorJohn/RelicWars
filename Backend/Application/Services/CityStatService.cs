@@ -68,20 +68,12 @@ namespace Application.Services
             return (int)calculationResult.FinalValue;
         }
 
-        public int GetCurrentPopulationUsage(City city)
+        public int GetCurrentPopulationUsage(City city, IEnumerable<BaseJob> activeJobs)
         {
             int unitUsage = city.UnitStacks
                 .Select(s => new { Stack = s, Def = _unitData.GetUnit(s.Type) })
                 .Where(x => x.Def != null)
                 .Sum(x => x.Stack.Quantity * x.Def!.PopulationCost);
-
-            return unitUsage;
-        }
-
-        public int GetAvailablePopulation(City city, IEnumerable<BaseJob> activeJobs)
-        {
-            int maxPop = GetMaxPopulation(city);
-            int currentUsed = GetCurrentPopulationUsage(city);
             int reservedInQueue = 0;
 
             foreach (var job in activeJobs)
@@ -93,7 +85,15 @@ namespace Application.Services
                 }
             }
 
-            return maxPop - (currentUsed + reservedInQueue);
+            return unitUsage + reservedInQueue;
+        }
+
+        public int GetAvailablePopulation(City city, IEnumerable<BaseJob> activeJobs)
+        {
+            int maxPop = GetMaxPopulation(city);
+            int currentUsed = GetCurrentPopulationUsage(city, activeJobs);
+
+            return maxPop - currentUsed;
         }
     }
 }

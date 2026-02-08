@@ -31,6 +31,8 @@ namespace Application.Services
             private readonly IModifierService _modifierService;
             private readonly ICityStatService _cityStatService;
             private readonly BuildingDataReader _buildingDataReader;
+            private readonly ResearchDataReader _researchDataReader;
+            private readonly IdeologyDataReader _ideologyDataReader;
             private readonly UnitDataReader _unitDataReader;
             private readonly ILogger<CityService> _logger;
 
@@ -41,6 +43,8 @@ namespace Application.Services
                 IModifierService modifierService,
                 ICityStatService cityStatService,
                 BuildingDataReader buildingDataReader,
+                ResearchDataReader researchDataReader,
+                IdeologyDataReader ideologyDataReader,
                 UnitDataReader unitDataReader,
                 IJobRepository jobRepository,
                 ILogger<CityService> logger)
@@ -51,6 +55,8 @@ namespace Application.Services
                 _cityStatService = cityStatService;
                 _buildingDataReader = buildingDataReader;
                 _unitDataReader = unitDataReader;
+                _researchDataReader = researchDataReader;
+                _ideologyDataReader = ideologyDataReader;
                 _jobRepository = jobRepository;
                 _modifierService = modifierService;
                 _logger = logger;
@@ -88,12 +94,9 @@ namespace Application.Services
                 return new CityOverviewHUD(
                 cityEntity.Id,
                 cityEntity.Name,
-                playerEntity.Silver,
-                playerEntity.ResearchPoints,
-                playerEntity.IdeologyFocusPoints,
-                CreateResourceOverview(cityEntity, BuildingTypeEnum.TimberCamp, ModifierTagEnum.Wood, cityEntity.Wood),
-                CreateResourceOverview(cityEntity, BuildingTypeEnum.StoneQuarry, ModifierTagEnum.Stone, cityEntity.Stone),
-                CreateResourceOverview(cityEntity, BuildingTypeEnum.MetalMine, ModifierTagEnum.Metal, cityEntity.Metal),
+                CreateResourceOverview(cityEntity, BuildingTypeEnum.TimberCamp, new[] { ModifierTagEnum.Wood, ModifierTagEnum.ResourceProduction }),
+                CreateResourceOverview(cityEntity, BuildingTypeEnum.StoneQuarry, new[] { ModifierTagEnum.Stone, ModifierTagEnum.ResourceProduction }),
+                CreateResourceOverview(cityEntity, BuildingTypeEnum.MetalMine, new[] { ModifierTagEnum.Metal, ModifierTagEnum.ResourceProduction }),
                 CreateProductionBreakdown(cityEntity, BuildingTypeEnum.MarketPlace, new[] { ModifierTagEnum.Silver }),
                 CreateProductionBreakdown(cityEntity, BuildingTypeEnum.University, new[] { ModifierTagEnum.Research }),
                 CreateIdeologyProductionBreakdown(playerEntity),
@@ -176,6 +179,8 @@ namespace Application.Services
                     ))
                     .ToList();
 
+                var activeRecruitmentJobs = await _jobRepository.GetRecruitmentJobsAsync(cityIdentifier);
+
                 return new CityControllerGetDetailedCityInformationDTO
                 {
                     CityId = cityEntity.Id,
@@ -204,7 +209,7 @@ namespace Application.Services
                     ResearchPointsPerHour = globalSnapshot.ResearchPointsPerHour,
                     IdeologyFocusPointsPerHour = globalSnapshot.IdeologyFocusPointsPerHour,
 
-                    CurrentPopulationUsage = _cityStatService.GetCurrentPopulationUsage(cityEntity),
+                    CurrentPopulationUsage = _cityStatService.GetCurrentPopulationUsage(cityEntity, activeRecruitmentJobs),
                     MaxPopulationCapacity = _cityStatService.GetMaxPopulation(cityEntity),
 
                     BuildingList = cityEntity.Buildings.Select(b => new CityControllerGetDetailedCityInformationBuildingDTO
@@ -301,12 +306,11 @@ namespace Application.Services
                 }
             }
 
-            private ResourceOverviewDTO CreateResourceOverview(City cityEntity, BuildingTypeEnum buildingType, ModifierTagEnum resourceTag, double currentStoredAmount)
+            private ResourceOverviewDTO CreateResourceOverview(City cityEntity, BuildingTypeEnum buildingType, IEnumerable<ModifierTagEnum> targetTags)
             {
                 return new ResourceOverviewDTO(
-                    currentStoredAmount,
                     _cityStatService.GetWarehouseCapacity(cityEntity),
-                    CreateProductionBreakdown(cityEntity, buildingType, new[] { resourceTag, ModifierTagEnum.ResourceProduction })
+                    CreateProductionBreakdown(cityEntity, buildingType, targetTags)
                 );
             }
 
@@ -340,6 +344,16 @@ namespace Application.Services
                     if (levelConfig != null) modifierProviders.Add(levelConfig);
                 }
 
+                foreach (var research in cityEntity.WorldPlayer.CompletedResearches)
+                {
+                    var researchToGetModifiers = _researchDataReader.GetNode(research.ResearchId);
+                    modifierProviders.Add(researchToGetModifiers);
+                }
+
+                var worldPlayerIdeologyType = cityEntity.WorldPlayer.Ideology;
+                var ideology = _ideologyDataReader.GetIdeology(worldPlayerIdeologyType);
+                modifierProviders.Add(ideology);
+
                 var result = _modifierService.CalculateEntityValueWithModifiers(baseProductionValue, targetTags, modifierProviders);
 
                 return new ProductionBreakdownDTO(baseProductionValue, result.FlatBonus, result.PercentageBonus, result.FinalValue);
@@ -366,8 +380,6 @@ namespace Application.Services
 
                 return new PopulationBreakdownDTO(
                     _cityStatService.GetMaxPopulation(cityEntity),
-                    unitUsage,
-                    _cityStatService.GetAvailablePopulation(cityEntity, activeJobs),
                     0
                 );
             }

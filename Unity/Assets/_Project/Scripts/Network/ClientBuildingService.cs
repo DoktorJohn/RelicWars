@@ -28,8 +28,6 @@ namespace Project.Network
                 request.uploadHandler = new UploadHandlerRaw(bodyRaw);
                 request.downloadHandler = new DownloadHandlerBuffer();
 
-                request.certificateHandler = new BypassCertificateHandler();
-
                 request.SetRequestHeader("Authorization", "Bearer " + token);
                 request.SetRequestHeader("Content-Type", "application/json");
 
@@ -52,7 +50,6 @@ namespace Project.Network
 
             using (UnityWebRequest request = UnityWebRequest.Get(url))
             {
-                request.certificateHandler = new BypassCertificateHandler();
                 request.SetRequestHeader("Authorization", "Bearer " + token);
                 request.SetRequestHeader("Accept", "application/json");
 
@@ -89,7 +86,6 @@ namespace Project.Network
 
             using (UnityWebRequest request = UnityWebRequest.Get(url))
             {
-                request.certificateHandler = new BypassCertificateHandler();
                 request.SetRequestHeader("Authorization", "Bearer " + token);
                 request.SetRequestHeader("Content-Type", "application/json");
 
@@ -123,7 +119,6 @@ namespace Project.Network
 
             using (UnityWebRequest request = UnityWebRequest.Get(url))
             {
-                request.certificateHandler = new BypassCertificateHandler();
                 request.SetRequestHeader("Authorization", "Bearer " + token);
                 request.SetRequestHeader("Content-Type", "application/json");
 
@@ -157,7 +152,6 @@ namespace Project.Network
 
             using (UnityWebRequest request = UnityWebRequest.Get(url))
             {
-                request.certificateHandler = new BypassCertificateHandler();
                 request.SetRequestHeader("Authorization", "Bearer " + token);
                 request.SetRequestHeader("Content-Type", "application/json");
 
@@ -192,7 +186,6 @@ namespace Project.Network
             using (UnityWebRequest request = UnityWebRequest.Get(url))
             {
                 // Dev Environment Fix
-                request.certificateHandler = new BypassCertificateHandler();
 
                 request.SetRequestHeader("Authorization", "Bearer " + token);
                 request.SetRequestHeader("Content-Type", "application/json");
@@ -228,7 +221,6 @@ namespace Project.Network
 
             using (UnityWebRequest request = UnityWebRequest.Get(url))
             {
-                request.certificateHandler = new BypassCertificateHandler();
                 request.SetRequestHeader("Authorization", "Bearer " + token);
                 request.SetRequestHeader("Content-Type", "application/json");
 

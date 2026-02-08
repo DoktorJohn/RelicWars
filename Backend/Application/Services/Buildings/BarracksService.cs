@@ -42,32 +42,6 @@ namespace Application.Services.Buildings
                 BuildingLevel = currentBuildingLevel
             };
 
-            // 1. Hent og filtrer Jobs til Køen (Kun Infantry)
-            var allActiveJobs = await _jobRepo.GetRecruitmentJobsAsync(cityId);
-
-            foreach (var recruitmentJob in allActiveJobs)
-            {
-                if (recruitmentJob.UnitType == UnitTypeEnum.None) continue;
-
-                var unitInformation = _unitDataReader.GetUnit(recruitmentJob.UnitType);
-
-                // FILTER: Vis kun infanteri i kasernens kø
-                if (unitInformation.Category != UnitCategoryEnum.Infantry) continue;
-
-                int remainingUnitsInJob = recruitmentJob.TotalQuantity - recruitmentJob.CompletedQuantity;
-                double timeUntilNextUnitCalculatedInSeconds = Math.Max(0, (recruitmentJob.ExecutionTime - DateTime.UtcNow).TotalSeconds);
-                double totalRemainingTimeInSeconds = timeUntilNextUnitCalculatedInSeconds + ((remainingUnitsInJob - 1) * recruitmentJob.SecondsPerUnit);
-
-                barracksResponse.RecruitmentQueue.Add(new RecruitmentQueueItemDTO
-                {
-                    QueueId = recruitmentJob.Id,
-                    UnitType = recruitmentJob.UnitType,
-                    Amount = remainingUnitsInJob,
-                    TimeRemainingSeconds = totalRemainingTimeInSeconds,
-                    TotalDurationSeconds = (int)(recruitmentJob.TotalQuantity * recruitmentJob.SecondsPerUnit)
-                });
-            }
-
             // 2. Hent tilgængelige enheder (Infantry)
             foreach (UnitTypeEnum unitTypeCandidate in Enum.GetValues(typeof(UnitTypeEnum)))
             {

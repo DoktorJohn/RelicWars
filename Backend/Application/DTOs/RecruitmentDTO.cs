@@ -18,7 +18,6 @@ namespace Application.DTOs
     {
         public int BuildingLevel { get; set; }
         public List<WorkshopUnitInfoDTO> AvailableUnits { get; set; } = new();
-        public List<RecruitmentQueueItemDTO> RecruitmentQueue { get; set; } = new();
     }
 
     public class WorkshopUnitInfoDTO
@@ -44,7 +43,6 @@ namespace Application.DTOs
     {
         public int BuildingLevel { get; set; }
         public List<StableUnitInfoDTO> AvailableUnits { get; set; } = new();
-        public List<RecruitmentQueueItemDTO> RecruitmentQueue { get; set; } = new();
     }
 
     // Detaljer om de enkelte kavaleri-enheder (f.eks. Rider, Knight)
@@ -72,7 +70,6 @@ namespace Application.DTOs
     {
         public int BuildingLevel { get; set; }
         public List<BarracksUnitInfoDTO> AvailableUnits { get; set; } = new List<BarracksUnitInfoDTO>();
-        public List<RecruitmentQueueItemDTO> RecruitmentQueue { get; set; } = new List<RecruitmentQueueItemDTO>();
     }
 
     // Detaljer om en enhed (pris, tid, inventory)
@@ -103,5 +100,11 @@ namespace Application.DTOs
         public int Amount { get; set; }
         public double TimeRemainingSeconds { get; set; }
         public int TotalDurationSeconds { get; set; }
+    }
+
+    public class GetRecruitmentQueueItemsDTO
+    {
+        public Guid CityId { get; set; }
+        public List<UnitCategoryEnum> UnitCategories { get; set; } = new();
     }
 }

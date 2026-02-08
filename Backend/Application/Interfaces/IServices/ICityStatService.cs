@@ -12,8 +12,7 @@ namespace Application.Interfaces.IServices
     {
         double GetWarehouseCapacity(City city);
         int GetMaxPopulation(City city);
-        int GetCurrentPopulationUsage(City city);
+        int GetCurrentPopulationUsage(City city, IEnumerable<BaseJob> activeJobs);
         int GetAvailablePopulation(City city, IEnumerable<BaseJob> activeJobs);
-        // Senere: GetDefenseBonus, GetResearchSpeed, osv.
     }
 }

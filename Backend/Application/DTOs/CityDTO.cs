@@ -54,11 +54,6 @@ namespace Application.DTOs
         Guid CityId,
         string CityName,
 
-        // 1. Globale Bebeholdninger (Wallet)
-        double GlobalSilverAmount,
-        double GlobalResearchPointsAmount,
-        double GlobalIdeologyFocusPointsAmount,
-
         // 2. Ressource Oversigt (Lager-ressourcer)
         ResourceOverviewDTO Wood,
         ResourceOverviewDTO Stone,
@@ -78,7 +73,6 @@ namespace Application.DTOs
     );
 
     public record ResourceOverviewDTO(
-        double CurrentAmount,
         double MaxCapacity,
         ProductionBreakdownDTO Production
     );
@@ -92,9 +86,7 @@ namespace Application.DTOs
 
     public record PopulationBreakdownDTO(
         int MaxCapacity,
-        int UsedByUnits,
-        int FreePopulation,
-        double ModifierBonus           // Ekstra plads fra f.eks. research eller buffs
+        double ModifierBonus
     );
     public record BarracksQueueOverviewDTO(
         bool IsBusy,

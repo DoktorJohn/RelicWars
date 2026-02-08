@@ -7,6 +7,7 @@ namespace Application.Interfaces.IServices
 {
     public interface IRecruitmentService
     {
-        Task<BuildingResult> QueueRecruitmentAsync(Guid userId, Guid cityId, UnitTypeEnum type, int quantity);
+        Task<RecruitmentResult> QueueRecruitmentAsync(Guid userId, Guid cityId, UnitTypeEnum type, int quantity);
+        Task<List<RecruitmentQueueItemDTO>> GetRecruitmentQueueAsync(GetRecruitmentQueueItemsDTO dto);
     }
 }

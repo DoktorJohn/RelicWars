@@ -76,6 +76,7 @@ namespace Application.DTOs
         public ModifierDTO BuildingSpeedModifier { get; set; } = new();
     }
 
+    public record RecruitmentResult(bool Success, string Message);
     public record BuildingResult(bool Success, string Message);
 
     public class AvailableBuildingDTO

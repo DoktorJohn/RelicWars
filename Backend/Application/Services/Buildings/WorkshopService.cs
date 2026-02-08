@@ -49,36 +49,6 @@ namespace Application.Services.Buildings
 
             var workshopResponse = new WorkshopFullViewDTO { BuildingLevel = currentBuildingLevel };
 
-            // 1. Hent og filtrer Jobs til Køen (Kun Siege)
-            var allActiveJobs = await _jobRepo.GetRecruitmentJobsAsync(cityId);
-            var recruitmentJobsForWorkshop = allActiveJobs.OfType<RecruitmentJob>()
-                .OrderBy(job => job.ExecutionTime)
-                .ToList();
-
-            foreach (var recruitmentJob in recruitmentJobsForWorkshop)
-            {
-                if (recruitmentJob.UnitType == UnitTypeEnum.None) continue;
-
-                var unitInformation = _unitDataReader.GetUnit(recruitmentJob.UnitType);
-
-                // FILTER: Vis kun belejringsvåben i værkstedets kø
-                if (unitInformation.Category != UnitCategoryEnum.Siege) continue;
-
-                int remainingUnitsInJob = recruitmentJob.TotalQuantity - recruitmentJob.CompletedQuantity;
-                double timeUntilNextUnitCalculatedInSeconds = Math.Max(0, (recruitmentJob.ExecutionTime - DateTime.UtcNow).TotalSeconds);
-                double totalRemainingTimeInSeconds = timeUntilNextUnitCalculatedInSeconds + ((remainingUnitsInJob - 1) * recruitmentJob.SecondsPerUnit);
-
-                workshopResponse.RecruitmentQueue.Add(new RecruitmentQueueItemDTO
-                {
-                    QueueId = recruitmentJob.Id,
-                    UnitType = recruitmentJob.UnitType,
-                    Amount = remainingUnitsInJob,
-                    TimeRemainingSeconds = totalRemainingTimeInSeconds,
-                    TotalDurationSeconds = (int)(recruitmentJob.TotalQuantity * recruitmentJob.SecondsPerUnit)
-                });
-            }
-
-            // 2. Hent tilgængelige enheder (Siege)
             foreach (UnitTypeEnum unitTypeCandidate in Enum.GetValues(typeof(UnitTypeEnum)))
             {
                 if (unitTypeCandidate == UnitTypeEnum.None) continue;

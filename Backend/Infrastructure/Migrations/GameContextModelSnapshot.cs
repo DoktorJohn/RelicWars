@@ -271,10 +271,7 @@ namespace Infrastructure.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<Guid>("UserId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<Guid?>("WorldPlayerId")
+                    b.Property<Guid>("WorldPlayerId")
                         .HasColumnType("uniqueidentifier");
 
                     b.HasKey("Id");
@@ -645,7 +642,7 @@ namespace Infrastructure.Migrations
                         .HasMaxLength(21)
                         .HasColumnType("nvarchar(21)");
 
-                    b.Property<Guid>("UserId")
+                    b.Property<Guid>("WorldPlayerId")
                         .HasColumnType("uniqueidentifier");
 
                     b.HasKey("Id");
@@ -848,9 +845,13 @@ namespace Infrastructure.Migrations
 
             modelBuilder.Entity("Domain.Entities.Research", b =>
                 {
-                    b.HasOne("Domain.User.WorldPlayer", null)
+                    b.HasOne("Domain.User.WorldPlayer", "WorldPlayer")
                         .WithMany("CompletedResearches")
-                        .HasForeignKey("WorldPlayerId");
+                        .HasForeignKey("WorldPlayerId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("WorldPlayer");
                 });
 
             modelBuilder.Entity("Domain.Entities.UnitDeployment", b =>

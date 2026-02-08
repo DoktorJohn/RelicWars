@@ -274,7 +274,7 @@ namespace Infrastructure.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<Guid>("UserId")
+                    b.Property<Guid>("WorldPlayerId")
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<Guid?>("WorldPlayerId")
@@ -648,7 +648,7 @@ namespace Infrastructure.Migrations
                         .HasMaxLength(21)
                         .HasColumnType("nvarchar(21)");
 
-                    b.Property<Guid>("UserId")
+                    b.Property<Guid>("WorldPlayerId")
                         .HasColumnType("uniqueidentifier");
 
                     b.HasKey("Id");

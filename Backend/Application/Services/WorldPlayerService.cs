@@ -143,6 +143,7 @@ namespace Application.Services
                 PlayerProfileId = playerProfileId,
                 WorldId = targetWorldId,
                 Silver = 1000,
+                ResearchPoints = 10,
                 Ideology = IdeologyTypeEnum.None,
                 LastResourceUpdate = DateTime.UtcNow,
                 Cities = new List<City>()

@@ -20,16 +20,18 @@ namespace Project.Modules.City
     {
         private CityControllerGetDetailedCityInformationBuildingDTO _associatedBuildingData;
 
-        // Liste over alle renderere under dette prefab (huse, træer, detaljer osv.)
+        // Liste over alle renderere under dette prefab
         private SpriteRenderer[] _allChildSpriteRenderers;
 
-        // Vi gemmer de oprindelige farver, så vi ikke ødelægger evt. unik toning pr. sprite
-        private Dictionary<SpriteRenderer, Color> _originalRendererColors = new Dictionary<SpriteRenderer, Color>();
+        // Vi gemmer de oprindelige farver for at kunne nulstille præcist
+        private readonly Dictionary<SpriteRenderer, Color> _originalRendererColors = new Dictionary<SpriteRenderer, Color>();
 
         private bool _isControllerSuccessfullyInitialized = false;
+        private bool _isCurrentlyHighlighted = false;
 
-        // Highlight farve - kan gøres SerializeField hvis ønsket
-        private readonly Color _highlightColorTint = Color.yellow;
+        [Header("Highlight Settings")]
+        [SerializeField] private Color _highlightColorTint = new Color(0.85f, 0.95f, 1.0f, 1.0f); // En ren, kold hvid/blålig farve
+        [SerializeField] private bool _resetHighlightOnDisable = true;
 
         /// <summary>
         /// Collects all child renderers and maps their initial states.
@@ -38,7 +40,7 @@ namespace Project.Modules.City
         {
             _associatedBuildingData = buildingData;
 
-            // Find ALLE SpriteRenderere i hele hierarkiet under dette objekt
+            // Find ALLE SpriteRenderere i hierarkiet
             _allChildSpriteRenderers = GetComponentsInChildren<SpriteRenderer>();
 
             if (_allChildSpriteRenderers != null && _allChildSpriteRenderers.Length > 0)
@@ -47,19 +49,18 @@ namespace Project.Modules.City
 
                 foreach (var renderer in _allChildSpriteRenderers)
                 {
-                    // Gem den originale farve for hver enkelt del
-                    if (!_originalRendererColors.ContainsKey(renderer))
+                    if (renderer != null && !_originalRendererColors.ContainsKey(renderer))
                     {
                         _originalRendererColors.Add(renderer, renderer.color);
                     }
                 }
 
                 _isControllerSuccessfullyInitialized = true;
-                Debug.Log($"<color=cyan>[CityInteraction]</color> Initialized {gameObject.name} with {_allChildSpriteRenderers.Length} sprites as {buildingData.BuildingType}");
+                _isCurrentlyHighlighted = false;
             }
             else
             {
-                Debug.LogError($"<color=red>[CityInteraction]</color> CRITICAL: No SpriteRenderers found on {gameObject.name} or its children.");
+                Debug.LogError($"<color=red>[CityInteraction]</color> CRITICAL: No SpriteRenderers found on {gameObject.name}.");
             }
         }
 
@@ -77,7 +78,18 @@ namespace Project.Modules.City
 
         public void OnPointerClick(PointerEventData eventData)
         {
+            // Sikkerhed: Fjern highlight når vi klikker, da et vindue åbner og kan "låse" hover-staten
+            ApplyHighlightEffect(false);
             ExecuteInteractionLogic();
+        }
+
+        private void OnDisable()
+        {
+            // Hvis objektet deaktiveres (f.eks. ved refresh eller sceneskift), sikrer vi at det ikke er gult næste gang
+            if (_resetHighlightOnDisable)
+            {
+                ApplyHighlightEffect(false);
+            }
         }
 
         /// <summary>
@@ -85,31 +97,32 @@ namespace Project.Modules.City
         /// </summary>
         private void ApplyHighlightEffect(bool shouldEnableHighlight)
         {
+            if (_allChildSpriteRenderers == null || _isCurrentlyHighlighted == shouldEnableHighlight) return;
+
             foreach (var renderer in _allChildSpriteRenderers)
             {
                 if (renderer == null) continue;
 
                 if (shouldEnableHighlight)
                 {
-                    // Vi multiplicerer med gul for at bevare evt. alpha-kanal (gennemsigtighed)
                     renderer.color = _highlightColorTint;
                 }
                 else
                 {
-                    // Gendan den præcise farve spriten havde før hover
                     if (_originalRendererColors.TryGetValue(renderer, out Color originalColor))
                     {
                         renderer.color = originalColor;
                     }
                 }
             }
+
+            _isCurrentlyHighlighted = shouldEnableHighlight;
         }
 
         private void ExecuteInteractionLogic()
         {
             if (!_isControllerSuccessfullyInitialized || _associatedBuildingData == null)
             {
-                Debug.LogError($"<color=red>[INTERACTION ERROR]</color> {gameObject.name} click ignored: Initialization failed.");
                 return;
             }
 
@@ -117,29 +130,29 @@ namespace Project.Modules.City
 
             if (targetWindowType != WindowTypeEnum.None)
             {
-                Debug.Log($"<color=green>[UI REQUEST]</color> Opening {targetWindowType} for City: {NetworkManager.Instance.ActiveCityId}");
+                Debug.Log($"<color=green>[UI REQUEST]</color> Opening {targetWindowType}");
                 GlobalWindowManager.Instance.OpenWindow(targetWindowType, null);
             }
         }
 
         private WindowTypeEnum MapBuildingTypeToWindowType(BuildingTypeEnum buildingType)
         {
-            switch (buildingType)
+            return buildingType switch
             {
-                case BuildingTypeEnum.TownHall: return WindowTypeEnum.TownHall;
-                case BuildingTypeEnum.Barracks: return WindowTypeEnum.Barracks;
-                case BuildingTypeEnum.Warehouse: return WindowTypeEnum.Warehouse;
-                case BuildingTypeEnum.TimberCamp: return WindowTypeEnum.TimberCamp;
-                case BuildingTypeEnum.StoneQuarry: return WindowTypeEnum.StoneQuarry;
-                case BuildingTypeEnum.MetalMine: return WindowTypeEnum.MetalMine;
-                case BuildingTypeEnum.Housing: return WindowTypeEnum.Housing;
-                case BuildingTypeEnum.Wall: return WindowTypeEnum.Wall;
-                case BuildingTypeEnum.University: return WindowTypeEnum.University;
-                case BuildingTypeEnum.Stable: return WindowTypeEnum.Stable;
-                case BuildingTypeEnum.Workshop: return WindowTypeEnum.Workshop;
-                case BuildingTypeEnum.MarketPlace: return WindowTypeEnum.MarketPlace;
-                default: return WindowTypeEnum.None;
-            }
+                BuildingTypeEnum.TownHall => WindowTypeEnum.TownHall,
+                BuildingTypeEnum.Barracks => WindowTypeEnum.Barracks,
+                BuildingTypeEnum.Warehouse => WindowTypeEnum.Warehouse,
+                BuildingTypeEnum.TimberCamp => WindowTypeEnum.TimberCamp,
+                BuildingTypeEnum.StoneQuarry => WindowTypeEnum.StoneQuarry,
+                BuildingTypeEnum.MetalMine => WindowTypeEnum.MetalMine,
+                BuildingTypeEnum.Housing => WindowTypeEnum.Housing,
+                BuildingTypeEnum.Wall => WindowTypeEnum.Wall,
+                BuildingTypeEnum.University => WindowTypeEnum.University,
+                BuildingTypeEnum.Stable => WindowTypeEnum.Stable,
+                BuildingTypeEnum.Workshop => WindowTypeEnum.Workshop,
+                BuildingTypeEnum.MarketPlace => WindowTypeEnum.MarketPlace,
+                _ => WindowTypeEnum.None
+            };
         }
     }
 }

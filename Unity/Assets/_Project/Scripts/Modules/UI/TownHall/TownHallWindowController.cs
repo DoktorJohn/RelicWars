@@ -9,6 +9,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Assets._Project.Scripts.Domain.Enums;
 using Assets.Scripts.Domain.Enums;
+using Project.Modules.City;
 
 namespace Project.Scripts.Modules.UI
 {
@@ -45,14 +46,31 @@ namespace Project.Scripts.Modules.UI
             _activeCityId = (dataPayload is Guid id) ? id : NetworkManager.Instance.ActiveCityId ?? Guid.Empty;
             if (_activeCityId == Guid.Empty) return;
 
+            // 1. Abonner på StateManagerens kø-ændringer
+            if (CityStateManager.Instance != null)
+            {
+                CityStateManager.Instance.OnBuildingQueueChanged += PopulateConstructionQueue;
+
+                // Tegn den nuværende tilstand med det samme
+                PopulateConstructionQueue(CityStateManager.Instance.CurrentBuildingQueue);
+            }
+
             ExecuteRefreshTownHallContent(_activeCityId);
+        }
+
+        private void OnDisable()
+        {
+            // Ryd op i event-abonnement
+            if (CityStateManager.Instance != null)
+            {
+                CityStateManager.Instance.OnBuildingQueueChanged -= PopulateConstructionQueue;
+            }
         }
 
         private void InitializeUserInterfaceReferences()
         {
             _mainWindowContainer = Root.Q<VisualElement>("TownHall-Window-MainContainer");
 
-            // Tooltip mapping - Vi bruger Root.Q for at sikre vi finder dem i det aktuelle vindues-hierarki
             _resourceTooltipContainer = Root.Q<VisualElement>("Resource-Tooltip");
             _tooltipWoodAmountLabel = Root.Q<Label>("Tip-Wood");
             _tooltipStoneAmountLabel = Root.Q<Label>("Tip-Stone");
@@ -78,30 +96,22 @@ namespace Project.Scripts.Modules.UI
         {
             string authenticationToken = NetworkManager.Instance.JwtToken;
 
-            StartCoroutine(NetworkManager.Instance.Building.GetBuildingQueue(cityIdentifier, authenticationToken, (currentQueue) =>
+            // Vi beder manageren om at starte en generel opdatering (DetailedInfo + Queue)
+            if (CityStateManager.Instance != null)
             {
-                _currentQueueCount = currentQueue?.Count ?? 0;
+                CityStateManager.Instance.InitiateResourceRefresh(cityIdentifier);
+            }
 
-                if (_queueHeaderLabel != null)
+            // Vi henter kun de specifikke 'Available Buildings' her, da de kun bruges i TownHall
+            StartCoroutine(NetworkManager.Instance.City.GetTownHallAvailableBuildings(cityIdentifier, authenticationToken, (availableBuildings) =>
+            {
+                if (_buildingGridScrollView != null && availableBuildings != null)
                 {
-                    _queueHeaderLabel.text = $"CONSTRUCTION QUEUE ({_currentQueueCount}/5)";
+                    PopulateBuildingGrid(availableBuildings, cityIdentifier);
                 }
 
-                if (_constructionQueueContainer != null && currentQueue != null)
-                {
-                    PopulateConstructionQueue(currentQueue);
-                }
-
-                StartCoroutine(NetworkManager.Instance.City.GetTownHallAvailableBuildings(cityIdentifier, authenticationToken, (availableBuildings) =>
-                {
-                    if (_buildingGridScrollView != null && availableBuildings != null)
-                    {
-                        PopulateBuildingGrid(availableBuildings, cityIdentifier);
-                    }
-
-                    if (_mainWindowContainer != null)
-                        _mainWindowContainer.style.display = DisplayStyle.Flex;
-                }));
+                if (_mainWindowContainer != null)
+                    _mainWindowContainer.style.display = DisplayStyle.Flex;
             }));
         }
 
@@ -150,11 +160,10 @@ namespace Project.Scripts.Modules.UI
                     }
 
                     var bType = building.BuildingType;
-                    var bData = building; // Capture local variable for lambda
+                    var bData = building;
 
                     upgradeExecutionButton.clicked += () => ExecuteUpgradeRequest(cityIdentifier, bType);
 
-                    // Tooltip Events
                     upgradeExecutionButton.RegisterCallback<MouseEnterEvent>(evt => ShowResourceUpgradeTooltip(evt, bData));
                     upgradeExecutionButton.RegisterCallback<MouseLeaveEvent>(evt => HideResourceUpgradeTooltip());
                     upgradeExecutionButton.RegisterCallback<MouseMoveEvent>(evt => UpdateResourceUpgradeTooltipPosition(evt));
@@ -164,49 +173,17 @@ namespace Project.Scripts.Modules.UI
             }
         }
 
-        private void ShowResourceUpgradeTooltip(MouseEnterEvent mouseEnterEvent, AvailableBuildingDTO buildingData)
-        {
-            if (_resourceTooltipContainer == null) return;
-
-            // FIX 1: Sikrer at data altid skrives til labels ved hver mouse enter
-            if (_tooltipWoodAmountLabel != null) _tooltipWoodAmountLabel.text = buildingData.WoodCost.ToString("N0");
-            if (_tooltipStoneAmountLabel != null) _tooltipStoneAmountLabel.text = buildingData.StoneCost.ToString("N0");
-            if (_tooltipMetalAmountLabel != null) _tooltipMetalAmountLabel.text = buildingData.MetalCost.ToString("N0");
-
-            TimeSpan duration = TimeSpan.FromSeconds(buildingData.ConstructionTimeInSeconds);
-            if (_tooltipConstructionTimeLabel != null)
-                _tooltipConstructionTimeLabel.text = duration.ToString(@"hh\:mm\:ss");
-
-            // FIX 2: BringToFront sikrer at tooltippet altid hopper øverst i lagene, selv hvis vinduet er flyttet
-            _resourceTooltipContainer.BringToFront();
-            _resourceTooltipContainer.style.display = DisplayStyle.Flex;
-
-            UpdateResourceUpgradeTooltipPosition(mouseEnterEvent);
-        }
-
-        private void UpdateResourceUpgradeTooltipPosition(IMouseEvent mouseEvent)
-        {
-            if (_resourceTooltipContainer == null || _resourceTooltipContainer.style.display == DisplayStyle.None) return;
-
-            // FIX 3: Vi bruger panel.visualTree for at få koordinater der er uafhængige af vinduets interne forskydning
-            Vector2 screenPosition = mouseEvent.mousePosition;
-            Vector2 localPos = _resourceTooltipContainer.parent.WorldToLocal(screenPosition);
-
-            _resourceTooltipContainer.style.left = localPos.x + 20f;
-            _resourceTooltipContainer.style.top = localPos.y + 20f;
-        }
-
-        private void HideResourceUpgradeTooltip()
-        {
-            if (_resourceTooltipContainer != null) _resourceTooltipContainer.style.display = DisplayStyle.None;
-        }
-
-        // ... (Resten af koden: PopulateConstructionQueue, UpdateConstructionTimerLabel, ExecuteUpgradeRequest)
         private void PopulateConstructionQueue(List<BuildingDTO> constructionJobs)
         {
             _constructionQueueContainer.Clear();
+            _currentQueueCount = constructionJobs?.Count ?? 0;
 
-            if (constructionJobs.Count == 0)
+            if (_queueHeaderLabel != null)
+            {
+                _queueHeaderLabel.text = $"CONSTRUCTION QUEUE ({_currentQueueCount}/5)";
+            }
+
+            if (_currentQueueCount == 0)
             {
                 Label emptyQueueLabel = new Label("NO ACTIVE CONSTRUCTIONS");
                 emptyQueueLabel.AddToClassList("queue-empty-label");
@@ -269,7 +246,9 @@ namespace Project.Scripts.Modules.UI
                 if (timeRemaining.TotalSeconds <= 0)
                 {
                     label.text = "FINISHED";
-                    ExecuteRefreshTownHallContent(_activeCityId);
+                    // Når noget er færdigt, trigger vi manageren til at refreshe sin state
+                    if (CityStateManager.Instance != null)
+                        CityStateManager.Instance.InitiateResourceRefresh(_activeCityId);
                     yield break;
                 }
 
@@ -284,12 +263,48 @@ namespace Project.Scripts.Modules.UI
             {
                 if (success)
                 {
-                    if (Project.Modules.City.CityStateManager.Instance != null)
-                        Project.Modules.City.CityStateManager.Instance.InitiateResourceRefresh(cityId);
+                    // Her trigger vi manageren til at hente den nye state (ressourcer brugt + ny kø)
+                    if (CityStateManager.Instance != null)
+                        CityStateManager.Instance.InitiateResourceRefresh(cityId);
 
+                    // Vi genhenter knapperne for at opdatere deres status
                     ExecuteRefreshTownHallContent(cityId);
                 }
             }));
+        }
+
+        private void ShowResourceUpgradeTooltip(MouseEnterEvent mouseEnterEvent, AvailableBuildingDTO buildingData)
+        {
+            if (_resourceTooltipContainer == null) return;
+
+            if (_tooltipWoodAmountLabel != null) _tooltipWoodAmountLabel.text = buildingData.WoodCost.ToString("N0");
+            if (_tooltipStoneAmountLabel != null) _tooltipStoneAmountLabel.text = buildingData.StoneCost.ToString("N0");
+            if (_tooltipMetalAmountLabel != null) _tooltipMetalAmountLabel.text = buildingData.MetalCost.ToString("N0");
+
+            TimeSpan duration = TimeSpan.FromSeconds(buildingData.ConstructionTimeInSeconds);
+            if (_tooltipConstructionTimeLabel != null)
+                _tooltipConstructionTimeLabel.text = duration.ToString(@"hh\:mm\:ss");
+
+            _resourceTooltipContainer.BringToFront();
+            _resourceTooltipContainer.style.display = DisplayStyle.Flex;
+
+            UpdateResourceUpgradeTooltipPosition(mouseEnterEvent);
+        }
+
+        private void UpdateResourceUpgradeTooltipPosition(IMouseEvent mouseEvent)
+        {
+            if (_resourceTooltipContainer == null || _resourceTooltipContainer.style.display == DisplayStyle.None) return;
+
+            Vector2 screenPosition = mouseEvent.mousePosition;
+            Vector2 localPos = _resourceTooltipContainer.parent.WorldToLocal(screenPosition);
+
+            _resourceTooltipContainer.style.left = localPos.x + 20f;
+            _resourceTooltipContainer.style.top = localPos.y + 20f;
+        }
+
+        private void HideResourceUpgradeTooltip()
+        {
+            if (_resourceTooltipContainer != null) _resourceTooltipContainer.style.display = DisplayStyle.None;
         }
     }
 }

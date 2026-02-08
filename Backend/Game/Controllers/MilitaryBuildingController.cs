@@ -1,7 +1,9 @@
 ﻿using Application.DTOs;
 using Application.Interfaces.IServices;
 using Application.Interfaces.IServices.IBuildings;
+using Application.Services;
 using Application.Services.Buildings;
+using Domain.Enums;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
@@ -35,6 +37,13 @@ namespace Game.Controllers
             _barracksService = barracksService;
         }
 
+        [HttpGet("recruitmentQueue")]
+        public async Task<IActionResult> GetRecruitmentQueue([FromBody] GetRecruitmentQueueItemsDTO dto)
+        {
+            var queue = await _recruitmentService.GetRecruitmentQueueAsync(dto);
+            return Ok(queue);
+        }
+
         [HttpPost("{cityId}/stableRecruit")]
         public async Task<IActionResult> StableRecruit(Guid cityId, [FromBody] RecruitUnitRequestDTO request)
         {
@@ -47,10 +56,10 @@ namespace Game.Controllers
 
                 if (result.Success)
                 {
-                    return Ok(new { Message = result.Message });
+                    return Ok(result);
                 }
 
-                return BadRequest(result.Message);
+                return BadRequest(result);
             }
             catch (Exception exception)
             {
@@ -110,10 +119,10 @@ namespace Game.Controllers
 
                 if (result.Success)
                 {
-                    return Ok(new { Message = result.Message });
+                    return Ok(result);
                 }
 
-                return BadRequest(result.Message);
+                return BadRequest(result);
             }
             catch (Exception ex)
             {
@@ -129,8 +138,8 @@ namespace Game.Controllers
 
             var result = await _recruitmentService.QueueRecruitmentAsync(userId, cityId, request.UnitType, request.Amount);
 
-            if (result.Success) return Ok(new { Message = result.Message });
-            return BadRequest(result.Message);
+            if (result.Success) return Ok(result);
+            return BadRequest(result);
         }
 
         private Guid GetUserIdFromClaims()

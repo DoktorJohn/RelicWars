@@ -10,7 +10,7 @@ namespace Domain.Workers.Abstraction
 {
     public abstract class BaseJob : BaseEntity
     {
-        public Guid UserId { get; set; }
+        public Guid WorldPlayerId { get; set; }
         public DateTime ExecutionTime { get; set; }
         public bool IsCompleted { get; set; }
     }

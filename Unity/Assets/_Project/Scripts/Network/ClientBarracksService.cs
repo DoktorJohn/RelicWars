@@ -6,6 +6,8 @@ using UnityEngine.Networking;
 using Newtonsoft.Json;
 using Project.Scripts.Domain.DTOs;
 using Assets.Scripts.Domain.Enums;
+using Assets._Project.Scripts.Domain.Enums;
+using Project.Network.Helper;
 
 namespace Project.Network
 {
@@ -18,13 +20,47 @@ namespace Project.Network
             _baseUrl = baseUrl;
         }
 
+        public IEnumerator GetRecruitmentQueue(Guid cityId, string token, Action<List<RecruitmentQueueItemDTO>> callback)
+        {
+            string url = $"{_baseUrl}/MilitaryBuilding/recruitmentQueue";
+
+            var requestDataContainer = new GetRecruitmentQueueItemsDTO
+            {
+                CityId = cityId,
+                UnitCategories = new List<UnitCategoryEnum> { UnitCategoryEnum.Infantry, UnitCategoryEnum.Ranged }
+            };
+
+            using (UnityWebRequest request = BackendRequestHelper.CreateGetWithBodyRequest(url, requestDataContainer, token))
+            {
+                yield return request.SendWebRequest();
+
+                if (request.result == UnityWebRequest.Result.Success)
+                {
+                    try
+                    {
+                        List<RecruitmentQueueItemDTO> queueItems = JsonConvert.DeserializeObject<List<RecruitmentQueueItemDTO>>(request.downloadHandler.text);
+                        callback?.Invoke(queueItems);
+                    }
+                    catch (Exception exception)
+                    {
+                        Debug.LogError($"[ClientBarracksService] JSON Deserialization Error: {exception.Message}");
+                        callback?.Invoke(new List<RecruitmentQueueItemDTO>());
+                    }
+                }
+                else
+                {
+                    Debug.LogError($"[ClientBarracksService] Network Error ({request.responseCode}): {request.error}");
+                    callback?.Invoke(new List<RecruitmentQueueItemDTO>());
+                }
+            }
+        }
+
         public IEnumerator GetBarracksOverviewInformation(Guid cityId, string token, Action<BarracksFullViewDTO> callback)
         {
             string url = $"{_baseUrl}/militarybuilding/{cityId}/barracksOverview";
 
             using (UnityWebRequest request = UnityWebRequest.Get(url))
             {
-                request.certificateHandler = new BypassCertificateHandler();
                 request.SetRequestHeader("Authorization", "Bearer " + token);
                 request.SetRequestHeader("Content-Type", "application/json");
 
@@ -51,8 +87,7 @@ namespace Project.Network
             }
         }
 
-        // ÆNDRING: Callback tager nu også en string 'message' med
-        public IEnumerator RecruitUnits(Guid cityId, UnitTypeEnum unitType, int amount, string token, Action<bool, string> callback)
+        public IEnumerator RecruitUnits(Guid cityId, UnitTypeEnum unitType, int amount, string token, Action<RecruitmentResult> callback)
         {
             string url = $"{_baseUrl}/militarybuilding/{cityId}/barracksRecruit";
 
@@ -69,57 +104,49 @@ namespace Project.Network
             {
                 request.uploadHandler = new UploadHandlerRaw(bodyRaw);
                 request.downloadHandler = new DownloadHandlerBuffer();
-                request.certificateHandler = new BypassCertificateHandler();
 
                 request.SetRequestHeader("Authorization", "Bearer " + token);
                 request.SetRequestHeader("Content-Type", "application/json");
 
                 yield return request.SendWebRequest();
 
-                string responseText = request.downloadHandler.text;
-                string message = "Unknown error";
-
-                // Forsøg at trække beskeden ud af JSON svaret
-                try
-                {
-                    // Backend sender: { "Message": "..." } både ved succes og nogle fejl
-                    var responseObj = JsonConvert.DeserializeObject<BackendMessageDTO>(responseText);
-                    if (responseObj != null && !string.IsNullOrEmpty(responseObj.Message))
-                    {
-                        message = responseObj.Message;
-                    }
-                    else
-                    {
-                        // Hvis backenden bare sender en rå string ved fejl (BadRequest("Tekst"))
-                        message = responseText;
-                    }
-                }
-                catch
-                {
-                    message = request.error;
-                }
+                RecruitmentResult recruitmentResult = new RecruitmentResult();
 
                 if (request.result == UnityWebRequest.Result.Success)
                 {
-                    callback?.Invoke(true, message);
+                    try
+                    {
+                        // Vi parser det fulde svar inkl. remainingFreePopulation
+                        recruitmentResult = JsonConvert.DeserializeObject<RecruitmentResult>(request.downloadHandler.text);
+                    }
+                    catch (Exception ex)
+                    {
+                        recruitmentResult.Success = false;
+                        recruitmentResult.Message = "Kunne ikke tolke succes-svar fra serveren.";
+                        Debug.LogError($"[BarracksService] JSON Parse Error: {ex.Message}");
+                    }
                 }
                 else
                 {
-                    Debug.LogError($"[BarracksService] Recruit Failed: {message}");
-                    callback?.Invoke(false, message);
+                    // Ved fejl (400, 500 osv.) forsøger vi stadig at læse backends fejlbesked
+                    try
+                    {
+                        recruitmentResult = JsonConvert.DeserializeObject<RecruitmentResult>(request.downloadHandler.text);
+                    }
+                    catch
+                    {
+                        // Hvis det ikke er JSON, bruger vi den rå fejlbesked
+                        recruitmentResult.Success = false;
+                        recruitmentResult.Message = string.IsNullOrEmpty(request.downloadHandler.text) ? request.error : request.downloadHandler.text;
+                    }
+
+                    Debug.LogError($"[BarracksService] Recruit Failed: {recruitmentResult.Message}");
                 }
+
+                // Vi returnerer hele objektet til controlleren
+                callback?.Invoke(recruitmentResult);
             }
         }
-    }
 
-    // Hvis denne klasse allerede findes i NetworkManager.cs (i samme namespace), 
-    // kan du slette den herfra for at undgå "Duplicate definition" fejl.
-    // Ellers behold den her.
-    public class BypassCertificateHandler : CertificateHandler
-    {
-        protected override bool ValidateCertificate(byte[] certificateData)
-        {
-            return true;
-        }
     }
 }

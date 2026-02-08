@@ -39,7 +39,7 @@ namespace Infrastructure.Repositories
         {
             return await _context.Jobs
         .OfType<ResearchJob>()
-        .Where(j => !j.IsCompleted && j.UserId == userId)
+        .Where(j => !j.IsCompleted && j.WorldPlayerId == userId)
         .FirstOrDefaultAsync();
         }
 

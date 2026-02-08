@@ -12,7 +12,6 @@ namespace Project.Scripts.Domain.DTOs
     {
         public int BuildingLevel;
         public List<StableUnitInfoDTO> AvailableUnits;
-        public List<RecruitmentQueueItemDTO> RecruitmentQueue;
     }
 
     [Serializable]

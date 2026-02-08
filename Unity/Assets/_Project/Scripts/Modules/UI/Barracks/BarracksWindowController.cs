@@ -55,7 +55,29 @@ namespace Project.Modules.UI.Windows.Implementations
             _currentActiveCityId = (dataPayload is Guid id) ? id : NetworkManager.Instance.ActiveCityId ?? Guid.Empty;
             if (_currentActiveCityId == Guid.Empty) return;
 
-            ExecuteRefreshBarracksData();
+            // 1. Abonner på CityStateManager for at holde køen synkroniseret på tværs af HUD og vinduer
+            if (CityStateManager.Instance != null)
+            {
+                CityStateManager.Instance.OnBarracksQueueChanged += HandleRecruitmentQueueUpdated;
+
+                // Tegn den nuværende kø fra statemanageren med det samme
+                HandleRecruitmentQueueUpdated(CityStateManager.Instance.CurrentBarracksQueue);
+
+                // Trigger en overordnet refresh af byens tilstand (DetailedInfo + Køer)
+                CityStateManager.Instance.InitiateResourceRefresh(_currentActiveCityId);
+            }
+
+            // 2. Hent bygningsspecifik data (Available Units / Tabs)
+            ExecuteRefreshBarracksBuildingData();
+        }
+
+        private void OnDisable()
+        {
+            // VIGTIGT: Fjern abonnement for at undgå memory leaks og utilsigtede UI opdateringer
+            if (CityStateManager.Instance != null)
+            {
+                CityStateManager.Instance.OnBarracksQueueChanged -= HandleRecruitmentQueueUpdated;
+            }
         }
 
         private void InitializeUserInterfaceReferences()
@@ -69,7 +91,6 @@ namespace Project.Modules.UI.Windows.Implementations
             _labelUnitFlavorText = Root.Q<Label>("Lbl-Flavor");
             _labelTotalCostString = Root.Q<Label>("Lbl-CostString");
 
-            // Stats Mapping
             _labelStatPowerValue = Root.Q<Label>("Stat-Power");
             _labelStatArmorValue = Root.Q<Label>("Stat-Armor");
             _labelStatDisciplineValue = Root.Q<Label>("Stat-Discipline");
@@ -112,22 +133,34 @@ namespace Project.Modules.UI.Windows.Implementations
             }
         }
 
-        private void ExecuteRefreshBarracksData()
+        private void HandleRecruitmentQueueUpdated(List<RecruitmentQueueItemDTO> updatedQueue)
+        {
+            // Vi bruger data direkte fra CityStateManager til at tegne køen
+            PopulateActiveRecruitmentQueue(updatedQueue);
+
+            // Da køen har ændret sig, genberegner vi hvad spilleren har råd til (Population caps)
+            if (_currentlySelectedUnitData != null)
+            {
+                ApplyUnitSelection(_currentlySelectedUnitData);
+            }
+        }
+
+        private void ExecuteRefreshBarracksBuildingData()
         {
             string token = NetworkManager.Instance.JwtToken;
             StartCoroutine(NetworkManager.Instance.Barracks.GetBarracksOverviewInformation(_currentActiveCityId, token, (data) => {
-                if (data != null) SynchronizeUserInterfaceWithData(data);
+                if (data != null) SynchronizeAvailableUnitsTabs(data.AvailableUnits);
             }));
         }
 
-        private void SynchronizeUserInterfaceWithData(BarracksFullViewDTO barracksData)
+        private void SynchronizeAvailableUnitsTabs(List<BarracksUnitInfoDTO> availableUnits)
         {
             _unitTabsScrollContainer.Clear();
             _activeTabButtons.Clear();
 
-            if (barracksData.AvailableUnits == null || barracksData.AvailableUnits.Count == 0) return;
+            if (availableUnits == null || availableUnits.Count == 0) return;
 
-            foreach (var unit in barracksData.AvailableUnits)
+            foreach (var unit in availableUnits)
             {
                 Button tabButton = new Button { text = unit.UnitName.ToUpper() };
                 tabButton.AddToClassList("tab-button");
@@ -137,11 +170,9 @@ namespace Project.Modules.UI.Windows.Implementations
             }
 
             if (_currentlySelectedUnitData == null)
-                ApplyUnitSelection(barracksData.AvailableUnits[0]);
+                ApplyUnitSelection(availableUnits[0]);
             else
-                ApplyUnitSelection(barracksData.AvailableUnits.FirstOrDefault(u => u.UnitType == _currentlySelectedUnitData.UnitType) ?? barracksData.AvailableUnits[0]);
-
-            PopulateActiveRecruitmentQueue(barracksData.RecruitmentQueue);
+                ApplyUnitSelection(availableUnits.FirstOrDefault(u => u.UnitType == _currentlySelectedUnitData.UnitType) ?? availableUnits[0]);
         }
 
         private void ApplyUnitSelection(BarracksUnitInfoDTO unitData)
@@ -158,7 +189,6 @@ namespace Project.Modules.UI.Windows.Implementations
             _labelOwnedCountBadge.text = $"OWNED: {unitData.AlreadyOwnedCount}";
             _labelUnitFlavorText.text = GetUnitHistoricalFlavorText(unitData.UnitType);
 
-            // Map Detailed Stats
             _labelStatPowerValue.text = unitData.Power.ToString();
             _labelStatArmorValue.text = unitData.Armor.ToString();
             _labelStatDisciplineValue.text = unitData.Discipline.ToString();
@@ -166,31 +196,22 @@ namespace Project.Modules.UI.Windows.Implementations
             _labelStatReachValue.text = unitData.Reach.ToString();
             _labelStatLootValue.text = unitData.LootCapacity.ToString();
             _labelStatPopulationValue.text = unitData.PopulationCost.ToString();
-            _labelStatRecruitmentTimeValue.text =
-                TimeSpan.FromSeconds(unitData.RecruitmentTimeInSeconds)
-                        .ToString(@"hh\:mm\:ss");
+            _labelStatRecruitmentTimeValue.text = TimeSpan.FromSeconds(unitData.RecruitmentTimeInSeconds).ToString(@"hh\:mm\:ss");
 
             int maxPossible = CalculateMaximumAffordableUnitQuantity(unitData);
 
-            // 🔒 Definér gyldigt interval
             _quantityAdjustmentSlider.lowValue = 1;
             _quantityAdjustmentSlider.highValue = Mathf.Max(1, maxPossible);
 
-            // 🔒 Start altid på 1 hvis muligt
             int startValue = maxPossible > 0 ? 1 : 0;
-
-            // 🔒 Sæt BEGGE uden callbacks
             _quantityAdjustmentSlider.SetValueWithoutNotify(startValue);
             _quantityAdjustmentInput.SetValueWithoutNotify(startValue);
 
-            // 🔓 Enable/disable korrekt
             bool canConstruct = unitData.IsUnlocked && maxPossible > 0;
-
             _quantityAdjustmentSlider.SetEnabled(canConstruct);
             _quantityAdjustmentInput.SetEnabled(canConstruct);
             _executeRecruitButton.SetEnabled(canConstruct);
 
-            // 🔄 Opdatér UI-tekst
             UpdateCalculatedCostDisplay(startValue);
             UpdateExecuteButtonDynamicText(startValue);
         }
@@ -235,47 +256,31 @@ namespace Project.Modules.UI.Windows.Implementations
                 yield return new WaitForSeconds(1);
                 countdownValue--;
             }
-            if (displayLabel != null) displayLabel.text = "READY";
-            ExecuteRefreshBarracksData();
+            if (displayLabel != null)
+            {
+                displayLabel.text = "READY";
+                // Når en enhed er færdig, trigger vi manageren til at rydde op i staten for alle vinduer
+                CityStateManager.Instance.InitiateResourceRefresh(_currentActiveCityId);
+            }
         }
 
         private int CalculateMaximumAffordableUnitQuantity(BarracksUnitInfoDTO unit)
         {
             if (CityStateManager.Instance == null) return 0;
-
             var resources = CityStateManager.Instance.CurrentResources;
 
-            // --- Resource caps ---
             int woodCap = unit.CostWood > 0 ? (int)(resources.WoodAmount / unit.CostWood) : int.MaxValue;
             int stoneCap = unit.CostStone > 0 ? (int)(resources.StoneAmount / unit.CostStone) : int.MaxValue;
             int metalCap = unit.CostMetal > 0 ? (int)(resources.MetalAmount / unit.CostMetal) : int.MaxValue;
+            int populationCap = unit.PopulationCost > 0 ? resources.FreePopulation / unit.PopulationCost : int.MaxValue;
 
-            // --- Population cap ---
-            int populationCap = int.MaxValue;
-            if (unit.PopulationCost > 0)
-            {
-                populationCap = resources.FreePopulation / unit.PopulationCost;
-            }
-
-            // --- Final cap ---
-            return Mathf.Max(
-                0,
-                Mathf.Min(
-                    Mathf.Min(woodCap, Mathf.Min(stoneCap, metalCap)),
-                    Mathf.Min(populationCap, 100)
-                )
-            );
+            return Mathf.Max(0, Mathf.Min(Mathf.Min(woodCap, Mathf.Min(stoneCap, metalCap)), Mathf.Min(populationCap, 100)));
         }
 
         private void UpdateCalculatedCostDisplay(int requestedQuantity)
         {
             if (_currentlySelectedUnitData == null) return;
-
-            long totalWood = (long)_currentlySelectedUnitData.CostWood * requestedQuantity;
-            long totalStone = (long)_currentlySelectedUnitData.CostStone * requestedQuantity;
-            long totalMetal = (long)_currentlySelectedUnitData.CostMetal * requestedQuantity;
-
-            _labelTotalCostString.text = $"Wood: {totalWood} | Stone: {totalStone} | Metal: {totalMetal}";
+            _labelTotalCostString.text = $"Wood: {_currentlySelectedUnitData.CostWood * requestedQuantity} | Stone: {_currentlySelectedUnitData.CostStone * requestedQuantity} | Metal: {_currentlySelectedUnitData.CostMetal * requestedQuantity}";
         }
 
         private void UpdateExecuteButtonDynamicText(int amount)
@@ -287,16 +292,29 @@ namespace Project.Modules.UI.Windows.Implementations
         private void OnRecruitExecutionRequested()
         {
             _executeRecruitButton.SetEnabled(false);
-            int amount = _quantityAdjustmentInput.value;
+            int amountToRecruit = _quantityAdjustmentInput.value;
 
-            StartCoroutine(NetworkManager.Instance.Barracks.RecruitUnits(_currentActiveCityId, _currentlySelectedUnitData.UnitType, amount, NetworkManager.Instance.JwtToken, (success, msg) => {
-                _executeRecruitButton.SetEnabled(true);
-                if (success)
-                {
-                    CityStateManager.Instance?.InitiateResourceRefresh(_currentActiveCityId);
-                    ExecuteRefreshBarracksData();
-                }
-            }));
+            StartCoroutine(NetworkManager.Instance.Barracks.RecruitUnits(
+                _currentActiveCityId,
+                _currentlySelectedUnitData.UnitType,
+                amountToRecruit,
+                NetworkManager.Instance.JwtToken,
+                (recruitmentResult) => {
+
+                    _executeRecruitButton.SetEnabled(true);
+
+                    if (recruitmentResult.Success)
+                    {
+                        if (CityStateManager.Instance != null)
+                        {
+                            CityStateManager.Instance.InitiateResourceRefresh(_currentActiveCityId);
+                        }
+                    }
+                    else
+                    {
+                        Debug.LogError($"[BarracksWindow] Recruitment failed: {recruitmentResult.Message}");
+                    }
+                }));
         }
 
         private string GetUnitHistoricalFlavorText(UnitTypeEnum type) => "Imperial forces specialized for regional conquest.";

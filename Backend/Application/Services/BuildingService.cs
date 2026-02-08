@@ -101,7 +101,7 @@ namespace Application.Services
             await _cityRepo.UpdateAsync(city);
             await _jobRepo.AddAsync(new BuildingJob
             {
-                UserId = city.WorldPlayerId.Value,
+                WorldPlayerId = city.WorldPlayerId.Value,
                 CityId = cityId,
                 BuildingType = type,
                 TargetLevel = nextLevel,

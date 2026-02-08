@@ -4,6 +4,7 @@ using Application.Interfaces.IServices;
 using Domain.Entities;
 using Domain.Enums;
 using Domain.StaticData.Readers;
+using Domain.User;
 using Domain.Workers;
 using System;
 using System.Collections.Generic;
@@ -72,49 +73,68 @@ namespace Application.Services
             return new ResearchTreeDTO(nodeDtos, activeJobDto, user.ResearchPoints);
         }
 
-        public async Task<BuildingResult> QueueResearchAsync(Guid userId, string researchId)
+        public async Task<BuildingResult> QueueResearchAsync(Guid worldPlayerId, string researchId)
         {
-            var user = await _userRepo.GetByIdWithResearchAsync(userId);
-            var node = _researchReader.GetNode(researchId);
+            var worldPlayer = await _userRepo.GetByIdWithResearchAsync(worldPlayerId);
+            var researchNode = _researchReader.GetNode(researchId);
 
-            if (user == null) return new BuildingResult(false, "Bruger ikke fundet.");
-
-            if (user.CompletedResearches.Any(r => r.ResearchId == researchId))
-                return new BuildingResult(false, "Denne teknologi er allerede udforsket.");
-
-            if (!string.IsNullOrEmpty(node.ParentId))
+            if (worldPlayer == null)
             {
-                if (!user.CompletedResearches.Any(r => r.ResearchId == node.ParentId))
-                    return new BuildingResult(false, "Du skal udforske den forrige teknologi i træet først.");
+                return new BuildingResult(false, "Spilleren blev ikke fundet i systemet.");
             }
 
-            var globalResearchJob = await _jobRepo.GetResearchJobAsync(userId);
-            if (globalResearchJob != null)
-                return new BuildingResult(false, "Du er allerede i gang med at forske.");
-
-            if (user.ResearchPoints < node.ResearchPointCost)
-                return new BuildingResult(false, $"Mangler Research Points. Kræver: {node.ResearchPointCost}");
-
-            user.ResearchPoints -= node.ResearchPointCost;
-
-            var job = new ResearchJob
+            // Tjek om teknologien allerede er udforsket
+            if (worldPlayer.CompletedResearches.Any(research => research.ResearchId == researchId))
             {
-                UserId = userId,
+                return new BuildingResult(false, "Denne teknologi er allerede færdiggjort.");
+            }
+
+            // Tjek forudsætninger (Parent teknologi)
+            if (!string.IsNullOrEmpty(researchNode.ParentId))
+            {
+                bool hasRequiredParent = worldPlayer.CompletedResearches.Any(research => research.ResearchId == researchNode.ParentId);
+                if (!hasRequiredParent)
+                {
+                    return new BuildingResult(false, $"Du skal udforske {researchNode.ParentId} før du kan påbegynde {researchNode.Name}.");
+                }
+            }
+
+            // Tjek om der allerede kører et forsknings-job
+            var existingResearchJob = await _jobRepo.GetResearchJobAsync(worldPlayerId);
+            if (existingResearchJob != null)
+            {
+                return new BuildingResult(false, "Laboratoriet er optaget. Du kan kun forske i én teknologi ad gangen.");
+            }
+
+            // Tjek økonomi
+            if (worldPlayer.ResearchPoints < researchNode.ResearchPointCost)
+            {
+                return new BuildingResult(false, $"Utilstrækkelige forskningspoint. Mangler: {researchNode.ResearchPointCost - worldPlayer.ResearchPoints}");
+            }
+
+            // Foretag betaling
+            worldPlayer.ResearchPoints -= researchNode.ResearchPointCost;
+
+            // Opret selve jobbet
+            var newResearchJob = new ResearchJob
+            {
+                WorldPlayerId = worldPlayerId,
                 ResearchId = researchId,
-                ExecutionTime = DateTime.UtcNow.AddSeconds(node.ResearchTimeInSeconds),
+                ExecutionTime = DateTime.UtcNow.AddSeconds(researchNode.ResearchTimeInSeconds),
                 IsCompleted = false
             };
 
-            await _userRepo.UpdateAsync(user);
-            await _jobRepo.AddAsync(job);
+            // Gem begge dele. Ideelt set bør dette ligge i en Unit of Work / Transaction.
+            await _userRepo.UpdateAsync(worldPlayer);
+            await _jobRepo.AddAsync(newResearchJob);
 
-            return new BuildingResult(true, $"Forskning af {node.Name} er påbegyndt.");
+            return new BuildingResult(true, $"Forskningen af {researchNode.Name} er nu sat i gang.");
         }
 
         public async Task<BuildingResult> CancelResearchAsync(Guid userId, Guid jobId)
         {
             var job = await _jobRepo.GetByIdAsync(jobId) as ResearchJob;
-            if (job == null || job.UserId != userId) return new BuildingResult(false, "Job ikke fundet.");
+            if (job == null || job.WorldPlayerId != userId) return new BuildingResult(false, "Job ikke fundet.");
 
             var user = await _userRepo.GetByIdAsync(userId);
             var node = _researchReader.GetNode(job.ResearchId);
