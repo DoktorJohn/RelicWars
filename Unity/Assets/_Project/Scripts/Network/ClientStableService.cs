@@ -30,26 +30,34 @@ namespace Project.Network
                 UnitCategories = new List<UnitCategoryEnum> { UnitCategoryEnum.Cavalry }
             };
 
-            using (UnityWebRequest request = BackendRequestHelper.CreateGetWithBodyRequest(url, requestDataContainer, token))
+            string json = JsonConvert.SerializeObject(requestDataContainer);
+            byte[] bodyRaw = System.Text.Encoding.UTF8.GetBytes(json);
+
+            using (UnityWebRequest request = new UnityWebRequest(url, "POST"))
             {
+                request.uploadHandler = new UploadHandlerRaw(bodyRaw);
+                request.downloadHandler = new DownloadHandlerBuffer();
+                request.SetRequestHeader("Content-Type", "application/json");
+                request.SetRequestHeader("Authorization", "Bearer " + token);
+
                 yield return request.SendWebRequest();
 
                 if (request.result == UnityWebRequest.Result.Success)
                 {
                     try
                     {
-                        List<RecruitmentQueueItemDTO> queueItems = JsonConvert.DeserializeObject<List<RecruitmentQueueItemDTO>>(request.downloadHandler.text);
-                        callback?.Invoke(queueItems);
+                        var data = JsonConvert.DeserializeObject<List<RecruitmentQueueItemDTO>>(request.downloadHandler.text);
+                        callback?.Invoke(data);
                     }
-                    catch (Exception exception)
+                    catch (Exception e)
                     {
-                        Debug.LogError($"[ClientBarracksService] JSON Deserialization Error: {exception.Message}");
+                        Debug.LogError($"[StableService] JSON Error: {e.Message}");
                         callback?.Invoke(new List<RecruitmentQueueItemDTO>());
                     }
                 }
                 else
                 {
-                    Debug.LogError($"[ClientBarracksService] Network Error ({request.responseCode}): {request.error}");
+                    Debug.LogError($"[StableService] Network Error ({request.responseCode}): {request.error}");
                     callback?.Invoke(new List<RecruitmentQueueItemDTO>());
                 }
             }

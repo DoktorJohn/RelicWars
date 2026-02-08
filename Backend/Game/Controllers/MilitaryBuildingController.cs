@@ -37,7 +37,7 @@ namespace Game.Controllers
             _barracksService = barracksService;
         }
 
-        [HttpGet("recruitmentQueue")]
+        [HttpPost("recruitmentQueue")]
         public async Task<IActionResult> GetRecruitmentQueue([FromBody] GetRecruitmentQueueItemsDTO dto)
         {
             var queue = await _recruitmentService.GetRecruitmentQueueAsync(dto);
