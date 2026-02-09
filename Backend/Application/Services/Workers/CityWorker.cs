@@ -24,18 +24,31 @@ namespace Application.Services.Workers
 
         public async Task ProcessCityJobsAsync()
         {
+            // Hent alle jobs der er forfaldne
             var dueJobs = await _jobRepo.GetDueJobsAsync(DateTime.UtcNow);
+
             foreach (var job in dueJobs)
             {
                 try
                 {
+                    // Service opdaterer City og selve job-objektet i hukommelsen
                     await _jobService.ProcessAsync(job);
-                    if (job.IsCompleted) await _jobRepo.DeleteAsync(job.Id);
-                    else await _jobRepo.UpdateAsync(job);
+
+                    // Nu beslutter vi hvad der skal ske i databasen
+                    if (job.IsCompleted)
+                    {
+                        _logger.LogInformation("[CityWorker] Job {JobId} completed. Deleting from queue.", job.Id);
+                        await _jobRepo.DeleteAsync(job.Id);
+                    }
+                    else
+                    {
+                        // For RecruitmentJobs der kun er delvist færdige, gemmer vi fremskridtet
+                        await _jobRepo.UpdateAsync(job);
+                    }
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogError(ex, $"Error processing job {job.Id}");
+                    _logger.LogError(ex, "Failed to process job {JobId}", job.Id);
                 }
             }
         }
