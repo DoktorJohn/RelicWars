@@ -28,7 +28,6 @@ namespace Project.Modules.City
 
         public event Action<List<CityControllerGetDetailedCityInformationBuildingDTO>> OnBuildingStateReceived;
         public event Action<List<UnitStackDTO>> OnTroopsStateReceived;
-        public event Action<List<UnitDeploymentDTO>> OnDeploymentsStateReceived;
 
         [Header("Konfiguration")]
         [SerializeField] private float _networkSynchronizationIntervalInSeconds = 30f;
@@ -231,9 +230,6 @@ namespace Project.Modules.City
 
                 _currentStationedUnits = detailedInformationDto.StationedUnits ?? new List<UnitStackDTO>();
                 OnTroopsStateReceived?.Invoke(_currentStationedUnits);
-
-                _currentActiveDeployments = detailedInformationDto.DeployedUnits ?? new List<UnitDeploymentDTO>();
-                OnDeploymentsStateReceived?.Invoke(_currentActiveDeployments);
 
                 _isDataInitialized = true;
                 OnResourceStateChanged?.Invoke(_currentResourceState);

@@ -97,7 +97,7 @@ namespace Application.Services
                 CreateResourceOverview(cityEntity, BuildingTypeEnum.TimberCamp, new[] { ModifierTagEnum.Wood, ModifierTagEnum.ResourceProduction }),
                 CreateResourceOverview(cityEntity, BuildingTypeEnum.StoneQuarry, new[] { ModifierTagEnum.Stone, ModifierTagEnum.ResourceProduction }),
                 CreateResourceOverview(cityEntity, BuildingTypeEnum.MetalMine, new[] { ModifierTagEnum.Metal, ModifierTagEnum.ResourceProduction }),
-                CreateProductionBreakdown(cityEntity, BuildingTypeEnum.MarketPlace, new[] { ModifierTagEnum.Silver }),
+                CreateSilverProductionBreakdown(cityEntity),
                 CreateProductionBreakdown(cityEntity, BuildingTypeEnum.University, new[] { ModifierTagEnum.Research }),
                 CreateIdeologyProductionBreakdown(playerEntity),
                 CreatePopulationBreakdown(cityEntity, activeBuildingJobs),
@@ -133,50 +133,6 @@ namespace Application.Services
 
                 var stationedUnitsDto = cityEntity.UnitStacks
                     .Select(u => new UnitStackDTO(u.Type, u.Quantity))
-                    .ToList();
-
-                var deployedUnitsDto = cityEntity.OriginUnitDeployments
-                    .Select(d => new UnitDeploymentDTO(
-                        d.Id,
-                        d.Name,
-                        d.WorldPlayerId,
-                        d.OriginCityId,
-
-                        new CityDTO(
-                            d.OriginCity.Id,
-                            d.OriginCity.Name,
-                            d.OriginCity.X,
-                            d.OriginCity.Y,
-                            d.OriginCity.Points
-                        ),
-
-                        d.TargetCityId ?? Guid.Empty,
-
-                        d.TargetCity != null
-                            ? new CityDTO(
-                                d.TargetCity.Id,
-                                d.TargetCity.Name,
-                                d.TargetCity.X,
-                                d.TargetCity.Y,
-                                d.TargetCity.Points
-                            )
-                            : null,
-
-                        d.UnitDeploymentMovementStatus,
-                        d.ArrivalTime,
-                        d.NextStepTime,
-                        d.LastStepTime,
-                        d.CurrentX,
-                        d.CurrentY,
-                        d.NextX,
-                        d.NextY,
-                        d.FinalX,
-                        d.FinalY,
-                        d.Mobility,
-                        d.RemainingPathJson ?? "",
-                        d.UnitStacks.Select(us => new UnitStackDTO(us.Type, us.Quantity)).ToList(),
-                        d.OwnerWorldPlayer?.PlayerProfile?.UserName ?? "Ukendt Spiller"
-                    ))
                     .ToList();
 
                 var activeRecruitmentJobs = await _jobRepository.GetRecruitmentJobsAsync(cityIdentifier);
@@ -219,7 +175,6 @@ namespace Application.Services
                     }).ToList(),
 
                     StationedUnits = stationedUnitsDto,
-                    DeployedUnits = deployedUnitsDto
                 };
             }
 
@@ -330,6 +285,7 @@ namespace Application.Services
                     result.FinalValue
                 );
             }
+
             private ProductionBreakdownDTO CreateProductionBreakdown(City cityEntity, BuildingTypeEnum buildingType, IEnumerable<ModifierTagEnum> targetTags)
             {
                 var building = cityEntity.Buildings.FirstOrDefault(b => b.Type == buildingType);
@@ -359,10 +315,66 @@ namespace Application.Services
                 return new ProductionBreakdownDTO(baseProductionValue, result.FlatBonus, result.PercentageBonus, result.FinalValue);
             }
 
+            private SilverBreakdownDTO CreateSilverProductionBreakdown(City cityEntity)
+            {
+                IEnumerable<ModifierTagEnum> silverIncomeTags = new[] { ModifierTagEnum.Silver };
+                IEnumerable<ModifierTagEnum> silverExpenditureTags = new[] { ModifierTagEnum.Upkeep };
+
+                //Calculate silver INCOME
+                double baseProductionValue = _cityStatService.GetMaxPopulation(cityEntity) * 7.0;
+
+                var modifierProviders = new List<IModifierProvider> { cityEntity, cityEntity.WorldPlayer };
+                if (cityEntity.WorldPlayer?.Alliance != null) modifierProviders.Add(cityEntity.WorldPlayer.Alliance);
+
+                foreach (var cityBuilding in cityEntity.Buildings.Where(b => b.Level > 0))
+                {
+                    var levelConfig = _buildingDataReader.GetConfig<BuildingLevelData>(cityBuilding.Type, cityBuilding.Level);
+                    if (levelConfig != null) modifierProviders.Add(levelConfig);
+                }
+
+                foreach (var research in cityEntity.WorldPlayer.CompletedResearches)
+                {
+                    var researchToGetModifiers = _researchDataReader.GetNode(research.ResearchId);
+                    modifierProviders.Add(researchToGetModifiers);
+                }
+
+                var ideology = _ideologyDataReader.GetIdeology(cityEntity.WorldPlayer.Ideology);
+                if (ideology != null) modifierProviders.Add(ideology);
+
+                var silverProduction = _modifierService.CalculateEntityValueWithModifiers(baseProductionValue, silverIncomeTags, modifierProviders);
+
+                //Calculate silver EXPENDITURE
+                int stationedPopulation = cityEntity.UnitStacks
+                    .Sum(stack => _unitDataReader.GetUnit(stack.Type).PopulationCost * stack.Quantity);
+
+                int deployedPopulation = cityEntity.OriginUnitDeployments
+                    .SelectMany(deployment => deployment.UnitStacks)
+                    .Sum(stack => _unitDataReader.GetUnit(stack.Type).PopulationCost * stack.Quantity);
+
+                int totalPopulation = stationedPopulation + deployedPopulation;
+
+                int buildingUpkeepCost = cityEntity.Buildings.Sum(building => _buildingDataReader.GetConfig<BuildingLevelData>(building.Type, building.Level).UpkeepCost);
+
+                double flatUnitSilverExpenditure = (stationedPopulation + deployedPopulation) * 7;
+                double flatTotalSilverExpenditure = flatUnitSilverExpenditure + buildingUpkeepCost;
+
+
+                var silverExpenditure = _modifierService.CalculateEntityValueWithModifiers(flatTotalSilverExpenditure, silverExpenditureTags, modifierProviders);
+
+                return new SilverBreakdownDTO(
+                    silverProduction.FinalValue,
+                    silverProduction.FlatBonus,
+                    silverProduction.PercentageBonus,
+                    silverProduction.FinalValue,
+                    silverExpenditure.FinalValue,
+                    silverExpenditure.PercentageBonus
+                );
+
+            }
+
             private double ExtractBaseValueFromLevelData(City cityEntity, BuildingTypeEnum buildingType, int level)
             {
                 if (level <= 0) return 0;
-                if (buildingType == BuildingTypeEnum.MarketPlace) return (double)_cityStatService.GetMaxPopulation(cityEntity) * 7.0;
 
                 return buildingType switch
                 {
@@ -395,6 +407,8 @@ namespace Application.Services
                 var firstJob = recruitmentJobs.FirstOrDefault();
                 return new BarracksQueueOverviewDTO(recruitmentJobs.Any(), recruitmentJobs.Sum(j => j.TotalQuantity - j.CompletedQuantity), firstJob?.UnitType.ToString() ?? "None", recruitmentJobs.LastOrDefault()?.ExecutionTime);
             }
+
+
         }
     }
 }

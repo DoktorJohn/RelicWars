@@ -3,17 +3,25 @@
     justify-content: center;
     position: absolute;
     background-color: rgba(0, 0, 0, 0);
+    
+    /* OBJEKTIV FIX: 'ignore' gør at denne container ikke blokerer for 
+       verdens-interaktioner som zoom og panering.
+    */
+    picking-mode: ignore;
 }
 
 .unit-owner-bar {
     background-color: rgba(80, 0, 0, 0.9); /* Deep Red/Maroon */
-    border-width: 0.25px;
+    border-width: 0.5px; /* Øget en smule for bedre læsbarhed ved zoom */
     border-color: rgb(255, 255, 255);
-    border-radius: 4px; /* Lidt skarpere hjørner end byen */
+    border-radius: 4px;
     padding: 2px 8px;
     min-width: 50px;
     align-items: center;
     justify-content: center;
+
+    /* Tillader zoom at passere igennem baren */
+    picking-mode: ignore;
 }
 
 .unit-owner-text {
@@ -23,6 +31,9 @@
     -unity-text-align: middle-center;
     margin: 0;
     padding: 0;
+
+    /* Tekst skal aldrig fange musen */
+    picking-mode: ignore;
 }
 
 .unit-strength-badge {
@@ -39,6 +50,9 @@
     
     align-items: center;
     justify-content: center;
+
+    /* Tillader zoom at passere igennem badget */
+    picking-mode: ignore;
 }
 
 .unit-strength-text {
@@ -49,4 +63,7 @@
     
     margin: 0;
     padding: 0;
+
+    /* Tekst skal aldrig fange musen */
+    picking-mode: ignore;
 }

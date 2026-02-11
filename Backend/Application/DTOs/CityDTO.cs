@@ -47,7 +47,6 @@ namespace Application.DTOs
         // Liste over bygninger med dedikeret DTO til denne specifikke forespørgsel
         public List<CityControllerGetDetailedCityInformationBuildingDTO> BuildingList { get; set; } = new();
         public List<UnitStackDTO> StationedUnits { get; set; } = new();
-        public List<UnitDeploymentDTO> DeployedUnits { get; set; } = new();
     }
 
     public record CityOverviewHUD(
@@ -60,7 +59,7 @@ namespace Application.DTOs
         ResourceOverviewDTO Metal,
 
         // 3. Produktions-detaljer (Hvor kommer tallene fra?)
-        ProductionBreakdownDTO SilverProduction,
+        SilverBreakdownDTO SilverProduction,
         ProductionBreakdownDTO ResearchProduction,
         ProductionBreakdownDTO IdeologyProduction,
 
@@ -83,6 +82,15 @@ namespace Application.DTOs
         double GlobalModifierMultiplier, // Procentvise bonusser fra Alliance/Research (fx 1.10 for +10%)
         double FinalValuePerHour       // Det endelige tal efter alle beregninger
     );
+
+    public record SilverBreakdownDTO(
+    double BaseValue,              // Grundproduktion (fx fra bygningens level)
+    double BuildingBonus,          // Flade bonusser fra andre bygninger
+    double GlobalModifierMultiplier, // Procentvise bonusser fra Alliance/Research (fx 1.10 for +10%)
+    double FinalValuePerHour,
+    double Expenditure,
+    double GlobalUpkeepMultiplier
+);
 
     public record PopulationBreakdownDTO(
         int MaxCapacity,

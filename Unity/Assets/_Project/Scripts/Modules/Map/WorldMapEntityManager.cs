@@ -25,8 +25,8 @@ namespace Project.Scripts.Modules.Map
         [SerializeField] private string _unitLayerName = "Units";
 
         public Tilemap TerrainTilemap;
-        private Dictionary<Guid, GameObject> _activeUnitVisuals = new Dictionary<Guid, GameObject>();
-        private Dictionary<Vector2Int, List<GameObject>> _activeMapObjectsPerChunk = new Dictionary<Vector2Int, List<GameObject>>();
+        private Dictionary<Guid, GameObject> _activeUnitVisuals = new();
+        private Dictionary<Vector2Int, List<GameObject>> _activeMapObjectsPerChunk = new();
 
         private void Awake() => Instance = this;
 
@@ -38,7 +38,7 @@ namespace Project.Scripts.Modules.Map
             if (WorldMapInteractionHandler.Instance != null)
                 WorldMapInteractionHandler.Instance.OnSelectionChanged += SyncUnitSelectionVisuals;
 
-            Debug.Log("<color=green>[EntityManager]</color> Start: System kører.");
+            Debug.Log("<color=green>[WorldMapEntityManager]</color> Start: System klar til synkronisering.");
         }
 
         private void OnDestroy()
@@ -53,21 +53,25 @@ namespace Project.Scripts.Modules.Map
         private void HandleEntitySynchronizationRequest(WorldMapChunkResponseDTO data)
         {
             Vector2Int key = new Vector2Int(data.ChunkX, data.ChunkY);
-            Debug.Log($"<color=green>[EntityManager]</color> Modtog Chunk-data ({data.ChunkX}, {data.ChunkY}). Opdaterer objekter...");
+            Debug.Log($"<color=green>[WorldMapEntityManager]</color> Synkroniserer visuelle objekter for chunk {key}.");
 
             if (_activeMapObjectsPerChunk.TryGetValue(key, out List<GameObject> existingObjects))
             {
-                Debug.Log($"<color=yellow>[EntityManager]</color> Rydder {existingObjects.Count} gamle objekter i chunk {key}.");
+                Debug.Log($"<color=yellow>[WorldMapEntityManager]</color> Rydder {existingObjects.Count} visuelle objekter i chunk {key} for at genopbygge.");
                 foreach (var obj in existingObjects)
                 {
                     if (obj == null) continue;
 
                     var movementController = obj.GetComponent<WorldMapUnitVisualMovementController>();
-                    if (movementController != null && movementController.GetDeploymentId() != Guid.Empty)
+                    if (movementController != null)
                     {
-                        _activeUnitVisuals.Remove(movementController.GetDeploymentId());
+                        Guid id = movementController.GetDeploymentId();
+                        if (id != Guid.Empty)
+                        {
+                            Debug.Log($"<color=yellow>[WorldMapEntityManager]</color> Fjerner hær-visual {id} fra tracking ordbog.");
+                            _activeUnitVisuals.Remove(id);
+                        }
                     }
-
                     Destroy(obj);
                 }
                 existingObjects.Clear();
@@ -82,6 +86,8 @@ namespace Project.Scripts.Modules.Map
             {
                 Vector3 worldPos = TerrainTilemap.GetCellCenterWorld(new Vector3Int(city.X, city.Y, 0));
                 GameObject inst = Instantiate(_cityPrefab, worldPos, Quaternion.identity, _objectContainer);
+                inst.name = $"City_{city.CityName}";
+
                 var uiDoc = inst.GetComponent<UIDocument>();
                 if (uiDoc != null) uiDoc.sortingOrder = _cityLabelSortingOrder;
 
@@ -90,9 +96,9 @@ namespace Project.Scripts.Modules.Map
             }
 
             // 2. Håndter Units
-            Debug.Log($"<color=green>[EntityManager]</color> Chunken indeholder {data.UnitDeployments?.Count ?? 0} hær-enheder.");
             if (data.UnitDeployments != null)
             {
+                Debug.Log($"<color=green>[WorldMapEntityManager]</color> Behandler {data.UnitDeployments.Count} hære i chunk {key}.");
                 foreach (var unit in data.UnitDeployments)
                 {
                     GameObject unitVisual = SynchronizeUnitDeploymentVisual(unit);
@@ -109,12 +115,13 @@ namespace Project.Scripts.Modules.Map
             GameObject unitObj;
             if (_activeUnitVisuals.TryGetValue(data.Id, out GameObject existing) && existing != null)
             {
+                Debug.Log($"<color=cyan>[WorldMapEntityManager]</color> GENBRUGER visual for hær {data.Id}. Opdaterer position.");
                 unitObj = existing;
                 unitObj.GetComponent<WorldMapUnitVisualMovementController>().InitializeMovement(data, TerrainTilemap);
-                Debug.Log($"<color=cyan>[EntityManager]</color> Opdaterede eksisterende visual for: {data.Id}");
             }
             else
             {
+                Debug.Log($"<color=green>[WorldMapEntityManager]</color> SPANWER NY visual for hær {data.Id}.");
                 unitObj = Instantiate(_unitDeploymentPrefab, Vector3.zero, Quaternion.identity, _objectContainer);
                 unitObj.name = $"UnitDeployment_{data.Id}";
 
@@ -127,15 +134,12 @@ namespace Project.Scripts.Modules.Map
                 var moveCtrl = unitObj.GetComponent<WorldMapUnitVisualMovementController>() ?? unitObj.AddComponent<WorldMapUnitVisualMovementController>();
                 moveCtrl.InitializeMovement(data, TerrainTilemap);
                 _activeUnitVisuals[data.Id] = unitObj;
-                Debug.Log($"<color=green>[EntityManager]</color> Spawnede NY visual for: {data.Id}");
             }
 
             var trigger = unitObj.GetComponent<WorldMapUnitClickTrigger>();
             if (trigger != null) trigger.InitializeTrigger(data.Id, data.CurrentX, data.CurrentY);
 
             int qty = data.UnitStacks?.Sum(s => s.Quantity) ?? 0;
-
-
             unitObj.GetComponent<WorldMapUnitDeploymentLabelController>()?.InitializeUnitDeploymentLabel(data.Name, qty);
             UpdateUnitVisualScale(data.Id, unitObj);
 
@@ -158,13 +162,13 @@ namespace Project.Scripts.Modules.Map
         {
             if (_activeUnitVisuals.TryGetValue(id, out GameObject obj))
             {
-                Debug.Log($"<color=red>[EntityManager]</color> Eksplicit sletning af hær: {id}");
+                Debug.Log($"<color=red>[WorldMapEntityManager]</color> EKSPLICIT SLETNING af visual for hær {id}.");
                 _activeUnitVisuals.Remove(id);
                 if (obj != null) Destroy(obj);
             }
             else
             {
-                Debug.LogWarning($"<color=orange>[EntityManager]</color> Forsøgte at slette {id}, men den findes ikke i ordbogen.");
+                Debug.LogWarning($"<color=orange>[WorldMapEntityManager]</color> Forsøgte eksplicit sletning af {id}, men visual findes ikke.");
             }
         }
     }

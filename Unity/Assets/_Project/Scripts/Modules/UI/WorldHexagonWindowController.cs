@@ -45,8 +45,11 @@ namespace Project.Modules.UI.Windows.Implementations
                 CacheRequiredVisualElements();
                 InitializeInteractionBlockingEvents();
 
-                // Vi ændrer metoden her til at fokusere på centret
-                ApplyCenterWindowPositioning();
+                // 1. Gør vinduet usynligt i et millisekund mens vi beregner position
+                MainContainer.style.visibility = Visibility.Hidden;
+
+                // 2. Vi venter på at layout-motoren har beregnet vinduets størrelse
+                MainContainer.RegisterCallback<GeometryChangedEvent>(HandleInitialCenteringGeometryCallback);
 
                 UpdateHexagonDisplayInformation();
                 RefreshContextualActionButtons();
@@ -60,6 +63,45 @@ namespace Project.Modules.UI.Windows.Implementations
             {
                 WorldMapInteractionHandler.Instance.SetMouseOverUI(false);
             }
+
+            // Sikkerhed: Fjern altid callback hvis vinduet lukkes før det når at centrere
+            MainContainer.UnregisterCallback<GeometryChangedEvent>(HandleInitialCenteringGeometryCallback);
+        }
+
+        /// <summary>
+        /// OBJEKTIV FIX: Beregner centrerings-pixels manuelt for at undgå 'translate' konflikten med dragger-komponenten.
+        /// </summary>
+        private void HandleInitialCenteringGeometryCallback(GeometryChangedEvent evt)
+        {
+            if (MainContainer == null || MainContainer.parent == null) return;
+
+            // Vi finder forældre-containerens (skærmens) dimensioner
+            float parentWidth = MainContainer.parent.resolvedStyle.width;
+            float parentHeight = MainContainer.parent.resolvedStyle.height;
+
+            // Vi finder vinduets egne ny-beregnede dimensioner
+            float windowWidth = evt.newRect.width;
+            float windowHeight = evt.newRect.height;
+
+            if (float.IsNaN(parentWidth) || windowWidth <= 0) return;
+
+            // Beregn præcis pixel-position for center
+            float targetLeft = (parentWidth - windowWidth) / 2f;
+            float targetTop = (parentHeight - windowHeight) / 2f;
+
+            // Sæt positionen i hårde pixels. Dette format forstår din dragger 100%.
+            MainContainer.style.position = Position.Absolute;
+            MainContainer.style.left = targetLeft;
+            MainContainer.style.top = targetTop;
+
+            // VIGTIGT: Vi rører IKKE 'translate' her, da det er det der skaber hoppet.
+            // Ved at lade translate være default (0), vil draggeren læse de korrekte pixels fra start.
+
+            // Nu er vi klar til at vise vinduet
+            MainContainer.style.visibility = Visibility.Visible;
+
+            // Vi har kun brug for at gøre dette én gang ved åbning
+            MainContainer.UnregisterCallback<GeometryChangedEvent>(HandleInitialCenteringGeometryCallback);
         }
 
         private void InitializeInteractionBlockingEvents()
@@ -83,27 +125,6 @@ namespace Project.Modules.UI.Windows.Implementations
             _unitDeploymentViewContainer = Root.Q<VisualElement>("Deploy-Unit-View");
             _primaryActionContainer = Root.Q<VisualElement>("Action-Container");
             _availableUnitsScrollView = Root.Q<ScrollView>("Unit-List-Container");
-        }
-
-        private void ApplyCenterWindowPositioning()
-        {
-            // Vi bruger IStyle til at manipulere CSS værdierne direkte fra koden.
-            // Ved at sætte positionen til 50% og translate til -50%, opnår vi 
-            // perfekt centrering uanset vinduets bredde og højde.
-            IStyle style = MainContainer.style;
-
-            style.left = new Length(50, LengthUnit.Percent);
-            style.top = new Length(50, LengthUnit.Percent);
-
-            // Translate flytter elementet tilbage med halvdelen af dets egen størrelse.
-            style.translate = new Translate(
-                new Length(-50, LengthUnit.Percent),
-                new Length(-50, LengthUnit.Percent),
-                0
-            );
-
-            // Vi sikrer os at positionen er Absolute så den ikke påvirkes af andre elementer
-            style.position = Position.Absolute;
         }
 
         private void UpdateHexagonDisplayInformation()
@@ -134,8 +155,11 @@ namespace Project.Modules.UI.Windows.Implementations
             }
             else orderMarchButton.AddToClassList("hidden");
 
-            openDeployViewButton.clicked -= HandleSwitchToDeploymentModeAction;
-            openDeployViewButton.clicked += HandleSwitchToDeploymentModeAction;
+            if (openDeployViewButton != null)
+            {
+                openDeployViewButton.clicked -= HandleSwitchToDeploymentModeAction;
+                openDeployViewButton.clicked += HandleSwitchToDeploymentModeAction;
+            }
         }
 
         private void ResetDeploymentViewToDefaultState()
@@ -175,8 +199,6 @@ namespace Project.Modules.UI.Windows.Implementations
                 unitSelectionRow.Q<Label>("Available-Amount").text = $"In City: {unitStack.Quantity}";
 
                 var quantityInputField = unitSelectionRow.Q<TextField>("Input-Amount");
-                quantityInputField.RegisterCallback<FocusEvent>(evt => quantityInputField.SelectAll());
-
                 quantityInputField.RegisterValueChangedCallback(evt => {
                     if (int.TryParse(evt.newValue, out int parsedAmount))
                     {

@@ -3,7 +3,7 @@
     <ui:Style src="project://database/Assets/UI/Windows/WindowTheme.uss" />
     <ui:Style src="project://database/Assets/UI/HUD/WorldMapUnitDeployment.uss" />
     
-    <ui:VisualElement name="UnitDeploymentBar-MainContainer" class="window-frame UnitDeployment-sidebar-window">
+    <ui:VisualElement name="UnitDeploymentBar-MainContainer" class="window-frame UnitDeployment-sidebar-window world-blocking-ui">
         <ui:VisualElement name="UnitDeploymentBar-Header" class="window-header UnitDeployment-header-clickable">
             <ui:Label text="DEPLOYED ARMIES" class="window-header-label sidebar-header-text" />
         </ui:VisualElement>

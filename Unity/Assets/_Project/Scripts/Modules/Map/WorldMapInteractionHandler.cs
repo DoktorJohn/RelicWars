@@ -11,6 +11,7 @@ using Project.Modules.UI.Windows.Implementations;
 using Project.Modules.UI;
 using Domain.StaticData.Generators;
 using Assets.Scripts.Domain.Enums;
+using System.Linq;
 
 namespace Project.Scripts.Modules.Map
 {
@@ -29,8 +30,6 @@ namespace Project.Scripts.Modules.Map
 
         public Guid? SelectedDeploymentId { get; private set; }
         public bool HasActiveSelection => SelectedDeploymentId.HasValue;
-
-        // Denne property styres af UI-events og valideres i Update for at forhindre click-through
         public bool IsMouseOverUI { get; private set; }
 
         private Vector3Int _lastHoveredCellCoordinate = new Vector3Int(-9999, -9999, 0);
@@ -86,36 +85,27 @@ namespace Project.Scripts.Modules.Map
 
         private void Update()
         {
-            // OBJEKTIV FIX: Fail-safe check. 
-            // Vi verificerer hver frame om musen reelt er over et blokerende UI element.
-            string blockingElementName;
-            bool isCurrentlyOverBlockingElement = VerifyIfPointerIsOverBlockingUserInterface(out blockingElementName);
-
-            // Hvis det automatiske tjek siger nej, og ingen manuel override er aktiv, så nulstil
-            if (!isCurrentlyOverBlockingElement && IsMouseOverUI)
-            {
-                // Vi tillader en lille buffer for at undgå flimmer ved hurtige bevægelser
-                IsMouseOverUI = false;
-            }
-            else if (isCurrentlyOverBlockingElement)
-            {
-                IsMouseOverUI = true;
-            }
-
             if (_terrainTilemap == null || _mainCamera == null) return;
 
-            // Stop hover-highlight hvis vi er over UI
+            // 1. Tjek om musen er over blokerende UI
+            string blockingElementName;
+            bool isBlockingUIActive = VerifyIfPointerIsOverBlockingUserInterface(out blockingElementName);
+
+            // Opdater internt flag (bruges bl.a. af kamerastyring til at stoppe zoom over UI)
+            IsMouseOverUI = isBlockingUIActive;
+
+            // 2. Map Hover (Kun hvis UI ikke spærrer)
             if (!IsMouseOverUI)
             {
                 ExecuteMapHoverInteractionLogic();
             }
 
+            // 3. Klik Håndtering
             if (Mouse.current != null && Mouse.current.leftButton.wasPressedThisFrame)
             {
-                // Hvis flaget er sat, eller det automatiske tjek finder UI, så stop klikket øjeblikkeligt
-                if (IsMouseOverUI || isCurrentlyOverBlockingElement)
+                if (IsMouseOverUI)
                 {
-                    Debug.Log($"<color=orange>[InteractionHandler]</color> Klik blokeret af: {blockingElementName}");
+                    Debug.Log($"<color=orange>[InteractionHandler]</color> Klik blokeret af UI: {blockingElementName}");
                     return;
                 }
 
@@ -123,41 +113,56 @@ namespace Project.Scripts.Modules.Map
             }
         }
 
+        /// <summary>
+        /// OBJEKTIV FIX: Denne metode skelner nu mellem 'Verdens-Labels' og 'Menu-Vinduer'.
+        /// </summary>
         public bool VerifyIfPointerIsOverBlockingUserInterface(out string nameOfBlockingElement)
         {
             nameOfBlockingElement = "None";
-            if (Mouse.current == null) return false;
+            if (EventSystem.current == null || Mouse.current == null) return false;
 
-            Vector2 currentMousePosition = Mouse.current.position.ReadValue();
-            Vector2 adjustedUiToolkitPosition = new Vector2(currentMousePosition.x, Screen.height - currentMousePosition.y);
+            // Find hvad musen peger på i UI Toolkit
+            Vector2 mousePos = Mouse.current.position.ReadValue();
+            Vector2 adjustedPos = new Vector2(mousePos.x, Screen.height - mousePos.y);
 
-            UIDocument[] allActiveUiDocuments = FindObjectsByType<UIDocument>(FindObjectsSortMode.None);
-            foreach (var currentDocument in allActiveUiDocuments)
+            UIDocument[] allDocs = FindObjectsByType<UIDocument>(FindObjectsSortMode.None);
+            foreach (var doc in allDocs)
             {
-                if (currentDocument.rootVisualElement == null) continue;
-                VisualElement pickedElement = currentDocument.rootVisualElement.panel.Pick(adjustedUiToolkitPosition);
+                if (doc.rootVisualElement == null) continue;
 
-                if (pickedElement != null && pickedElement.pickingMode == PickingMode.Position)
+                VisualElement picked = doc.rootVisualElement.panel.Pick(adjustedPos);
+                if (picked != null && picked.pickingMode == PickingMode.Position)
                 {
-                    // OBJEKTIV FIX: Vi gør exclusion-listen ekstremt specifik til hær-enhedens labels på mappet.
-                    // Vi tjekker efter det unikke navn vi gav dem i WorldMapEntityManager (fx "unit-label-container")
-                    // Dette sikrer at Labels i dine Vinduer (HexagonWindow) STADIG blokerer klikket.
-                    string elementName = pickedElement.name.ToLower();
-                    if (elementName == "unit-label-container" ||
-                        elementName == "unit-owner-text" ||
-                        elementName == "unit-strength-badge")
+                    // Tjek navne på elementer vi tillader at klikke IGENNEM
+                    // (Disse skal matche navnene i din hær-label UXML)
+                    string n = picked.name.ToLower();
+                    bool isUnitLabel = n.Contains("unit-label") || n.Contains("unit-strength") || n.Contains("unit-owner") || n.Contains("badge");
+
+                    if (isUnitLabel)
                     {
+                        // Vi har ramt en label, men vi tillader at klikke igennem den
                         continue;
                     }
 
-                    nameOfBlockingElement = $"UI Toolkit: {pickedElement.name}";
+                    // Hvis vi rammer noget andet (Menuer, Sidebars, HUD), så blokerer vi
+                    nameOfBlockingElement = $"UI Toolkit: {picked.name} ({doc.gameObject.name})";
                     return true;
                 }
             }
 
-            if (EventSystem.current != null && EventSystem.current.IsPointerOverGameObject())
+            // Tjek for Legacy uGUI (hvis du har Canvases)
+            // Men kun hvis vi ikke allerede har godkendt at vi ramte en label
+            PointerEventData eventData = new PointerEventData(EventSystem.current) { position = mousePos };
+            List<RaycastResult> results = new List<RaycastResult>();
+            EventSystem.current.RaycastAll(eventData, results);
+
+            foreach (var result in results)
             {
-                nameOfBlockingElement = "uGUI System / Legacy EventSystem";
+                // Ignorer objekter på "Units" lag (hvis dine labels er her)
+                if (result.gameObject.layer == LayerMask.NameToLayer("Units")) continue;
+
+                // Hvis vi finder noget andet UI, så bloker
+                nameOfBlockingElement = $"EventSystem: {result.gameObject.name}";
                 return true;
             }
 
@@ -166,75 +171,71 @@ namespace Project.Scripts.Modules.Map
 
         private void ExecuteMapHoverInteractionLogic()
         {
-            Vector2 currentMousePosition = Mouse.current.position.ReadValue();
-            Vector3 worldSpacePosition = _mainCamera.ScreenToWorldPoint(new Vector3(currentMousePosition.x, currentMousePosition.y, 1f));
-            Vector3Int calculatedCellCoordinate = _terrainTilemap.WorldToCell(new Vector3(worldSpacePosition.x, worldSpacePosition.y + 0.125f, 0));
+            Vector2 mousePos = Mouse.current.position.ReadValue();
+            Vector3 worldPos = _mainCamera.ScreenToWorldPoint(new Vector3(mousePos.x, mousePos.y, 1f));
+            Vector3Int cell = _terrainTilemap.WorldToCell(new Vector3(worldPos.x, worldPos.y + 0.125f, 0));
 
-            if (calculatedCellCoordinate != _lastHoveredCellCoordinate)
+            if (cell != _lastHoveredCellCoordinate)
             {
                 if (_highlightTilemap != null)
                 {
-                    try
-                    {
-                        _highlightTilemap.SetTile(_lastHoveredCellCoordinate, null);
-                        _highlightTilemap.SetTile(calculatedCellCoordinate, _selectionFrameTile);
-                    }
-                    catch { }
+                    _highlightTilemap.SetTile(_lastHoveredCellCoordinate, null);
+                    _highlightTilemap.SetTile(cell, _selectionFrameTile);
                 }
-                _lastHoveredCellCoordinate = calculatedCellCoordinate;
+                _lastHoveredCellCoordinate = cell;
             }
         }
 
         private void ExecuteGlobalWorldMapClickHandling()
         {
-            Vector2 currentMousePosition = Mouse.current.position.ReadValue();
-            Vector3 worldSpacePosition = _mainCamera.ScreenToWorldPoint(new Vector3(currentMousePosition.x, currentMousePosition.y, 1f));
-            worldSpacePosition.z = 0;
+            Vector2 mousePos = Mouse.current.position.ReadValue();
+            Vector3 worldPos = _mainCamera.ScreenToWorldPoint(new Vector3(mousePos.x, mousePos.y, 1f));
+            worldPos.z = 0;
 
-            Collider2D detectedUnitCollider = Physics2D.OverlapPoint(worldSpacePosition, _unitLayerMask);
-            if (detectedUnitCollider != null)
+            // 1. Tjek om vi rammer en hær (Collider2D)
+            Collider2D hit = Physics2D.OverlapPoint(worldPos, _unitLayerMask);
+            if (hit != null)
             {
-                WorldMapUnitClickTrigger unitTriggerComponent = detectedUnitCollider.GetComponent<WorldMapUnitClickTrigger>();
-                if (unitTriggerComponent != null)
+                var trigger = hit.GetComponent<WorldMapUnitClickTrigger>();
+                if (trigger != null)
                 {
-                    SetSelectedDeployment(unitTriggerComponent.DeploymentId);
+                    SetSelectedDeployment(trigger.DeploymentId);
                     return;
                 }
             }
 
+            // 2. Ellers tjek hexagon/by
             ExecuteHexagonClickInteraction(
                 new Vector2Int(_lastHoveredCellCoordinate.x, _lastHoveredCellCoordinate.y),
-                new Vector2(currentMousePosition.x, Screen.height - currentMousePosition.y)
+                new Vector2(mousePos.x, Screen.height - mousePos.y)
             );
         }
 
-        private void ExecuteHexagonClickInteraction(Vector2Int hexagonCoordinates, Vector2 screenPosition)
+        private void ExecuteHexagonClickInteraction(Vector2Int coords, Vector2 screenPos)
         {
             if (HasActiveSelection)
             {
-                MapInteractionPayload interactionPayload = new MapInteractionPayload
-                {
-                    Coordinates = hexagonCoordinates,
-                    ScreenClickPosition = screenPosition
-                };
-                GlobalWindowManager.Instance.OpenWindow(WindowTypeEnum.UnitDeployment, interactionPayload);
+                MapInteractionPayload payload = new MapInteractionPayload { Coordinates = coords, ScreenClickPosition = screenPos };
+                GlobalWindowManager.Instance.OpenWindow(WindowTypeEnum.UnitDeployment, payload);
             }
             else
             {
-                var unitOnTargetTile = WorldMapStateManager.Instance.GetUnitDeploymentByCoordinate(hexagonCoordinates.x, hexagonCoordinates.y);
-                var worldMapSeed = WorldMapStateManager.Instance.CurrentWorldSeed ?? 0;
-                var calculatedBiome = WorldGenerationService.CalculateWorldMapBiomeVariant((short)hexagonCoordinates.x, (short)hexagonCoordinates.y, worldMapSeed);
+                var unit = WorldMapStateManager.Instance.AllVisibleDeployments
+                    .FirstOrDefault(d => d.CurrentX == coords.x && d.CurrentY == coords.y);
 
-                MapInteractionPayload interactionPayload = new MapInteractionPayload
+                var seed = WorldMapStateManager.Instance.CurrentWorldSeed ?? 0;
+                var biome = WorldGenerationService.CalculateWorldMapBiomeVariant((short)coords.x, (short)coords.y, seed);
+
+                MapInteractionPayload payload = new MapInteractionPayload
                 {
-                    Coordinates = hexagonCoordinates,
-                    BiomeName = calculatedBiome.ToString(),
-                    ScreenClickPosition = screenPosition,
-                    DeploymentIdOnTile = unitOnTargetTile?.Id,
-                    IsPlayerOwned = unitOnTargetTile != null && unitOnTargetTile.WorldPlayerId == Guid.Parse(NetworkManager.Instance.WorldPlayerId)
+                    Coordinates = coords,
+                    BiomeName = biome.ToString(),
+                    ScreenClickPosition = screenPos,
+                    DeploymentIdOnTile = unit?.Id,
+                    IsPlayerOwned = unit != null && unit.WorldPlayerId == Guid.Parse(NetworkManager.Instance.WorldPlayerId)
                 };
 
-                GlobalWindowManager.Instance.OpenWindow(WindowTypeEnum.Hexagon, interactionPayload);
+                GlobalWindowManager.Instance.OpenWindow(WindowTypeEnum.Hexagon, payload);
             }
         }
     }

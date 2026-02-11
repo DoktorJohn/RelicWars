@@ -26,7 +26,7 @@ namespace Project.Network.Models
         public ResourceOverviewDTO Wood;
         public ResourceOverviewDTO Stone;
         public ResourceOverviewDTO Metal;
-        public ProductionBreakdownDTO SilverProduction;
+        public SilverBreakdownDTO SilverProduction;
         public ProductionBreakdownDTO ResearchProduction;
         public ProductionBreakdownDTO IdeologyProduction;
         public PopulationBreakdownDTO Population;
@@ -48,6 +48,17 @@ namespace Project.Network.Models
         public double BuildingBonus;
         public double GlobalModifierMultiplier;
         public double FinalValuePerHour;
+    }
+
+    [Serializable]
+    public class SilverBreakdownDTO
+    {
+        public double BaseValue;
+        public double BuildingBonus;
+        public double GlobalModifierMultiplier;
+        public double FinalValuePerHour;
+        public double Expenditure;
+        public double GlobalUpkeepMultiplier;
     }
 
     [Serializable]
@@ -107,7 +118,6 @@ namespace Project.Network.Models
 
         public List<CityControllerGetDetailedCityInformationBuildingDTO> BuildingList = new();
         public List<UnitStackDTO> StationedUnits { get; set; } = new();
-        public List<UnitDeploymentDTO> DeployedUnits { get; set; } = new();
     }
 
     [Serializable]

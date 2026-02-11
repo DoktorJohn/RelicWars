@@ -18,6 +18,7 @@ namespace Domain.StaticData.Data
         public int WoodCost { get; set; }
         public int StoneCost { get; set; }
         public int MetalCost { get; set; }
+        public int UpkeepCost { get; set; }
         public TimeSpan BuildTime { get; set; }
 
         public List<BuildingRequirement> Prerequisites { get; set; } = new();

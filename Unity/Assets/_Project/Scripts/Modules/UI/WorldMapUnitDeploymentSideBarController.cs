@@ -11,6 +11,10 @@ using UnityEngine.UIElements;
 
 namespace Project.Scripts.Modules.UI
 {
+    /// <summary>
+    /// Controller til sidebaren på verdenskortet, der viser aktive ekspeditioner (hære).
+    /// Benytter de granulære events fra StateManagers til automatisk UI-opdatering.
+    /// </summary>
     [RequireComponent(typeof(UIDocument))]
     public class WorldMapUnitDeploymentSideBarController : MonoBehaviour
     {
@@ -19,9 +23,24 @@ namespace Project.Scripts.Modules.UI
         private ScrollView _unitDeploymentScrollView;
 
         private bool _isSidebarMinimized = false;
-        private HashSet<Guid> _expandedUnitDeploymentIds = new HashSet<Guid>();
+        private readonly HashSet<Guid> _expandedUnitDeploymentIds = new();
 
         private void OnEnable()
+        {
+            InitializeUserInterface();
+            SubscribeToStateEvents();
+
+            // Initial render baseret på hvad managerne ved lige nu
+            RefreshUnitDeploymentList(CityStateManager.Instance?.CurrentActiveDeployments);
+        }
+
+        private void OnDisable()
+        {
+            UnsubscribeFromStateEvents();
+            WorldMapInteractionHandler.Instance?.SetMouseOverUI(false);
+        }
+
+        private void InitializeUserInterface()
         {
             var uiDocumentComponent = GetComponent<UIDocument>();
             if (uiDocumentComponent == null) return;
@@ -32,49 +51,29 @@ namespace Project.Scripts.Modules.UI
 
             if (_mainUnitDeploymentContainer != null)
             {
-                _mainUnitDeploymentContainer.RegisterCallback<PointerEnterEvent>(evt =>
-                {
-                    WorldMapInteractionHandler.Instance?.SetMouseOverUI(true);
-                });
-
-                _mainUnitDeploymentContainer.RegisterCallback<PointerLeaveEvent>(evt =>
-                {
-                    WorldMapInteractionHandler.Instance?.SetMouseOverUI(false);
-                });
+                _mainUnitDeploymentContainer.RegisterCallback<PointerEnterEvent>(evt => WorldMapInteractionHandler.Instance?.SetMouseOverUI(true));
+                _mainUnitDeploymentContainer.RegisterCallback<PointerLeaveEvent>(evt => WorldMapInteractionHandler.Instance?.SetMouseOverUI(false));
             }
 
             var headerElement = _rootVisualElement.Q<VisualElement>("UnitDeploymentBar-Header");
-            if (headerElement != null)
-            {
-                headerElement.RegisterCallback<ClickEvent>(evt => ExecuteSidebarMinimizeToggle());
-            }
-
-            if (CityStateManager.Instance != null)
-            {
-                CityStateManager.Instance.OnDeploymentsStateReceived += HandleUnitDeploymentsStateReceived;
-            }
-
-            if (WorldMapStateManager.Instance != null)
-            {
-                WorldMapStateManager.Instance.OnChunkDataReady += HandleWorldMapChunkDataUpdateReceived;
-            }
-
-            RefreshUnitDeploymentList(CityStateManager.Instance?.CurrentActiveDeployments);
+            headerElement?.RegisterCallback<ClickEvent>(evt => ExecuteSidebarMinimizeToggle());
         }
 
-        private void OnDisable()
+        private void SubscribeToStateEvents()
         {
-            if (CityStateManager.Instance != null)
-            {
-                CityStateManager.Instance.OnDeploymentsStateReceived -= HandleUnitDeploymentsStateReceived;
-            }
-
+            // Vi lytter nu KUN på WorldMapStateManager
             if (WorldMapStateManager.Instance != null)
             {
-                WorldMapStateManager.Instance.OnChunkDataReady -= HandleWorldMapChunkDataUpdateReceived;
+                WorldMapStateManager.Instance.OnUnitDeploymentsStateChanged += HandleMapDeploymentsUpdated;
             }
+        }
 
-            WorldMapInteractionHandler.Instance?.SetMouseOverUI(false);
+        private void UnsubscribeFromStateEvents()
+        {
+            if (WorldMapStateManager.Instance != null)
+            {
+                WorldMapStateManager.Instance.OnUnitDeploymentsStateChanged -= HandleMapDeploymentsUpdated;
+            }
         }
 
         private void ExecuteSidebarMinimizeToggle()
@@ -91,73 +90,40 @@ namespace Project.Scripts.Modules.UI
             }
         }
 
+        /// <summary>
+        /// Modtager opdateringer for spillerens egne hære fra CityStateManager.
+        /// </summary>
         private void HandleUnitDeploymentsStateReceived(List<UnitDeploymentDTO> deployments)
         {
             RefreshUnitDeploymentList(deployments);
         }
 
-        private void HandleWorldMapChunkDataUpdateReceived(WorldMapChunkResponseDTO chunkData)
+        /// <summary>
+        /// Modtager realtids-opdateringer for alle synlige hære på kortet.
+        /// Vi filtrerer her for at sikre, at vi kun viser spillerens egne hære i ekspeditions-listen.
+        /// </summary>
+        private void HandleMapDeploymentsUpdated(List<UnitDeploymentDTO> mapDeployments)
         {
-            if (chunkData == null || CityStateManager.Instance == null) return;
+            if (mapDeployments == null) return;
 
-            var globalDeployments = CityStateManager.Instance.CurrentActiveDeployments;
-            bool stateChanged = false;
+            string myPlayerId = NetworkManager.Instance.WorldPlayerId;
 
-            if (chunkData.UnitDeployments != null)
-            {
-                foreach (var mapUnit in chunkData.UnitDeployments)
-                {
-                    if (mapUnit.WorldPlayerId != Guid.Parse(NetworkManager.Instance.WorldPlayerId)) continue;
-
-                    bool isAtHome = mapUnit.Status == UnitDeploymentMovementStatusEnum.Stationed &&
-                                   mapUnit.CurrentX == CityStateManager.Instance.HomeCityX &&
-                                   mapUnit.CurrentY == CityStateManager.Instance.HomeCityY;
-
-                    var existingUnit = globalDeployments.FirstOrDefault(d => d.Id == mapUnit.Id);
-
-                    if (isAtHome)
-                    {
-                        if (existingUnit != null)
-                        {
-                            Debug.Log($"<color=orange>[SideBar Sync]</color> ABSORPTION: Sletter {mapUnit.Id} fra UI (Er nået hjem).");
-                            globalDeployments.Remove(existingUnit);
-                            WorldMapEntityManager.Instance?.RemoveUnitVisualExplicitly(mapUnit.Id);
-                            stateChanged = true;
-                        }
-                        continue;
-                    }
-
-                    if (existingUnit != null)
-                    {
-                        int index = globalDeployments.IndexOf(existingUnit);
-                        globalDeployments[index] = mapUnit;
-                        stateChanged = true;
-                    }
-                    else
-                    {
-                        globalDeployments.Add(mapUnit);
-                        stateChanged = true;
-                    }
-                }
-            }
-
-            var deploymentsToRemove = globalDeployments
-                .Where(d => d.CurrentX >= chunkData.ChunkX && d.CurrentX < chunkData.ChunkX + chunkData.Width &&
-                            d.CurrentY >= chunkData.ChunkY && d.CurrentY < chunkData.ChunkY + chunkData.Height)
-                .Where(d => chunkData.UnitDeployments == null || !chunkData.UnitDeployments.Any(mu => mu.Id == d.Id))
+            // OBJEKTIV LOGIK: Vi viser kun hære i sidebaren der tilhører spilleren selv
+            var myVisibleArmies = mapDeployments
+                .Where(d => d.WorldPlayerId.ToString() == myPlayerId)
                 .ToList();
 
-            foreach (var toRemove in deploymentsToRemove)
+            // Hvis manageren har opdaget ændringer i mine hære på kortet, opdaterer vi listen
+            if (myVisibleArmies.Count > 0)
             {
-                Debug.Log($"<color=red>[SideBar Sync]</color> Server har fjernet hær {toRemove.Id}. Sletter visual.");
-                globalDeployments.Remove(toRemove);
-                WorldMapEntityManager.Instance?.RemoveUnitVisualExplicitly(toRemove.Id);
-                stateChanged = true;
-            }
+                // Vi bruger WorldMapStateManagerens AllVisibleDeployments som 'Master List' 
+                // for at sikre at vi ikke mister hære der er uden for den nuværende chunk-opdatering.
+                var allMyArmies = WorldMapStateManager.Instance.AllVisibleDeployments
+                    .Where(d => d.WorldPlayerId.ToString() == myPlayerId)
+                    .OrderBy(d => d.Name)
+                    .ToList();
 
-            if (stateChanged)
-            {
-                RefreshUnitDeploymentList(globalDeployments);
+                RefreshUnitDeploymentList(allMyArmies);
             }
         }
 
@@ -166,20 +132,33 @@ namespace Project.Scripts.Modules.UI
             if (_unitDeploymentScrollView == null) return;
             _unitDeploymentScrollView.Clear();
 
-            if (deployments == null || deployments.Count == 0)
+            // Filtrering: Vi viser ikke hære der er 'Stationed' i hjembyen i sidebaren (de er inde i kasernen)
+            var activeExpeditions = deployments?
+                .Where(d => d.Status != UnitDeploymentMovementStatusEnum.Stationed ||
+                            d.CurrentX != CityStateManager.Instance.HomeCityX ||
+                            d.CurrentY != CityStateManager.Instance.HomeCityY)
+                .OrderBy(d => d.Name)
+                .ToList();
+
+            if (activeExpeditions == null || activeExpeditions.Count == 0)
             {
-                Label emptyLabel = new Label("NO ACTIVE EXPEDITIONS");
-                emptyLabel.AddToClassList("detail-label");
-                emptyLabel.style.marginTop = 20;
-                emptyLabel.style.unityTextAlign = TextAnchor.MiddleCenter;
-                _unitDeploymentScrollView.Add(emptyLabel);
+                RenderEmptyState();
                 return;
             }
 
-            foreach (var deployment in deployments.OrderBy(d => d.WorldPlayerUserName))
+            foreach (var deployment in activeExpeditions)
             {
                 _unitDeploymentScrollView.Add(CreateUnitDeploymentVisualEntry(deployment));
             }
+        }
+
+        private void RenderEmptyState()
+        {
+            Label emptyLabel = new Label("NO ACTIVE EXPEDITIONS");
+            emptyLabel.AddToClassList("detail-label");
+            emptyLabel.style.marginTop = 20;
+            emptyLabel.style.unityTextAlign = TextAnchor.MiddleCenter;
+            _unitDeploymentScrollView.Add(emptyLabel);
         }
 
         private VisualElement CreateUnitDeploymentVisualEntry(UnitDeploymentDTO data)
@@ -187,153 +166,101 @@ namespace Project.Scripts.Modules.UI
             VisualElement entryContainer = new VisualElement();
             entryContainer.AddToClassList("UnitDeployment-entry-container");
 
+            // Header
             VisualElement headerContainer = new VisualElement();
             headerContainer.AddToClassList("UnitDeployment-entry-header");
 
-            int totalUnitStrength = data.UnitStacks.Sum(stack => stack.Quantity);
+            int totalUnits = data.UnitStacks.Sum(s => s.Quantity);
+            string displayName = data.Name.Length > 20 ? data.Name[..20] + "..." : data.Name;
 
-            // Navnebegrænsning: Maks 30 tegn
-            string processedUnitDeploymentName = data.Name.Length > 20
-                ? data.Name.Substring(0, 20) + "..."
-                : data.Name;
+            headerContainer.Add(new Label(displayName.ToUpper()) { name = "UnitDeployment-name-label" });
+            headerContainer.Add(new Label($"{totalUnits} UNITS") { name = "UnitDeployment-size-badge" });
 
-            Label unitNameLabel = new Label(processedUnitDeploymentName.ToUpper());
-            unitNameLabel.AddToClassList("UnitDeployment-name-label");
-
-            Label unitSizeBadgeLabel = new Label($"{totalUnitStrength} UNITS");
-            unitSizeBadgeLabel.AddToClassList("UnitDeployment-size-badge");
-
-            headerContainer.Add(unitNameLabel);
-            headerContainer.Add(unitSizeBadgeLabel);
-
+            // Details Container
             VisualElement detailsContainer = new VisualElement();
             detailsContainer.AddToClassList("UnitDeployment-details-container");
+            if (_expandedUnitDeploymentIds.Contains(data.Id)) detailsContainer.AddToClassList("expanded");
 
-            if (_expandedUnitDeploymentIds.Contains(data.Id))
-            {
-                detailsContainer.AddToClassList("expanded");
-            }
-
+            // Data Rækker
             detailsContainer.Add(CreateUnitDeploymentDetailRow("ORIGIN", data.OriginCity?.CityName ?? "UNKNOWN"));
             detailsContainer.Add(CreateUnitDeploymentDetailRow("LOCATION", $"{data.CurrentX}, {data.CurrentY}"));
             detailsContainer.Add(CreateUnitDeploymentDetailRow("TARGET", data.TargetCity?.CityName ?? $"{data.FinalX}, {data.FinalY}"));
             detailsContainer.Add(CreateUnitDeploymentDetailRow("STATUS", data.Status.ToString().ToUpper()));
 
-            detailsContainer.Add(CreateUnitDeploymentDetailRow("NEXT STEP", data.NextStepTime.ToString("HH:mm:ss")));
-            string arrivalTimeString = data.ArrivalTime.HasValue ? data.ArrivalTime.Value.ToString("HH:mm:ss") : "--:--:--";
-            detailsContainer.Add(CreateUnitDeploymentDetailRow("ARRIVAL", arrivalTimeString));
+            string arrivalStr = data.ArrivalTime.HasValue ? data.ArrivalTime.Value.ToString("HH:mm:ss") : "--:--:--";
+            detailsContainer.Add(CreateUnitDeploymentDetailRow("ARRIVAL", arrivalStr));
 
+            // Controls
             if (data.Status == UnitDeploymentMovementStatusEnum.Moving)
             {
-                Button abortButton = new Button { text = "ABORT MARCH" };
-                abortButton.AddToClassList("btn-global-base");
-                abortButton.AddToClassList("btn-imperial-danger");
-                abortButton.style.marginTop = 15;
-                abortButton.clicked += () => ExecuteAbortMovementRequest(data.Id);
-                detailsContainer.Add(abortButton);
+                Button abortBtn = new Button(() => ExecuteAbortMovementRequest(data.Id)) { text = "ABORT MARCH" };
+                abortBtn.AddToClassList("btn-imperial-danger");
+                detailsContainer.Add(abortBtn);
             }
 
-            Button returnButton = new Button { text = "RETURN TO CITY" };
-            returnButton.AddToClassList("btn-global-base");
-            returnButton.AddToClassList("btn-imperial-primary");
-            returnButton.style.marginTop = 5;
-            returnButton.clicked += () => ExecuteReturnToOriginRequest(data.Id);
-            detailsContainer.Add(returnButton);
+            Button returnBtn = new Button(() => ExecuteReturnToOriginRequest(data.Id)) { text = "RETURN TO CITY" };
+            returnBtn.AddToClassList("btn-imperial-primary");
+            detailsContainer.Add(returnBtn);
 
-            VisualElement unitStackListContainer = new VisualElement();
-            unitStackListContainer.AddToClassList("unit-stack-list");
-
+            // Unit Composition
+            VisualElement stackList = new VisualElement();
+            stackList.AddToClassList("unit-stack-list");
             foreach (var stack in data.UnitStacks)
             {
-                VisualElement stackRow = new VisualElement();
-                stackRow.AddToClassList("unit-stack-row");
-
-                Label typeLabel = new Label(stack.Type.ToString());
-                typeLabel.AddToClassList("unit-stack-text");
-                Label quantityLabel = new Label(stack.Quantity.ToString());
-                quantityLabel.AddToClassList("unit-stack-text");
-
-                stackRow.Add(typeLabel);
-                stackRow.Add(quantityLabel);
-                unitStackListContainer.Add(stackRow);
+                VisualElement row = new VisualElement();
+                row.AddToClassList("unit-stack-row");
+                row.Add(new Label(stack.Type.ToString()) { name = "unit-stack-text" });
+                row.Add(new Label(stack.Quantity.ToString()) { name = "unit-stack-text" });
+                stackList.Add(row);
             }
-            detailsContainer.Add(unitStackListContainer);
+            detailsContainer.Add(stackList);
 
+            // Click to Expand
             headerContainer.RegisterCallback<ClickEvent>(evt =>
             {
-                if (_expandedUnitDeploymentIds.Contains(data.Id))
-                {
-                    _expandedUnitDeploymentIds.Remove(data.Id);
-                    detailsContainer.RemoveFromClassList("expanded");
-                }
-                else
-                {
-                    _expandedUnitDeploymentIds.Add(data.Id);
-                    detailsContainer.AddToClassList("expanded");
-                }
+                if (_expandedUnitDeploymentIds.Contains(data.Id)) _expandedUnitDeploymentIds.Remove(data.Id);
+                else _expandedUnitDeploymentIds.Add(data.Id);
+
+                detailsContainer.ToggleInClassList("expanded");
                 evt.StopPropagation();
             });
 
             entryContainer.Add(headerContainer);
             entryContainer.Add(detailsContainer);
-
             return entryContainer;
         }
 
-        private void ExecuteAbortMovementRequest(Guid deploymentId)
+        private void ExecuteAbortMovementRequest(Guid id)
         {
-            string authenticationToken = NetworkManager.Instance.JwtToken;
-            StartCoroutine(NetworkManager.Instance.UnitDeployment.AbortMovementUnits(deploymentId, authenticationToken, (updatedDeployment) =>
+            StartCoroutine(NetworkManager.Instance.UnitDeployment.AbortMovementUnits(id, NetworkManager.Instance.JwtToken, (updated) =>
             {
-                if (updatedDeployment != null)
-                {
-                    WorldMapStateManager.Instance.UpdateDeploymentInCache(updatedDeployment);
-                }
+                if (updated != null) WorldMapStateManager.Instance.UpdateDeploymentInCache(updated);
             }));
         }
 
-        private void ExecuteReturnToOriginRequest(Guid deploymentId)
+        private void ExecuteReturnToOriginRequest(Guid id)
         {
-            string authenticationToken = NetworkManager.Instance.JwtToken;
-            Debug.Log($"<color=cyan>[SideBar]</color> Bruger klikkede RETURN for {deploymentId}");
-
-            StartCoroutine(NetworkManager.Instance.UnitDeployment.ReturnToOriginCityUnits(deploymentId, authenticationToken, (updatedDeployment) =>
+            StartCoroutine(NetworkManager.Instance.UnitDeployment.ReturnToOriginCityUnits(id, NetworkManager.Instance.JwtToken, (updated) =>
             {
-                if (updatedDeployment != null)
-                {
-                    bool shouldBeRemoved = updatedDeployment.Status == UnitDeploymentMovementStatusEnum.Stationed &&
-                                         updatedDeployment.CurrentX == CityStateManager.Instance.HomeCityX &&
-                                         updatedDeployment.CurrentY == CityStateManager.Instance.HomeCityY;
+                if (updated == null) return;
 
-                    if (shouldBeRemoved)
-                    {
-                        var globalList = CityStateManager.Instance.CurrentActiveDeployments;
-                        globalList.RemoveAll(d => d.Id == updatedDeployment.Id);
-                        WorldMapEntityManager.Instance?.RemoveUnitVisualExplicitly(updatedDeployment.Id);
-                        RefreshUnitDeploymentList(globalList);
-                    }
-                    else
-                    {
-                        WorldMapStateManager.Instance.UpdateDeploymentInCache(updatedDeployment);
-                    }
-                }
+                // Tjek om enheden er nået hjem med det samme (f.eks. hvis den stod lige uden for)
+                bool isHome = updated.Status == UnitDeploymentMovementStatusEnum.Stationed &&
+                             updated.CurrentX == CityStateManager.Instance.HomeCityX &&
+                             updated.CurrentY == CityStateManager.Instance.HomeCityY;
+
+                if (isHome) WorldMapStateManager.Instance.RemoveDeploymentFromCacheExplicitly(updated.Id);
+                else WorldMapStateManager.Instance.UpdateDeploymentInCache(updated);
             }));
         }
 
-        private VisualElement CreateUnitDeploymentDetailRow(string labelText, string valueText)
+        private VisualElement CreateUnitDeploymentDetailRow(string label, string value)
         {
-            VisualElement rowContainer = new VisualElement();
-            rowContainer.AddToClassList("detail-row");
-
-            Label titleLabel = new Label(labelText);
-            titleLabel.AddToClassList("detail-label");
-
-            Label valueLabel = new Label(valueText);
-            valueLabel.AddToClassList("detail-value");
-
-            rowContainer.Add(titleLabel);
-            rowContainer.Add(valueLabel);
-            return rowContainer;
+            VisualElement row = new VisualElement();
+            row.AddToClassList("detail-row");
+            row.Add(new Label(label) { name = "detail-label" });
+            row.Add(new Label(value) { name = "detail-value" });
+            return row;
         }
     }
 }

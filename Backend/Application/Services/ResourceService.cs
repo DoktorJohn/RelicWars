@@ -34,17 +34,26 @@ namespace Application.Services
     public class ResourceService : IResourceService
     {
         private readonly BuildingDataReader _buildingData;
+        private readonly ResearchDataReader _researchData;
+        private readonly IdeologyDataReader _ideologyData;
+        private readonly UnitDataReader _unitData;
         private readonly ICityStatService _statService;
         private readonly IModifierService _modifierService;
         private readonly ILogger<ResourceService> _logger;
 
         public ResourceService(
             BuildingDataReader buildingData,
+            ResearchDataReader researchData,
+            IdeologyDataReader ideologyData,
+            UnitDataReader unitData,
             ICityStatService statService,
             IModifierService modifierService,
             ILogger<ResourceService> logger)
         {
             _buildingData = buildingData;
+            _researchData = researchData;
+            _ideologyData = ideologyData;
+            _unitData = unitData;
             _statService = statService;
             _modifierService = modifierService;
             _logger = logger;
@@ -80,10 +89,10 @@ namespace Application.Services
 
             foreach (var city in playerEntity.Cities)
             {
-                var silverResult = GetProductionResult(city, BuildingTypeEnum.MarketPlace, new[] { ModifierTagEnum.Silver });
+                var silverResult = GetSilverProductionResult(city);
                 var researchResult = GetProductionResult(city, BuildingTypeEnum.University, new[] { ModifierTagEnum.Research });
 
-                totalSilverRate += silverResult.FinalValue;
+                totalSilverRate += silverResult;
                 totalResearchRate += researchResult.FinalValue;
             }
 
@@ -143,13 +152,57 @@ namespace Application.Services
             return _modifierService.CalculateEntityValueWithModifiers(baseValue, targetTags, providers);
         }
 
-        private double GetBaseProductionValue(City cityEntity, BuildingTypeEnum buildingType)
+        private double GetSilverProductionResult(City cityEntity)
         {
-            if (buildingType == BuildingTypeEnum.MarketPlace)
+            IEnumerable<ModifierTagEnum> silverIncomeTags = new[] { ModifierTagEnum.Silver };
+            IEnumerable<ModifierTagEnum> silverExpenditureTags = new[] { ModifierTagEnum.Upkeep };
+
+            //Calculate silver INCOME
+            double baseProductionValue = _statService.GetMaxPopulation(cityEntity) * 7.0;
+
+            var modifierProviders = new List<IModifierProvider> { cityEntity, cityEntity.WorldPlayer };
+            if (cityEntity.WorldPlayer?.Alliance != null) modifierProviders.Add(cityEntity.WorldPlayer.Alliance);
+
+            foreach (var cityBuilding in cityEntity.Buildings.Where(b => b.Level > 0))
             {
-                return (double)_statService.GetMaxPopulation(cityEntity) * 7.0;
+                var levelConfig = _buildingData.GetConfig<BuildingLevelData>(cityBuilding.Type, cityBuilding.Level);
+                if (levelConfig != null) modifierProviders.Add(levelConfig);
             }
 
+            foreach (var research in cityEntity.WorldPlayer.CompletedResearches)
+            {
+                var researchToGetModifiers = _researchData.GetNode(research.ResearchId);
+                modifierProviders.Add(researchToGetModifiers);
+            }
+
+            var ideology = _ideologyData.GetIdeology(cityEntity.WorldPlayer.Ideology);
+            if (ideology != null) modifierProviders.Add(ideology);
+
+            var silverProduction = _modifierService.CalculateEntityValueWithModifiers(baseProductionValue, silverIncomeTags, modifierProviders);
+
+            //Calculate silver EXPENDITURE
+            int stationedPopulation = cityEntity.UnitStacks
+                .Sum(stack => _unitData.GetUnit(stack.Type).PopulationCost * stack.Quantity);
+
+            int deployedPopulation = cityEntity.OriginUnitDeployments
+                .SelectMany(deployment => deployment.UnitStacks)
+                .Sum(stack => _unitData.GetUnit(stack.Type).PopulationCost * stack.Quantity);
+
+            int totalPopulation = stationedPopulation + deployedPopulation;
+
+            int buildingUpkeepCost = cityEntity.Buildings.Sum(building => _buildingData.GetConfig<BuildingLevelData>(building.Type, building.Level).UpkeepCost);
+
+            double flatUnitSilverExpenditure = (stationedPopulation + deployedPopulation) * 7;
+            double flatTotalSilverExpenditure = flatUnitSilverExpenditure + buildingUpkeepCost;
+
+
+            var silverExpenditure = _modifierService.CalculateEntityValueWithModifiers(flatTotalSilverExpenditure, silverExpenditureTags, modifierProviders);
+
+            return silverProduction.FinalValue - silverExpenditure.FinalValue;
+        }
+
+        private double GetBaseProductionValue(City cityEntity, BuildingTypeEnum buildingType)
+        {
             var building = cityEntity.Buildings.FirstOrDefault(b => b.Type == buildingType);
             if (building == null || building.Level == 0) return 0.0;
 

@@ -164,7 +164,7 @@ namespace Assets._Project.Scripts.Modules.UI
             AddEconomyResourceCard("WOOD", "icon-wood", productionDataModel.Wood.Production);
             AddEconomyResourceCard("STONE", "icon-stone", productionDataModel.Stone.Production);
             AddEconomyResourceCard("METAL", "icon-metal", productionDataModel.Metal.Production);
-            AddEconomyResourceCard("SILVER", "icon-silver", productionDataModel.SilverProduction);
+            AddSilverEconomyResourceCard("SILVER", "icon-silver", productionDataModel.SilverProduction);
             AddEconomyResourceCard("RESEARCH", "icon-research", productionDataModel.ResearchProduction);
             AddEconomyResourceCard("IDEOLOGY", "icon-ideology", productionDataModel.IdeologyProduction);
 
@@ -231,6 +231,47 @@ namespace Assets._Project.Scripts.Modules.UI
             cardContainer.Add(CreateStatisticalBreakdownRow("Multipliers:", $"x{productionBreakdown.GlobalModifierMultiplier:F2}"));
 
             Label hourlyTotalLabel = new Label($"Total: {productionBreakdown.FinalValuePerHour:N1} / h");
+            hourlyTotalLabel.AddToClassList("breakdown-total");
+            cardContainer.Add(hourlyTotalLabel);
+
+            _economyResourceGridContainer.Add(cardContainer);
+        }
+
+        private void AddSilverEconomyResourceCard(string resourceTitle, string iconCssClass, SilverBreakdownDTO productionBreakdown)
+        {
+            VisualElement cardContainer = new VisualElement();
+            cardContainer.AddToClassList("economy-card");
+
+            VisualElement headerRow = new VisualElement();
+            headerRow.style.flexDirection = FlexDirection.Row;
+            headerRow.style.alignItems = Align.Center;
+            headerRow.style.marginBottom = 5;
+
+            VisualElement resourceIcon = new VisualElement();
+            resourceIcon.AddToClassList("side-bar-icon-base");
+            resourceIcon.AddToClassList(iconCssClass);
+            resourceIcon.style.width = 22;
+            resourceIcon.style.height = 22;
+
+            Label resourceTitleLabel = new Label(resourceTitle);
+            resourceTitleLabel.style.marginLeft = 10;
+            resourceTitleLabel.style.color = _darkTextColor;
+            resourceTitleLabel.style.unityFontStyleAndWeight = FontStyle.Bold;
+            resourceTitleLabel.style.fontSize = 13;
+
+            headerRow.Add(resourceIcon);
+            headerRow.Add(resourceTitleLabel);
+
+            cardContainer.Add(headerRow);
+            cardContainer.Add(CreateStatisticalBreakdownRow("Base Production:", productionBreakdown.BaseValue.ToString("N1")));
+            cardContainer.Add(CreateStatisticalBreakdownRow("Flat Bonus:", $"+{productionBreakdown.BuildingBonus:N1}"));
+            cardContainer.Add(CreateStatisticalBreakdownRow("Multipliers:", $"x{productionBreakdown.GlobalModifierMultiplier:F2}%"));
+            cardContainer.Add(CreateStatisticalBreakdownRow("Upkeep:", $"-{productionBreakdown.Expenditure:N1}"));
+            cardContainer.Add(CreateStatisticalBreakdownRow("Upkeep multipliers:", $"x{productionBreakdown.GlobalUpkeepMultiplier:F2}%"));
+
+            double finalRate = productionBreakdown.FinalValuePerHour - productionBreakdown.Expenditure;
+
+            Label hourlyTotalLabel = new Label($"Total: {finalRate:N1} / h");
             hourlyTotalLabel.AddToClassList("breakdown-total");
             cardContainer.Add(hourlyTotalLabel);
 

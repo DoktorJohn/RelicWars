@@ -8,45 +8,36 @@ using Assets.Scripts.Domain.Enums;
 using Project.Network.Manager;
 using Project.Modules.UI;
 using Project.Network.Models;
+using UnityEngine.InputSystem;
 
 namespace Project.Modules.City
 {
     /// <summary>
-    /// Controls visual interaction for complex building objects consisting of multiple sprites.
-    /// Manages highlighting of all child renderers simultaneously.
+    /// Kontrollerer visuel interaktion for komplekse bygnings-prefabs.
+    /// Opdateret til at bruge Unity Input System pakken for at undgå InvalidOperationException.
     /// </summary>
     [RequireComponent(typeof(BoxCollider))]
     public class CityBuildingInteractionController : MonoBehaviour, IPointerClickHandler, IPointerEnterHandler, IPointerExitHandler
     {
         private CityControllerGetDetailedCityInformationBuildingDTO _associatedBuildingData;
-
-        // Liste over alle renderere under dette prefab
         private SpriteRenderer[] _allChildSpriteRenderers;
-
-        // Vi gemmer de oprindelige farver for at kunne nulstille præcist
         private readonly Dictionary<SpriteRenderer, Color> _originalRendererColors = new Dictionary<SpriteRenderer, Color>();
 
         private bool _isControllerSuccessfullyInitialized = false;
         private bool _isCurrentlyHighlighted = false;
 
         [Header("Highlight Settings")]
-        [SerializeField] private Color _highlightColorTint = new Color(0.85f, 0.95f, 1.0f, 1.0f); // En ren, kold hvid/blålig farve
+        [SerializeField] private Color _highlightColorTint = new Color(0.85f, 0.95f, 1.0f, 1.0f);
         [SerializeField] private bool _resetHighlightOnDisable = true;
 
-        /// <summary>
-        /// Collects all child renderers and maps their initial states.
-        /// </summary>
         public void InitializeBuildingInteractionData(CityControllerGetDetailedCityInformationBuildingDTO buildingData)
         {
             _associatedBuildingData = buildingData;
-
-            // Find ALLE SpriteRenderere i hierarkiet
             _allChildSpriteRenderers = GetComponentsInChildren<SpriteRenderer>();
 
             if (_allChildSpriteRenderers != null && _allChildSpriteRenderers.Length > 0)
             {
                 _originalRendererColors.Clear();
-
                 foreach (var renderer in _allChildSpriteRenderers)
                 {
                     if (renderer != null && !_originalRendererColors.ContainsKey(renderer))
@@ -58,10 +49,57 @@ namespace Project.Modules.City
                 _isControllerSuccessfullyInitialized = true;
                 _isCurrentlyHighlighted = false;
             }
-            else
+        }
+
+        private void Update()
+        {
+            if (!_isControllerSuccessfullyInitialized || !_isCurrentlyHighlighted) return;
+
+            // Hvis IsPointerOverGameObject er true pga. HUD eller vinduer, tjekker vi om vi skal slukke highlight
+            if (EventSystem.current != null && EventSystem.current.IsPointerOverGameObject())
             {
-                Debug.LogError($"<color=red>[CityInteraction]</color> CRITICAL: No SpriteRenderers found on {gameObject.name}.");
+                if (IsPointerOverBlockingWindow())
+                {
+                    ApplyHighlightEffect(false);
+                }
             }
+        }
+
+        /// <summary>
+        /// Hjælpemetode til at afgøre om musen er over et UI-vindue.
+        /// Bruger det nye Input System til at læse musens position.
+        /// </summary>
+        private bool IsPointerOverBlockingWindow()
+        {
+            if (EventSystem.current == null) return false;
+
+            // FIX: Vi læser positionen fra det nye Input System i stedet for den gamle Input-klasse
+            Vector2 currentMousePosition = Vector2.zero;
+
+            if (Mouse.current != null)
+            {
+                currentMousePosition = Mouse.current.position.ReadValue();
+            }
+            else if (Pointer.current != null)
+            {
+                currentMousePosition = Pointer.current.position.ReadValue();
+            }
+
+            PointerEventData eventDataCurrentPosition = new PointerEventData(EventSystem.current);
+            eventDataCurrentPosition.position = currentMousePosition;
+
+            List<RaycastResult> results = new List<RaycastResult>();
+            EventSystem.current.RaycastAll(eventDataCurrentPosition, results);
+
+            foreach (var result in results)
+            {
+                // Vi tjekker om navnet indikerer et blokerende element
+                if (result.gameObject.name.Contains("Window") || result.gameObject.name.Contains("Panel"))
+                {
+                    return true;
+                }
+            }
+            return false;
         }
 
         public void OnPointerEnter(PointerEventData eventData)
@@ -78,23 +116,20 @@ namespace Project.Modules.City
 
         public void OnPointerClick(PointerEventData eventData)
         {
-            // Sikkerhed: Fjern highlight når vi klikker, da et vindue åbner og kan "låse" hover-staten
+            if (!_isControllerSuccessfullyInitialized) return;
+
             ApplyHighlightEffect(false);
             ExecuteInteractionLogic();
         }
 
         private void OnDisable()
         {
-            // Hvis objektet deaktiveres (f.eks. ved refresh eller sceneskift), sikrer vi at det ikke er gult næste gang
             if (_resetHighlightOnDisable)
             {
                 ApplyHighlightEffect(false);
             }
         }
 
-        /// <summary>
-        /// Iterates through all tracked renderers and applies or removes the highlight tint.
-        /// </summary>
         private void ApplyHighlightEffect(bool shouldEnableHighlight)
         {
             if (_allChildSpriteRenderers == null || _isCurrentlyHighlighted == shouldEnableHighlight) return;
@@ -102,18 +137,7 @@ namespace Project.Modules.City
             foreach (var renderer in _allChildSpriteRenderers)
             {
                 if (renderer == null) continue;
-
-                if (shouldEnableHighlight)
-                {
-                    renderer.color = _highlightColorTint;
-                }
-                else
-                {
-                    if (_originalRendererColors.TryGetValue(renderer, out Color originalColor))
-                    {
-                        renderer.color = originalColor;
-                    }
-                }
+                renderer.color = shouldEnableHighlight ? _highlightColorTint : _originalRendererColors[renderer];
             }
 
             _isCurrentlyHighlighted = shouldEnableHighlight;
@@ -121,16 +145,11 @@ namespace Project.Modules.City
 
         private void ExecuteInteractionLogic()
         {
-            if (!_isControllerSuccessfullyInitialized || _associatedBuildingData == null)
-            {
-                return;
-            }
+            if (_associatedBuildingData == null) return;
 
             WindowTypeEnum targetWindowType = MapBuildingTypeToWindowType(_associatedBuildingData.BuildingType);
-
             if (targetWindowType != WindowTypeEnum.None)
             {
-                Debug.Log($"<color=green>[UI REQUEST]</color> Opening {targetWindowType}");
                 GlobalWindowManager.Instance.OpenWindow(targetWindowType, null);
             }
         }
