@@ -50,8 +50,10 @@ namespace Application.Services.Buildings
 
             int levelsToProject = 5;
 
-            for (int i = 0; i <= levelsToProject; i++)
+            for (int i = 0; i < levelsToProject; i++)
             {
+                if (currentBuildingLevel + i > 19) break;
+
                 int levelToCheck = currentBuildingLevel + i;
                 int calculatedProduction = 0;
 

@@ -18,5 +18,6 @@ namespace Application.Interfaces.IRepositories
         Task DeleteAsync(Guid jobId);
         Task<ResearchJob?> GetResearchJobAsync(Guid userId);
         Task<List<RecruitmentJob>> GetRecruitmentJobsAsync(Guid cityId);
+        Task<List<ResearchJob>> GetResearchJobsByIdAsync(Guid id);
     }
 }

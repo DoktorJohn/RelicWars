@@ -67,7 +67,8 @@ namespace Application.DTOs
     public class MarketPlaceInfoDTO
     {
         public int Level { get; set; }
-        public ModifierDTO Modifier { get; set; } = new();
+        public double ModifierIncrease { get; set; }
+        public bool IsCurrentLevel { get; set; }
     }
 
     public class TownHallInfoDTO

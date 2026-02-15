@@ -1,13 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
-<ui:UXML xmlns:ui="UnityEngine.UIElements" editor-extension-mode="False">
-    
+<ui:UXML xmlns:ui="UnityEngine.UIElements">
     <ui:Style src="project://database/Assets/UI/Windows/WindowTheme.uss" />
     <ui:Style src="RankingWindow.uss" />
 
     <ui:VisualElement class="table-row">
-        <ui:Label name="Row-Rank" class="row-label col-rank" text="#" />
-        <ui:Label name="Row-PlayerName" class="row-label col-name" text="Player Name" />
-        <ui:Label name="Row-Points" class="row-label col-points" text="0" />
+        <ui:Label name="Row-Rank" class="row-label col-rank" />
+        <ui:Label name="Row-PlayerName" class="row-label col-name" />
+        <ui:Label name="Row-Ideology" class="row-label col-ideology" />
+        <ui:Label name="Row-Alliance" class="row-label col-alliance" />
+        <ui:Label name="Row-Points" class="row-label col-score" />
     </ui:VisualElement>
-
 </ui:UXML>

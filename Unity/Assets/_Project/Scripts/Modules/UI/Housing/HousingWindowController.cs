@@ -64,9 +64,9 @@ namespace Project.Modules.UI.Windows.Implementations
             }));
         }
 
-        private void UpdateHousingHeaderInformation(List<HousingProjectionDTO> projectionDataList)
+        private void UpdateHousingHeaderInformation(List<HousingInfoDTO> projectionDataList)
         {
-            HousingProjectionDTO currentLevelEntry = projectionDataList.Find(projection => projection.IsCurrentLevel);
+            HousingInfoDTO currentLevelEntry = projectionDataList.Find(projection => projection.IsCurrentLevel);
 
             if (_currentHousingLevelDisplayLabel != null)
             {
@@ -76,19 +76,19 @@ namespace Project.Modules.UI.Windows.Implementations
             }
         }
 
-        private void PopulateHousingStatisticsTable(List<HousingProjectionDTO> projectionDataList)
+        private void PopulateHousingStatisticsTable(List<HousingInfoDTO> projectionDataList)
         {
             if (_housingStatisticsScrollView == null) return;
 
             _housingStatisticsScrollView.Clear();
 
-            foreach (HousingProjectionDTO housingProjection in projectionDataList)
+            foreach (HousingInfoDTO housingProjection in projectionDataList)
             {
                 CreateAndAddHousingStatisticRow(housingProjection);
             }
         }
 
-        private void CreateAndAddHousingStatisticRow(HousingProjectionDTO housingProjectionData)
+        private void CreateAndAddHousingStatisticRow(HousingInfoDTO housingProjectionData)
         {
             VisualElement tableRowContainer = new VisualElement();
             tableRowContainer.AddToClassList("table-row");
@@ -102,6 +102,15 @@ namespace Project.Modules.UI.Windows.Implementations
             Label levelValueLabel = new Label(housingProjectionData.Level.ToString());
             levelValueLabel.AddToClassList("row-label");
             tableRowContainer.Add(levelValueLabel);
+
+            // Production Cell
+            Label prodLabel = new Label($"{housingProjectionData.Population:N0} total");
+            prodLabel.AddToClassList("row-label");
+
+            prodLabel.style.color = new StyleColor(new Color(0.2f, 0.6f, 0.2f));
+            if (housingProjectionData.IsCurrentLevel) prodLabel.style.unityFontStyleAndWeight = FontStyle.Bold;
+
+            tableRowContainer.Add(prodLabel);
 
             _housingStatisticsScrollView.Add(tableRowContainer);
         }

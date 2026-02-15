@@ -4,6 +4,7 @@ using System;
 using Project.Network.Manager;
 using Project.Scripts.Domain.DTOs;
 using Project.Modules.UI.Windows;
+using System.Collections.Generic;
 
 namespace Project.Modules.UI.Windows.Implementations
 {
@@ -13,76 +14,109 @@ namespace Project.Modules.UI.Windows.Implementations
         protected override string VisualContainerName => "Market-Window-MainContainer";
         protected override string HeaderName => "Market-Window-Header";
 
-        private Label _levelLabel;
-        private ScrollView _statsContainer;
+        private Label _currentLevelDisplayLabel;
+        private ScrollView _marketStatisticsScrollView;
 
         public override void OnOpen(object dataPayload)
         {
-            var closeBtn = Root.Q<Button>("Header-Close-Button");
-            if (closeBtn != null) { closeBtn.clicked -= Close; closeBtn.clicked += Close; }
+            InitializeUserInterfaceComponentReferences();
 
-            _levelLabel = Root.Q<Label>("Lbl-Level");
-            _statsContainer = Root.Q<ScrollView>("Market-Stats-List");
+            Guid activeCityIdentifier = (dataPayload is Guid id) ? id : NetworkManager.Instance.ActiveCityId ?? Guid.Empty;
 
-            Guid cityId = (dataPayload is Guid id) ? id : NetworkManager.Instance.ActiveCityId ?? Guid.Empty;
-            if (cityId == Guid.Empty) return;
+            if (activeCityIdentifier == Guid.Empty)
+            {
+                Debug.LogWarning("[MarketPlaceWindowController] Open failed: No valid City ID found.");
+                return;
+            }
 
-            RefreshData(cityId);
+            RequestAndRenderMarketPlaceProjectionData(activeCityIdentifier);
         }
 
-        private void RefreshData(Guid cityId)
+        private void InitializeUserInterfaceComponentReferences()
         {
-            if (_statsContainer != null) _statsContainer.Clear();
-            string token = NetworkManager.Instance.JwtToken;
-
-            // FIX: Callback now accepts a single 'data' object
-            StartCoroutine(NetworkManager.Instance.MarketPlace.GetMarketPlaceInfo(cityId, token, (data) =>
+            var headerCloseButton = Root.Q<Button>("Header-Close-Button");
+            if (headerCloseButton != null)
             {
-                if (data != null)
+                headerCloseButton.clicked -= Close;
+                headerCloseButton.clicked += Close;
+            }
+
+            _currentLevelDisplayLabel = Root.Q<Label>("Lbl-Level");
+            _marketStatisticsScrollView = Root.Q<ScrollView>("Market-Stats-List");
+        }
+
+        private void RequestAndRenderMarketPlaceProjectionData(Guid cityIdentifier)
+        {
+            if (_marketStatisticsScrollView != null)
+            {
+                _marketStatisticsScrollView.Clear();
+            }
+
+            string authenticationToken = NetworkManager.Instance.JwtToken;
+
+            StartCoroutine(NetworkManager.Instance.MarketPlace.GetMarketPlaceInfo(cityIdentifier, authenticationToken, (projectionDataList) =>
+            {
+                if (projectionDataList != null && projectionDataList.Count > 0)
                 {
-                    UpdateUI(data);
+                    UpdateMarketPlaceHeaderInformation(projectionDataList);
+                    PopulateMarketPlaceStatisticsTable(projectionDataList);
                 }
             }));
         }
 
-        private void UpdateUI(MarketPlaceInfoDTO data)
+        private void UpdateMarketPlaceHeaderInformation(List<MarketPlaceInfoDTO> projectionDataList)
         {
-            // Logic: If data exists and Level > 0, it is constructed
-            if (_levelLabel != null)
+            MarketPlaceInfoDTO currentLevelEntry = projectionDataList.Find(projection => projection.IsCurrentLevel);
+
+            if (_currentLevelDisplayLabel != null)
             {
-                _levelLabel.text = data.Level > 0 ? $"Level {data.Level}" : "Not Constructed";
+                _currentLevelDisplayLabel.text = currentLevelEntry != null
+                    ? $"Level {currentLevelEntry.Level}"
+                    : "Not Constructed";
             }
-
-            if (_statsContainer == null) return;
-            _statsContainer.Clear();
-
-            // Create a single row for the current state
-            CreateTableRow(data);
         }
 
-        private void CreateTableRow(MarketPlaceInfoDTO item)
+        private void PopulateMarketPlaceStatisticsTable(List<MarketPlaceInfoDTO> projectionDataList)
         {
-            VisualElement row = new VisualElement();
-            row.AddToClassList("table-row");
+            if (_marketStatisticsScrollView == null) return;
+
+            _marketStatisticsScrollView.Clear();
+
+            foreach (MarketPlaceInfoDTO marketProjection in projectionDataList)
+            {
+                CreateAndAddMarketPlaceStatisticRow(marketProjection);
+            }
+        }
+
+        private void CreateAndAddMarketPlaceStatisticRow(MarketPlaceInfoDTO marketPlaceProjectionData)
+        {
+            VisualElement tableRowContainer = new VisualElement();
+            tableRowContainer.AddToClassList("table-row");
+
+            if (marketPlaceProjectionData.IsCurrentLevel)
+            {
+                tableRowContainer.AddToClassList("table-row-current");
+            }
 
             // 1. Level Cell
-            Label lvlLabel = new Label(item.Level.ToString());
-            lvlLabel.AddToClassList("row-label");
-            lvlLabel.style.unityFontStyleAndWeight = FontStyle.Bold;
-            row.Add(lvlLabel);
+            Label levelValueLabel = new Label(marketPlaceProjectionData.Level.ToString());
+            levelValueLabel.AddToClassList("row-label");
+            if (marketPlaceProjectionData.IsCurrentLevel) levelValueLabel.style.unityFontStyleAndWeight = FontStyle.Bold;
+            tableRowContainer.Add(levelValueLabel);
 
-            // 2. Silver Production Cell
-            string valueText = item.Modifier != null ? $"+{item.Modifier.Value:N0}" : "+0";
-            Label prodLabel = new Label(valueText);
-            prodLabel.AddToClassList("row-label");
+            // 2. Production Cell (Silver bonus)
+            // Vi formaterer det som en procentvis bonus jf. din database logik (+0.10 = +10%)
+            string percentageText = $"+{(marketPlaceProjectionData.ModifierIncrease * 100):N0}%";
+            Label silverBonusLabel = new Label(percentageText);
+            silverBonusLabel.AddToClassList("row-label");
 
-            // COLOR: Bright Silver/White (#E0E0E0)
-            prodLabel.style.color = new StyleColor(new Color(0.2f, 0.6f, 0.2f));
-            prodLabel.style.unityFontStyleAndWeight = FontStyle.Bold;
+            // COLOR: Silver/Success Green
+            silverBonusLabel.style.color = new StyleColor(new Color(0.2f, 0.6f, 0.2f));
+            if (marketPlaceProjectionData.IsCurrentLevel) silverBonusLabel.style.unityFontStyleAndWeight = FontStyle.Bold;
 
-            row.Add(prodLabel);
+            tableRowContainer.Add(silverBonusLabel);
 
-            _statsContainer.Add(row);
+            _marketStatisticsScrollView.Add(tableRowContainer);
         }
     }
 }

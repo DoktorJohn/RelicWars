@@ -52,7 +52,8 @@ namespace Project.Scripts.Domain.DTOs
     public class MarketPlaceInfoDTO
     {
         public int Level { get; set; }
-        public ModifierDTO Modifier { get; set; } = new();
+        public double ModifierIncrease { get; set; }
+        public bool IsCurrentLevel { get; set; }
     }
 
     public class TownHallInfoDTO
@@ -70,9 +71,10 @@ namespace Project.Scripts.Domain.DTOs
     }
 
     [Serializable]
-    public class HousingProjectionDTO
+    public class HousingInfoDTO
     {
         public int Level;
+        public int Population;
         public bool IsCurrentLevel;
     }
 

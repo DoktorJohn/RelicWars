@@ -24,10 +24,10 @@
                 <ui:VisualElement class="table-container">
                     <ui:VisualElement class="table-header-row">
                         <ui:Label text="LEVEL" class="table-header-label" />
-                        <ui:Label text="SILVER / HOUR" class="table-header-label" />
+                        <ui:Label text="SILVER BONUS" class="table-header-label" />
                     </ui:VisualElement>
 
-                    <ui:ScrollView name="Market-Stats-List" />
+                    <ui:ScrollView name="Market-Stats-List" class="housing-scroll-view" />
                 </ui:VisualElement>
 
             </ui:VisualElement>

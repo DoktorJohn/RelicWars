@@ -29,6 +29,7 @@ namespace Project.Scripts.Domain.DTOs
         public double ResearchPointCost;
         public int ResearchTimeInSeconds;
         public bool IsCompleted;
+        public bool IsResearching;
         public bool IsLocked;
         public bool CanAfford;
     }

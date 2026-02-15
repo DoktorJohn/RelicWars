@@ -171,6 +171,20 @@ namespace Project.Scripts.Modules.UI
                 lockedBtn.style.marginTop = 0;
                 costRow.Add(lockedBtn);
             }
+            else if (nodeData.IsResearching)
+            {
+                nodeCard.AddToClassList("node-researching");
+
+                Button researchingBtn = new Button();
+                researchingBtn.text = "RESEARCHING";
+                researchingBtn.AddToClassList("btn-global-base");
+                researchingBtn.AddToClassList("node-button-researching");
+                researchingBtn.SetEnabled(false);
+                researchingBtn.style.height = 24;
+                researchingBtn.style.fontSize = 10;
+                researchingBtn.style.marginTop = 0;
+                costRow.Add(researchingBtn);
+            }
             else
             {
                 Button researchBtn = new Button(() => RequestStartResearch(nodeData.Id));
@@ -193,7 +207,6 @@ namespace Project.Scripts.Modules.UI
 
         private void HandleActiveResearchJobDisplay(ActiveResearchJobDTO activeJob)
         {
-            // RETTELSE: Vi tvinger panelet til ALTID at være synligt (Flex)
             if (_activeJobPanel != null) _activeJobPanel.style.display = DisplayStyle.Flex;
 
             if (_activeTimerCoroutine != null) StopCoroutine(_activeTimerCoroutine);
@@ -221,7 +234,7 @@ namespace Project.Scripts.Modules.UI
                 if (_cancelResearchButton != null)
                 {
                     _cancelResearchButton.SetEnabled(true);
-                    _cancelResearchButton.clicked -= () => RequestCancelResearch(activeJob.JobId); // Undgå dubletter
+                    _cancelResearchButton.clicked -= () => RequestCancelResearch(activeJob.JobId);
                     _cancelResearchButton.clicked += () => RequestCancelResearch(activeJob.JobId);
                 }
 

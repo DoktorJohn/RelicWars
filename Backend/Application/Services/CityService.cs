@@ -219,7 +219,7 @@ namespace Application.Services
                     // Næste opgradering vi skal vise data for (f.eks. Lvl 3, hvis Lvl 2 er i kø)
                     int targetUpgradeLevel = effectiveCurrentLevel + 1;
 
-                    BuildingLevelData? nextLevelConfiguration = _buildingDataReader.GetConfig<BuildingLevelData>(buildingType, targetUpgradeLevel);
+                    BuildingLevelData? nextLevelConfiguration = _buildingDataReader.GetConfig<BuildingLevelData>(buildingType, targetUpgradeLevel - 1);
 
                     // Hvis der ikke er konfiguration for næste niveau, er bygningen fuldt udbygget
                     if (nextLevelConfiguration == null) continue;
@@ -237,7 +237,6 @@ namespace Application.Services
                         StoneCost = nextLevelConfiguration.StoneCost,
                         MetalCost = nextLevelConfiguration.MetalCost,
                         ConstructionTimeInSeconds = (int)nextLevelConfiguration.BuildTime.TotalSeconds,
-                        // Bygningen er "IsCurrentlyUpgrading" hvis enten entiteten siger det, eller der ligger et job
                         IsCurrentlyUpgrading = existingBuilding?.IsUpgrading ?? (pendingJobForThisBuilding != null),
                         CanAfford = canAffordUpgrade,
                     });
@@ -246,20 +245,6 @@ namespace Application.Services
                 return availableBuildingsResponse;
             }
 
-
-
-            public async Task UpdateCityPointsAsync(Guid cityIdentifier)
-            {
-                var cityEntity = await _cityRepository.GetByIdAsync(cityIdentifier);
-                if (cityEntity == null) return;
-
-                int calculatedPoints = cityEntity.Buildings.Sum(b => b.Level * 10);
-                if (cityEntity.Points != calculatedPoints)
-                {
-                    cityEntity.Points = calculatedPoints;
-                    await _cityRepository.UpdateAsync(cityEntity);
-                }
-            }
 
             private ResourceOverviewDTO CreateResourceOverview(City cityEntity, BuildingTypeEnum buildingType, IEnumerable<ModifierTagEnum> targetTags)
             {

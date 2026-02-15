@@ -277,7 +277,7 @@ namespace Application.Services
                 Buildings = new List<Building>()
             };
 
-            city.Buildings.Add(new Building { Type = BuildingTypeEnum.TownHall, Level = 1 });
+            city.Buildings.Add(new Building { Type = BuildingTypeEnum.TownHall, Level = 20 });
             city.Buildings.Add(new Building { Type = BuildingTypeEnum.Warehouse, Level = 1 });
             city.Buildings.Add(new Building { Type = BuildingTypeEnum.Housing, Level = 1 });
             city.Buildings.Add(new Building { Type = BuildingTypeEnum.TimberCamp, Level = 1 });

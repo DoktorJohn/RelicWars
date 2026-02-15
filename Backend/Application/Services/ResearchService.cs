@@ -34,26 +34,35 @@ namespace Application.Services
             var user = await _userRepo.GetByIdWithResearchAsync(userId);
             if (user == null) throw new Exception("Bruger ikke fundet.");
 
+            // Hent alle jobs ÉN gang uden for loopet for at undgå N+1
             var activeJob = await _jobRepo.GetResearchJobAsync(userId);
+            var allCurrentJobs = await _jobRepo.GetResearchJobsByIdAsync(userId);
+
             var allStaticNodes = _researchReader.GetAll();
+            var completedIds = user.CompletedResearches.Select(r => r.ResearchId).ToHashSet();
+            var researchingIds = allCurrentJobs
+                .Where(r => r.ExecutionTime > DateTime.UtcNow)
+                .Select(r => r.ResearchId)
+                .ToHashSet();
 
             var nodeDtos = allStaticNodes.Select(staticNode =>
             {
-                bool isCompleted = user.CompletedResearches.Any(r => r.ResearchId == staticNode.Id);
+                bool isCompleted = completedIds.Contains(staticNode.Id);
+                bool isResearching = researchingIds.Contains(staticNode.Id);
 
-                // En node er låst hvis den har en forælder, som endnu ikke er udforsket
                 bool parentIsCompleted = string.IsNullOrEmpty(staticNode.ParentId) ||
-                                         user.CompletedResearches.Any(r => r.ResearchId == staticNode.ParentId);
+                                         completedIds.Contains(staticNode.ParentId);
 
                 return new ResearchNodeDTO(
                     staticNode.Id,
                     staticNode.Name,
                     staticNode.Description,
-                    staticNode.ResearchType, // Mapped direkte fra static data
+                    staticNode.ResearchType,
                     staticNode.ParentId,
                     staticNode.ResearchPointCost,
                     staticNode.ResearchTimeInSeconds,
                     isCompleted,
+                    isResearching,
                     !parentIsCompleted, // IsLocked
                     user.ResearchPoints >= staticNode.ResearchPointCost // CanAfford
                 );
@@ -66,7 +75,7 @@ namespace Application.Services
                     activeJob.Id,
                     activeJob.ResearchId,
                     activeJob.ExecutionTime,
-                    0 // Progress beregnes i Unity eller her hvis starttid haves
+                    0
                 );
             }
 

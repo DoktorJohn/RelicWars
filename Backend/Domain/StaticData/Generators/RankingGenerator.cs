@@ -37,9 +37,10 @@ namespace Domain.StaticData.Generators
                     {
                         WorldPlayerId = worldPlayerId, // VIGTIGT: Gemmer ID til senere opslag
                         PlayerName = city.WorldPlayer.PlayerProfile.UserName!,
-                        AllianceName = "Ingen Alliance",
+                        AllianceName = city.WorldPlayer.Alliance.Name ?? "",
+                        Ideology = city.WorldPlayer.Ideology.ToString(),
                         TotalPoints = pointsCalculatedFromCity,
-                        CityCount = 1,
+                        CityCount = city.WorldPlayer.Cities.Count,
                         LastUpdated = DateTime.UtcNow
                     };
                 }

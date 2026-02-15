@@ -146,7 +146,7 @@ namespace Project.Network
                 }
             }
         }
-        public IEnumerator GetHousingProjection(Guid cityId, string token, Action<List<HousingProjectionDTO>> callback)
+        public IEnumerator GetHousingProjection(Guid cityId, string token, Action<List<HousingInfoDTO>> callback)
         {
             string url = $"{_baseUrl}/economybuilding/{cityId}/housing";
 
@@ -162,7 +162,7 @@ namespace Project.Network
                     string json = request.downloadHandler.text;
                     try
                     {
-                        var data = JsonConvert.DeserializeObject<List<HousingProjectionDTO>>(json);
+                        var data = JsonConvert.DeserializeObject<List<HousingInfoDTO>>(json);
                         callback?.Invoke(data);
                     }
                     catch (Exception e)

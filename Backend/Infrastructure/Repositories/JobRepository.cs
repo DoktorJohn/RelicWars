@@ -48,6 +48,14 @@ namespace Infrastructure.Repositories
             return await _context.Jobs.FindAsync(id);
         }
 
+        public async Task<List<ResearchJob>> GetResearchJobsByIdAsync(Guid id)
+        {
+            return await ActiveJobs
+                .OfType<ResearchJob>()
+                .Where(j => j.WorldPlayerId == id)
+                .ToListAsync();
+        }
+
         public async Task<List<BaseJob>> GetDueJobsAsync(DateTime now)
         {
             return await ActiveJobs

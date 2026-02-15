@@ -13,72 +13,65 @@ namespace Project.Modules.UI.Windows.Implementations
         protected override string VisualContainerName => "Ranking-Window-MainContainer";
         protected override string HeaderName => "Ranking-Window-Header";
 
-        [Header("Template Configuration")]
+        [Header("Ranking Row Configuration")]
         [SerializeField] private VisualTreeAsset _rankingRowTemplate;
 
-        private ScrollView _listContainer;
+        private ScrollView _rankingEntriesScrollView;
 
         public override void OnOpen(object dataPayload)
         {
-            // 1. Close Button
-            var closeBtn = Root.Q<Button>("Header-Close-Button");
-            if (closeBtn != null)
-            {
-                closeBtn.clicked -= Close;
-                closeBtn.clicked += Close;
-            }
+            // Komponent referencer
+            _rankingEntriesScrollView = Root.Q<ScrollView>("Ranking-List-Container");
 
-            // 2. Container
-            _listContainer = Root.Q<ScrollView>("Ranking-List-Container");
-
-            RefreshRankingData();
+            RequestGlobalRankingDataFromServer();
         }
 
-        private void RefreshRankingData()
+        private void RequestGlobalRankingDataFromServer()
         {
-            if (_listContainer != null) _listContainer.Clear();
-            string jwtToken = NetworkManager.Instance.JwtToken;
+            if (_rankingEntriesScrollView != null) _rankingEntriesScrollView.Clear();
 
-            StartCoroutine(NetworkManager.Instance.Ranking.GetGlobalRankings(jwtToken, (rankingsList) =>
+            string authenticationToken = NetworkManager.Instance.JwtToken;
+
+            StartCoroutine(NetworkManager.Instance.Ranking.GetGlobalRankings(authenticationToken, (rankingsList) =>
             {
                 if (rankingsList != null)
                 {
-                    PopulateList(rankingsList);
+                    PopulateGlobalRankingStatisticsTable(rankingsList);
                 }
                 else
                 {
-                    Debug.LogError("[RankingWindow] No data received from ranking service.");
+                    Debug.LogError("[RankingWindow] Failed to retrieve ranking data from the network service.");
                 }
             }));
         }
 
-        private void PopulateList(List<RankingEntryDataDTO> data)
+        private void PopulateGlobalRankingStatisticsTable(List<RankingEntryDataDTO> rankingData)
         {
-            if (_listContainer == null) return;
-            _listContainer.Clear();
+            if (_rankingEntriesScrollView == null || _rankingRowTemplate == null) return;
 
-            if (_rankingRowTemplate == null)
+            _rankingEntriesScrollView.Clear();
+
+            foreach (var entry in rankingData)
             {
-                Debug.LogError("[RankingWindow] RankingRowTemplate is not assigned in the Inspector!");
-                return;
-            }
+                // Vi instantiere templaten
+                VisualElement rowInstance = _rankingRowTemplate.Instantiate();
 
-            foreach (var entry in data)
-            {
-                // Instantiate nu uden inline var() styles - dette stopper crashet.
-                VisualElement row = _rankingRowTemplate.Instantiate();
+                // Finder labels via de præcise navne fra UXML
+                Label rankLabel = rowInstance.Q<Label>("Row-Rank");
+                Label nameLabel = rowInstance.Q<Label>("Row-PlayerName");
+                Label ideologyLabel = rowInstance.Q<Label>("Row-Ideology");
+                Label allianceLabel = rowInstance.Q<Label>("Row-Alliance");
+                Label scoreLabel = rowInstance.Q<Label>("Row-Points");
 
-                // Find labels inde i den nye row
-                var rankLbl = row.Q<Label>("Row-Rank");
-                var nameLbl = row.Q<Label>("Row-PlayerName");
-                var pointsLbl = row.Q<Label>("Row-Points");
+                // Mapper data
+                if (rankLabel != null) rankLabel.text = entry.Rank.ToString();
+                if (nameLabel != null) nameLabel.text = entry.PlayerName;
+                if (ideologyLabel != null) ideologyLabel.text = entry.Ideology ?? "None";
+                if (allianceLabel != null) allianceLabel.text = entry.AllianceName ?? "";
+                if (scoreLabel != null) scoreLabel.text = entry.TotalPoints.ToString("N0");
 
-                // Map data
-                if (rankLbl != null) rankLbl.text = entry.Rank.ToString();
-                if (nameLbl != null) nameLbl.text = entry.PlayerName;
-                if (pointsLbl != null) pointsLbl.text = entry.TotalPoints.ToString("N0");
-
-                _listContainer.Add(row);
+                // Tilføjer rækken til listen
+                _rankingEntriesScrollView.Add(rowInstance);
             }
         }
     }

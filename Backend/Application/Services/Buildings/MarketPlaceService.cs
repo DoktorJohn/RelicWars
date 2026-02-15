@@ -23,29 +23,49 @@ namespace Application.Services.Buildings
             _buildingDataReader = buildingDataReader;
         }
 
-        public async Task<MarketPlaceInfoDTO> GetMarketPlaceInfoAsync(Guid cityId)
+        public async Task<List<MarketPlaceInfoDTO>> GetMarketPlaceInfoAsync(Guid cityId)
         {
-            var city = await _cityRepo.GetByIdAsync(cityId);
-            if (city == null) throw new Exception("City not found");
+            var cityEntity = await _cityRepo.GetByIdAsync(cityId);
+            if (cityEntity == null)
+            {
+                throw new Exception($"City with ID {cityId} not found");
+            }
 
-            var marketPlace = city.Buildings.FirstOrDefault(b => b.Type == BuildingTypeEnum.MarketPlace);
-            int currentLevel = marketPlace?.Level ?? 0;
+            var marketPlaceBuilding = cityEntity.Buildings.FirstOrDefault(b => b.Type == BuildingTypeEnum.MarketPlace);
+            int currentBuildingLevel = marketPlaceBuilding?.Level ?? 0;
 
-            var result = new MarketPlaceInfoDTO();
-            ModifierDTO modifier = new();
+            var marketPlaceProjectionList = new List<MarketPlaceInfoDTO>();
 
-            var config = _buildingDataReader.GetConfig<MarketPlaceLevelData>(BuildingTypeEnum.MarketPlace, currentLevel);
+            // Vi looper: Nuværende level + de næste 5
+            for (int i = 0; i < 5; i++)
+            {
+                int levelToCheck = currentBuildingLevel + i;
 
-            if (config == null) return null;
+                // Stop hvis vi går ud over max level (20)
+                if (levelToCheck > 19) break;
 
-            modifier.ModifierTag = ModifierTagEnum.Silver;
-            modifier.ModifierType = ModifierTypeEnum.Flat;
-            modifier.Value = config.ModifiersInternal.FirstOrDefault(x => x.Tag == ModifierTagEnum.Silver)?.Value ?? 0;
+                double silverModifierValue = 0;
 
-            result.Level = currentLevel;
-            result.Modifier = modifier;
+                if (levelToCheck > 0)
+                {
+                    var levelConfiguration = _buildingDataReader.GetConfig<MarketPlaceLevelData>(BuildingTypeEnum.MarketPlace, levelToCheck);
 
-            return result;
+                    if (levelConfiguration == null) break;
+
+                    // Find værdien for Silver-tagget direkte i listens modifiers
+                    silverModifierValue = levelConfiguration.ModifiersInternal
+                        .FirstOrDefault(m => m.Tag == ModifierTagEnum.Silver)?.Value ?? 0;
+                }
+
+                marketPlaceProjectionList.Add(new MarketPlaceInfoDTO
+                {
+                    Level = levelToCheck,
+                    ModifierIncrease = silverModifierValue,
+                    IsCurrentLevel = (levelToCheck == currentBuildingLevel)
+                });
+            }
+
+            return marketPlaceProjectionList;
         }
     }
 }

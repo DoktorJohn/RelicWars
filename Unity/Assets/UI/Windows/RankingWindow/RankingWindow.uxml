@@ -1,32 +1,35 @@
 <?xml version="1.0" encoding="utf-8"?>
-<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" editor-extension-mode="False">
-    
+<ui:UXML xmlns:ui="UnityEngine.UIElements">
     <ui:Style src="project://database/Assets/UI/Windows/WindowTheme.uss" />
     <ui:Style src="RankingWindow.uss" />
 
-    <ui:VisualElement name="Ranking-Window-Overlay" picking-mode="Ignore" class="screen-overlay">
-        
-        <ui:VisualElement name="Ranking-Window-MainContainer" class="window-frame size-medium">
+    <ui:VisualElement class="screen-overlay" picking-mode="Ignore">
+        <ui:VisualElement name="Ranking-Window-MainContainer" class="window-frame ranking-window-size">
             
             <ui:VisualElement name="Ranking-Window-Header" class="window-header">
-                <ui:Label name="Lbl-Title" class="window-header-label" text="GLOBAL RANKINGS" />
-                <ui:Button name="Header-Close-Button" class="window-close-btn" text="x" />
+                <ui:Label class="window-header-label" text="RANKINGS" />
+                <ui:Button name="RankingWindow-Close-Button" class="window-close-btn" text="×" />
             </ui:VisualElement>
-            
-            <ui:VisualElement style="padding: 20px; flex-grow: 1;">
+
+            <ui:VisualElement class="ranking-content-container">
                 
-                <ui:VisualElement class="table-container">
+                <ui:VisualElement class="table-main-area">
                     <ui:VisualElement class="table-header-row">
-                        <ui:Label text="#" class="table-header-label" style="width: 15%;" />
-                        <ui:Label text="PLAYER" class="table-header-label" style="width: 60%; -unity-text-align: middle-left; padding-left: 20px;" />
-                        <ui:Label text="POINTS" class="table-header-label" style="width: 25%;" />
+                        <ui:Label text="#" class="table-header-label col-rank" />
+                        <ui:Label text="PLAYER" class="table-header-label col-name" />
+                        <ui:Label text="IDEOLOGY" class="table-header-label col-ideology" />
+                        <ui:Label text="ALLIANCE" class="table-header-label col-alliance" />
+                        <ui:Label text="POINTS" class="table-header-label col-score" />
                     </ui:VisualElement>
 
-                    <ui:ScrollView name="Ranking-List-Container" />
+                    <ui:ScrollView name="Ranking-List-Container" 
+                                   class="ranking-scrollview" 
+                                   vertical-scroller-visibility="Always" 
+                                   horizontal-scroller-visibility="Hidden" 
+                                   mode="Vertical" />
                 </ui:VisualElement>
 
             </ui:VisualElement>
-            
         </ui:VisualElement>
     </ui:VisualElement>
 </ui:UXML>

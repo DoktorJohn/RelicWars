@@ -1,71 +1,91 @@
-/* Assets/UI/Windows/RankingWindow/RankingWindow.uss */
-
-/* --- TABLE CONTAINER --- */
-.table-container {
+﻿/* =========================================================
+   TABLE SYSTEM (THE FLUSH FIX)
+   ========================================================= */
+.table-main-area {
+    width: 100%;
     flex-grow: 1;
-    background-color: rgba(0, 0, 0, 0.04);
-    border-radius: 6px;
     border-width: 1px;
-    border-color: rgba(0,0,0,0.1);
-    padding: 10px;
-    overflow: hidden; 
+    border-color: var(--c-border);
+    background-color: rgba(0, 0, 0, 0.05);
 }
 
-/* --- HEADER ROW --- */
 .table-header-row {
-    flex-direction: row; height: 35px;
-    background-color: rgba(0, 0, 0, 0.06);
+    width: 100%;
+    height: 45px;
+    flex-direction: row;
+    background-color: var(--c-btn-chill-bg);
     border-bottom-width: 2px;
     border-bottom-color: var(--c-border);
-    margin-bottom: 5px; align-items: center;
-    flex-shrink: 0; 
+    /* Matcher præcis ScrollViewets indhold når vertical scroll er Always */
+    padding-right: 18px; 
 }
+
+.ranking-scrollview {
+    flex-grow: 1;
+    /* Hard-lock: Ingen horisontal scroll overhovedet */
+}
+
+/* TVING INTERN CONTAINER TIL AT MATCHE BREDDEN */
+.ranking-scrollview #unity-content-container {
+    width: 100%;
+    max-width: 100%;
+    padding: 0;
+    margin: 0;
+    overflow: hidden; /* Fjerner horisontal blødning */
+}
+
+/* SKJUL DEN HORISONTALE SCROLLER HELT VIA CSS */
+.ranking-scrollview .unity-scroll-view__horizontal-scroller {
+    display: none;
+    opacity: 0;
+    height: 0;
+    width: 0;
+}
+
+.table-row {
+    width: 100%;
+    height: 40px;
+    flex-direction: row;
+    align-items: center;
+    border-bottom-width: 1px;
+    border-bottom-color: rgba(165, 125, 50, 0.2);
+}
+
+/* =========================================================
+   COLUMN SYSTEM (Mathematical Alignment)
+   ========================================================= */
+.col-rank     { width: 10%; flex-shrink: 0; -unity-text-align: middle-center; }
+.col-name     { width: 35%; flex-shrink: 0; -unity-text-align: middle-center; }
+.col-ideology { width: 15%; flex-shrink: 0; -unity-text-align: middle-center; }
+.col-alliance { width: 25%; flex-shrink: 0; -unity-text-align: middle-center; }
+.col-score    { width: 15%; flex-shrink: 0; -unity-text-align: middle-center; }
 
 .table-header-label {
     -unity-font-definition: var(--font-header);
-    color: var(--c-text-header);
-    font-size: 14px; -unity-font-style: bold;
-    -unity-text-align: middle-center;
-}
-
-/* --- DATA ROWS --- */
-.table-row {
-    flex-direction: row; height: 45px; align-items: center;
-    border-bottom-width: 1px;
-    border-bottom-color: rgba(0, 0, 0, 0.05);
-    flex-shrink: 0; 
+    font-size: 16px;
+    color: white;
+    -unity-font-style: bold;
 }
 
 .row-label {
     -unity-font-definition: var(--font-body);
+    font-size: 14px;
     color: var(--c-text-body);
-    font-size: 14px; -unity-text-align: middle-center;
 }
 
-/* --- COLUMN SPECIFIC STYLES (Moved from Inline UXML) --- */
-.col-rank {
-    width: 15%;
-    -unity-font-style: bold;
-    color: var(--c-text-highlight);
+.ranking-window-size {
+    width: 1100px;
+    height: 750px;
+    background-color: var(--c-window-bg);
 }
 
-.col-name {
-    width: 60%;
-    -unity-text-align: middle-left;
-    padding-left: 20px;
-}
-
-.col-points {
-    width: 25%;
-    -unity-font-style: bold;
-}
-
-/* --- SCROLLBAR HIDING --- */
-.unity-scroller { display: none; opacity: 0; }
-.unity-scroller--vertical { width: 0; }
-.unity-scroller--horizontal { height: 0; }
-
-.unity-scroll-view__content-container {
+.ranking-content-container {
+    padding: 25px;
     flex-grow: 1;
-    min-width: 100%;
+}
+
+.ranking-close-pos {
+    position: absolute;
+    top: 15px;
+    right: 15px;
 }

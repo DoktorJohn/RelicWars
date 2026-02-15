@@ -33,8 +33,10 @@ namespace Application.Services.Buildings
 
             var resultList = new List<WallInfoDTO>();
 
-            for (int i = 0; i <= 5; i++)
+            for (int i = 0; i < 5; i++)
             {
+                if (currentLevel + i > 19) break;
+
                 int levelToCheck = currentLevel + i;
 
                 ModifierDTO modifier = new();

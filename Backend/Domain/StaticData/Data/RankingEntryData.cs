@@ -12,6 +12,7 @@ namespace Domain.StaticData.Data
         public int Rank { get; set; }
         public string PlayerName { get; set; } = string.Empty;
         public string AllianceName { get; set; } = string.Empty;
+        public string Ideology { get; set; } = string.Empty;
         public int TotalPoints { get; set; }
         public int CityCount { get; set; }
         public DateTime LastUpdated { get; set; }

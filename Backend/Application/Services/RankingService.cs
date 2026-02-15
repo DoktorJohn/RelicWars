@@ -19,8 +19,6 @@ namespace Application.Services
 
         public async Task<List<RankingEntryData>> GetRankings()
         {
-            // Vi wrapper i Task.Run hvis du vil beholde det asynkrone interface,
-            // selvom operationen nu er synkron (cached memory læsning).
             return await Task.Run(() =>
             {
                 return _reader.GetGlobalRankings()

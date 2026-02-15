@@ -13,6 +13,7 @@ namespace Project.Scripts.Domain.DTOs
         public int Rank { get; set; }
         public string PlayerName { get; set; }
         public string AllianceName { get; set; }
+        public string Ideology { get; set; }
         public int TotalPoints { get; set; }
         public int CityCount { get; set; }
         public DateTime LastUpdated { get; set; }

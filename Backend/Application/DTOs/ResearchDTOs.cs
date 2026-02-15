@@ -22,6 +22,7 @@ namespace Application.DTOs
         double ResearchPointCost,
         int ResearchTimeInSeconds,
         bool IsCompleted,
+        bool IsResearching,
         bool IsLocked,
         bool CanAfford
     );

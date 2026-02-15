@@ -9,6 +9,6 @@ namespace Application.Interfaces.IServices.IBuildings
 {
     public interface IMarketPlaceService
     {
-        Task<MarketPlaceInfoDTO> GetMarketPlaceInfoAsync(Guid cityId);
+        Task<List<MarketPlaceInfoDTO>> GetMarketPlaceInfoAsync(Guid cityId);
     }
 }

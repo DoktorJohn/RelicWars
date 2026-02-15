@@ -17,7 +17,7 @@ namespace Project.Network
             _baseUrl = baseUrl;
         }
 
-        public IEnumerator GetMarketPlaceInfo(Guid cityId, string token, Action<MarketPlaceInfoDTO> callback)
+        public IEnumerator GetMarketPlaceInfo(Guid cityId, string token, Action<List<MarketPlaceInfoDTO>> callback)
         {
             string url = $"{_baseUrl}/MarketPlaceBuilding/{cityId}/marketPlace";
 
@@ -33,8 +33,8 @@ namespace Project.Network
                 {
                     try
                     {
-                        // FIX: Deserialize Single Object directly
-                        var data = JsonConvert.DeserializeObject<MarketPlaceInfoDTO>(request.downloadHandler.text);
+                        // Vi deserialiserer nu til en liste af DTO'er jf. den nye backend-logik
+                        var data = JsonConvert.DeserializeObject<List<MarketPlaceInfoDTO>>(request.downloadHandler.text);
                         callback?.Invoke(data);
                     }
                     catch (Exception e)

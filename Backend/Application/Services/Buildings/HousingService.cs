@@ -35,8 +35,10 @@ namespace Application.Services.Buildings
             var resultList = new List<HousingInfoDTO>();
 
             // 2. Loop: Nuværende level + 5 næste
-            for (int i = 0; i <= 5; i++)
+            for (int i = 0; i < 5; i++)
             {
+                if (currentLevel + i > 19) break;
+
                 int levelToCheck = currentLevel + i;
 
                 int population = 0;
