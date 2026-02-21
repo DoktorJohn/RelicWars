@@ -18,27 +18,19 @@ namespace Application.Services.Buildings
     public class WorkshopService : IWorkshopService
     {
         private readonly ICityRepository _cityRepo;
-        private readonly IJobRepository _jobRepo;
-        private readonly RecruitmentTimeCalculationService _recruitmentCalculationService;
-        private readonly BuildingDataReader _buildingDataReader;
         private readonly UnitDataReader _unitDataReader;
+        private readonly IModifierService _modifierService;
 
         public WorkshopService(
             ICityRepository cityRepo,
-            IJobRepository jobRepo,
-            IResourceService resService,
-            IResearchService researchService,
-            BuildingDataReader buildingDataReader,
             UnitDataReader unitDataReader,
-            ICityStatService statService,
-            RecruitmentTimeCalculationService recruitmentCalculationService)
+            IModifierService modifierService)
         {
             _cityRepo = cityRepo;
-            _jobRepo = jobRepo;
-            _buildingDataReader = buildingDataReader;
             _unitDataReader = unitDataReader;
-            _recruitmentCalculationService = recruitmentCalculationService;
+            _modifierService = modifierService;
         }
+
         public async Task<WorkshopFullViewDTO> GetWorkshopOverviewAsync(Guid userId, Guid cityId)
         {
             var cityEntity = await _cityRepo.GetByIdAsync(cityId);
@@ -47,7 +39,10 @@ namespace Application.Services.Buildings
             var workshopBuilding = cityEntity.Buildings.FirstOrDefault(b => b.Type == BuildingTypeEnum.Workshop);
             int currentBuildingLevel = workshopBuilding?.Level ?? 0;
 
-            var workshopResponse = new WorkshopFullViewDTO { BuildingLevel = currentBuildingLevel };
+            var workshopResponse = new WorkshopFullViewDTO
+            {
+                BuildingLevel = currentBuildingLevel
+            };
 
             foreach (UnitTypeEnum unitTypeCandidate in Enum.GetValues(typeof(UnitTypeEnum)))
             {
@@ -56,7 +51,10 @@ namespace Application.Services.Buildings
                 var unitStaticData = _unitDataReader.GetUnit(unitTypeCandidate);
                 if (unitStaticData == null || unitStaticData.Category != UnitCategoryEnum.Siege) continue;
 
-                double calculatedRecruitmentTimePerUnit = await _recruitmentCalculationService.CalculateFinalRecruitmentTimeAsync(userId, cityEntity, unitStaticData);
+                var modifiedCosts = MilitaryUnitModifierHelper.GetModifiedCosts(_modifierService, cityEntity, unitStaticData);
+                var modifiedStats = MilitaryUnitModifierHelper.GetModifiedStats(_modifierService, cityEntity, unitStaticData);
+                int calculatedRecruitmentTime = MilitaryUnitModifierHelper.GetModifiedRecruitmentTime(_modifierService, cityEntity, unitStaticData);
+
                 int alreadyOwnedCount = cityEntity.UnitStacks.FirstOrDefault(stack => stack.Type == unitTypeCandidate)?.Quantity ?? 0;
                 bool isUnitTypeUnlocked = currentBuildingLevel > 0;
 
@@ -65,17 +63,20 @@ namespace Application.Services.Buildings
                     UnitType = unitTypeCandidate,
                     UnitName = unitStaticData.Type.ToString(),
                     AlreadyOwnedCount = alreadyOwnedCount,
-                    CostWood = unitStaticData.WoodCost,
-                    CostStone = unitStaticData.StoneCost,
-                    CostMetal = unitStaticData.MetalCost,
-                    Power = unitStaticData.Power,
-                    Armor = unitStaticData.Armor,
-                    Discipline = unitStaticData.Discipline,
-                    Mobility = unitStaticData.Mobility,
-                    Reach = unitStaticData.Reach,
-                    LootCapacity = unitStaticData.LootCapacity,
+
+                    CostWood = modifiedCosts.wood,
+                    CostStone = modifiedCosts.stone,
+                    CostMetal = modifiedCosts.metal,
+
+                    Power = modifiedStats.power,
+                    Armor = modifiedStats.armor,
+                    Discipline = modifiedStats.discipline,
+                    Mobility = modifiedStats.mobility,
+                    Reach = modifiedStats.reach,
+                    LootCapacity = modifiedStats.loot,
+
                     PopulationCost = unitStaticData.PopulationCost,
-                    RecruitmentTimeInSeconds = (int)calculatedRecruitmentTimePerUnit,
+                    RecruitmentTimeInSeconds = calculatedRecruitmentTime,
                     IsUnlocked = isUnitTypeUnlocked
                 });
             }

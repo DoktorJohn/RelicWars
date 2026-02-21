@@ -1,4 +1,5 @@
-﻿using Project.Scripts.Domain.Enums;
+﻿using Assets._Project.Scripts.Network;
+using Project.Scripts.Domain.Enums;
 using Project.Scripts.Network;
 using System;
 using UnityEngine;
@@ -37,6 +38,7 @@ namespace Project.Network.Manager
         public ClientMarketPlaceService MarketPlace { get; private set; }
         public ClientResearchService Research { get; private set; }
         public ClientUnitDeploymentService UnitDeployment { get; private set; }
+        public ClientIdeologyFocusService IdeologyFocus { get; private set; }
 
         private void Awake()
         {
@@ -82,6 +84,7 @@ namespace Project.Network.Manager
             MarketPlace = new ClientMarketPlaceService(_activeBackendUrl);
             Research = new ClientResearchService(_activeBackendUrl);
             UnitDeployment = new ClientUnitDeploymentService(_activeBackendUrl);
+            IdeologyFocus = new ClientIdeologyFocusService(_activeBackendUrl);
 
             Debug.Log($"[NetworkManager] Services Initialized pointing to: {_activeBackendUrl}");
         }

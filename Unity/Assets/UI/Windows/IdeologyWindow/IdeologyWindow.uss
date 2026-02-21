@@ -1,0 +1,126 @@
+/* Assets/UI/Windows/IdeologyWindow/IdeologyWindow.uss */
+
+.window-body {
+    padding: 20px;
+    flex-grow: 1;
+    overflow: hidden;
+    flex-direction: column;
+}
+
+/* ============================================================
+   OVERVIEW SECTION (Top)
+   ============================================================ */
+.overview-section {
+    flex-direction: row;
+    justify-content: space-between;
+    background-color: rgba(0,0,0,0.05);
+    border-width: 1px;
+    border-color: var(--c-border);
+    border-radius: 6px;
+    padding: 15px;
+    margin-bottom: 15px;
+    flex-shrink: 0;
+}
+
+.overview-left { flex-basis: 60%; }
+.overview-right { flex-basis: 35%; align-items: flex-end; justify-content: center; }
+
+.ideology-title { -unity-font-definition: var(--font-header); color: var(--c-text-header); font-size: 26px; -unity-font-style: bold; margin-bottom: 5px; }
+.ideology-description { -unity-font-definition: var(--font-body); color: var(--c-text-muted); font-size: 13px; white-space: normal; }
+.points-title { -unity-font-definition: var(--font-body); color: var(--c-text-muted); font-size: 12px; -unity-font-style: bold; }
+.points-value { -unity-font-definition: var(--font-header); color: var(--c-text-highlight); font-size: 22px; -unity-font-style: bold; }
+.points-production { -unity-font-definition: var(--font-body); color: rgb(60, 110, 60); font-size: 12px; -unity-font-style: bold; }
+
+/* ============================================================
+   GRID SYSTEM (2 Rækker á 3 Kolonner)
+   ============================================================ */
+.focus-grid {
+    flex-direction: row;
+    flex-wrap: wrap; 
+    justify-content: space-between;
+    /* align-content er god, men margin sikrer det faste 10px mellemrum */
+    align-content: flex-start; 
+    flex-grow: 1;
+    width: 100%;
+}
+
+.focus-card {
+    flex-direction: column; 
+    width: 32%; 
+    /* Reduceret en anelse for at give plads til margin */
+    height: 47%; 
+    margin-bottom: 15px; /* Skaber det faste mellemrum under den første række */
+    
+    background-color: rgba(255,255,255,0.2);
+    border-width: 1px;
+    border-color: rgba(165, 125, 50, 0.4);
+    border-radius: 6px;
+    padding: 10px;
+    justify-content: space-between;
+}
+
+/* ============================================================
+   CARD INTERNALS (Grid Layout)
+   ============================================================ */
+.focus-card-info {
+    flex-direction: column;
+    align-items: center;
+    flex-grow: 1;
+    flex-shrink: 1;
+    overflow: hidden; 
+}
+
+.focus-card-name {
+    -unity-font-definition: var(--font-header);
+    color: var(--c-text-body);
+    font-size: 15px;
+    -unity-font-style: bold;
+    -unity-text-align: middle-center;
+    margin-bottom: 6px;
+    white-space: normal;
+    flex-shrink: 0; 
+}
+
+.focus-card-description {
+    -unity-font-definition: var(--font-body);
+    color: var(--c-text-muted);
+    font-size: 11px;
+    margin-bottom: 8px;
+    white-space: normal;
+    -unity-text-align: middle-center;
+    flex-grow: 1; 
+    flex-shrink: 1;
+    text-overflow: ellipsis; 
+}
+
+.focus-card-action {
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-end;
+    flex-shrink: 0; 
+}
+
+.focus-cost-label {
+    -unity-font-definition: var(--font-body);
+    color: var(--c-text-highlight);
+    font-size: 14px;
+    -unity-font-style: bold;
+    margin-bottom: 6px;
+}
+
+.btn-enact-grid {
+    width: 100%;
+    height: 32px;
+    font-size: 12px;
+    margin-top: 0;
+}
+
+.status-active-label {
+    -unity-font-definition: var(--font-body);
+    color: rgb(155, 45, 35);
+    font-size: 11px;
+    -unity-font-style: bold;
+    -unity-text-align: middle-center;
+    white-space: normal;
+    min-height: 32px; 
+}

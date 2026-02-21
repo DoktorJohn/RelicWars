@@ -19,6 +19,7 @@ namespace Infrastructure.Repositories
             return await _context.Cities
                 .Include(city => city.Buildings)
                 .Include(city => city.UnitStacks)
+                .Include(city => city.ActiveFocuses)
                 .Include(city => city.WorldPlayer)
                     .ThenInclude(player => player.ModifiersInternal)
                 .FirstOrDefaultAsync(city => city.Id == cityIdentifier);
@@ -29,6 +30,7 @@ namespace Infrastructure.Repositories
             return await _context.Cities
                  .AsSplitQuery()
                  .Include(city => city.Buildings)
+                 .Include(city => city.ActiveFocuses)
                  .Include(city => city.WorldPlayer)
                      .ThenInclude(worldPlayer => worldPlayer.PlayerProfile)
                  .Include(city => city.WorldPlayer)
@@ -63,6 +65,9 @@ namespace Infrastructure.Repositories
                 .Include(cityEntity => cityEntity.WorldPlayer)
                     .ThenInclude(playerEntity => playerEntity!.ModifiersInternal)
 
+                .Include(cityEntity => cityEntity.WorldPlayer)
+                    .ThenInclude(playerEntity => playerEntity!.Alliance)
+
                 .ToListAsync();
         }
 
@@ -77,7 +82,6 @@ namespace Infrastructure.Repositories
 
         public async Task UpdateAsync(City city)
         {
-            _context.Cities.Update(city);
             await _context.SaveChangesAsync();
         }
 

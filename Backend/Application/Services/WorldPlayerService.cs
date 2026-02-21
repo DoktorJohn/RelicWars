@@ -144,6 +144,7 @@ namespace Application.Services
                 WorldId = targetWorldId,
                 Silver = 1000,
                 ResearchPoints = 10,
+                IdeologyFocusPoints = 100,
                 Ideology = IdeologyTypeEnum.None,
                 LastResourceUpdate = DateTime.UtcNow,
                 Cities = new List<City>()
@@ -270,15 +271,15 @@ namespace Application.Services
                 WorldPlayerId = worldPlayerId,
                 X = x,
                 Y = y,
-                Wood = 500,
-                Stone = 500,
-                Metal = 500,
+                Wood = 5000,
+                Stone = 5000,
+                Metal = 5000,
                 LastResourceUpdate = DateTime.UtcNow,
                 Buildings = new List<Building>()
             };
 
-            city.Buildings.Add(new Building { Type = BuildingTypeEnum.TownHall, Level = 20 });
-            city.Buildings.Add(new Building { Type = BuildingTypeEnum.Warehouse, Level = 1 });
+            city.Buildings.Add(new Building { Type = BuildingTypeEnum.TownHall, Level = 18 });
+            city.Buildings.Add(new Building { Type = BuildingTypeEnum.Warehouse, Level = 18 });
             city.Buildings.Add(new Building { Type = BuildingTypeEnum.Housing, Level = 1 });
             city.Buildings.Add(new Building { Type = BuildingTypeEnum.TimberCamp, Level = 1 });
             city.Buildings.Add(new Building { Type = BuildingTypeEnum.StoneQuarry, Level = 1 });
@@ -288,7 +289,7 @@ namespace Application.Services
             city.Buildings.Add(new Building { Type = BuildingTypeEnum.Barracks, Level = 1 });
             city.Buildings.Add(new Building { Type = BuildingTypeEnum.Wall, Level = 1 });
             city.Buildings.Add(new Building { Type = BuildingTypeEnum.Stable, Level = 1 });
-            city.Buildings.Add(new Building { Type = BuildingTypeEnum.MarketPlace, Level = 1 });
+            city.Buildings.Add(new Building { Type = BuildingTypeEnum.MarketPlace, Level = 18 });
 
             city.Points = _cityPointCalculator.CalculateTotalPointsForCity(city);
 

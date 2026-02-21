@@ -24,5 +24,9 @@ namespace Domain.Enums
         AcceleratedConscription,
         IronDiscipline,
         FortifiedCity,
+        NobleClemency,
+        PrivateSecurity,
+        SpeculativeStockpiling,
+        EconomicTransparency,
     }
 }

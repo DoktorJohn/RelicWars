@@ -36,6 +36,13 @@ namespace Infrastructure.Repositories
                 .FirstOrDefaultAsync(x => x.Id == id);
         }
 
+        public async Task<WorldPlayer?> GetByIdIdeologyOverviewAsync(Guid id)
+        {
+            return await _context.WorldPlayers
+                .Include(wp => wp.PlayerProfile)
+                .FirstOrDefaultAsync(wp => wp.Id == id);
+        }
+
         public async Task<WorldPlayer?> GetByIdWithResearchAsync(Guid id)
         {
             return await _context.WorldPlayers

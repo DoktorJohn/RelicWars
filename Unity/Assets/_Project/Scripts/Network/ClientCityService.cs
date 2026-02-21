@@ -98,5 +98,67 @@ namespace Project.Network
                 }
             }
         }
+
+        public IEnumerator ChangeCityName(Guid cityId, string newName, string authenticationToken, Action<ChangeCityNameResponseDTO> callback)
+        {
+            string url = $"{_baseUrl}/ChangeCityName/{cityId}/{newName}";
+            byte[] bodyRaw = new byte[0];
+
+            using (UnityWebRequest request = new UnityWebRequest(url, "POST"))
+            {
+                request.uploadHandler = new UploadHandlerRaw(bodyRaw);
+                request.downloadHandler = new DownloadHandlerBuffer();
+
+                request.SetRequestHeader("Content-Type", "application/json");
+                request.SetRequestHeader("Authorization", "Bearer " + authenticationToken);
+
+                yield return request.SendWebRequest();
+
+                ChangeCityNameResponseDTO resultData;
+
+                if (request.result == UnityWebRequest.Result.Success)
+                {
+                    try
+                    {
+                        resultData = JsonConvert.DeserializeObject<ChangeCityNameResponseDTO>(request.downloadHandler.text);
+                    }
+                    catch (Exception exception)
+                    {
+                        Debug.LogError($"[IdeologyFocusService] JSON Parse Error on Enact: {exception.Message}");
+                        resultData = new ChangeCityNameResponseDTO();
+                        resultData.Success = false;
+                        resultData.Message = "Exception thrown";
+                    }
+                }
+                else
+                {
+                    try
+                    {
+                        string errorFromBackend = request.downloadHandler.text;
+                        resultData = new ChangeCityNameResponseDTO
+                        {
+                            CityId = cityId,
+                            CityName = newName,
+                            Success = false,
+                            Message = "Some error happened in the backend"
+                        };
+                    }
+                    catch
+                    {
+                        resultData = new ChangeCityNameResponseDTO
+                        {
+                            CityId = cityId,
+                            CityName = newName,
+                            Success = false,
+                            Message = "Unknown error"
+                        };
+                    }
+
+                    Debug.LogWarning($"[IdeologyFocusService] Enact Failed: {resultData.Message}");
+                }
+
+                callback?.Invoke(resultData);
+            }
+        }
     }
 }

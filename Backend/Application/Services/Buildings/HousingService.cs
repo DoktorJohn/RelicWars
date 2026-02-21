@@ -1,5 +1,6 @@
 ﻿using Application.DTOs;
 using Application.Interfaces.IRepositories;
+using Application.Interfaces.IServices;
 using Application.Interfaces.IServices.IBuildings;
 using Application.Utility;
 using Domain.Enums;
@@ -17,11 +18,16 @@ namespace Application.Services.Buildings
     {
         private readonly ICityRepository _cityRepo;
         private readonly BuildingDataReader _buildingDataReader;
+        private readonly IModifierService _modifierService;
 
-        public HousingService(ICityRepository cityRepo, BuildingDataReader buildingDataReader)
+        public HousingService(
+            ICityRepository cityRepo,
+            BuildingDataReader buildingDataReader,
+            IModifierService modifierService)
         {
             _cityRepo = cityRepo;
             _buildingDataReader = buildingDataReader;
+            _modifierService = modifierService;
         }
 
         public async Task<List<HousingInfoDTO>> GetHousingInfoAsync(Guid cityId)
@@ -34,18 +40,17 @@ namespace Application.Services.Buildings
 
             var resultList = new List<HousingInfoDTO>();
 
-            // 2. Loop: Nuværende level + 5 næste
             for (int i = 0; i < 5; i++)
             {
                 if (currentLevel + i > 19) break;
 
                 int levelToCheck = currentLevel + i;
 
-                int population = 0;
+                double basePopulation = 0;
 
                 if (levelToCheck == 0)
                 {
-                    population = 100;
+                    basePopulation = 100;
                 }
                 else
                 {
@@ -53,13 +58,17 @@ namespace Application.Services.Buildings
 
                     if (config == null) break;
 
-                    population = config.Population;
+                    basePopulation = config.Population;
                 }
+
+                var populationModifierResult = _modifierService.CalculateCityValue(city, basePopulation, ModifierTagEnum.Population);
+
+                int finalCalculatedPopulation = (int)Math.Floor(populationModifierResult.FinalValue);
 
                 resultList.Add(new HousingInfoDTO
                 {
                     Level = levelToCheck,
-                    Population = population,
+                    Population = finalCalculatedPopulation,
                     IsCurrentLevel = (levelToCheck == currentLevel)
                 });
             }

@@ -97,7 +97,7 @@ namespace Domain.StaticData.Generators
                 Description = "Upkeep of siege units is decreased by 5%",
                 ResearchPointCost = 25,
                 ResearchTimeInSeconds = 600,
-                ModifiersInternal = { new Modifier { Tag = ModifierTagEnum.Siege, Type = ModifierTypeEnum.Increased, Value = 0.05, Source = "Research: Cheaper sieges" } }
+                ModifiersInternal = { new Modifier { Tag = ModifierTagEnum.SiegeUpkeep, Type = ModifierTypeEnum.Increased, Value = 0.05, Source = "Research: Cheaper sieges" } }
             });
 
             nodes.Add(new ResearchData
@@ -120,7 +120,7 @@ namespace Domain.StaticData.Generators
                 Description = "Siege weapons deal 5% more damage",
                 ResearchPointCost = 40,
                 ResearchTimeInSeconds = 3600,
-                ModifiersInternal = { new Modifier { Tag = ModifierTagEnum.Siege, Type = ModifierTypeEnum.Increased, Value = 0.05, Source = "Research: Sieging Power" } }
+                ModifiersInternal = { new Modifier { Tag = ModifierTagEnum.SiegeStats, Type = ModifierTypeEnum.Increased, Value = 0.05, Source = "Research: Sieging Power" } }
             });
 
             nodes.Add(new ResearchData

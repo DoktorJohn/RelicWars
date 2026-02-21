@@ -23,6 +23,9 @@ namespace Infrastructure.Repositories
             _logger = logger;
         }
 
+        private IQueryable<BaseJob> ActiveJobs => _context.Jobs
+        .Where(j => !j.IsCompleted);
+
         public async Task<List<RecruitmentJob>> GetRecruitmentJobsAsync(Guid cityId)
         {
             return await _context.Jobs
@@ -31,9 +34,6 @@ namespace Infrastructure.Repositories
                 .OrderBy(j => j.ExecutionTime)
                 .ToListAsync();
         }
-
-        private IQueryable<BaseJob> ActiveJobs => _context.Jobs
-        .Where(j => !j.IsCompleted);
 
         public async Task<ResearchJob?> GetResearchJobAsync(Guid userId)
         {
@@ -60,10 +60,9 @@ namespace Infrastructure.Repositories
         {
             return await ActiveJobs
             .Where(j => j.ExecutionTime <= now)
-            .OrderBy(j => j.ExecutionTime) // Sortering her til sidst
+            .OrderBy(j => j.ExecutionTime)
             .ToListAsync();
         }
-
 
         public async Task<List<BuildingJob>> GetBuildingJobsAsync(Guid cityId)
         {

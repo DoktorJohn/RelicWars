@@ -10,5 +10,6 @@ namespace Application.Interfaces.IServices
     public interface IIdeologyFocusService
     {
         Task<IdeologyFocusAnswerDTO?> EnactIdeologyFocus(IdeologyFocusRequestDTO ideologyFocusDTO);
+        Task<IdeologyOverviewDTO?> GetIdeologyOverview(Guid cityId);
     }
 }

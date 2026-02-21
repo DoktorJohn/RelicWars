@@ -17,7 +17,6 @@ using Application.Interfaces.IServices.IBuildings;
 using Application.Services.Buildings;
 using Application.Services.Jobs;
 using Infrastructure.Workers;
-using Application.Services.Application.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -139,12 +138,16 @@ builder.Services.AddScoped<IStableService, StableService>();
 builder.Services.AddScoped<IWorkshopService, WorkshopService>();
 builder.Services.AddScoped<IWallService, WallService>();
 builder.Services.AddScoped<IUniversityService, UniversityService>();
+builder.Services.AddScoped<InstantUtility>();
 builder.Services.AddScoped<IRankingService, RankingService>();
 builder.Services.AddScoped<IAllianceService, AllianceService>();
 builder.Services.AddScoped<IAllianceRepository, AllianceRepository>();
 builder.Services.AddScoped<IModifierService, ModifierService>();
+builder.Services.AddScoped<IModifierCollectorService, ModifierCollectorService>();
 builder.Services.AddScoped<IUnitDeploymentService, UnitDeploymentService>();
 builder.Services.AddScoped<CityPointCalculator>();
+builder.Services.AddScoped<IIdeologyFocusRepository, IdeologyFocusRepository>();
+builder.Services.AddScoped<IIdeologyFocusService, IdeologyFocusService>();
 
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();

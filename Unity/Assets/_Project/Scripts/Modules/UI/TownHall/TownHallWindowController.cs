@@ -94,19 +94,19 @@ namespace Project.Scripts.Modules.UI
 
         private void ExecuteRefreshTownHallContent(Guid cityIdentifier)
         {
+            Debug.Log("[TownHall] Beder om friske AvailableBuildings fra backend...");
             string authenticationToken = NetworkManager.Instance.JwtToken;
 
-            // Vi beder manageren om at starte en generel opdatering (DetailedInfo + Queue)
             if (CityStateManager.Instance != null)
             {
                 CityStateManager.Instance.InitiateResourceRefresh(cityIdentifier);
             }
 
-            // Vi henter kun de specifikke 'Available Buildings' her, da de kun bruges i TownHall
             StartCoroutine(NetworkManager.Instance.City.GetTownHallAvailableBuildings(cityIdentifier, authenticationToken, (availableBuildings) =>
             {
                 if (_buildingGridScrollView != null && availableBuildings != null)
                 {
+                    Debug.Log("[TownHall] AvailableBuildings modtaget. Bygger grid.");
                     PopulateBuildingGrid(availableBuildings, cityIdentifier);
                 }
 
@@ -135,38 +135,67 @@ namespace Project.Scripts.Modules.UI
                 {
                     upgradeExecutionButton.AddToClassList("btn-global-base");
 
-                    if (building.IsCurrentlyUpgrading)
+                    // Tæl, hvor mange opgraderinger af DENNE bygning, der ligger i køen lige nu
+                    int queuedUpgradesForThisBuilding = 0;
+                    if (CityStateManager.Instance != null && CityStateManager.Instance.CurrentBuildingQueue != null)
+                    {
+                        queuedUpgradesForThisBuilding = CityStateManager.Instance.CurrentBuildingQueue
+                            .Count(job => job.Type.ToString() == building.BuildingType.ToString());
+                    }
+
+                    int targetLevel = building.CurrentLevel + queuedUpgradesForThisBuilding;
+                    int maxLevelAllowed = 20;
+
+                    // --- HIERARKI FOR KNAP-STATUS ---
+
+                    // 1. Max level (Stærkest)
+                    if (targetLevel >= maxLevelAllowed)
+                    {
+                        upgradeExecutionButton.text = "MAX LEVEL";
+                        upgradeExecutionButton.SetEnabled(false);
+                        upgradeExecutionButton.AddToClassList("btn-imperial-primary");
+                    }
+                    // (Ekstra tjek for igangværende byggeproces, svarer visuelt til køen)
+                    else if (building.IsCurrentlyUpgrading)
                     {
                         upgradeExecutionButton.text = "UPGRADING";
                         upgradeExecutionButton.SetEnabled(false);
                         upgradeExecutionButton.AddToClassList("btn-imperial-primary");
                     }
+                    // 2. Queue full
                     else if (_currentQueueCount >= 5)
                     {
                         upgradeExecutionButton.text = "QUEUE FULL";
                         upgradeExecutionButton.SetEnabled(false);
                         upgradeExecutionButton.AddToClassList("btn-imperial-danger");
                     }
+                    // 3. Insufficient resources
+                    else if (!building.CanAfford)
+                    {
+                        upgradeExecutionButton.text = "INSUFFICIENT RESOURCES";
+                        upgradeExecutionButton.SetEnabled(false);
+                        upgradeExecutionButton.AddToClassList("btn-imperial-danger");
+                    }
+                    // 4. Kan opgradere (Standard)
                     else
                     {
-                        bool canAffordUpgrade = building.CanAfford;
-                        upgradeExecutionButton.SetEnabled(canAffordUpgrade);
-                        upgradeExecutionButton.text = canAffordUpgrade ? "UPGRADE" : "LOCKED";
+                        upgradeExecutionButton.text = "UPGRADE";
+                        upgradeExecutionButton.SetEnabled(true);
+                        upgradeExecutionButton.AddToClassList("btn-imperial-success");
 
-                        if (canAffordUpgrade)
-                            upgradeExecutionButton.AddToClassList("btn-imperial-success");
-                        else
-                            upgradeExecutionButton.AddToClassList("btn-imperial-danger");
+                        var bType = building.BuildingType;
+                        upgradeExecutionButton.clicked += () => ExecuteUpgradeRequest(cityIdentifier, bType);
                     }
 
-                    var bType = building.BuildingType;
-                    var bData = building;
-
-                    upgradeExecutionButton.clicked += () => ExecuteUpgradeRequest(cityIdentifier, bType);
-
-                    upgradeExecutionButton.RegisterCallback<MouseEnterEvent>(evt => ShowResourceUpgradeTooltip(evt, bData));
-                    upgradeExecutionButton.RegisterCallback<MouseLeaveEvent>(evt => HideResourceUpgradeTooltip());
-                    upgradeExecutionButton.RegisterCallback<MouseMoveEvent>(evt => UpdateResourceUpgradeTooltipPosition(evt));
+                    // --- TOOLTIP LOGIK ---
+                    // Vis kun tooltip, hvis vi ikke er på max level
+                    if (targetLevel < maxLevelAllowed)
+                    {
+                        var bData = building; // Capture til event listener
+                        upgradeExecutionButton.RegisterCallback<MouseEnterEvent>(evt => ShowResourceUpgradeTooltip(evt, bData));
+                        upgradeExecutionButton.RegisterCallback<MouseLeaveEvent>(evt => HideResourceUpgradeTooltip());
+                        upgradeExecutionButton.RegisterCallback<MouseMoveEvent>(evt => UpdateResourceUpgradeTooltipPosition(evt));
+                    }
                 }
 
                 _buildingGridScrollView.Add(buildingCardInstance);
@@ -176,11 +205,33 @@ namespace Project.Scripts.Modules.UI
         private void PopulateConstructionQueue(List<BuildingDTO> constructionJobs)
         {
             _constructionQueueContainer.Clear();
+
+            // Opdater den interne counter
             _currentQueueCount = constructionJobs?.Count ?? 0;
+            Debug.Log($"[TownHall] Queue opdateret! Nuværende antal i kø: {_currentQueueCount}");
 
             if (_queueHeaderLabel != null)
             {
                 _queueHeaderLabel.text = $"CONSTRUCTION QUEUE ({_currentQueueCount}/5)";
+            }
+
+            // !! NY LOGIK !!
+            // Fordi _currentQueueCount lige er ændret, skal vi sikre, at bygge-knapperne i grid'et 
+            // revaluerer deres tilstand, så de skifter til "QUEUE FULL" hvis vi rammer 5.
+            // Vi kalder ExecuteRefreshTownHallContent for at hente bygningerne og bygge dem med den nye count.
+            // Bemærk: Vi gør det kun hvis gridet rent faktisk vises, for at undgå unødvendige kald før vinduet er åbent.
+            if (_mainWindowContainer != null && _mainWindowContainer.style.display == DisplayStyle.Flex)
+            {
+                Debug.Log("[TownHall] Genbygger knapper for at afspejle den nye kø-størrelse.");
+
+                // Vi kører ikke hele RefreshTownHallContent igen for at undgå et evigt loop.
+                // Vi kalder kun selve knap-tegningen, da AvailableBuildings sjældent ændrer sig (kun hvis en bygning fx. når max level, 
+                // og det håndteres allerede via targetLevel udregningen lokalt).
+                // Det nemmeste er at hente bygningsdataene igen via API'et *uden* at kalde InitiateResourceRefresh igen.
+                StartCoroutine(NetworkManager.Instance.City.GetTownHallAvailableBuildings(_activeCityId, NetworkManager.Instance.JwtToken, (availableBuildings) =>
+                {
+                    if (availableBuildings != null) PopulateBuildingGrid(availableBuildings, _activeCityId);
+                }));
             }
 
             if (_currentQueueCount == 0)
@@ -191,6 +242,7 @@ namespace Project.Scripts.Modules.UI
                 return;
             }
 
+            // ... resten af din Queue-byggekode forbliver præcis den samme ...
             foreach (var job in constructionJobs)
             {
                 VisualElement queueItemElement = new VisualElement();
@@ -259,16 +311,28 @@ namespace Project.Scripts.Modules.UI
 
         private void ExecuteUpgradeRequest(Guid cityId, BuildingTypeEnum buildingType)
         {
+            Debug.Log($"[TownHall] Trykkede Upgrade på {buildingType}. Sender API kald...");
+
+            // Optimistisk UI opdatering af kø-tallet
+            _currentQueueCount++;
+            Debug.Log($"[TownHall] Optimistisk kø opdateret lokalt til {_currentQueueCount}.");
+
             StartCoroutine(NetworkManager.Instance.Building.UpgradeBuilding(cityId, buildingType, NetworkManager.Instance.JwtToken, (success, msg) =>
             {
                 if (success)
                 {
-                    // Her trigger vi manageren til at hente den nye state (ressourcer brugt + ny kø)
+                    Debug.Log("[TownHall] Upgrade Success! Beder CityManager om frisk data.");
                     if (CityStateManager.Instance != null)
                         CityStateManager.Instance.InitiateResourceRefresh(cityId);
 
-                    // Vi genhenter knapperne for at opdatere deres status
+                    // Fjern _ikke_ knapperne midt i en evt. overgang. Vi kalder bare knap-refreshen igen.
                     ExecuteRefreshTownHallContent(cityId);
+                }
+                else
+                {
+                    // Revert optimistisk opdatering hvis serveren sagde nej
+                    _currentQueueCount--;
+                    Debug.LogError($"[TownHall] Upgrade Failed: {msg}. Reverterede kø til {_currentQueueCount}");
                 }
             }));
         }

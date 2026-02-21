@@ -31,10 +31,24 @@ namespace Game.Controllers
 
             if (result.Success)
             {
-                return Ok(new { Message = result.Message });
+                return Ok(result);
             }
 
-            return BadRequest(result.Message);
+            // Gør det samme for BadRequest, så Unity altid kan parse det korrekt:
+            return BadRequest(result);
+        }
+
+        [HttpPost("getIdeologyOverview/{cityId}")]
+        public async Task<IActionResult> GetIdeologyOverview(Guid cityId)
+        {
+            var result = await _ideologyService.GetIdeologyOverview(cityId);
+
+            if (result != null)
+            {
+                return Ok(result);
+            }
+
+            return NotFound();
         }
     }
 }

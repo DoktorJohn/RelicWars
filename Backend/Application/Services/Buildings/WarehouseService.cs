@@ -1,5 +1,6 @@
 ﻿using Application.DTOs;
 using Application.Interfaces.IRepositories;
+using Application.Interfaces.IServices;
 using Application.Interfaces.IServices.IBuildings;
 using Domain.Enums;
 using Domain.StaticData.Data;
@@ -16,16 +17,20 @@ namespace Application.Services.Buildings
     {
         private readonly ICityRepository _cityRepo;
         private readonly BuildingDataReader _buildingDataReader;
+        private readonly IModifierService _modifierService;
 
-        public WarehouseService(ICityRepository cityRepo, BuildingDataReader buildingDataReader)
+        public WarehouseService(
+            ICityRepository cityRepo,
+            BuildingDataReader buildingDataReader,
+            IModifierService modifierService)
         {
             _cityRepo = cityRepo;
             _buildingDataReader = buildingDataReader;
+            _modifierService = modifierService;
         }
 
         public async Task<List<WarehouseProjectionDTO>> GetWarehouseProjectionAsync(Guid cityId)
         {
-            // 1. Hent byen for at finde nuværende warehouse level
             var city = await _cityRepo.GetByIdAsync(cityId);
             if (city == null) throw new Exception("City not found");
 
@@ -42,13 +47,11 @@ namespace Application.Services.Buildings
                 }
 
                 int levelToCheck = currentLevel + i;
-
-
-                int capacity = 0;
+                double baseCapacity = 0;
 
                 if (levelToCheck == 0)
                 {
-                    capacity = 500;
+                    baseCapacity = 500;
                 }
                 else
                 {
@@ -56,13 +59,17 @@ namespace Application.Services.Buildings
 
                     if (config == null) break;
 
-                    capacity = config.Capacity;
+                    baseCapacity = config.Capacity;
                 }
+
+                var capacityModifierResult = _modifierService.CalculateCityValue(city, baseCapacity, ModifierTagEnum.WarehouseCapacity);
+
+                int finalModifiedCapacity = (int)Math.Floor(capacityModifierResult.FinalValue);
 
                 resultList.Add(new WarehouseProjectionDTO
                 {
                     Level = levelToCheck,
-                    Capacity = capacity,
+                    Capacity = finalModifiedCapacity,
                     IsCurrentLevel = (levelToCheck == currentLevel)
                 });
             }

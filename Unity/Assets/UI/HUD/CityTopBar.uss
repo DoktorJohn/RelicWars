@@ -19,7 +19,6 @@
     background-image: url('project://database/Assets/UI/TopBarHUD.jpg');
     -unity-background-scale-mode: scale-and-crop;
     background-position: center;
-    /* PUNKT 1 FIX: Matchet med LeftSideBar tint */
     -unity-background-image-tint-color: rgba(120, 120, 120, 0.3);
 
     border-bottom-width: 5px;
@@ -27,6 +26,37 @@
     overflow: visible; 
 }
 
+/* =======================================================
+   TIME SECTION
+   ======================================================= */
+.city-top-bar-time-section {
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    height: 100%;
+    width: 120px; 
+    margin-left: 140px; /* Sikrer at den ikke ligger under den store kort-knap i venstre hjørne */
+    border-right-width: 1px;
+    border-right-color: rgba(165, 125, 50, 0.3); /* Let guld-linje for at adskille uret */
+}
+
+.city-time-header {
+    color: var(--c-hud-border-gold);
+    font-size: 10px;
+    -unity-font-style: bold;
+    margin-bottom: -2px;
+}
+
+.city-time-value {
+    color: var(--c-hud-text-light);
+    font-size: 16px;
+    -unity-font-style: bold;
+}
+
+
+/* =======================================================
+   RESOURCES SECTION
+   ======================================================= */
 .city-top-bar-resource-section-right {
     flex-direction: row;
     align-items: flex-start;
@@ -39,7 +69,7 @@
 .city-resource-group {
     flex-direction: row;
     align-items: center;
-    width: 120px; 
+    width: 140px; /* ØGET FRA 120px for at give mere luft mellem blokkene */
     height: 100%;
     justify-content: center;
     overflow: visible;
@@ -62,8 +92,6 @@
     flex-shrink: 0;
 }
 
-/* WAREHOUSE BUE (PUNKT 2 FIX) 
-   Flyttet fra -4px til -7px for at give luft til ikonet */
 .city-warehouse-capacity-bar {
     position: absolute;
     width: 48px;
@@ -85,14 +113,17 @@
     -unity-font-definition: url("project://database/Assets/TextMesh Pro/Fonts/Roboto.asset");
     -unity-font-style: bold;
     font-size: 16px; 
-    margin-left: 6px;
-    width: 70px; 
+    margin-left: 10px; /* ØGET for at trække tallet lidt væk fra buens højre kant */
+    width: 85px; /* ØGET FRA 70px for at tillade store tal uden at de presses */
     -unity-text-align: middle-left;
     overflow: hidden; 
     white-space: nowrap;
     text-shadow: 1px 1px 1px rgba(0, 0, 0, 0.8);
 }
 
+/* =======================================================
+   MAP BUTTON
+   ======================================================= */
 .city-top-bar-map-button {
     position: absolute;
     top: -5px;
@@ -115,3 +146,4 @@
 .city-top-bar-map-button:active {
     scale: 0.95;
     -unity-background-image-tint-color: rgb(200, 200, 200);
+}

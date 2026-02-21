@@ -1,5 +1,6 @@
 ﻿using Application.DTOs;
 using Application.Interfaces.IRepositories;
+using Application.Interfaces.IServices;
 using Application.Interfaces.IServices.IBuildings;
 using Domain.Enums;
 using Domain.StaticData.Data;
@@ -14,60 +15,75 @@ namespace Application.Services.Buildings
 {
     public class WallService : IWallService
     {
-        private readonly ICityRepository _cityRepo;
+        private readonly ICityRepository _cityRepository;
         private readonly BuildingDataReader _buildingDataReader;
+        private readonly IModifierService _modifierService;
 
-        public WallService(ICityRepository cityRepo, BuildingDataReader buildingDataReader)
+        public WallService(
+            ICityRepository cityRepository,
+            BuildingDataReader buildingDataReader,
+            IModifierService modifierService)
         {
-            _cityRepo = cityRepo;
+            _cityRepository = cityRepository;
             _buildingDataReader = buildingDataReader;
+            _modifierService = modifierService;
         }
 
         public async Task<List<WallInfoDTO>> GetWallInfoAsync(Guid cityId)
         {
-            var city = await _cityRepo.GetByIdAsync(cityId);
-            if (city == null) throw new Exception("City not found");
+            // 1. Hent byen for at få adgang til aktive modifier providers
+            var cityEntity = await _cityRepository.GetByIdAsync(cityId);
+            if (cityEntity == null) throw new Exception("City not found");
 
-            var wall = city.Buildings.FirstOrDefault(b => b.Type == BuildingTypeEnum.Wall);
-            int currentLevel = wall?.Level ?? 0;
+            var wallBuilding = cityEntity.Buildings.FirstOrDefault(b => b.Type == BuildingTypeEnum.Wall);
+            int currentBuildingLevel = wallBuilding?.Level ?? 0;
 
-            var resultList = new List<WallInfoDTO>();
+            var wallProjectionList = new List<WallInfoDTO>();
 
+            // Vi looper: Nuværende level + de næste 5
             for (int i = 0; i < 5; i++)
             {
-                if (currentLevel + i > 19) break;
+                int levelToCheck = currentBuildingLevel + i;
 
-                int levelToCheck = currentLevel + i;
+                // Stop hvis vi går ud over max level (20)
+                if (levelToCheck > 19) break;
 
-                ModifierDTO modifier = new();
+                double baseWallModifierValue = 0;
 
-                if (levelToCheck == 0)
+                if (levelToCheck > 0)
                 {
-                    modifier.ModifierTag = ModifierTagEnum.Wall;
-                    modifier.ModifierType = ModifierTypeEnum.Increased;
-                    modifier.Value = 0;
+                    var levelConfiguration = _buildingDataReader.GetConfig<WallLevelData>(BuildingTypeEnum.Wall, levelToCheck);
+
+                    if (levelConfiguration == null) break;
+
+                    // Find basisværdien for Wall-tagget i bygningens konfiguration
+                    baseWallModifierValue = levelConfiguration.ModifiersInternal
+                        .FirstOrDefault(modifier => modifier.Tag == ModifierTagEnum.Wall)?.Value ?? 0;
                 }
 
-                else
+                // Anvend modifiers på murens egen bonus (f.eks. hvis man har "+10% Wall Effectiveness")
+                var wallModifierCalculationResult = _modifierService.CalculateCityValue(
+                    cityEntity,
+                    baseWallModifierValue,
+                    ModifierTagEnum.Wall);
+
+                // Vi pakker resultatet ind i en ModifierDTO til frontenden
+                ModifierDTO finalDefensiveModifier = new ModifierDTO
                 {
-                    var config = _buildingDataReader.GetConfig<WallLevelData>(BuildingTypeEnum.Wall, levelToCheck);
+                    ModifierTag = ModifierTagEnum.Wall,
+                    ModifierType = ModifierTypeEnum.Increased,
+                    Value = wallModifierCalculationResult.FinalValue
+                };
 
-                    if (config == null) break;
-
-                    modifier.ModifierTag = ModifierTagEnum.Wall;
-                    modifier.ModifierType = ModifierTypeEnum.Increased;
-                    modifier.Value = config.ModifiersInternal.FirstOrDefault(x => x.Tag == ModifierTagEnum.Wall)?.Value ?? 0;
-                }
-
-                resultList.Add(new WallInfoDTO
+                wallProjectionList.Add(new WallInfoDTO
                 {
                     Level = levelToCheck,
-                    DefensiveModifier = modifier,
-                    IsCurrentLevel = (levelToCheck == currentLevel)
+                    DefensiveModifier = finalDefensiveModifier,
+                    IsCurrentLevel = (levelToCheck == currentBuildingLevel)
                 });
             }
 
-            return resultList;
+            return wallProjectionList;
         }
     }
 }

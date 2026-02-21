@@ -35,7 +35,7 @@ namespace Domain.StaticData.Generators
                 {
                     playerPointMap[worldPlayerId] = new RankingEntryData
                     {
-                        WorldPlayerId = worldPlayerId, // VIGTIGT: Gemmer ID til senere opslag
+                        WorldPlayerId = worldPlayerId,
                         PlayerName = city.WorldPlayer.PlayerProfile.UserName!,
                         AllianceName = city.WorldPlayer.Alliance.Name ?? "",
                         Ideology = city.WorldPlayer.Ideology.ToString(),

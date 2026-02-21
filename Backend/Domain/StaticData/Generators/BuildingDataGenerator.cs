@@ -328,13 +328,30 @@ namespace Domain.StaticData.Generators
                 // Standard tags for rekrutterings-funktionalitet
                 recruitmentEntry.ModifiersThatAffectsThis.Add(ModifierTagEnum.RecruitmentSpeed);
 
-                // Specifikke tags baseret på enhedskategorier
                 if (recruitmentEntry is BarracksLevelData)
-                    recruitmentEntry.ModifiersThatAffectsThis.Add(ModifierTagEnum.Infantry);
+                {
+                    recruitmentEntry.ModifiersThatAffectsThis.AddRange(new[] {
+                        ModifierTagEnum.InfantryCost,
+                        ModifierTagEnum.InfantryUpkeep,
+                        ModifierTagEnum.InfantryStats
+                    });
+                }
                 else if (recruitmentEntry is StableLevelData)
-                    recruitmentEntry.ModifiersThatAffectsThis.Add(ModifierTagEnum.Cavalry);
+                {
+                    recruitmentEntry.ModifiersThatAffectsThis.AddRange(new[] {
+                        ModifierTagEnum.CavalryCost,
+                        ModifierTagEnum.CavalryUpkeep,
+                        ModifierTagEnum.CavalryStats
+                    });
+                }
                 else if (recruitmentEntry is WorkshopLevelData)
-                    recruitmentEntry.ModifiersThatAffectsThis.Add(ModifierTagEnum.Siege);
+                {
+                    recruitmentEntry.ModifiersThatAffectsThis.AddRange(new[] {
+                        ModifierTagEnum.SiegeCost,
+                        ModifierTagEnum.SiegeUpkeep,
+                        ModifierTagEnum.SiegeStats
+                    });
+                }
 
                 // Beregning af rekrutteringsbonus (eksponentiel vækst mod niveau 20)
                 double calculatedModifierValue = Math.Pow(currentLvl / 20.0, 1.7);

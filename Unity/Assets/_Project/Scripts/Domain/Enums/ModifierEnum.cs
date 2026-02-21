@@ -17,9 +17,13 @@ namespace Assets.Scripts.Domain.Enums
     {
         Wood, Stone, Metal, Silver,
         ResourceProduction,
-        Recruitment, Construction, Research, Population, Storage,
+        RecruitmentSpeed, Construction, ConstructionCost, Research, Population,
+        WarehouseCapacity, Market,
 
-        Infantry, Cavalry, Siege,
-        Upkeep, Speed, Power, Wall
+        InfantryCost, CavalryCost, SiegeCost, InfantryStats, CavalryStats, SiegeStats, InfantryUpkeep, CavalryUpkeep, SiegeUpkeep, SiegeRecruitmentSpeed, InfantryRecruitmentSpeed, CavalryRecruitmentSpeed,
+        Upkeep, BuildingUpkeep, UnitUpkeep, TravelSpeed, Power, Armor, Discipline, Casualties, Wall, LootCapacity,
+        Ideology, IdeologyFocus,
+
+        Placeholder, ResistanceRecovery, Revival
     }
 }

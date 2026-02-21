@@ -11,6 +11,7 @@ namespace Domain.Entities
 {
     public class IdeologyFocus : BaseEntity
     {
+        public IdeologyFocusNameEnum Name { get; set; }
         public DateTime? TimeOfIdeologyStarted { get; set; }
         public DateTime? TimeOfIdeologyFinished { get; set; }
         public bool IsActive => TimeOfIdeologyStarted <= DateTime.UtcNow &&

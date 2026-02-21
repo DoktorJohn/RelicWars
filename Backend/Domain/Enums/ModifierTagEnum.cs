@@ -13,10 +13,10 @@ namespace Domain.Enums
         RecruitmentSpeed, Construction, ConstructionCost, Research, Population, 
         WarehouseCapacity, Market,
 
-        Infantry, Cavalry, Siege,
-        Upkeep, TravelSpeed, Power, Armor, Discipline, Casualties, Wall, LootCapacity,
+        InfantryCost, CavalryCost, SiegeCost, InfantryStats, CavalryStats, SiegeStats, InfantryUpkeep, CavalryUpkeep, SiegeUpkeep, SiegeRecruitmentSpeed, InfantryRecruitmentSpeed, CavalryRecruitmentSpeed,
+        Upkeep, BuildingUpkeep, UnitUpkeep, TravelSpeed, Power, Armor, Discipline, Casualties, Wall, LootCapacity,
         Ideology, IdeologyFocus,
 
-        Placeholder
+        Placeholder, ResistanceRecovery, Revival
     }
 }

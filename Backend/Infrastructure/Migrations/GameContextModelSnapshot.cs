@@ -236,6 +236,9 @@ namespace Infrastructure.Migrations
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("bit");
 
+                    b.Property<int>("Name")
+                        .HasColumnType("int");
+
                     b.Property<DateTime?>("TimeOfIdeologyFinished")
                         .HasColumnType("datetime2");
 

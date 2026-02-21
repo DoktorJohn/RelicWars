@@ -5,6 +5,7 @@ using Project.Modules.City;
 using Project.Network.Models;
 using UnityEngine.SceneManagement;
 using Assets.Scripts.Domain.State;
+using System.Collections;
 
 namespace Project.Modules.UI
 {
@@ -21,6 +22,9 @@ namespace Project.Modules.UI
         private Label _researchAmountLabel;
         private Label _ideologyFocusPointsAmountLabel;
 
+        // NY: Server Time Label
+        private Label _serverTimeLabel;
+
         private Button _navigationButton;
 
         private WarehouseCapacityProgressPainter _woodWarehousePainter;
@@ -28,6 +32,9 @@ namespace Project.Modules.UI
         private WarehouseCapacityProgressPainter _metalWarehousePainter;
         private WarehouseCapacityProgressPainter _populationUsagePainter;
         private WarehouseCapacityProgressPainter _ideologyPainter;
+
+        // NY: Coroutine reference
+        private Coroutine _timeUpdateCoroutine;
 
         private void OnEnable()
         {
@@ -47,6 +54,10 @@ namespace Project.Modules.UI
                 UpdateUserInterfaceLabels(CityStateManager.Instance.CurrentResources);
                 UpdateWarehouseVisuals(CityStateManager.Instance.CurrentResources);
             }
+
+            // Start Uret
+            if (_timeUpdateCoroutine != null) StopCoroutine(_timeUpdateCoroutine);
+            _timeUpdateCoroutine = StartCoroutine(UpdateServerTimeRoutine());
         }
 
         private void OnDisable()
@@ -55,6 +66,8 @@ namespace Project.Modules.UI
             {
                 CityStateManager.Instance.OnResourceStateChanged -= HandleResourceStateCalculated;
             }
+
+            if (_timeUpdateCoroutine != null) StopCoroutine(_timeUpdateCoroutine);
         }
 
         private void InitializeUserInterfaceResourceLabels()
@@ -66,11 +79,13 @@ namespace Project.Modules.UI
             _populationAmountLabel = _rootVisualElement.Q<Label>("City-ResourceLabel-PopulationAmount");
             _researchAmountLabel = _rootVisualElement.Q<Label>("City-ResourceLabel-ResearchAmount");
             _ideologyFocusPointsAmountLabel = _rootVisualElement.Q<Label>("City-ResourceLabel-IdeologyAmount");
+
+            // Initialiser det nye time label
+            _serverTimeLabel = _rootVisualElement.Q<Label>("City-ServerTime-Label");
         }
 
         private void InitializeNavigationButtons()
         {
-            // Vi genbruger knappen uanset scene-kontekst
             _navigationButton = _rootVisualElement.Q<Button>("City-TopBar-MapButton");
             if (_navigationButton != null)
             {
@@ -92,7 +107,6 @@ namespace Project.Modules.UI
         {
             string currentSceneName = SceneManager.GetActiveScene().name;
 
-            // Hvis vi er på mappet, skal vi "hjem" til byen. Ellers skal vi ud på mappet.
             if (currentSceneName == "WorldMapScene")
             {
                 Debug.Log("[CityTopBar] Navigation back to City requested.");
@@ -151,6 +165,23 @@ namespace Project.Modules.UI
             _populationUsagePainter?.UpdateFillAmount(populationFill);
 
             _ideologyPainter?.UpdateFillAmount(0f);
+        }
+
+        // ===============================================
+        // SERVER TIME ROUTINE
+        // ===============================================
+        private IEnumerator UpdateServerTimeRoutine()
+        {
+            var waitInstruction = new WaitForSeconds(1f);
+            while (true)
+            {
+                if (_serverTimeLabel != null)
+                {
+                    // Formatterer tiden som DD.MM.YYYY HH:MM:SS
+                    _serverTimeLabel.text = DateTime.UtcNow.ToString("HH:mm:ss");
+                }
+                yield return waitInstruction;
+            }
         }
 
         private class WarehouseCapacityProgressPainter

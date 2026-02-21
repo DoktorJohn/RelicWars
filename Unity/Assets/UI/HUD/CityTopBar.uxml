@@ -3,6 +3,12 @@
     <ui:Style src="project://database/Assets/UI/HUD/CityTopBar.uss" />
 
     <ui:VisualElement name="City-TopBar-MainContainer" class="city-top-bar-main-container">
+        
+        <ui:VisualElement class="city-top-bar-time-section">
+            <ui:Label text="SERVER TIME" class="city-time-header" />
+            <ui:Label name="City-ServerTime-Label" class="city-time-value" text="00:00:00" />
+        </ui:VisualElement>
+
         <ui:VisualElement name="City-TopBar-ResourceSection-Right" class="city-top-bar-resource-section-right">
             
             <ui:VisualElement class="city-resource-group">

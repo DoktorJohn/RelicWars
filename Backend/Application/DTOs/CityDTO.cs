@@ -122,4 +122,13 @@ namespace Application.DTOs
         public DateTime? UpgradeFinishedAt { get; set; }
         public bool IsCurrentlyUpgrading { get; set; }
     }
+    
+    public class ChangeCityNameResponseDTO
+    {
+        public Guid CityId { get; set; }
+        public string CityName { get; set; } = string.Empty;
+        public string Message { get; set; } = string.Empty;
+        public bool Success { get; set; }
+
+    }
 }

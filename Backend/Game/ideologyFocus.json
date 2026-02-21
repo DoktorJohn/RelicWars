@@ -1,5 +1,207 @@
 [
   {
+    "Name": "LordsLevy",
+    "RequiredIdeology": "Feudalism",
+    "TimeActive": null,
+    "SpecialFlag": true,
+    "IdeologyFocusPointCost": 6,
+    "Description": "Gain \u002B8 militia per 100 free population",
+    "ModifiersInternal": [],
+    "ModifiersThatAffectsThis": [
+      "IdeologyFocus"
+    ]
+  },
+  {
+    "Name": "FeudalMuster",
+    "RequiredIdeology": "Feudalism",
+    "TimeActive": "02:00:00",
+    "SpecialFlag": false,
+    "IdeologyFocusPointCost": 10,
+    "Description": "\u002B10% defensive unit values",
+    "ModifiersInternal": [
+      {
+        "Tag": "Armor",
+        "Type": "Increased",
+        "Value": 0.1,
+        "Source": "Feudal Muster focus: \u002B10% defensive unit values"
+      }
+    ],
+    "ModifiersThatAffectsThis": [
+      "IdeologyFocus"
+    ]
+  },
+  {
+    "Name": "RoyalLogistics",
+    "RequiredIdeology": "Monarchy",
+    "TimeActive": "02:00:00",
+    "SpecialFlag": false,
+    "IdeologyFocusPointCost": 6,
+    "Description": "\u002B8% movespeed from the city",
+    "ModifiersInternal": [
+      {
+        "Tag": "TravelSpeed",
+        "Type": "Increased",
+        "Value": 0.08,
+        "Source": "Royal Logistics focus: \u002B8% movespeed"
+      }
+    ],
+    "ModifiersThatAffectsThis": [
+      "IdeologyFocus"
+    ]
+  },
+  {
+    "Name": "RoyalDecree",
+    "RequiredIdeology": "Monarchy",
+    "TimeActive": "02:00:00",
+    "SpecialFlag": false,
+    "IdeologyFocusPointCost": 8,
+    "Description": "-15% building time for 2h",
+    "ModifiersInternal": [
+      {
+        "Tag": "Construction",
+        "Type": "Increased",
+        "Value": 0.15,
+        "Source": "Royal Decree focus: -15% construction time"
+      }
+    ],
+    "ModifiersThatAffectsThis": [
+      "IdeologyFocus"
+    ]
+  },
+  {
+    "Name": "CrownTax",
+    "RequiredIdeology": "Monarchy",
+    "TimeActive": "02:00:00",
+    "SpecialFlag": false,
+    "IdeologyFocusPointCost": 14,
+    "Description": "Improve Silver production from all sources by 100% for 1h",
+    "ModifiersInternal": [
+      {
+        "Tag": "Silver",
+        "Type": "Increased",
+        "Value": 1,
+        "Source": "Crown Tax focus: \u002B100% Silver production"
+      }
+    ],
+    "ModifiersThatAffectsThis": [
+      "IdeologyFocus"
+    ]
+  },
+  {
+    "Name": "EnhancendWorkshop",
+    "RequiredIdeology": "Oligarchy",
+    "TimeActive": "02:00:00",
+    "SpecialFlag": false,
+    "IdeologyFocusPointCost": 6,
+    "Description": "10% workshop production speed for 2h",
+    "ModifiersInternal": [
+      {
+        "Tag": "SiegeRecruitmentSpeed",
+        "Type": "Increased",
+        "Value": 0.1,
+        "Source": "Enhanced Workshop focus: \u002B10% production speed"
+      }
+    ],
+    "ModifiersThatAffectsThis": [
+      "IdeologyFocus"
+    ]
+  },
+  {
+    "Name": "MarketSurge",
+    "RequiredIdeology": "Oligarchy",
+    "TimeActive": "02:00:00",
+    "SpecialFlag": false,
+    "IdeologyFocusPointCost": 10,
+    "Description": "Gain \u002B20% silver production for 2h",
+    "ModifiersInternal": [
+      {
+        "Tag": "Silver",
+        "Type": "Increased",
+        "Value": 0.2,
+        "Source": "Market Surge focus: \u002B20% silver"
+      }
+    ],
+    "ModifiersThatAffectsThis": [
+      "IdeologyFocus"
+    ]
+  },
+  {
+    "Name": "CivicInitiative",
+    "RequiredIdeology": "Democracy",
+    "TimeActive": "02:00:00",
+    "SpecialFlag": false,
+    "IdeologyFocusPointCost": 6,
+    "Description": "\u002B10% research speed for 2h",
+    "ModifiersInternal": [
+      {
+        "Tag": "Research",
+        "Type": "Increased",
+        "Value": 0.1,
+        "Source": "Civic Initiative focus: \u002B10% research speed"
+      }
+    ],
+    "ModifiersThatAffectsThis": [
+      "IdeologyFocus"
+    ]
+  },
+  {
+    "Name": "PublicWorks",
+    "RequiredIdeology": "Democracy",
+    "TimeActive": "02:00:00",
+    "SpecialFlag": false,
+    "IdeologyFocusPointCost": 8,
+    "Description": "-10% construction and repair cost for 2h",
+    "ModifiersInternal": [
+      {
+        "Tag": "ConstructionCost",
+        "Type": "Decreased",
+        "Value": 0.1,
+        "Source": "Public Works focus: -10% construction cost"
+      }
+    ],
+    "ModifiersThatAffectsThis": [
+      "IdeologyFocus"
+    ]
+  },
+  {
+    "Name": "CitizenMorale",
+    "RequiredIdeology": "Democracy",
+    "TimeActive": "02:00:00",
+    "SpecialFlag": false,
+    "IdeologyFocusPointCost": 10,
+    "Description": "Non-elite infantry gain \u002B5% discipline for 3h",
+    "ModifiersInternal": [
+      {
+        "Tag": "Discipline",
+        "Type": "Increased",
+        "Value": 0.05,
+        "Source": "Citizen Morale focus: \u002B5% discipline"
+      }
+    ],
+    "ModifiersThatAffectsThis": [
+      "IdeologyFocus"
+    ]
+  },
+  {
+    "Name": "EconomicTransparency",
+    "RequiredIdeology": "Democracy",
+    "TimeActive": null,
+    "SpecialFlag": false,
+    "IdeologyFocusPointCost": 12,
+    "Description": "-20% Building Upkeep for 2h",
+    "ModifiersInternal": [
+      {
+        "Tag": "BuildingUpkeep",
+        "Type": "Decreased",
+        "Value": 0.2,
+        "Source": "Economic Transparency focus: -20% building upkeep"
+      }
+    ],
+    "ModifiersThatAffectsThis": [
+      "IdeologyFocus"
+    ]
+  },
+  {
     "Name": "NewRecruits",
     "RequiredIdeology": "MilitaryJunta",
     "TimeActive": null,
@@ -24,6 +226,44 @@
         "Type": "Increased",
         "Value": 0.15,
         "Source": "Accelerated Conscription focus: \u002B15% recruitment speed"
+      }
+    ],
+    "ModifiersThatAffectsThis": [
+      "IdeologyFocus"
+    ]
+  },
+  {
+    "Name": "IronDiscipline",
+    "RequiredIdeology": "MilitaryJunta",
+    "TimeActive": "02:00:00",
+    "SpecialFlag": false,
+    "IdeologyFocusPointCost": 10,
+    "Description": "-10% unit upkeep 2h",
+    "ModifiersInternal": [
+      {
+        "Tag": "UnitUpkeep",
+        "Type": "Decreased",
+        "Value": 0.1,
+        "Source": "Iron Discipline focus: -10% unit upkeep"
+      }
+    ],
+    "ModifiersThatAffectsThis": [
+      "IdeologyFocus"
+    ]
+  },
+  {
+    "Name": "FortifiedCity",
+    "RequiredIdeology": "MilitaryJunta",
+    "TimeActive": "02:00:00",
+    "SpecialFlag": false,
+    "IdeologyFocusPointCost": 14,
+    "Description": "Walls have \u002B10% defense bonus for 3h",
+    "ModifiersInternal": [
+      {
+        "Tag": "Wall",
+        "Type": "Increased",
+        "Value": 0.1,
+        "Source": "Fortified City focus: \u002B10% wall defense"
       }
     ],
     "ModifiersThatAffectsThis": [

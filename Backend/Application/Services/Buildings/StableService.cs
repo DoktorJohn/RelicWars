@@ -1,5 +1,6 @@
 ﻿using Application.DTOs;
 using Application.Interfaces.IRepositories;
+using Application.Interfaces.IServices;
 using Application.Interfaces.IServices.IBuildings;
 using Application.Utility;
 using Domain.Enums;
@@ -17,20 +18,18 @@ namespace Application.Services.Buildings
     public class StableService : IStableService
     {
         private readonly ICityRepository _cityRepo;
-        private readonly IJobRepository _jobRepo;
-        private readonly RecruitmentTimeCalculationService _recruitmentTimeCalculationService;
-        private readonly BuildingDataReader _buildingDataReader;
         private readonly UnitDataReader _unitDataReader;
+        private readonly IModifierService _modifierService;
 
-        public StableService(ICityRepository cityRepo, BuildingDataReader buildingDataReader, IJobRepository jobRepo, UnitDataReader unitDataReader, RecruitmentTimeCalculationService recruitmentTimeCalculationService)
+        public StableService(
+            ICityRepository cityRepo,
+            UnitDataReader unitDataReader,
+            IModifierService modifierService)
         {
             _cityRepo = cityRepo;
-            _buildingDataReader = buildingDataReader;
-            _jobRepo = jobRepo;
             _unitDataReader = unitDataReader;
-            _recruitmentTimeCalculationService = recruitmentTimeCalculationService;
+            _modifierService = modifierService;
         }
-
 
         public async Task<StableFullViewDTO> GetStableOverviewAsync(Guid userId, Guid cityId)
         {
@@ -45,7 +44,6 @@ namespace Application.Services.Buildings
                 BuildingLevel = currentBuildingLevel
             };
 
-            // 2. Hent tilgængelige enheder til rekruttering (Kun Cavalry)
             foreach (UnitTypeEnum unitTypeCandidate in Enum.GetValues(typeof(UnitTypeEnum)))
             {
                 if (unitTypeCandidate == UnitTypeEnum.None) continue;
@@ -53,7 +51,10 @@ namespace Application.Services.Buildings
                 var unitStaticData = _unitDataReader.GetUnit(unitTypeCandidate);
                 if (unitStaticData == null || unitStaticData.Category != UnitCategoryEnum.Cavalry) continue;
 
-                double calculatedRecruitmentTimePerUnit = await _recruitmentTimeCalculationService.CalculateFinalRecruitmentTimeAsync(userId, cityEntity, unitStaticData);
+                var modifiedCosts = MilitaryUnitModifierHelper.GetModifiedCosts(_modifierService, cityEntity, unitStaticData);
+                var modifiedStats = MilitaryUnitModifierHelper.GetModifiedStats(_modifierService, cityEntity, unitStaticData);
+                int calculatedRecruitmentTime = MilitaryUnitModifierHelper.GetModifiedRecruitmentTime(_modifierService, cityEntity, unitStaticData);
+
                 int alreadyOwnedCount = cityEntity.UnitStacks.FirstOrDefault(stack => stack.Type == unitTypeCandidate)?.Quantity ?? 0;
                 bool isUnitTypeUnlocked = currentBuildingLevel > 0;
 
@@ -62,23 +63,25 @@ namespace Application.Services.Buildings
                     UnitType = unitTypeCandidate,
                     UnitName = unitStaticData.Type.ToString(),
                     AlreadyOwnedCount = alreadyOwnedCount,
-                    CostWood = unitStaticData.WoodCost,
-                    CostStone = unitStaticData.StoneCost,
-                    CostMetal = unitStaticData.MetalCost,
-                    Power = unitStaticData.Power,
-                    Armor = unitStaticData.Armor,
-                    Discipline = unitStaticData.Discipline,
-                    Mobility = unitStaticData.Mobility,
-                    Reach = unitStaticData.Reach,
-                    LootCapacity = unitStaticData.LootCapacity,
+
+                    CostWood = modifiedCosts.wood,
+                    CostStone = modifiedCosts.stone,
+                    CostMetal = modifiedCosts.metal,
+
+                    Power = modifiedStats.power,
+                    Armor = modifiedStats.armor,
+                    Discipline = modifiedStats.discipline,
+                    Mobility = modifiedStats.mobility,
+                    Reach = modifiedStats.reach,
+                    LootCapacity = modifiedStats.loot,
+
                     PopulationCost = unitStaticData.PopulationCost,
-                    RecruitmentTimeInSeconds = (int)calculatedRecruitmentTimePerUnit,
+                    RecruitmentTimeInSeconds = calculatedRecruitmentTime,
                     IsUnlocked = isUnitTypeUnlocked
                 });
             }
 
             return stableResponse;
         }
-
     }
 }

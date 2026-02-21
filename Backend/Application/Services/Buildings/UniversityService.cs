@@ -1,5 +1,6 @@
 ﻿using Application.DTOs;
 using Application.Interfaces.IRepositories;
+using Application.Interfaces.IServices;
 using Application.Interfaces.IServices.IBuildings;
 using Domain.Enums;
 using Domain.StaticData.Data;
@@ -14,56 +15,70 @@ namespace Application.Services.Buildings
 {
     public class UniversityService : IUniversityService
     {
-        private readonly ICityRepository _cityRepo;
+        private readonly ICityRepository _cityRepository;
         private readonly BuildingDataReader _buildingDataReader;
+        private readonly IModifierService _modifierService;
 
-        public UniversityService(ICityRepository cityRepo, BuildingDataReader buildingDataReader)
+        public UniversityService(
+            ICityRepository cityRepository,
+            BuildingDataReader buildingDataReader,
+            IModifierService modifierService)
         {
-            _cityRepo = cityRepo;
+            _cityRepository = cityRepository;
             _buildingDataReader = buildingDataReader;
+            _modifierService = modifierService;
         }
 
         public async Task<List<UniversityInfoDTO>> GetUniversityInfoAsync(Guid cityId)
         {
-            var city = await _cityRepo.GetByIdAsync(cityId);
-            if (city == null) throw new Exception("City not found");
+            // 1. Hent byen for at få adgang til alle aktive modifier providers (Research, Ideology, etc.)
+            var cityEntity = await _cityRepository.GetByIdAsync(cityId);
+            if (cityEntity == null)
+            {
+                throw new Exception($"City with ID {cityId} not found");
+            }
 
-            var university = city.Buildings.FirstOrDefault(b => b.Type == BuildingTypeEnum.University);
-            int currentLevel = university?.Level ?? 0;
+            var universityBuilding = cityEntity.Buildings.FirstOrDefault(b => b.Type == BuildingTypeEnum.University);
+            int currentBuildingLevel = universityBuilding?.Level ?? 0;
 
-            var resultList = new List<UniversityInfoDTO>();
+            var projectionList = new List<UniversityInfoDTO>();
 
-            // 2. Loop: Nuværende level + 5 næste
+            // Vi looper: Nuværende level + de næste 5 (Max level 20 / index 19)
             for (int i = 0; i < 5; i++)
             {
-                if (currentLevel + i > 19) break;
+                int levelToCheck = currentBuildingLevel + i;
 
-                int levelToCheck = currentLevel + i;
+                if (levelToCheck > 19) break;
 
-                int productionPerHour = 0;
+                double baseResearchProduction = 0;
 
-                if (levelToCheck == 0)
+                if (levelToCheck > 0)
                 {
-                    productionPerHour = 0;
-                }
-                else
-                {
-                    var config = _buildingDataReader.GetConfig<UniversityLevelData>(BuildingTypeEnum.University, levelToCheck);
+                    var levelConfiguration = _buildingDataReader.GetConfig<UniversityLevelData>(BuildingTypeEnum.University, levelToCheck);
 
-                    if (config == null) break;
+                    if (levelConfiguration == null) break;
 
-                    productionPerHour = config.ProductionPerHour;
+                    baseResearchProduction = levelConfiguration.ProductionPerHour;
                 }
 
-                resultList.Add(new UniversityInfoDTO
+                // Anvend modifiers på basis-research-produktionen (f.eks. +20% Research Speed fra en ideologi)
+                var modifierCalculationResult = _modifierService.CalculateCityValue(
+                    cityEntity,
+                    baseResearchProduction,
+                    ModifierTagEnum.Research);
+
+                // Konverterer resultatet til int, da vi ikke ønsker halve forskningspoint i UI'et
+                int finalCalculatedProduction = (int)Math.Floor(modifierCalculationResult.FinalValue);
+
+                projectionList.Add(new UniversityInfoDTO
                 {
                     Level = levelToCheck,
-                    ProductionPerHour = productionPerHour,
-                    IsCurrentLevel = (levelToCheck == currentLevel)
+                    ProductionPerHour = finalCalculatedProduction,
+                    IsCurrentLevel = (levelToCheck == currentBuildingLevel)
                 });
             }
 
-            return resultList;
+            return projectionList;
         }
     }
 }

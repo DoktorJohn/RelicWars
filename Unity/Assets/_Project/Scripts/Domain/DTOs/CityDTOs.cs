@@ -8,6 +8,16 @@ using Project.Scripts.Domain.Enums;
 namespace Project.Network.Models
 {
     [Serializable]
+    public class ChangeCityNameResponseDTO
+    {
+        public Guid CityId { get; set; }
+        public string CityName { get; set; } = string.Empty;
+        public string Message { get; set; } = string.Empty;
+        public bool Success { get; set; }
+
+    }
+
+    [Serializable]
     public class CityDTO
     {
         public Guid Id { get; set; }

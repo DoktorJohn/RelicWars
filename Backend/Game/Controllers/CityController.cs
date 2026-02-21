@@ -54,5 +54,18 @@ namespace WebApi.Controllers
             var buildings = await _cityService.GetAvailableBuildingsForTownHallAsync(cityIdentifier);
             return Ok(buildings);
         }
+
+        [HttpPost("ChangeCityName/{cityIdentifier}/{newCityName}")]
+        public async Task<IActionResult> ChangeCityName(Guid cityIdentifier, string newCityName)
+        {
+            var result = await _cityService.ChangeCityName(cityIdentifier, newCityName);
+
+            if (result.Success)
+            {
+                return Ok(result);
+            }
+
+            return NotFound();
+        }
     }
 }

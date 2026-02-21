@@ -3,6 +3,7 @@ using Application.Interfaces.IServices;
 using Domain.Abstraction;
 using Domain.Entities;
 using Domain.Enums;
+using Domain.User;
 using Microsoft.Extensions.Logging;
 using System.Collections.Generic;
 using System.Linq;
@@ -12,10 +13,24 @@ namespace Application.Services
     public class ModifierService : IModifierService
     {
         private readonly ILogger<ModifierService> _logger;
+        private readonly IModifierCollectorService _collector;
 
-        public ModifierService(ILogger<ModifierService> logger)
+        public ModifierService(ILogger<ModifierService> logger, IModifierCollectorService collector)
         {
             _logger = logger;
+            _collector = collector;
+        }
+
+        public ModifierCalculationResult CalculateCityValue(City city, double baseValue, params ModifierTagEnum[] targetTags)
+        {
+            var providers = _collector.CollectAllProvidersForCity(city);
+            return CalculateEntityValueWithModifiers(baseValue, targetTags, providers);
+        }
+
+        public ModifierCalculationResult CalculatePlayerValue(WorldPlayer player, double baseValue, params ModifierTagEnum[] targetTags)
+        {
+            var providers = _collector.CollectAllProvidersForPlayer(player);
+            return CalculateEntityValueWithModifiers(baseValue, targetTags, providers);
         }
 
         public ModifierCalculationResult CalculateEntityValueWithModifiers(

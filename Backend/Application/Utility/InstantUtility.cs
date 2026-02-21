@@ -64,8 +64,6 @@ namespace Application.Utility
                     CityId = cityId
                 });
             }
-
-            await _cityRepository.UpdateAsync(cityEntity);
         }
     }
 }

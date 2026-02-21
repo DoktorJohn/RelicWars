@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ui:UXML xmlns:ui="UnityEngine.UIElements">
+    <ui:VisualElement class="focus-card">
+        
+        <ui:VisualElement class="focus-card-info">
+            <ui:Label name="Card-Name" class="focus-card-name" text="FOCUS NAME" />
+            <ui:Label name="Card-Description" class="focus-card-description" text="Focus description goes here." />
+        </ui:VisualElement>
+
+        <ui:VisualElement class="focus-card-action">
+            <ui:Label name="Card-CostInfo" class="focus-cost-label" text="100 PTS" />
+            
+            <ui:Button name="Btn-Enact" class="btn-global-base btn-imperial-success btn-enact-grid" text="ENACT" />
+            
+            <ui:Label name="Lbl-Status" class="status-active-label" text="ACTIVE" style="display: none;" />
+        </ui:VisualElement>
+
+    </ui:VisualElement>
+</ui:UXML>
