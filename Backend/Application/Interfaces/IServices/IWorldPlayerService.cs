@@ -12,6 +12,7 @@ namespace Application.Interfaces.IServices
     {
         Task<WorldPlayerJoinResponse> AssignPlayerToGameWorldAsync(Guid profileId, Guid worldId);
         Task<WorldPlayerProfileDTO> GetWorldPlayerProfileAsync(Guid worldPlayerId);
+        Task<WorldPlayerEconomyDTO> GetWorldPlayerEconomyAsync(Guid worldPlayerId);
         void UpdateGlobalResourceState(WorldPlayer player, DateTime currentDateTime);
         Task<WorldPlayerSelectIdeologyResponse> SelectIdeology(SelectIdeologyRequest request);
     }

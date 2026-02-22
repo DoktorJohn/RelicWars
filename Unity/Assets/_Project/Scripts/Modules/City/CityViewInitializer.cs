@@ -2,6 +2,7 @@
 using System;
 using Project.Modules.City;
 using Project.Network.Manager; // Sørg for at CityStateManager ligger i dette namespace
+using Project.Modules.WorldPlayer;
 
 namespace Project.Modules.CityView
 {
@@ -25,6 +26,7 @@ namespace Project.Modules.CityView
 
             // 2. Hent ID fra den nye property 'ActiveCityId'
             Guid? activeCityId = NetworkManager.Instance.ActiveCityId;
+            string worldPlayerIdString = NetworkManager.Instance.WorldPlayerId;
 
             if (activeCityId.HasValue && activeCityId.Value != Guid.Empty)
             {
@@ -39,6 +41,22 @@ namespace Project.Modules.CityView
                 else
                 {
                     Debug.LogError("[DEBUG-INIT] FEJL: CityStateManager.Instance findes ikke i scenen.");
+                }
+
+                if (!string.IsNullOrEmpty(worldPlayerIdString) && Guid.TryParse(worldPlayerIdString, out Guid worldPlayerId))
+                {
+                    if (WorldPlayerStateManager.Instance != null)
+                    {
+                        WorldPlayerStateManager.Instance.InitiateEconomyRefresh(worldPlayerId);
+                    }
+                    else
+                    {
+                        Debug.LogError("[DEBUG-INIT] FEJL: WorldPlayerStateManager.Instance findes ikke i scenen.");
+                    }
+                }
+                else
+                {
+                    Debug.LogError("[DEBUG-INIT] FEJL: WorldPlayerId er ugyldig eller mangler i NetworkManager.");
                 }
             }
             else

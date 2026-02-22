@@ -19,6 +19,7 @@ namespace Application.Services
     public class WorldPlayerService : IWorldPlayerService
     {
         private readonly IWorldMapObjectRepository _worldMapObjectRepository;
+        private readonly ICityRepository _cityRepository;
         private readonly IWorldPlayerRepository _worldPlayerRepository;
         private readonly IPlayerProfileRepository _profileRepository;
         private readonly IRankingService _rankingService;
@@ -31,6 +32,7 @@ namespace Application.Services
         public WorldPlayerService(
             IWorldPlayerRepository worldPlayerRepository,
             IPlayerProfileRepository profileRepository,
+            ICityRepository cityRepository,
             IRankingService rankingService,
             IResourceService resourceService,
             IWorldRepository worldRepo,
@@ -40,6 +42,7 @@ namespace Application.Services
         {
             _worldPlayerRepository = worldPlayerRepository;
             _profileRepository = profileRepository;
+            _cityRepository = cityRepository;
             _rankingService = rankingService;
             _resourceService = resourceService;
             _worldRepo = worldRepo;
@@ -50,6 +53,7 @@ namespace Application.Services
 
         public void UpdateGlobalResourceState(WorldPlayer player, DateTime currentDateTime)
         {
+            _logger.LogInformation("[WorldPlayerService] Updating Global Resource State for Player {PlayerId}. Old Silver: {Silver}, Old LastUpdate: {LastUpdate}", player.Id, player.Silver, player.LastResourceUpdate);
             var globalSnapshot = _resourceService.CalculateGlobalResources(player, currentDateTime);
 
             player.Silver = globalSnapshot.SilverAmount;
@@ -57,7 +61,43 @@ namespace Application.Services
             player.IdeologyFocusPoints = globalSnapshot.IdeologyFocusPoints;
             player.LastResourceUpdate = currentDateTime;
 
-            _logger.LogInformation("[WorldPlayerService] Global economy state synchronized for Player: {PlayerId}", player.Id);
+            _logger.LogInformation("[WorldPlayerService] Global economy state synchronized for Player: {PlayerId}. New Silver: {Silver}, Rate: {Rate}", player.Id, player.Silver, globalSnapshot.SilverProductionPerHour);
+        }
+
+        public async Task<WorldPlayerEconomyDTO> GetWorldPlayerEconomyAsync(Guid worldPlayerId)
+        {
+            _logger.LogInformation("[WorldPlayerService] GetWorldPlayerEconomyAsync called for Player {PlayerId}", worldPlayerId);
+            var player = await _worldPlayerRepository.GetByIdAsync(worldPlayerId);
+            if (player == null)
+            {
+                _logger.LogWarning("[WorldPlayerService] Player {PlayerId} not found", worldPlayerId);
+                throw new KeyNotFoundException($"WorldPlayer med ID {worldPlayerId} blev ikke fundet.");
+            }
+
+            var currentDateTime = DateTime.UtcNow;
+            UpdateGlobalResourceState(player, currentDateTime);
+            await _worldPlayerRepository.UpdateAsync(player); // Persist the updated resources
+
+            var globalSnapshot = _resourceService.CalculateGlobalResources(player, currentDateTime);
+            
+            _logger.LogInformation("[WorldPlayerService] Returning economy DTO for {PlayerId}. Silver: {Silver}, Rate: {Rate}", player.Id, player.Silver, globalSnapshot.SilverProductionPerHour);
+
+            // Fetch cities efficiently for the dropdown
+            var cities = await _cityRepository.GetCitiesByWorldPlayerIdAsync(player.Id);
+            var cityDtos = cities.Select(c => new CityDTO(c.Id, c.Name, c.X, c.Y, 0)).OrderBy(c => c.CityName).ToList();
+
+            return new WorldPlayerEconomyDTO
+            {
+                WorldPlayerId = player.Id,
+                CurrentSilverAmount = Math.Floor(player.Silver),
+                CurrentResearchPoints = Math.Floor(player.ResearchPoints),
+                CurrentIdeologyFocusPoints = Math.Floor(player.IdeologyFocusPoints),
+                SilverProductionPerHour = globalSnapshot.SilverProductionPerHour,
+                ResearchPointsPerHour = globalSnapshot.ResearchPointsPerHour,
+                IdeologyFocusPointsPerHour = globalSnapshot.IdeologyFocusPointsPerHour,
+                PlayerCities = cityDtos,
+                LastUpdated = currentDateTime
+            };
         }
 
         public async Task<WorldPlayerProfileDTO> GetWorldPlayerProfileAsync(Guid worldPlayerId)
@@ -281,7 +321,7 @@ namespace Application.Services
             city.Buildings.Add(new Building { Type = BuildingTypeEnum.TownHall, Level = 18 });
             city.Buildings.Add(new Building { Type = BuildingTypeEnum.Warehouse, Level = 18 });
             city.Buildings.Add(new Building { Type = BuildingTypeEnum.Housing, Level = 1 });
-            city.Buildings.Add(new Building { Type = BuildingTypeEnum.TimberCamp, Level = 1 });
+            city.Buildings.Add(new Building { Type = BuildingTypeEnum.TimberCamp, Level = 18 });
             city.Buildings.Add(new Building { Type = BuildingTypeEnum.StoneQuarry, Level = 1 });
             city.Buildings.Add(new Building { Type = BuildingTypeEnum.MetalMine, Level = 1 });
             city.Buildings.Add(new Building { Type = BuildingTypeEnum.Workshop, Level = 1 });

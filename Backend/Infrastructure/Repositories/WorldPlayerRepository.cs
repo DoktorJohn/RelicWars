@@ -30,9 +30,18 @@ namespace Infrastructure.Repositories
         public async Task<WorldPlayer?> GetByIdAsync(Guid id)
         {
             return await _context.WorldPlayers
+                .AsSplitQuery()
                 .Include(wp => wp.PlayerProfile)
-                .Include(x => x.Alliance)
-                .Include(x => x.Cities)
+                .Include(wp => wp.Alliance)
+                .Include(wp => wp.CompletedResearches)
+                .Include(wp => wp.ModifiersInternal)
+                .Include(wp => wp.Cities)
+                    .ThenInclude(c => c.Buildings)
+                .Include(wp => wp.Cities)
+                    .ThenInclude(c => c.UnitStacks)
+                .Include(wp => wp.Cities)
+                    .ThenInclude(c => c.OriginUnitDeployments)
+                        .ThenInclude(d => d.UnitStacks)
                 .FirstOrDefaultAsync(x => x.Id == id);
         }
 

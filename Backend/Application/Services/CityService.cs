@@ -103,23 +103,15 @@ namespace Application.Services
 
             var currentDateTime = DateTime.UtcNow;
 
-            // 1. Global synkronisering
-            _worldPlayerService.UpdateGlobalResourceState(cityEntity.WorldPlayer, currentDateTime);
-
-            // 2. Lokal by-synkronisering
-            foreach (var city in cityEntity.WorldPlayer.Cities)
-            {
-                var citySnapshot = _resourceService.CalculateCityResources(city, currentDateTime);
-                city.Wood = citySnapshot.Wood;
-                city.Stone = citySnapshot.Stone;
-                city.Metal = citySnapshot.Metal;
-                city.LastResourceUpdate = currentDateTime;
-            }
-
-            await _cityRepository.UpdateRangeAsync(cityEntity.WorldPlayer.Cities.ToList());
-
-            var globalSnapshot = _resourceService.CalculateGlobalResources(cityEntity.WorldPlayer, currentDateTime);
+            // Opdater kun denne by
             var currentCitySnapshot = _resourceService.CalculateCityResources(cityEntity, currentDateTime);
+            
+            cityEntity.Wood = currentCitySnapshot.Wood;
+            cityEntity.Stone = currentCitySnapshot.Stone;
+            cityEntity.Metal = currentCitySnapshot.Metal;
+            cityEntity.LastResourceUpdate = currentDateTime;
+
+            await _cityRepository.UpdateAsync(cityEntity);
 
             var stationedUnitsDto = cityEntity.UnitStacks
                 .Select(u => new UnitStackDTO(u.Type, u.Quantity))
@@ -138,9 +130,6 @@ namespace Application.Services
                 CurrentWoodAmount = Math.Floor(cityEntity.Wood),
                 CurrentStoneAmount = Math.Floor(cityEntity.Stone),
                 CurrentMetalAmount = Math.Floor(cityEntity.Metal),
-                CurrentSilverAmount = Math.Floor(cityEntity.WorldPlayer.Silver),
-                CurrentResearchPoints = Math.Floor(cityEntity.WorldPlayer.ResearchPoints),
-                CurrentIdeologyFocusPoints = Math.Floor(cityEntity.WorldPlayer.IdeologyFocusPoints),
 
                 // Kapaciteter og produktion
                 MaxWoodCapacity = _cityStatService.GetWarehouseCapacity(cityEntity),
@@ -150,10 +139,6 @@ namespace Application.Services
                 WoodProductionPerHour = currentCitySnapshot.WoodProductionPerHour,
                 StoneProductionPerHour = currentCitySnapshot.StoneProductionPerHour,
                 MetalProductionPerHour = currentCitySnapshot.MetalProductionPerHour,
-
-                SilverProductionPerHour = globalSnapshot.SilverProductionPerHour,
-                ResearchPointsPerHour = globalSnapshot.ResearchPointsPerHour,
-                IdeologyFocusPointsPerHour = globalSnapshot.IdeologyFocusPointsPerHour,
 
                 CurrentPopulationUsage = _cityStatService.GetCurrentPopulationUsage(cityEntity, activeRecruitmentJobs),
                 MaxPopulationCapacity = _cityStatService.GetMaxPopulation(cityEntity),
@@ -165,6 +150,45 @@ namespace Application.Services
                 }).ToList(),
 
                 StationedUnits = stationedUnitsDto,
+            };
+        }
+
+        public async Task<CityResourcesDTO?> GetCityResourcesAsync(Guid cityIdentifier)
+        {
+            var cityEntity = await _cityRepository.GetByIdAsync(cityIdentifier);
+            if (cityEntity == null) return null;
+
+            var currentDateTime = DateTime.UtcNow;
+
+            // Opdater kun denne ene bys ressourcer for hurtig respons
+            var citySnapshot = _resourceService.CalculateCityResources(cityEntity, currentDateTime);
+            
+            cityEntity.Wood = citySnapshot.Wood;
+            cityEntity.Stone = citySnapshot.Stone;
+            cityEntity.Metal = citySnapshot.Metal;
+            cityEntity.LastResourceUpdate = currentDateTime;
+
+            await _cityRepository.UpdateAsync(cityEntity);
+
+            var activeRecruitmentJobs = await _jobRepository.GetRecruitmentJobsAsync(cityIdentifier);
+
+            return new CityResourcesDTO
+            {
+                CityId = cityEntity.Id,
+                CurrentWoodAmount = Math.Floor(cityEntity.Wood),
+                CurrentStoneAmount = Math.Floor(cityEntity.Stone),
+                CurrentMetalAmount = Math.Floor(cityEntity.Metal),
+                
+                WoodProductionPerHour = citySnapshot.WoodProductionPerHour,
+                StoneProductionPerHour = citySnapshot.StoneProductionPerHour,
+                MetalProductionPerHour = citySnapshot.MetalProductionPerHour,
+
+                MaxWoodCapacity = _cityStatService.GetWarehouseCapacity(cityEntity),
+                MaxStoneCapacity = _cityStatService.GetWarehouseCapacity(cityEntity),
+                MaxMetalCapacity = _cityStatService.GetWarehouseCapacity(cityEntity),
+
+                CurrentPopulationUsage = _cityStatService.GetCurrentPopulationUsage(cityEntity, activeRecruitmentJobs),
+                MaxPopulationCapacity = _cityStatService.GetMaxPopulation(cityEntity)
             };
         }
 
@@ -242,10 +266,6 @@ namespace Application.Services
 
             return availableBuildingsResponse;
         }
-        // ==========================================
-        // REFAKTOREREDE UDTRAEKS-METODER (Zero-Boilerplate)
-        // ==========================================
-
         private ResourceOverviewDTO CreateResourceOverview(City cityEntity, BuildingTypeEnum buildingType, params ModifierTagEnum[] targetTags)
         {
             return new ResourceOverviewDTO(
@@ -314,9 +334,6 @@ namespace Application.Services
             );
         }
 
-        // ==========================================
-        // HJÆLPEMETODER 
-        // ==========================================
 
         private double ExtractBaseValueFromLevelData(City cityEntity, BuildingTypeEnum buildingType, int level)
         {
@@ -334,7 +351,6 @@ namespace Application.Services
 
         private PopulationBreakdownDTO CreatePopulationBreakdown(City cityEntity, IEnumerable<BaseJob> activeJobs)
         {
-            // (Logik bevaret fra original)
             int unitUsage = cityEntity.UnitStacks.Sum(s => s.Quantity * (_unitDataReader.GetUnit(s.Type)?.PopulationCost ?? 0));
 
             return new PopulationBreakdownDTO(
@@ -353,6 +369,26 @@ namespace Application.Services
         {
             var firstJob = recruitmentJobs.FirstOrDefault();
             return new BarracksQueueOverviewDTO(recruitmentJobs.Any(), recruitmentJobs.Sum(j => j.TotalQuantity - j.CompletedQuantity), firstJob?.UnitType.ToString() ?? "None", recruitmentJobs.LastOrDefault()?.ExecutionTime);
+        }
+
+        public async Task<List<CityDTO>> GetPlayerCitiesByCityId(Guid cityId)
+        {
+            // 1. Find the player ID efficiently (without loading the entire City object graph)
+            var playerId = await _cityRepository.GetWorldPlayerIdByCityIdAsync(cityId);
+
+            if (playerId == null)
+            {
+                return new List<CityDTO>();
+            }
+
+            // 2. Fetch only the cities belonging to this player
+            var cities = await _cityRepository.GetCitiesByWorldPlayerIdAsync(playerId.Value);
+
+            // 3. Map to simple DTOs
+            return cities
+                .Select(c => new CityDTO(c.Id, c.Name, c.X, c.Y, 0)) // Points 0 for now as requested
+                .OrderBy(c => c.CityName)
+                .ToList();
         }
 
         public async Task<ChangeCityNameResponseDTO> ChangeCityName(Guid cityId, string newCityName)

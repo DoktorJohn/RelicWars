@@ -15,6 +15,8 @@ namespace Application.DTOs
         int Y,
         int Points
         );
+
+
     public class CityControllerGetDetailedCityInformationDTO
     {
         public Guid CityId { get; set; }
@@ -26,9 +28,6 @@ namespace Application.DTOs
         public double CurrentWoodAmount { get; set; }
         public double CurrentStoneAmount { get; set; }
         public double CurrentMetalAmount { get; set; }
-        public double CurrentSilverAmount { get; set; }
-        public double CurrentResearchPoints { get; set; }
-        public double CurrentIdeologyFocusPoints { get; set; }
 
         public double MaxWoodCapacity { get; set; }
         public double MaxStoneCapacity { get; set; }
@@ -37,9 +36,6 @@ namespace Application.DTOs
         public double WoodProductionPerHour { get; set; }
         public double StoneProductionPerHour { get; set; }
         public double MetalProductionPerHour { get; set; }
-        public double SilverProductionPerHour { get; set; }
-        public double ResearchPointsPerHour { get; set; }
-        public double IdeologyFocusPointsPerHour { get; set; }
 
         public int CurrentPopulationUsage { get; set; }
         public int MaxPopulationCapacity { get; set; }
@@ -47,6 +43,22 @@ namespace Application.DTOs
         // Liste over bygninger med dedikeret DTO til denne specifikke forespørgsel
         public List<CityControllerGetDetailedCityInformationBuildingDTO> BuildingList { get; set; } = new();
         public List<UnitStackDTO> StationedUnits { get; set; } = new();
+    }
+
+    public class CityResourcesDTO
+    {
+        public Guid CityId { get; set; }
+        public double CurrentWoodAmount { get; set; }
+        public double CurrentStoneAmount { get; set; }
+        public double CurrentMetalAmount { get; set; }
+        public double WoodProductionPerHour { get; set; }
+        public double StoneProductionPerHour { get; set; }
+        public double MetalProductionPerHour { get; set; }
+        public double MaxWoodCapacity { get; set; }
+        public double MaxStoneCapacity { get; set; }
+        public double MaxMetalCapacity { get; set; }
+        public int CurrentPopulationUsage { get; set; }
+        public int MaxPopulationCapacity { get; set; }
     }
 
     public record CityOverviewHUD(

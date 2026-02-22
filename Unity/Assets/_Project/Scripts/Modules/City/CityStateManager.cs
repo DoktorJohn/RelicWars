@@ -21,6 +21,7 @@ namespace Project.Modules.City
 
         // --- Events ---
         public event Action<CityResourceState> OnResourceStateChanged;
+        public event Action<string> OnCityNameChanged;
         public event Action<List<BuildingDTO>> OnBuildingQueueChanged;
         public event Action<List<RecruitmentQueueItemDTO>> OnBarracksQueueChanged;
         public event Action<List<RecruitmentQueueItemDTO>> OnStableQueueChanged;
@@ -54,6 +55,7 @@ namespace Project.Modules.City
         public List<RecruitmentQueueItemDTO> CurrentWorkshopQueue => _currentWorkshopQueue;
 
         public Guid CityId { get; set; }
+        public string CurrentCityName { get; private set; }
         public int HomeCityX { get; private set; }
         public int HomeCityY { get; private set; }
 
@@ -110,10 +112,6 @@ namespace Project.Modules.City
             _currentResourceState.MetalAmount = Math.Min(
                 _currentResourceState.MetalMaxCapacity,
                 _currentResourceState.MetalAmount + (_currentResourceState.MetalProductionPerHour * hoursPassedThisFrame));
-
-            _currentResourceState.SilverAmount += _currentResourceState.SilverProductionPerHour * hoursPassedThisFrame;
-            _currentResourceState.ResearchPointsAmount += _currentResourceState.ResearchPointsProductionPerHour * hoursPassedThisFrame;
-            _currentResourceState.IdeologyFocusPointsAmount += _currentResourceState.IdeologyFocusPointsProductionPerHour * hoursPassedThisFrame;
 
             OnResourceStateChanged?.Invoke(_currentResourceState);
         }
@@ -197,6 +195,13 @@ namespace Project.Modules.City
                 }
 
                 this.CityId = detailedInformationDto.CityId;
+                
+                if (this.CurrentCityName != detailedInformationDto.CityName)
+                {
+                    this.CurrentCityName = detailedInformationDto.CityName;
+                    OnCityNameChanged?.Invoke(this.CurrentCityName);
+                }
+                
                 this.HomeCityX = detailedInformationDto.X;
                 this.HomeCityY = detailedInformationDto.Y;
 
@@ -213,18 +218,9 @@ namespace Project.Modules.City
                 _currentResourceState.MetalMaxCapacity = detailedInformationDto.MaxMetalCapacity;
                 _currentResourceState.MetalProductionPerHour = detailedInformationDto.MetalProductionPerHour;
 
-                _currentResourceState.SilverAmount = detailedInformationDto.CurrentSilverAmount;
-                _currentResourceState.SilverProductionPerHour = detailedInformationDto.SilverProductionPerHour;
-
                 // Befolknings-mapping
                 _currentResourceState.CurrentPopulationUsage = detailedInformationDto.CurrentPopulationUsage;
                 _currentResourceState.MaxPopulationCapacity = detailedInformationDto.MaxPopulationCapacity;
-
-                _currentResourceState.ResearchPointsAmount = detailedInformationDto.CurrentResearchPoints;
-                _currentResourceState.ResearchPointsProductionPerHour = detailedInformationDto.ResearchPointsPerHour;
-
-                _currentResourceState.IdeologyFocusPointsAmount = detailedInformationDto.CurrentIdeologyFocusPoints;
-                _currentResourceState.IdeologyFocusPointsProductionPerHour = detailedInformationDto.IdeologyFocusPointsPerHour;
 
                 if (detailedInformationDto.BuildingList != null) OnBuildingStateReceived?.Invoke(detailedInformationDto.BuildingList);
 
@@ -242,15 +238,12 @@ namespace Project.Modules.City
             }
         }
 
-        public void DeductResourcesLocally(double wood, double stone, double metal, double silver = 0, double research = 0, double ideology = 0)
+        public void DeductResourcesLocally(double wood, double stone, double metal)
         {
             Debug.Log($"[CityStateManager] DeductResourcesLocally kaldet. Trækker Wood:{wood}, Stone:{stone}, Metal:{metal}");
             _currentResourceState.WoodAmount -= wood;
             _currentResourceState.StoneAmount -= stone;
             _currentResourceState.MetalAmount -= metal;
-            _currentResourceState.SilverAmount -= silver;
-            _currentResourceState.ResearchPointsAmount -= research;
-            _currentResourceState.IdeologyFocusPointsAmount -= ideology;
 
             OnResourceStateChanged?.Invoke(_currentResourceState);
         }

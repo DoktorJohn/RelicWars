@@ -34,6 +34,19 @@ namespace WebApi.Controllers
             return Ok(detailedInfo);
         }
 
+        [HttpGet("{cityIdentifier}/resources")]
+        public async Task<ActionResult<CityResourcesDTO>> GetCityResources(Guid cityIdentifier)
+        {
+            var resources = await _cityService.GetCityResourcesAsync(cityIdentifier);
+
+            if (resources == null)
+            {
+                return NotFound(new { Message = $"City with ID {cityIdentifier} was not found." });
+            }
+
+            return Ok(resources);
+        }
+
         [HttpGet("CityOverviewHUD/{cityIdentifier}")]
         public async Task<ActionResult<CityOverviewHUD>> GetCityOverviewHUD(Guid cityIdentifier)
         {
@@ -66,6 +79,13 @@ namespace WebApi.Controllers
             }
 
             return NotFound();
+        }
+
+        [HttpGet("{cityIdentifier}/my-cities")]
+        public async Task<ActionResult<List<CityDTO>>> GetPlayerCities(Guid cityIdentifier)
+        {
+            var cities = await _cityService.GetPlayerCitiesByCityId(cityIdentifier);
+            return Ok(cities);
         }
     }
 }

@@ -3161,6 +3161,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0750b64f6f230864f9605fecf6fbb320, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Project.Modules.City.CityBuildingInteractionController
+  _highlightColorTint: {r: 0.85, g: 0.95, b: 1, a: 1}
+  _resetHighlightOnDisable: 1
 --- !u!65 &360983564
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -4322,6 +4324,51 @@ BoxCollider2D:
   m_AutoTiling: 0
   m_Size: {x: 2.21, y: 2.03}
   m_EdgeRadius: 0
+--- !u!1 &483056170
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 483056172}
+  - component: {fileID: 483056171}
+  m_Layer: 0
+  m_Name: WorldPlayerState
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &483056171
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 483056170}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 257340ca94ad636408e8e7b8af796e3e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Project.Modules.WorldPlayer.WorldPlayerStateManager
+  _networkSynchronizationIntervalInSeconds: 30
+--- !u!4 &483056172
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 483056170}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0.81314, y: 0.22445, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!61 &483239878
 BoxCollider2D:
   m_ObjectHideFlags: 0
@@ -4870,6 +4917,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0750b64f6f230864f9605fecf6fbb320, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Project.Modules.City.CityBuildingInteractionController
+  _highlightColorTint: {r: 0.85, g: 0.95, b: 1, a: 1}
+  _resetHighlightOnDisable: 1
 --- !u!65 &522586792
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -355751,6 +355800,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0750b64f6f230864f9605fecf6fbb320, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Project.Modules.City.CityBuildingInteractionController
+  _highlightColorTint: {r: 0.85, g: 0.95, b: 1, a: 1}
+  _resetHighlightOnDisable: 1
 --- !u!65 &1066896736
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -359128,6 +359179,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0750b64f6f230864f9605fecf6fbb320, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Project.Modules.City.CityBuildingInteractionController
+  _highlightColorTint: {r: 0.85, g: 0.95, b: 1, a: 1}
+  _resetHighlightOnDisable: 1
 --- !u!65 &1315400247
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -364640,6 +364693,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0750b64f6f230864f9605fecf6fbb320, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Project.Modules.City.CityBuildingInteractionController
+  _highlightColorTint: {r: 0.85, g: 0.95, b: 1, a: 1}
+  _resetHighlightOnDisable: 1
 --- !u!65 &1750946491
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -365357,6 +365412,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0750b64f6f230864f9605fecf6fbb320, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Project.Modules.City.CityBuildingInteractionController
+  _highlightColorTint: {r: 0.85, g: 0.95, b: 1, a: 1}
+  _resetHighlightOnDisable: 1
 --- !u!65 &1816004989
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -366803,6 +366860,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0750b64f6f230864f9605fecf6fbb320, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Project.Modules.City.CityBuildingInteractionController
+  _highlightColorTint: {r: 0.85, g: 0.95, b: 1, a: 1}
+  _resetHighlightOnDisable: 1
 --- !u!65 &1894829227
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -368603,6 +368662,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0750b64f6f230864f9605fecf6fbb320, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Project.Modules.City.CityBuildingInteractionController
+  _highlightColorTint: {r: 0.85, g: 0.95, b: 1, a: 1}
+  _resetHighlightOnDisable: 1
 --- !u!65 &2051106315
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -372054,6 +372115,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0750b64f6f230864f9605fecf6fbb320, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Project.Modules.City.CityBuildingInteractionController
+  _highlightColorTint: {r: 0.85, g: 0.95, b: 1, a: 1}
+  _resetHighlightOnDisable: 1
 --- !u!65 &3317020688314896011
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -374268,6 +374331,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0750b64f6f230864f9605fecf6fbb320, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Project.Modules.City.CityBuildingInteractionController
+  _highlightColorTint: {r: 0.85, g: 0.95, b: 1, a: 1}
+  _resetHighlightOnDisable: 1
 --- !u!65 &6390227051391453847
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -375205,3 +375270,4 @@ SceneRoots:
   - {fileID: 1167106537}
   - {fileID: 133480769}
   - {fileID: 228978488}
+  - {fileID: 483056172}

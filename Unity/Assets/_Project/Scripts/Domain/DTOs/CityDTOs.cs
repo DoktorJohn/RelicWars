@@ -18,6 +18,23 @@ namespace Project.Network.Models
     }
 
     [Serializable]
+    public class CityResourcesDTO
+    {
+        public Guid CityId;
+        public double CurrentWoodAmount;
+        public double CurrentStoneAmount;
+        public double CurrentMetalAmount;
+        public double WoodProductionPerHour;
+        public double StoneProductionPerHour;
+        public double MetalProductionPerHour;
+        public double MaxWoodCapacity;
+        public double MaxStoneCapacity;
+        public double MaxMetalCapacity;
+        public int CurrentPopulationUsage;
+        public int MaxPopulationCapacity;
+    }
+
+    [Serializable]
     public class CityDTO
     {
         public Guid Id { get; set; }

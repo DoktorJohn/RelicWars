@@ -23,6 +23,19 @@ namespace Application.DTOs
         string Message
     );
 
+    public class WorldPlayerEconomyDTO
+    {
+        public Guid WorldPlayerId { get; set; }
+        public double CurrentSilverAmount { get; set; }
+        public double CurrentResearchPoints { get; set; }
+        public double CurrentIdeologyFocusPoints { get; set; }
+        public double SilverProductionPerHour { get; set; }
+        public double ResearchPointsPerHour { get; set; }
+        public double IdeologyFocusPointsPerHour { get; set; }
+        public List<CityDTO> PlayerCities { get; set; } = new();
+        public DateTime LastUpdated { get; set; }
+    }
+
     public record WorldPlayerProfileDTO(
         Guid worldPlayerId,
         string UserName,

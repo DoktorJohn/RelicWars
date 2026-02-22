@@ -35,6 +35,28 @@ namespace Game.Controllers
             }
         }
 
+        [HttpGet("{worldPlayerId}/economy")]
+        public async Task<ActionResult<WorldPlayerEconomyDTO>> GetWorldPlayerEconomy(Guid worldPlayerId)
+        {
+            _logger.LogInformation("[WorldPlayerController] Request received for economy of player {PlayerId}", worldPlayerId);
+            try
+            {
+                var result = await _worldPlayerService.GetWorldPlayerEconomyAsync(worldPlayerId);
+                _logger.LogInformation("[WorldPlayerController] Economy retrieved for {PlayerId}. Silver: {Silver}, Rate: {Rate}", worldPlayerId, result.CurrentSilverAmount, result.SilverProductionPerHour);
+                return Ok(result);
+            }
+            catch (KeyNotFoundException)
+            {
+                _logger.LogWarning("[WorldPlayerController] Player {PlayerId} not found.", worldPlayerId);
+                return NotFound();
+            }
+            catch (Exception exception)
+            {
+                _logger.LogError(exception, "Error retrieving economy data for player {PlayerId}", worldPlayerId);
+                return StatusCode(500, "Internal server error retrieving economy data.");
+            }
+        }
+
         [HttpPost("selectIdeology")]
         public async Task<IActionResult> SelectIdeology([FromBody] SelectIdeologyRequest request)
         {

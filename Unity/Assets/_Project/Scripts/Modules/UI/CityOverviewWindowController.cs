@@ -1,13 +1,13 @@
-﻿using UnityEngine;
-using UnityEngine.UIElements;
+﻿using Assets.Scripts.Domain.State;
+using Project.Modules.City;
+using Project.Modules.UI;
+using Project.Modules.WorldPlayer;
+using Project.Network.Manager;
+using Project.Network.Models;
 using System;
 using System.Collections.Generic;
-using Project.Modules.UI;
-using Project.Network.Manager;
-using Project.Network;
-using Project.Network.Models;
-using Project.Modules.City;
-using Assets.Scripts.Domain.State;
+using UnityEngine;
+using UnityEngine.UIElements;
 
 namespace Assets._Project.Scripts.Modules.UI
 {
@@ -48,7 +48,7 @@ namespace Assets._Project.Scripts.Modules.UI
             if (CityStateManager.Instance != null)
             {
                 // Ressource opdateringer (hvert sekund/frame)
-                CityStateManager.Instance.OnResourceStateChanged += HandleGlobalResourceStateCalculated;
+                CityStateManager.Instance.OnResourceStateChanged += HandleCityResourceStateCalculated;
 
                 // Kø opdateringer (når data lander fra serveren)
                 CityStateManager.Instance.OnBuildingQueueChanged += HandleAnyQueueChanged;
@@ -57,8 +57,15 @@ namespace Assets._Project.Scripts.Modules.UI
                 CityStateManager.Instance.OnWorkshopQueueChanged += HandleAnyQueueChanged;
 
                 // Initial kørsel for at vise nuværende tilstand
-                UpdateDynamicUserInterfaceElements(CityStateManager.Instance.CurrentResources);
+                UpdateCityUserInterfaceElements(CityStateManager.Instance.CurrentResources);
                 UpdateAllActivityStatuses();
+            }
+
+            // 2. Abonner på WorldPlayerStateManager events
+            if (WorldPlayerStateManager.Instance != null)
+            {
+                WorldPlayerStateManager.Instance.OnEconomyStateChanged += HandleWorldPlayerEconomyStateCalculated;
+                UpdateWorldPlayerUserInterfaceElements(WorldPlayerStateManager.Instance.CurrentEconomy);
             }
 
             Guid activeCityIdentifier = (dataPayload is Guid cityGuid)
@@ -75,11 +82,16 @@ namespace Assets._Project.Scripts.Modules.UI
             // VIGTIGT: Fjern abonnementer
             if (CityStateManager.Instance != null)
             {
-                CityStateManager.Instance.OnResourceStateChanged -= HandleGlobalResourceStateCalculated;
+                CityStateManager.Instance.OnResourceStateChanged -= HandleCityResourceStateCalculated;
                 CityStateManager.Instance.OnBuildingQueueChanged -= HandleAnyQueueChanged;
                 CityStateManager.Instance.OnBarracksQueueChanged -= HandleAnyQueueChanged;
                 CityStateManager.Instance.OnStableQueueChanged -= HandleAnyQueueChanged;
                 CityStateManager.Instance.OnWorkshopQueueChanged -= HandleAnyQueueChanged;
+            }
+
+            if (WorldPlayerStateManager.Instance != null)
+            {
+                WorldPlayerStateManager.Instance.OnEconomyStateChanged -= HandleWorldPlayerEconomyStateCalculated;
             }
         }
 
@@ -105,12 +117,16 @@ namespace Assets._Project.Scripts.Modules.UI
             _labelStatusBarracks = Root.Q<Label>("Status-Barracks");
         }
 
-        private void HandleGlobalResourceStateCalculated(CityResourceState currentState)
+        private void HandleCityResourceStateCalculated(CityResourceState currentState)
         {
-            UpdateDynamicUserInterfaceElements(currentState);
+            UpdateCityUserInterfaceElements(currentState);
         }
 
-        // Fælles handler for alle kø-ændringer
+        private void HandleWorldPlayerEconomyStateCalculated(WorldPlayerState currentState)
+        {
+            UpdateWorldPlayerUserInterfaceElements(currentState);
+        }
+
         private void HandleAnyQueueChanged<T>(List<T> ignored)
         {
             UpdateAllActivityStatuses();
@@ -158,7 +174,9 @@ namespace Assets._Project.Scripts.Modules.UI
 
         private void PopulateUserInterfaceWithDataModel(CityOverviewHUDDTO productionDataModel)
         {
-            UpdateDynamicUserInterfaceElements(CityStateManager.Instance.CurrentResources);
+            UpdateCityUserInterfaceElements(CityStateManager.Instance.CurrentResources);
+            if (WorldPlayerStateManager.Instance != null)
+                UpdateWorldPlayerUserInterfaceElements(WorldPlayerStateManager.Instance.CurrentEconomy);
 
             _economyResourceGridContainer.Clear();
             AddEconomyResourceCard("WOOD", "icon-wood", productionDataModel.Wood.Production);
@@ -172,17 +190,8 @@ namespace Assets._Project.Scripts.Modules.UI
             UpdateAllActivityStatuses();
         }
 
-        private void UpdateDynamicUserInterfaceElements(CityResourceState resourceState)
+        private void UpdateCityUserInterfaceElements(CityResourceState resourceState)
         {
-            if (_labelGlobalSilverAmount != null)
-                _labelGlobalSilverAmount.text = Math.Floor(resourceState.SilverAmount).ToString("N0");
-
-            if (_labelGlobalResearchAmount != null)
-                _labelGlobalResearchAmount.text = Math.Floor(resourceState.ResearchPointsAmount).ToString("N0");
-
-            if (_labelGlobalIdeologyAmount != null)
-                _labelGlobalIdeologyAmount.text = Math.Floor(resourceState.IdeologyFocusPointsAmount).ToString("N0");
-
             if (resourceState.MaxPopulationCapacity > 0)
             {
                 float usagePercentage = ((float)resourceState.CurrentPopulationUsage / (float)resourceState.MaxPopulationCapacity) * 100f;
@@ -198,6 +207,18 @@ namespace Assets._Project.Scripts.Modules.UI
                 _labelPopulationStatisticalDetails.text = $"Units: {resourceState.CurrentPopulationUsage} | Free: {resourceState.FreePopulation}";
                 _labelPopulationStatisticalDetails.style.color = (resourceState.FreePopulation <= 0) ? Color.red : _darkTextColor;
             }
+        }
+
+        private void UpdateWorldPlayerUserInterfaceElements(WorldPlayerState resourceState)
+        {
+            if (_labelGlobalSilverAmount != null)
+                _labelGlobalSilverAmount.text = Math.Floor(resourceState.SilverAmount).ToString("N0");
+
+            if (_labelGlobalResearchAmount != null)
+                _labelGlobalResearchAmount.text = Math.Floor(resourceState.ResearchPointsAmount).ToString("N0");
+
+            if (_labelGlobalIdeologyAmount != null)
+                _labelGlobalIdeologyAmount.text = Math.Floor(resourceState.IdeologyFocusPointsAmount).ToString("N0");
         }
 
         private void AddEconomyResourceCard(string resourceTitle, string iconCssClass, ProductionBreakdownDTO productionBreakdown)

@@ -9,6 +9,17 @@
             <ui:Label name="City-ServerTime-Label" class="city-time-value" text="00:00:00" />
         </ui:VisualElement>
 
+        <ui:VisualElement name="City-Selector-Section" class="city-selector-section">
+            <ui:Button name="City-Selector-Arrow-Left" class="city-selector-arrow" text="◄" />
+            <ui:Label name="City-Selector-CurrentCity-Label" class="city-selector-label" text="Current City" />
+            <ui:TextField name="City-Selector-Rename-Input" class="city-selector-rename-input" style="display: none;" />
+            <ui:Button name="City-Selector-Arrow-Right" class="city-selector-arrow" text="►" />
+
+            <ui:VisualElement name="City-Selector-Dropdown-Container" class="city-selector-dropdown-container" style="display: none;">
+                <ui:ScrollView name="City-Selector-Dropdown-Scroll" />
+            </ui:VisualElement>
+        </ui:VisualElement>
+
         <ui:VisualElement name="City-TopBar-ResourceSection-Right" class="city-top-bar-resource-section-right">
             
             <ui:VisualElement class="city-resource-group">

@@ -10,8 +10,10 @@ namespace Application.Interfaces.IServices
     public interface ICityService
     {
         Task<CityControllerGetDetailedCityInformationDTO?> GetDetailedCityInformationByCityIdentifierAsync(Guid cityId);
+        Task<CityResourcesDTO?> GetCityResourcesAsync(Guid cityId);
         Task<List<AvailableBuildingDTO>> GetAvailableBuildingsForTownHallAsync(Guid cityId);
         Task<CityOverviewHUD> GetCityOverviewHUD(Guid cityId);
+        Task<List<CityDTO>> GetPlayerCitiesByCityId(Guid cityId);
         Task<ChangeCityNameResponseDTO> ChangeCityName(Guid cityId, string newCityName);
     }
 }

@@ -17,11 +17,24 @@ namespace Infrastructure.Repositories
         public async Task<City?> GetByIdAsync(Guid cityIdentifier)
         {
             return await _context.Cities
+                .AsSplitQuery()
                 .Include(city => city.Buildings)
                 .Include(city => city.UnitStacks)
                 .Include(city => city.ActiveFocuses)
                 .Include(city => city.WorldPlayer)
                     .ThenInclude(player => player.ModifiersInternal)
+                .Include(city => city.WorldPlayer)
+                    .ThenInclude(player => player.CompletedResearches)
+                .Include(city => city.WorldPlayer)
+                    .ThenInclude(player => player.Cities)
+                        .ThenInclude(c => c.Buildings)
+                .Include(city => city.WorldPlayer)
+                    .ThenInclude(player => player.Cities)
+                        .ThenInclude(c => c.UnitStacks)
+                .Include(city => city.WorldPlayer)
+                    .ThenInclude(player => player.Cities)
+                        .ThenInclude(c => c.OriginUnitDeployments)
+                            .ThenInclude(d => d.UnitStacks)
                 .FirstOrDefaultAsync(city => city.Id == cityIdentifier);
         }
 
@@ -39,6 +52,16 @@ namespace Infrastructure.Repositories
                      .ThenInclude(player => player.CompletedResearches)
                  .Include(city => city.WorldPlayer)
                      .ThenInclude(player => player.Alliance) 
+                 .Include(city => city.WorldPlayer)
+                     .ThenInclude(player => player.Cities)
+                         .ThenInclude(c => c.Buildings)
+                 .Include(city => city.WorldPlayer)
+                     .ThenInclude(player => player.Cities)
+                         .ThenInclude(c => c.UnitStacks)
+                 .Include(city => city.WorldPlayer)
+                     .ThenInclude(player => player.Cities)
+                         .ThenInclude(c => c.OriginUnitDeployments)
+                             .ThenInclude(d => d.UnitStacks)
                  .Include(city => city.UnitStacks)
                  .Include(city => city.OriginUnitDeployments)
                      .ThenInclude(deployment => deployment.UnitStacks)
@@ -91,11 +114,28 @@ namespace Infrastructure.Repositories
             await _context.SaveChangesAsync();
         }
 
+        public async Task<List<City>> GetCitiesByWorldPlayerIdAsync(Guid worldPlayerId)
+        {
+            return await _context.Cities
+                .Where(c => c.WorldPlayerId == worldPlayerId)
+                .AsNoTracking()
+                .ToListAsync();
+        }
+
+        public async Task<Guid?> GetWorldPlayerIdByCityIdAsync(Guid cityId)
+        {
+            var city = await _context.Cities
+                .AsNoTracking()
+                .Select(c => new { c.Id, c.WorldPlayerId })
+                .FirstOrDefaultAsync(c => c.Id == cityId);
+
+            return city?.WorldPlayerId;
+        }
+
         public async Task UpdateRangeAsync(List<City> cities)
         {
             _context.Cities.UpdateRange(cities);
             await _context.SaveChangesAsync();
         }
-
     }
 }

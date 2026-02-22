@@ -1,5 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
+using System.Collections;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -7,13 +7,11 @@ using UnityEngine.UIElements;
 using UnityEngine;
 using Project.Modules.UI;
 using Project.Network.Manager;
-using Project.Modules.City;
-using Unity.VisualScripting;
-using Project.Scripts.Domain.DTOs;
-using Assets.Scripts.Domain.Enums;
-using Assets._Project.Scripts.Domain.Enums;
-using System.Collections;
+using Project.Modules.WorldPlayer;
 using Assets.Scripts.Domain.State;
+using Project.Scripts.Domain.DTOs;
+using Assets._Project.Scripts.Domain.Enums;
+using System.Collections.Generic;
 
 namespace Assets._Project.Scripts.Modules.UI
 {
@@ -49,12 +47,12 @@ namespace Assets._Project.Scripts.Modules.UI
             if (_currentActiveCityId == Guid.Empty) return;
 
             // 3. Abonnement: Lyt til state manageren for løbende opdateringer
-            if (CityStateManager.Instance != null)
+            if (WorldPlayerStateManager.Instance != null)
             {
-                CityStateManager.Instance.OnResourceStateChanged += HandleResourceStateChanged;
+                WorldPlayerStateManager.Instance.OnEconomyStateChanged += HandleEconomyStateChanged;
 
                 // Kør den manuelt én gang for at få start-værdien med det samme
-                HandleResourceStateChanged(CityStateManager.Instance.CurrentResources);
+                HandleEconomyStateChanged(WorldPlayerStateManager.Instance.CurrentEconomy);
             }
 
             RequestAndRenderIdeologyData();
@@ -63,9 +61,9 @@ namespace Assets._Project.Scripts.Modules.UI
         private void OnDisable()
         {
             // VIGTIGT: Afmeld event for at undgå memory leaks når vinduet lukkes
-            if (CityStateManager.Instance != null)
+            if (WorldPlayerStateManager.Instance != null)
             {
-                CityStateManager.Instance.OnResourceStateChanged -= HandleResourceStateChanged;
+                WorldPlayerStateManager.Instance.OnEconomyStateChanged -= HandleEconomyStateChanged;
             }
             StopAllActiveTimers();
         }
@@ -87,7 +85,7 @@ namespace Assets._Project.Scripts.Modules.UI
             _focusGridContainer = Root.Q<VisualElement>("Focus-Grid-Container");
         }
 
-        private void HandleResourceStateChanged(CityResourceState state)
+        private void HandleEconomyStateChanged(WorldPlayerState state)
         {
             _currentAvailablePoints = state.IdeologyFocusPointsAmount;
 
@@ -257,9 +255,9 @@ namespace Assets._Project.Scripts.Modules.UI
             double pointCost = (double)clickedButton.userData;
 
             // 1. Træk pointene fra skærmen LOKALT og ØJEBLIKKELIGT
-            if (CityStateManager.Instance != null)
+            if (WorldPlayerStateManager.Instance != null)
             {
-                CityStateManager.Instance.DeductResourcesLocally(0, 0, 0, 0, 0, pointCost);
+                WorldPlayerStateManager.Instance.DeductResourcesLocally(0, 0, pointCost);
             }
 
             var requestDto = new IdeologyFocusRequestDTO();
@@ -272,12 +270,17 @@ namespace Assets._Project.Scripts.Modules.UI
                 if (result != null && result.Success)
                 {
                     RequestAndRenderIdeologyData();
+                    
+                    if (Guid.TryParse(NetworkManager.Instance.WorldPlayerId, out Guid wpId) && WorldPlayerStateManager.Instance != null)
+                    {
+                        WorldPlayerStateManager.Instance.InitiateEconomyRefresh(wpId);
+                    }
                 }
                 else
                 {
-                    if (CityStateManager.Instance != null)
+                    if (WorldPlayerStateManager.Instance != null)
                     {
-                        CityStateManager.Instance.DeductResourcesLocally(0, 0, 0, 0, 0, -pointCost);
+                        WorldPlayerStateManager.Instance.DeductResourcesLocally(0, 0, -pointCost);
                     }
 
                     Debug.LogError($"[IdeologyWindow] Enact failed: {result?.Message}");

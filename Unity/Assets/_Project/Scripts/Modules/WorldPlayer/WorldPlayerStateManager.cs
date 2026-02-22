@@ -1,0 +1,129 @@
+using UnityEngine;
+using System;
+using System.Collections;
+using Project.Network.Manager;
+using Assets.Scripts.Domain.State;
+using Project.Scripts.Domain.DTOs;
+
+namespace Project.Modules.WorldPlayer
+{
+    public class WorldPlayerStateManager : MonoBehaviour
+    {
+        public static WorldPlayerStateManager Instance { get; private set; }
+
+        public event Action<WorldPlayerState> OnEconomyStateChanged;
+
+        [Header("Configuration")]
+        [SerializeField] private float _networkSynchronizationIntervalInSeconds = 30f;
+
+        private WorldPlayerState _currentEconomyState = new WorldPlayerState();
+        public WorldPlayerState CurrentEconomy => _currentEconomyState;
+
+        private bool _isRequestInProgress = false;
+        private Coroutine _activePollingCoroutine;
+
+        private void Awake()
+        {
+            if (Instance == null)
+            {
+                Instance = this;
+                if (transform.parent != null) transform.SetParent(null);
+                DontDestroyOnLoad(gameObject);
+                Debug.Log("[WorldPlayerStateManager] Global instance initialized.");
+            }
+            else if (Instance != this)
+            {
+                Destroy(gameObject);
+            }
+        }
+
+        private void Update()
+        {
+            ExecuteLocalResourceExtrapolationPerFrame();
+        }
+
+        private void ExecuteLocalResourceExtrapolationPerFrame()
+        {
+            double hoursPassedThisFrame = Time.deltaTime / 3600.0;
+
+            if (_currentEconomyState == null) return;
+
+            _currentEconomyState.SilverAmount += _currentEconomyState.SilverProductionPerHour * hoursPassedThisFrame;
+            _currentEconomyState.ResearchPointsAmount += _currentEconomyState.ResearchPointsProductionPerHour * hoursPassedThisFrame;
+            _currentEconomyState.IdeologyFocusPointsAmount += _currentEconomyState.IdeologyFocusPointsProductionPerHour * hoursPassedThisFrame;
+
+            // Debug.Log($"[WorldPlayerStateManager] Extrapolating: Silver={_currentEconomyState.SilverAmount:F2} (+{_currentEconomyState.SilverProductionPerHour:F2}/h)");
+            OnEconomyStateChanged?.Invoke(_currentEconomyState);
+        }
+
+        public void InitiateEconomyRefresh(Guid worldPlayerId)
+        {
+            Debug.Log($"[WorldPlayerStateManager] Initiating economy refresh for WorldPlayerId: {worldPlayerId}");
+            if (_activePollingCoroutine != null) StopCoroutine(_activePollingCoroutine);
+            _activePollingCoroutine = StartCoroutine(ExecuteEconomyPollingCycleCoroutine(worldPlayerId));
+        }
+
+        private IEnumerator ExecuteEconomyPollingCycleCoroutine(Guid worldPlayerId)
+        {
+            while (true)
+            {
+                Debug.Log("[WorldPlayerStateManager] Starting planned economy sync...");
+                yield return StartCoroutine(PerformFullEconomySyncCoroutine(worldPlayerId));
+                yield return new WaitForSeconds(_networkSynchronizationIntervalInSeconds);
+            }
+        }
+
+        private IEnumerator PerformFullEconomySyncCoroutine(Guid worldPlayerId)
+        {
+            if (_isRequestInProgress)
+            {
+                Debug.LogWarning("[WorldPlayerStateManager] Request already in progress, skipping sync.");
+                yield break;
+            }
+            _isRequestInProgress = true;
+
+            string token = NetworkManager.Instance.JwtToken;
+
+            Debug.Log($"[WorldPlayerStateManager] Fetching economy data for {worldPlayerId}...");
+            yield return StartCoroutine(NetworkManager.Instance.WorldPlayer.GetWorldPlayerEconomy(worldPlayerId, token, (economyDto) =>
+            {
+                if (economyDto != null)
+                {
+                    HandleEconomyResponseAndMapToState(economyDto);
+                }
+                else
+                {
+                    Debug.LogError("[WorldPlayerStateManager] Failed to fetch economy data.");
+                }
+            }));
+
+            _isRequestInProgress = false;
+        }
+
+        private void HandleEconomyResponseAndMapToState(WorldPlayerEconomyDTO dto)
+        {
+            if (_currentEconomyState == null) _currentEconomyState = new WorldPlayerState();
+
+            _currentEconomyState.SilverAmount = dto.CurrentSilverAmount;
+            _currentEconomyState.SilverProductionPerHour = dto.SilverProductionPerHour;
+
+            _currentEconomyState.ResearchPointsAmount = dto.CurrentResearchPoints;
+            _currentEconomyState.ResearchPointsProductionPerHour = dto.ResearchPointsPerHour;
+
+            _currentEconomyState.IdeologyFocusPointsAmount = dto.CurrentIdeologyFocusPoints;
+            _currentEconomyState.IdeologyFocusPointsProductionPerHour = dto.IdeologyFocusPointsPerHour;
+
+            OnEconomyStateChanged?.Invoke(_currentEconomyState);
+            Debug.Log($"[WorldPlayerStateManager] Economy state synchronized. Silver: {dto.CurrentSilverAmount}, Research: {dto.CurrentResearchPoints}");
+        }
+
+        public void DeductResourcesLocally(double silver, double research, double ideology)
+        {
+            _currentEconomyState.SilverAmount -= silver;
+            _currentEconomyState.ResearchPointsAmount -= research;
+            _currentEconomyState.IdeologyFocusPointsAmount -= ideology;
+
+            OnEconomyStateChanged?.Invoke(_currentEconomyState);
+        }
+    }
+}

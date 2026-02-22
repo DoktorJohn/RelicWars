@@ -18,5 +18,7 @@ namespace Application.Interfaces.IRepositories
         Task AddAsync(City city);
         Task<City?> GetCityWithBuildingsByCityIdentifierAsync(Guid cityId);
         Task<City?> GetByCoordinatesAsync(int x, int y);
+        Task<Guid?> GetWorldPlayerIdByCityIdAsync(Guid cityId);
+        Task<List<City>> GetCitiesByWorldPlayerIdAsync(Guid worldPlayerId);
     }
 }

@@ -1,4 +1,5 @@
-﻿using Project.Scripts.Domain.Enums;
+﻿using Project.Network.Models;
+using Project.Scripts.Domain.Enums;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -7,6 +8,30 @@ using System.Threading.Tasks;
 
 namespace Project.Scripts.Domain.DTOs
 {
+    [Serializable]
+    public class WorldPlayerEconomyDTO
+    {
+        public Guid WorldPlayerId;
+        public double CurrentSilverAmount;
+        public double CurrentResearchPoints;
+        public double CurrentIdeologyFocusPoints;
+        public double SilverProductionPerHour;
+        public double ResearchPointsPerHour;
+        public double IdeologyFocusPointsPerHour;
+        public List<CityDTO> PlayerCities;
+        public DateTime LastUpdated;
+    }
+
+    [Serializable]
+    public class WorldPlayerJoinResponse
+    {
+        public bool ConnectionSuccessful;
+        public string Message;
+        public Guid? ActiveCityId;
+        public Guid? WorldPlayerId;
+        public IdeologyTypeEnum SelectedIdeology;
+    }
+
     [Serializable]
     public class WorldPlayerProfileDTO
     {

@@ -23,7 +23,7 @@ namespace Project.Network
             _baseUrl = $"{baseUrl}/WorldPlayer";
         }
 
-        public IEnumerator JoinWorld(string playerId, Guid worldId, string jwtToken, Action<PlayerWorldJoinResponse> callback)
+        public IEnumerator JoinWorld(string playerId, Guid worldId, string jwtToken, Action<WorldPlayerJoinResponse> callback)
         {
             var payload = new { PlayerProfileId = playerId, WorldId = worldId.ToString() };
             string url = $"{_baseUrl}/join";
@@ -34,13 +34,13 @@ namespace Project.Network
 
                 if (request.result == UnityWebRequest.Result.Success)
                 {
-                    var response = JsonConvert.DeserializeObject<PlayerWorldJoinResponse>(request.downloadHandler.text);
+                    var response = JsonConvert.DeserializeObject<WorldPlayerJoinResponse>(request.downloadHandler.text);
                     callback?.Invoke(response);
                 }
                 else
                 {
                     Debug.LogError($"[World] Join Failed: {request.downloadHandler.text}");
-                    callback?.Invoke(new PlayerWorldJoinResponse
+                    callback?.Invoke(new WorldPlayerJoinResponse
                     {
                         ConnectionSuccessful = false,
                         Message = "Failed to join",
@@ -48,6 +48,35 @@ namespace Project.Network
                         WorldPlayerId = null,
                         SelectedIdeology = IdeologyTypeEnum.None
                     });
+                }
+            }
+        }
+
+        public IEnumerator GetWorldPlayerEconomy(Guid worldPlayerId, string jwtToken, Action<WorldPlayerEconomyDTO> callback)
+        {
+            string url = $"{_baseUrl}/{worldPlayerId}/economy";
+
+            using (var request = BackendRequestHelper.CreateGetRequest(url, jwtToken))
+            {
+                yield return request.SendWebRequest();
+
+                if (request.result == UnityWebRequest.Result.Success)
+                {
+                    try
+                    {
+                        var data = JsonConvert.DeserializeObject<WorldPlayerEconomyDTO>(request.downloadHandler.text);
+                        callback?.Invoke(data);
+                    }
+                    catch (Exception ex)
+                    {
+                        Debug.LogError($"[WorldPlayer] Deserialization Error (Economy): {ex.Message}");
+                        callback?.Invoke(null);
+                    }
+                }
+                else
+                {
+                    Debug.LogError($"[WorldPlayer] GetWorldPlayerEconomy Failed: {request.error}");
+                    callback?.Invoke(null);
                 }
             }
         }

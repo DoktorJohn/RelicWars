@@ -129,11 +129,11 @@ namespace Project.Network.Manager
             {
                 if (response.ConnectionSuccessful)
                 {
-                    if (!string.IsNullOrEmpty(response.ActiveCityId))
-                        ActiveCityId = Guid.Parse(response.ActiveCityId);
+                    if (response.ActiveCityId.HasValue)
+                        ActiveCityId = response.ActiveCityId;
 
-                    if (!string.IsNullOrEmpty(response.WorldPlayerId))
-                        WorldPlayerId = response.WorldPlayerId;
+                    if (response.WorldPlayerId.HasValue)
+                        WorldPlayerId = response.WorldPlayerId.Value.ToString();
 
                     Debug.Log($"[NetworkManager] Joined World. Ideology: {response.SelectedIdeology}");
 

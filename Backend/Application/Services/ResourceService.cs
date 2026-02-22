@@ -83,6 +83,8 @@ namespace Application.Services
         public GlobalResourceSnapshot CalculateGlobalResources(WorldPlayer playerEntity, DateTime currentDateTime)
         {
             double hoursPassed = CalculateHoursPassed(playerEntity.LastResourceUpdate, currentDateTime);
+            _logger.LogInformation("[ResourceService] Calculating global resources for Player {PlayerId}. Hours passed: {HoursPassed:F4}. Last Update: {LastUpdate}, Current: {Current}", 
+                playerEntity.Id, hoursPassed, playerEntity.LastResourceUpdate, currentDateTime);
 
             double totalSilverRate = 0;
             double totalResearchRate = 0;
@@ -107,6 +109,9 @@ namespace Application.Services
             double newSilverAmount = playerEntity.Silver + (totalSilverRate * hoursPassed);
             double newResearchAmount = playerEntity.ResearchPoints + (totalResearchRate * hoursPassed);
             double newIdeologyAmount = playerEntity.IdeologyFocusPoints + (ideologyCalculation.FinalValue * hoursPassed);
+
+            _logger.LogInformation("[ResourceService] Global Calc Result: Total Silver Rate: {TotalSilverRate}, Old Silver: {OldSilver}, New Silver: {NewSilver}", 
+                totalSilverRate, playerEntity.Silver, newSilverAmount);
 
             return new GlobalResourceSnapshot(
                 newSilverAmount,
@@ -198,7 +203,12 @@ namespace Application.Services
 
             var silverExpenditure = _modifierService.CalculateEntityValueWithModifiers(flatTotalSilverExpenditure, silverExpenditureTags, modifierProviders);
 
-            return silverProduction.FinalValue - silverExpenditure.FinalValue;
+            double netSilver = silverProduction.FinalValue - silverExpenditure.FinalValue;
+
+            _logger.LogInformation("[ResourceService] City {CityName} Silver Breakdown: Income Base={IncomeBase} -> Final={IncomeFinal}. Expenditure Base={ExpBase} (Units={UnitExp}, Buildings={BuildExp}) -> Final={ExpFinal}. Net={Net}",
+                cityEntity.Name, baseProductionValue, silverProduction.FinalValue, flatTotalSilverExpenditure, flatUnitSilverExpenditure, buildingUpkeepCost, silverExpenditure.FinalValue, netSilver);
+
+            return netSilver;
         }
 
         private double GetBaseProductionValue(City cityEntity, BuildingTypeEnum buildingType)

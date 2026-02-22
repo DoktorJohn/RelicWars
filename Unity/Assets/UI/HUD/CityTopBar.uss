@@ -35,7 +35,7 @@
     align-items: center;
     height: 100%;
     width: 120px; 
-    margin-left: 140px; /* Sikrer at den ikke ligger under den store kort-knap i venstre hjørne */
+    margin-left: 140px; /* Sikrer at den ikke ligger under den store kort-knap i venstre hjrne */
     border-right-width: 1px;
     border-right-color: rgba(165, 125, 50, 0.3); /* Let guld-linje for at adskille uret */
 }
@@ -69,7 +69,7 @@
 .city-resource-group {
     flex-direction: row;
     align-items: center;
-    width: 140px; /* ØGET FRA 120px for at give mere luft mellem blokkene */
+    width: 140px; /* GET FRA 120px for at give mere luft mellem blokkene */
     height: 100%;
     justify-content: center;
     overflow: visible;
@@ -113,8 +113,8 @@
     -unity-font-definition: url("project://database/Assets/TextMesh Pro/Fonts/Roboto.asset");
     -unity-font-style: bold;
     font-size: 16px; 
-    margin-left: 10px; /* ØGET for at trække tallet lidt væk fra buens højre kant */
-    width: 85px; /* ØGET FRA 70px for at tillade store tal uden at de presses */
+    margin-left: 10px; /* GET for at trkke tallet lidt vk fra buens hjre kant */
+    width: 85px; /* GET FRA 70px for at tillade store tal uden at de presses */
     -unity-text-align: middle-left;
     overflow: hidden; 
     white-space: nowrap;
@@ -146,4 +146,116 @@
 .city-top-bar-map-button:active {
     scale: 0.95;
     -unity-background-image-tint-color: rgb(200, 200, 200);
+}
+
+/* =======================================================
+   CITY SELECTOR
+   ======================================================= */
+.city-selector-section {
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    margin-left: 20px;
+    padding-left: 10px;
+    padding-right: 10px;
+    border-left-width: 1px;
+    border-left-color: rgba(165, 125, 50, 0.3);
+    cursor: link;
+    /* Allow overflow for dropdown */
+    overflow: visible;
+}
+
+.city-selector-label {
+    width: 300px;
+    height: 40px;
+    color: var(--c-hud-text-light);
+    font-size: 18px;
+    -unity-font-style: bold;
+    -unity-text-align: middle-center;
+    cursor: link;
+    margin: 0;
+    padding: 0;
+}
+
+.city-selector-label:hover {
+    color: var(--c-hud-border-gold);
+}
+
+.city-selector-rename-input {
+    width: 300px;
+    height: 40px; 
+    font-size: 16px; 
+    -unity-font-definition: var(--font-body);
+    margin: 0;
+    padding: 0;
+}
+
+/* Fix for inner input field styling */
+.city-selector-rename-input > .unity-text-field__input {
+    background-color: rgba(0, 0, 0, 0.5);
+    color: var(--c-hud-text-light);
+    border-width: 1px;
+    border-color: var(--c-hud-border-gold);
+    border-radius: 4px;
+    padding-top: 2px;
+    padding-bottom: 2px;
+    -unity-text-align: middle-center;
+}
+
+.city-selector-arrow {
+    width: 30px;
+    height: 40px;
+    background-color: transparent;
+    border-width: 0;
+    color: #FFFFFF;
+    -unity-font-style: bold;
+    font-size: 24px;
+    cursor: link;
+    margin-left: 5px;
+    margin-right: 5px;
+    -unity-text-align: middle-center;
+}
+
+.city-selector-arrow:hover {
+    color: rgb(255, 255, 255);
+    scale: 1.1;
+}
+
+.city-selector-arrow:active {
+    scale: 0.95;
+    color: rgb(200, 200, 200);
+}
+
+.city-selector-arrow:disabled {
+    color: rgba(100, 100, 100, 0.5);
+    cursor: default;
+}
+
+.city-selector-dropdown-container {
+    position: absolute;
+    top: 50px; /* HUD height */
+    left: 0;
+    width: 220px;
+    max-height: 300px;
+    background-color: var(--c-hud-bg-dark);
+    border-width: 2px;
+    border-color: var(--c-hud-border-gold);
+    border-radius: 4px;
+    flex-direction: column;
+}
+
+.city-selector-item {
+    padding: 10px;
+    color: var(--c-hud-text-light);
+    border-bottom-width: 1px;
+    border-bottom-color: rgba(165, 125, 50, 0.3);
+    -unity-text-align: middle-left;
+    -unity-font-style: bold;
+    font-size: 14px;
+    cursor: link;
+}
+
+.city-selector-item:hover {
+    background-color: rgba(165, 125, 50, 0.2);
 }

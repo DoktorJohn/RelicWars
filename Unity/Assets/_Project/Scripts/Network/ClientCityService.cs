@@ -19,6 +19,35 @@ namespace Project.Network
             _baseUrl = $"{baseUrl}/City";
         }
 
+        public IEnumerator GetCityResources(Guid cityId, string jwtToken, Action<CityResourcesDTO> callback)
+        {
+            string url = $"{_baseUrl}/{cityId}/resources";
+
+            using (var request = BackendRequestHelper.CreateGetRequest(url, jwtToken))
+            {
+                yield return request.SendWebRequest();
+
+                if (request.result == UnityWebRequest.Result.Success)
+                {
+                    try
+                    {
+                        var data = JsonConvert.DeserializeObject<CityResourcesDTO>(request.downloadHandler.text);
+                        callback?.Invoke(data);
+                    }
+                    catch (Exception ex)
+                    {
+                        Debug.LogError($"[City] Deserialization Error (Resources): {ex.Message}");
+                        callback?.Invoke(null);
+                    }
+                }
+                else
+                {
+                    Debug.LogError($"[City] GetCityResources Failed: {request.error}");
+                    callback?.Invoke(null);
+                }
+            }
+        }
+
         public IEnumerator GetCityOverviewHUD(Guid cityId, string jwtToken, Action<CityOverviewHUDDTO> callback)
         {
             string url = $"{_baseUrl}/CityOverviewHUD/{cityId}";
@@ -94,6 +123,35 @@ namespace Project.Network
                 else
                 {
                     Debug.LogError($"[City] GetSenateData Failed: {request.error}");
+                    callback?.Invoke(null);
+                }
+            }
+        }
+
+        public IEnumerator GetPlayerCities(Guid cityId, string jwtToken, Action<List<CityDTO>> callback)
+        {
+            string url = $"{_baseUrl}/{cityId}/my-cities";
+
+            using (var request = BackendRequestHelper.CreateGetRequest(url, jwtToken))
+            {
+                yield return request.SendWebRequest();
+
+                if (request.result == UnityWebRequest.Result.Success)
+                {
+                    try
+                    {
+                        var data = JsonConvert.DeserializeObject<List<CityDTO>>(request.downloadHandler.text);
+                        callback?.Invoke(data);
+                    }
+                    catch (Exception ex)
+                    {
+                        Debug.LogError($"[City] Deserialization Error (GetPlayerCities): {ex.Message}");
+                        callback?.Invoke(null);
+                    }
+                }
+                else
+                {
+                    Debug.LogError($"[City] GetPlayerCities Failed: {request.error}");
                     callback?.Invoke(null);
                 }
             }
