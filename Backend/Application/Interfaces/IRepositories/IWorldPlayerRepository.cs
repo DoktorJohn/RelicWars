@@ -19,6 +19,7 @@ namespace Application.Interfaces.IRepositories
         Task<List<WorldPlayer>>? GetAllAsync();
         Task<WorldPlayer?> GetByProfileAndWorldAsync(Guid profileId, Guid worldId);
         Task<List<WorldPlayer>> GetAllByAllianceIdAsync(Guid allianceId);
+        Task<List<WorldPlayer>> SearchPlayersByUsernameAsync(Guid worldId, string usernameQuery);
 
 
     }

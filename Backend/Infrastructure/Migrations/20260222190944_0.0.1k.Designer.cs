@@ -4,6 +4,7 @@ using Infrastructure.Context;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Infrastructure.Migrations
 {
     [DbContext(typeof(GameContext))]
-    partial class GameContextModelSnapshot : ModelSnapshot
+    [Migration("20260222190944_0.0.1k")]
+    partial class _001k
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -915,13 +918,13 @@ namespace Infrastructure.Migrations
             modelBuilder.Entity("Domain.Entities.Conversation", b =>
                 {
                     b.HasOne("Domain.User.WorldPlayer", "Participant1")
-                        .WithMany("ConversationsAsParticipant1")
+                        .WithMany()
                         .HasForeignKey("Participant1Id")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.HasOne("Domain.User.WorldPlayer", "Participant2")
-                        .WithMany("ConversationsAsParticipant2")
+                        .WithMany()
                         .HasForeignKey("Participant2Id")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
@@ -1266,10 +1269,6 @@ namespace Infrastructure.Migrations
                     b.Navigation("Cities");
 
                     b.Navigation("CompletedResearches");
-
-                    b.Navigation("ConversationsAsParticipant1");
-
-                    b.Navigation("ConversationsAsParticipant2");
 
                     b.Navigation("UnitDeployments");
 

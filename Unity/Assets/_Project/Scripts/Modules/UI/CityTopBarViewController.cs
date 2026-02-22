@@ -40,6 +40,7 @@ namespace Project.Modules.UI
         private Button _nextCityButton;
 
         private Button _navigationButton;
+        private Button _alphaCheatButton;
 
         private WarehouseCapacityProgressPainter _woodWarehousePainter;
         private WarehouseCapacityProgressPainter _stoneWarehousePainter;
@@ -66,6 +67,13 @@ namespace Project.Modules.UI
             InitializeCitySelector();
             InitializeNavigationButtons();
             InitializeWarehouseCapacityPainters();
+            
+            _alphaCheatButton = _rootVisualElement.Q<Button>("Alpha-Cheat-Button");
+            if (_alphaCheatButton != null)
+            {
+                _alphaCheatButton.clicked -= OnAlphaCheatClicked;
+                _alphaCheatButton.clicked += OnAlphaCheatClicked;
+            }
 
             if (CityStateManager.Instance != null)
             {
@@ -102,6 +110,30 @@ namespace Project.Modules.UI
             // Start Uret
             if (_timeUpdateCoroutine != null) StopCoroutine(_timeUpdateCoroutine);
             _timeUpdateCoroutine = StartCoroutine(UpdateServerTimeRoutine());
+        }
+
+        private void OnAlphaCheatClicked()
+        {
+            if (NetworkManager.Instance == null || string.IsNullOrEmpty(NetworkManager.Instance.WorldPlayerId)) return;
+            if (CityStateManager.Instance == null || CityStateManager.Instance.CityId == Guid.Empty) return;
+
+            if (Guid.TryParse(NetworkManager.Instance.WorldPlayerId, out Guid wpId))
+            {
+                Guid cityId = CityStateManager.Instance.CityId;
+                
+                // Call the service
+                StartCoroutine(NetworkManager.Instance.WorldPlayer.ApplyAlphaCheat(wpId, cityId, NetworkManager.Instance.JwtToken, (success) =>
+                {
+                    if (success)
+                    {
+                        Debug.Log("[CityTopBar] Cheat Applied! Refreshing data...");
+                        // Request updates to show new resources immediately
+                        // Ideally, we'd trigger a full refresh of City and WorldPlayer state.
+                        // For now, let's assume the periodic updates will catch it, or we can force one if methods exist.
+                        // NetworkManager.Instance.City.GetCityDetails... but that logic is usually in a Manager.
+                    }
+                }));
+            }
         }
 
         private void OnDisable()

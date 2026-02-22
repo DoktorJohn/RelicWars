@@ -65,6 +65,20 @@ namespace Infrastructure.Repositories
                 .Where(player => player.AllianceId == allianceId)
                 .ToListAsync();
         }
+
+        public async Task<List<WorldPlayer>> SearchPlayersByUsernameAsync(Guid worldId, string usernameQuery)
+        {
+            if (string.IsNullOrWhiteSpace(usernameQuery)) return new List<WorldPlayer>();
+            
+            // EF Core translates .Contains() to SQL LIKE '%query%', which is case-insensitive by default in SQL Server unless a CS collation is used.
+            // Removing explicit ToLower() to ensure better index usage and compatibility.
+            return await _context.WorldPlayers
+                .Include(wp => wp.PlayerProfile)
+                .Where(wp => wp.WorldId == worldId && wp.PlayerProfile.UserName.Contains(usernameQuery))
+                .Take(10) 
+                .ToListAsync();
+        }
+
         public async Task AddAsync(WorldPlayer user)
         {
             await _context.WorldPlayers.AddAsync(user);

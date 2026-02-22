@@ -16,16 +16,37 @@ namespace Project.Modules.UI
         private VisualElement _playerProfileButton;
         private VisualElement _alliancePanelButton;
         private VisualElement _globalRankingsButton;
-
+        private VisualElement _messageButton;
+        private VisualElement _inboxNotificationDot;
+        
         private void OnEnable()
         {
             InitializeUserInterfaceRoots();
             RegisterNavigationButtonCallbacks();
+            CheckUnreadMessages();
+            InvokeRepeating(nameof(CheckUnreadMessages), 10f, 10f);
+        }
+
+        private void CheckUnreadMessages()
+        {
+            if (Project.Network.Manager.NetworkManager.Instance == null || string.IsNullOrEmpty(Project.Network.Manager.NetworkManager.Instance.WorldPlayerId)) return;
+
+            if (Guid.TryParse(Project.Network.Manager.NetworkManager.Instance.WorldPlayerId, out Guid wpId))
+            {
+                StartCoroutine(Project.Network.Manager.NetworkManager.Instance.Messaging.HasUnreadMessages(wpId, Project.Network.Manager.NetworkManager.Instance.JwtToken, (hasUnread) =>
+                {
+                    if (_inboxNotificationDot != null)
+                    {
+                        _inboxNotificationDot.style.display = hasUnread ? DisplayStyle.Flex : DisplayStyle.None;
+                    }
+                }));
+            }
         }
 
         private void OnDisable()
         {
             UnregisterNavigationButtonCallbacks();
+            CancelInvoke(nameof(CheckUnreadMessages));
         }
 
         private void InitializeUserInterfaceRoots()
@@ -39,7 +60,13 @@ namespace Project.Modules.UI
                 _playerProfileButton = _rootVisualElement.Q<VisualElement>("SideBar-Button-Profile");
                 _alliancePanelButton = _rootVisualElement.Q<VisualElement>("SideBar-Button-Alliance");
                 _globalRankingsButton = _rootVisualElement.Q<VisualElement>("SideBar-Button-Rankings");
+                _messageButton = _rootVisualElement.Q<VisualElement>("SideBar-Button-Inbox");
                 _researchButton = _rootVisualElement.Q<VisualElement>("SideBar-Button-Research");
+                
+                if (_messageButton != null)
+                {
+                    _inboxNotificationDot = _messageButton.Q<VisualElement>("Inbox-Notification-Dot");
+                }
 
                 ValidateButtonReferences();
             }
@@ -51,6 +78,7 @@ namespace Project.Modules.UI
             if (_playerProfileButton == null) Debug.LogError("[LeftSideBarViewController] Profile Button reference missing.");
             if (_alliancePanelButton == null) Debug.LogError("[LeftSideBarViewController] Alliance Button reference missing.");
             if (_globalRankingsButton == null) Debug.LogError("[LeftSideBarViewController] Rankings Button reference missing.");
+            if (_messageButton == null) Debug.LogError("[LeftSideBarViewController] Message Button reference missing.");
             if (_researchButton == null) Debug.LogError("[LeftSideBarViewController] Research Button reference missing.");
         }
 
@@ -60,6 +88,7 @@ namespace Project.Modules.UI
             _playerProfileButton?.RegisterCallback<ClickEvent>(OnProfileButtonClicked);
             _alliancePanelButton?.RegisterCallback<ClickEvent>(OnAllianceButtonClicked);
             _globalRankingsButton?.RegisterCallback<ClickEvent>(OnRankingsButtonClicked);
+            _messageButton?.RegisterCallback<ClickEvent>(OnMessageButtonClicked);
             _researchButton?.RegisterCallback<ClickEvent>(OnResearchButtonClicked);
         }
 
@@ -69,6 +98,7 @@ namespace Project.Modules.UI
             _playerProfileButton?.UnregisterCallback<ClickEvent>(OnProfileButtonClicked);
             _alliancePanelButton?.UnregisterCallback<ClickEvent>(OnAllianceButtonClicked);
             _globalRankingsButton?.UnregisterCallback<ClickEvent>(OnRankingsButtonClicked);
+            _messageButton?.UnregisterCallback<ClickEvent>(OnMessageButtonClicked);
             _researchButton?.UnregisterCallback<ClickEvent>(OnResearchButtonClicked);
         }
 
@@ -95,6 +125,11 @@ namespace Project.Modules.UI
         private void OnRankingsButtonClicked(ClickEvent clickEvent)
         {
             ExecuteOpenWindowRequest(WindowTypeEnum.Rankings);
+        }
+
+        private void OnMessageButtonClicked(ClickEvent clickEvent)
+        {
+            ExecuteOpenWindowRequest(WindowTypeEnum.Message);
         }
 
         private void ExecuteOpenWindowRequest(WindowTypeEnum windowType)

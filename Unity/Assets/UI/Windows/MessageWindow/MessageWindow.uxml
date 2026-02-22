@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" editor-extension-mode="False">
+    <ui:Style src="project://database/Assets/UI/Windows/WindowTheme.uss" />
+    <ui:Style src="MessageWindow.uss" />
+    
+    <ui:VisualElement name="Overlay" class="screen-overlay">
+        <ui:VisualElement name="WindowFrame" class="window-frame size-large">
+            <!-- Header -->
+            <ui:VisualElement name="Header" class="window-header">
+                <ui:Label text="INBOX" class="window-header-label" />
+                <ui:Button name="Inbox-Close-Button" text="X" class="window-close-btn" />
+            </ui:VisualElement>
+            
+            <!-- Content -->
+            <ui:VisualElement class="message-content">
+                <!-- Left: Conversations -->
+                <ui:VisualElement class="conversation-list-panel">
+                    <ui:Button name="NewConversationButton" text="+ NEW MESSAGE" class="btn-global-base btn-imperial-primary new-conversation-btn" />
+                    <ui:ScrollView name="ConversationList" />
+                </ui:VisualElement>
+                
+                <!-- Right: Messages -->
+                <ui:VisualElement name="MessageArea" class="message-area-panel">
+                    <!-- Title Bar for active conversation -->
+                    <ui:VisualElement name="ActiveConversationHeader" class="active-conversation-header">
+                        <ui:Label name="ConversationTitle" text="Select a conversation" class="conversation-title-label" />
+                    </ui:VisualElement>
+
+                    <!-- New Conversation Header (Hidden by default) -->
+                    <ui:VisualElement name="NewMessageHeader" class="new-message-header">
+                        <ui:VisualElement class="recipient-row">
+                            <ui:Label text="To:" class="recipient-label" />
+                            <ui:VisualElement class="recipient-input-container">
+                                <ui:TextField name="RecipientInput" class="game-input recipient-input-field" />
+                            </ui:VisualElement>
+                        </ui:VisualElement>
+                        <ui:VisualElement class="subject-row">
+                            <ui:Label text="Subject:" class="recipient-label" />
+                            <ui:TextField name="SubjectInput" class="game-input recipient-input-field" />
+                        </ui:VisualElement>
+                        <!-- Moved SuggestionList here to render ON TOP of everything else -->
+                        <ui:VisualElement name="SuggestionList" class="suggestion-list-container" style="display: none;" />
+                    </ui:VisualElement>
+
+                    <ui:ScrollView name="MessageList" class="message-scroll-view" />
+                    
+                    <ui:VisualElement name="InputArea" class="input-area">
+                        <ui:TextField name="MessageInput" class="game-input message-input" />
+                        <ui:Button name="SendButton" text="SEND" class="btn-global-base btn-imperial-success send-button" />
+                    </ui:VisualElement>
+                </ui:VisualElement>
+            </ui:VisualElement>
+            
+        </ui:VisualElement>
+    </ui:VisualElement>
+</ui:UXML>

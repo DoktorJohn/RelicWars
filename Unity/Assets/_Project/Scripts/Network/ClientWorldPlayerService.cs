@@ -23,6 +23,24 @@ namespace Project.Network
             _baseUrl = $"{baseUrl}/WorldPlayer";
         }
 
+        public IEnumerator ApplyAlphaCheat(Guid worldPlayerId, Guid cityId, string jwtToken, Action<bool> callback)
+        {
+            string url = $"{_baseUrl}/{worldPlayerId}/cheat?cityId={cityId}";
+            using (var request = BackendRequestHelper.CreatePostRequest(url, null, jwtToken))
+            {
+                yield return request.SendWebRequest();
+                if (request.result == UnityWebRequest.Result.Success)
+                {
+                    callback?.Invoke(true);
+                }
+                else
+                {
+                    Debug.LogError($"[WorldPlayer] ApplyAlphaCheat Failed: {request.error} - {request.downloadHandler.text}");
+                    callback?.Invoke(false);
+                }
+            }
+        }
+
         public IEnumerator JoinWorld(string playerId, Guid worldId, string jwtToken, Action<WorldPlayerJoinResponse> callback)
         {
             var payload = new { PlayerProfileId = playerId, WorldId = worldId.ToString() };
@@ -105,6 +123,35 @@ namespace Project.Network
                         ConnectionSuccessful = false,
                         Message = "Internal client error or server rejection."
                     });
+                }
+            }
+        }
+
+        public IEnumerator SearchPlayers(Guid worldId, string query, string jwtToken, Action<List<PlayerSearchResultDTO>> callback)
+        {
+            string url = $"{_baseUrl}/search?worldId={worldId}&query={UnityWebRequest.EscapeURL(query)}";
+
+            using (var request = BackendRequestHelper.CreateGetRequest(url, jwtToken))
+            {
+                yield return request.SendWebRequest();
+
+                if (request.result == UnityWebRequest.Result.Success)
+                {
+                    try
+                    {
+                        var results = JsonConvert.DeserializeObject<List<PlayerSearchResultDTO>>(request.downloadHandler.text);
+                        callback?.Invoke(results);
+                    }
+                    catch (Exception ex)
+                    {
+                        Debug.LogError($"[WorldPlayer] Search Deserialization Error: {ex.Message}");
+                        callback?.Invoke(null);
+                    }
+                }
+                else
+                {
+                    Debug.LogError($"[WorldPlayer] Search Failed: {request.error}");
+                    callback?.Invoke(null);
                 }
             }
         }

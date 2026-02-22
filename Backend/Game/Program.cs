@@ -144,6 +144,8 @@ builder.Services.AddScoped<IAllianceService, AllianceService>();
 builder.Services.AddScoped<IAllianceRepository, AllianceRepository>();
 builder.Services.AddScoped<IModifierService, ModifierService>();
 builder.Services.AddScoped<IModifierCollectorService, ModifierCollectorService>();
+builder.Services.AddScoped<IMessagingRepository, MessagingRepository>();
+builder.Services.AddScoped<IMessagingService, MessagingService>();
 builder.Services.AddScoped<IUnitDeploymentService, UnitDeploymentService>();
 builder.Services.AddScoped<CityPointCalculator>();
 builder.Services.AddScoped<IIdeologyFocusRepository, IdeologyFocusRepository>();

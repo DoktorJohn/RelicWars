@@ -40,6 +40,22 @@ namespace Project.Network.Helper
             return request;
         }
 
+        public static UnityWebRequest CreatePutRequest(string url, object bodyPayload = null, string jwtToken = null)
+        {
+            var request = new UnityWebRequest(url, "PUT");
+
+            if (bodyPayload != null)
+            {
+                string json = JsonConvert.SerializeObject(bodyPayload);
+                byte[] bodyRaw = Encoding.UTF8.GetBytes(json);
+                request.uploadHandler = new UploadHandlerRaw(bodyRaw);
+            }
+
+            request.downloadHandler = new DownloadHandlerBuffer();
+            SetStandardHeaders(request, jwtToken);
+            return request;
+        }
+
         private static void SetStandardHeaders(UnityWebRequest request, string jwtToken)
         {
             request.SetRequestHeader("Content-Type", "application/json");

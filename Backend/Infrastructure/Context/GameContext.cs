@@ -34,6 +34,8 @@ namespace Infrastructure.Context
         public DbSet<BattleReport> BattleReports { get; set; }
         public DbSet<IdeologyFocus> IdeologyFocuses { get; set; }
         public DbSet<WorldMapObject> WorldMapObjects { get; set; }
+        public DbSet<Conversation> Conversations { get; set; }
+        public DbSet<Message> Messages { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -128,6 +130,32 @@ namespace Infrastructure.Context
             modelBuilder.Entity<City>()
                 .HasIndex(c => new { c.X, c.Y })
                 .HasDatabaseName("IX_City_Coordinates");
+
+            modelBuilder.Entity<Conversation>(entity =>
+            {
+                entity.HasOne(c => c.Participant1)
+                    .WithMany(p => p.ConversationsAsParticipant1)
+                    .HasForeignKey(c => c.Participant1Id)
+                    .OnDelete(DeleteBehavior.Restrict);
+
+                entity.HasOne(c => c.Participant2)
+                    .WithMany(p => p.ConversationsAsParticipant2)
+                    .HasForeignKey(c => c.Participant2Id)
+                    .OnDelete(DeleteBehavior.Restrict);
+            });
+
+            modelBuilder.Entity<Message>(entity =>
+            {
+                entity.HasOne(m => m.Sender)
+                    .WithMany()
+                    .HasForeignKey(m => m.SenderId)
+                    .OnDelete(DeleteBehavior.Restrict);
+
+                entity.HasOne(m => m.Conversation)
+                    .WithMany(c => c.Messages)
+                    .HasForeignKey(m => m.ConversationId)
+                    .OnDelete(DeleteBehavior.Cascade);
+            });
 
             base.OnModelCreating(modelBuilder);
         }

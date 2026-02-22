@@ -133,6 +133,18 @@ namespace Application.Services
             );
         }
 
+        public async Task<List<PlayerSearchResultDTO>> SearchPlayersAsync(Guid worldId, string query)
+        {
+            if (string.IsNullOrWhiteSpace(query)) return new List<PlayerSearchResultDTO>();
+
+            var players = await _worldPlayerRepository.SearchPlayersByUsernameAsync(worldId, query);
+            return players.Select(p => new PlayerSearchResultDTO
+            {
+                WorldPlayerId = p.Id,
+                Username = p.PlayerProfile?.UserName ?? "Unknown"
+            }).ToList();
+        }
+
         public async Task<WorldPlayerJoinResponse> AssignPlayerToGameWorldAsync(Guid playerProfileId, Guid targetWorldId)
         {
             var existingGameWorldParticipation = await _worldPlayerRepository.GetByProfileAndWorldAsync(playerProfileId, targetWorldId);
@@ -242,6 +254,54 @@ namespace Application.Services
             _logger.LogInformation("Player {Id} selected ideology: {Ideology}", worldPlayer.Id, request.Ideology);
 
             return new WorldPlayerSelectIdeologyResponse(true, $"Ideology {request.Ideology} confirmed.");
+        }
+
+        public async Task<bool> ApplyAlphaCheatAsync(Guid worldPlayerId, Guid cityId)
+        {
+            var worldPlayer = await _worldPlayerRepository.GetByIdAsync(worldPlayerId);
+            if (worldPlayer == null)
+            {
+                _logger.LogWarning("[WorldPlayerService] ApplyAlphaCheatAsync: WorldPlayer {PlayerId} not found.", worldPlayerId);
+                return false;
+            }
+
+            var city = await _cityRepository.GetByIdAsync(cityId);
+            if (city == null)
+            {
+                _logger.LogWarning("[WorldPlayerService] ApplyAlphaCheatAsync: City {CityId} not found.", cityId);
+                return false;
+            }
+
+            if (city.WorldPlayerId != worldPlayerId)
+            {
+                _logger.LogWarning("[WorldPlayerService] ApplyAlphaCheatAsync: City {CityId} does not belong to player {PlayerId}.", cityId, worldPlayerId);
+                return false;
+            }
+
+            var currentDateTime = DateTime.UtcNow;
+            
+            // Opdater ressourcer før cheat, så vi ikke overskriver produktion
+            var citySnapshot = _resourceService.CalculateCityResources(city, currentDateTime);
+            city.Wood = citySnapshot.Wood;
+            city.Stone = citySnapshot.Stone;
+            city.Metal = citySnapshot.Metal;
+            city.LastResourceUpdate = currentDateTime;
+
+            UpdateGlobalResourceState(worldPlayer, currentDateTime);
+
+            // Apply Cheat
+            city.Wood += 1000;
+            city.Stone += 1000;
+            city.Metal += 1000;
+
+            worldPlayer.ResearchPoints += 10;
+            worldPlayer.IdeologyFocusPoints += 10;
+
+            await _cityRepository.UpdateAsync(city);
+            await _worldPlayerRepository.UpdateAsync(worldPlayer);
+
+            _logger.LogInformation("[WorldPlayerService] Alpha Cheat Applied for Player {PlayerId} in City {CityId}", worldPlayerId, cityId);
+            return true;
         }
 
         private async Task<(int X, int Y)> CalculateNextAlphaTestSpawnCoordinatesAsync(Guid worldId)

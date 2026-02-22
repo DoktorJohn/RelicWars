@@ -25,6 +25,9 @@ namespace Domain.User
         public List<UnitStack> UnitStacks { get; set; } = new();
         public List<Modifier> ModifiersInternal { get; set; } = new();
         public List<ModifierTagEnum> ModifiersThatAffectsThis { get; set; } = new();
+        
+        public List<Conversation> ConversationsAsParticipant1 { get; set; } = new();
+        public List<Conversation> ConversationsAsParticipant2 { get; set; } = new();
 
         //Foreign keys
         public Guid? AllianceId { get; set; }

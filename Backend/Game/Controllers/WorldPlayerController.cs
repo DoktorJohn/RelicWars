@@ -35,6 +35,21 @@ namespace Game.Controllers
             }
         }
 
+        [HttpGet("search")]
+        public async Task<ActionResult<List<PlayerSearchResultDTO>>> SearchPlayers([FromQuery] Guid worldId, [FromQuery] string query)
+        {
+            try
+            {
+                var result = await _worldPlayerService.SearchPlayersAsync(worldId, query);
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error searching players");
+                return BadRequest("Failed to search players");
+            }
+        }
+
         [HttpGet("{worldPlayerId}/economy")]
         public async Task<ActionResult<WorldPlayerEconomyDTO>> GetWorldPlayerEconomy(Guid worldPlayerId)
         {
@@ -89,6 +104,22 @@ namespace Game.Controllers
 
             _logger.LogInformation("Player {PlayerId} successfully accessed World {WorldId}.", request.PlayerProfileId, request.WorldId);
             return Ok(result);
+        }
+
+        [HttpPost("{worldPlayerId}/cheat")]
+        public async Task<IActionResult> ApplyCheat(Guid worldPlayerId, [FromQuery] Guid cityId)
+        {
+            try
+            {
+                var success = await _worldPlayerService.ApplyAlphaCheatAsync(worldPlayerId, cityId);
+                if (!success) return BadRequest("Cheat failed.");
+                return Ok(new { Message = "Cheat Applied: +1000 Resources, +10 RP/IP" });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error applying cheat");
+                return StatusCode(500, ex.Message);
+            }
         }
     }
 }

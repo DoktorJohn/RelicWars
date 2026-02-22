@@ -24,7 +24,7 @@
     background-position: center;
     -unity-background-image-tint-color: rgba(120, 120, 120, 0.3);
 
-    /* BORDERS: Højre side og nu også bunden */
+    /* BORDERS: Hï¿½jre side og nu ogsï¿½ bunden */
     border-right-width: 5px;
     border-right-color: var(--c-hud-border-gold);
     border-bottom-width: 5px;
@@ -72,6 +72,7 @@
 .icon-alliance { background-image: url('project://database/Assets/UI/Icons/AllianceIcon.png'); }
 .icon-rankings { background-image: url('project://database/Assets/UI/Icons/RankingIcon.png'); }
 .icon-research-sidebar { background-image: url('project://database/Assets/UI/Icons/ResearchIcon.png'); }
+.icon-inbox { background-image: url('project://database/Assets/UI/Icons/Message.png'); }
 
 .side-bar-label {
     color: var(--c-hud-text-light);
@@ -83,4 +84,17 @@
     flex-grow: 1;
     overflow: hidden;
     white-space: nowrap;
+}
+
+.notification-dot {
+    width: 10px;
+    height: 10px;
+    background-color: rgb(255, 50, 50);
+    border-radius: 5px;
+    position: absolute;
+    right: 5px;
+    top: 5px;
+    border-width: 1px;
+    border-color: rgba(0, 0, 0, 0.5);
+    display: none; 
 }

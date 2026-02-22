@@ -22,6 +22,8 @@
         Overview,
         Research,
 
+        Message,
+
         IdeologyFocus,
 
         Hexagon,

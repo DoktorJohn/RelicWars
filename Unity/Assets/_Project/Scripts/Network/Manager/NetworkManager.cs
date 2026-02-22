@@ -21,6 +21,7 @@ namespace Project.Network.Manager
         public string JwtToken { get; private set; }
         public string PlayerProfileId { get; private set; }
         public string WorldPlayerId { get; private set; }
+        public Guid ActiveWorldId { get; private set; }
         public string PlayerName { get; private set; }
         public Guid? ActiveCityId { get; private set; }
 
@@ -39,6 +40,7 @@ namespace Project.Network.Manager
         public ClientResearchService Research { get; private set; }
         public ClientUnitDeploymentService UnitDeployment { get; private set; }
         public ClientIdeologyFocusService IdeologyFocus { get; private set; }
+        public ClientMessagingService Messaging { get; private set; }
 
         private void Awake()
         {
@@ -85,6 +87,7 @@ namespace Project.Network.Manager
             Research = new ClientResearchService(_activeBackendUrl);
             UnitDeployment = new ClientUnitDeploymentService(_activeBackendUrl);
             IdeologyFocus = new ClientIdeologyFocusService(_activeBackendUrl);
+            Messaging = new ClientMessagingService(_activeBackendUrl);
 
             Debug.Log($"[NetworkManager] Services Initialized pointing to: {_activeBackendUrl}");
         }
@@ -129,6 +132,7 @@ namespace Project.Network.Manager
             {
                 if (response.ConnectionSuccessful)
                 {
+                    ActiveWorldId = worldId;
                     if (response.ActiveCityId.HasValue)
                         ActiveCityId = response.ActiveCityId;
 

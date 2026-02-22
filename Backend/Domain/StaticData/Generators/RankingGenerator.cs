@@ -37,7 +37,7 @@ namespace Domain.StaticData.Generators
                     {
                         WorldPlayerId = worldPlayerId,
                         PlayerName = city.WorldPlayer.PlayerProfile.UserName!,
-                        AllianceName = city.WorldPlayer.Alliance.Name ?? "",
+                        AllianceName = city.WorldPlayer.Alliance?.Name ?? "",
                         Ideology = city.WorldPlayer.Ideology.ToString(),
                         TotalPoints = pointsCalculatedFromCity,
                         CityCount = city.WorldPlayer.Cities.Count,
