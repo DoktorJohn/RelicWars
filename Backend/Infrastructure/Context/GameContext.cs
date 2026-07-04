@@ -20,8 +20,11 @@ namespace Infrastructure.Context
         }
 
         public DbSet<Alliance> Alliances { get; set; }
+        public DbSet<AllianceInvitation> AllianceInvitations { get; set; }
+        public DbSet<AllianceRelation> AllianceRelations { get; set; }
         public DbSet<Building> Buildings { get; set; }
         public DbSet<City> Cities { get; set; }
+        public DbSet<CityExoticResource> CityExoticResources { get; set; }
         public DbSet<WorldPlayer> WorldPlayers { get; set; }
         public DbSet<World> World { get; set; }
         public DbSet<BaseJob> Jobs { get; set; }
@@ -34,8 +37,12 @@ namespace Infrastructure.Context
         public DbSet<BattleReport> BattleReports { get; set; }
         public DbSet<IdeologyFocus> IdeologyFocuses { get; set; }
         public DbSet<WorldMapObject> WorldMapObjects { get; set; }
+        public DbSet<WorldIsland> WorldIslands { get; set; }
+        public DbSet<WorldIslandExoticResource> WorldIslandExoticResources { get; set; }
         public DbSet<Conversation> Conversations { get; set; }
+        public DbSet<ConversationParticipant> ConversationParticipants { get; set; }
         public DbSet<Message> Messages { get; set; }
+        public DbSet<BugReport> BugReports { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -68,9 +75,25 @@ namespace Infrastructure.Context
                 .HasValue<RecruitmentJob>("RecruitmentSpeed")
                 .HasValue<ResearchJob>("Research");
 
+            modelBuilder.Entity<BaseJob>()
+                .HasIndex(job => new { job.IsCompleted, job.ExecutionTime })
+                .HasDatabaseName("IX_Jobs_Due");
+
             // --- UNIT DEPLOYMENT KONFIGURATION (Løsning på Multiple Cascade Paths) ---
             modelBuilder.Entity<UnitDeployment>(entity =>
             {
+                entity.Property(deployment => deployment.DepartureTime).HasColumnType("datetime2(3)");
+                entity.Property(deployment => deployment.ArrivalTime).HasColumnType("datetime2(3)");
+                entity.Property(deployment => deployment.StationedAt).HasColumnType("datetime2(3)");
+
+                entity.HasIndex(deployment => new { deployment.Phase, deployment.UnitDeploymentMovementStatus, deployment.ArrivalTime })
+                    .HasDatabaseName("IX_UnitDeployments_DueMovement");
+
+                entity.HasIndex(deployment => new { deployment.TargetCityId, deployment.Type, deployment.Phase })
+                    .HasDatabaseName("IX_UnitDeployments_TargetSupport");
+
+                entity.HasIndex(deployment => deployment.WorldId)
+                    .HasDatabaseName("IX_UnitDeployments_WorldId");
                 // FIX: Sæt World relation til Restrict for at undgå multiple cascade paths i SQL Server
                 entity.HasOne(ud => ud.World)
                     .WithMany()
@@ -127,12 +150,35 @@ namespace Infrastructure.Context
                 entity.Property(e => e.Type).HasConversion<byte>();
             });
 
-            modelBuilder.Entity<City>()
+        modelBuilder.Entity<City>()
                 .HasIndex(c => new { c.X, c.Y })
                 .HasDatabaseName("IX_City_Coordinates");
 
+            modelBuilder.Entity<CityExoticResource>(entity =>
+            {
+                entity.HasIndex(resource => new { resource.CityId, resource.ResourceType })
+                    .IsUnique()
+                    .HasDatabaseName("IX_CityExoticResources_City_Type");
+
+                entity.HasOne(resource => resource.City)
+                    .WithMany(city => city.ExoticResources)
+                    .HasForeignKey(resource => resource.CityId)
+                    .OnDelete(DeleteBehavior.Cascade);
+
+                entity.Property(resource => resource.ResourceType).HasConversion<int>();
+            });
+
+            modelBuilder.Entity<WorldPlayer>()
+                .HasIndex(player => player.WorldId)
+                .HasDatabaseName("IX_WorldPlayers_WorldId");
+
             modelBuilder.Entity<Conversation>(entity =>
             {
+                entity.HasMany(c => c.Participants)
+                    .WithOne(p => p.Conversation)
+                    .HasForeignKey(p => p.ConversationId)
+                    .OnDelete(DeleteBehavior.Cascade);
+
                 entity.HasOne(c => c.Participant1)
                     .WithMany(p => p.ConversationsAsParticipant1)
                     .HasForeignKey(c => c.Participant1Id)
@@ -142,6 +188,50 @@ namespace Infrastructure.Context
                     .WithMany(p => p.ConversationsAsParticipant2)
                     .HasForeignKey(c => c.Participant2Id)
                     .OnDelete(DeleteBehavior.Restrict);
+            });
+
+            modelBuilder.Entity<WorldIsland>(entity =>
+            {
+                entity.HasIndex(island => new { island.WorldId, island.CellX, island.CellY })
+                    .IsUnique()
+                    .HasDatabaseName("IX_WorldIslands_World_Cell");
+
+                entity.HasOne(island => island.World)
+                    .WithMany(world => world.Islands)
+                    .HasForeignKey(island => island.WorldId)
+                    .OnDelete(DeleteBehavior.Cascade);
+
+                entity.Property(island => island.Shape).HasConversion<int>();
+            });
+
+            modelBuilder.Entity<WorldIslandExoticResource>(entity =>
+            {
+                entity.HasIndex(resource => new { resource.WorldIslandId, resource.SlotIndex })
+                    .IsUnique()
+                    .HasDatabaseName("IX_WorldIslandExoticResources_Island_Slot");
+
+                entity.HasIndex(resource => new { resource.WorldIslandId, resource.ResourceType })
+                    .IsUnique()
+                    .HasDatabaseName("IX_WorldIslandExoticResources_Island_Type");
+
+                entity.HasOne(resource => resource.WorldIsland)
+                    .WithMany(island => island.ExoticResources)
+                    .HasForeignKey(resource => resource.WorldIslandId)
+                    .OnDelete(DeleteBehavior.Cascade);
+
+                entity.Property(resource => resource.ResourceType).HasConversion<int>();
+                entity.Property(resource => resource.RowVersion).IsRowVersion();
+            });
+
+            modelBuilder.Entity<ConversationParticipant>(entity =>
+            {
+                entity.HasOne(cp => cp.WorldPlayer)
+                    .WithMany(p => p.ConversationParticipants)
+                    .HasForeignKey(cp => cp.WorldPlayerId)
+                    .OnDelete(DeleteBehavior.Cascade);
+
+                entity.HasIndex(cp => new { cp.ConversationId, cp.WorldPlayerId })
+                    .IsUnique();
             });
 
             modelBuilder.Entity<Message>(entity =>
@@ -155,6 +245,41 @@ namespace Infrastructure.Context
                     .WithMany(c => c.Messages)
                     .HasForeignKey(m => m.ConversationId)
                     .OnDelete(DeleteBehavior.Cascade);
+            });
+
+            modelBuilder.Entity<BugReport>(entity =>
+            {
+                entity.Property(report => report.Description).HasMaxLength(4000).IsRequired();
+                entity.HasIndex(report => report.PlayerProfileId);
+                entity.HasOne(report => report.PlayerProfile)
+                    .WithMany()
+                    .HasForeignKey(report => report.PlayerProfileId)
+                    .OnDelete(DeleteBehavior.Restrict);
+            });
+
+            modelBuilder.Entity<AllianceInvitation>(entity =>
+            {
+                entity.HasOne(i => i.Alliance).WithMany().HasForeignKey(i => i.AllianceId).OnDelete(DeleteBehavior.Cascade);
+                entity.HasOne(i => i.InvitedWorldPlayer).WithMany().HasForeignKey(i => i.InvitedWorldPlayerId).OnDelete(DeleteBehavior.Restrict);
+                entity.HasOne(i => i.InvitedByWorldPlayer).WithMany().HasForeignKey(i => i.InvitedByWorldPlayerId).OnDelete(DeleteBehavior.Restrict);
+                entity.HasIndex(i => new { i.AllianceId, i.InvitedWorldPlayerId });
+            });
+
+            modelBuilder.Entity<Alliance>(entity =>
+            {
+                entity.HasOne(a => a.World).WithMany().HasForeignKey(a => a.WorldId).OnDelete(DeleteBehavior.Restrict);
+                entity.HasIndex(a => new { a.WorldId, a.Name });
+            });
+
+            modelBuilder.Entity<AllianceRelation>(entity =>
+            {
+                entity.Property(r => r.RelationType).HasConversion<int>();
+                entity.Property(r => r.Status).HasConversion<int>();
+                entity.HasOne(r => r.World).WithMany().HasForeignKey(r => r.WorldId).OnDelete(DeleteBehavior.Restrict);
+                entity.HasOne(r => r.AllianceA).WithMany(a => a.RelationsAsAllianceA).HasForeignKey(r => r.AllianceIdA).OnDelete(DeleteBehavior.Restrict);
+                entity.HasOne(r => r.AllianceB).WithMany(a => a.RelationsAsAllianceB).HasForeignKey(r => r.AllianceIdB).OnDelete(DeleteBehavior.Restrict);
+                entity.HasIndex(r => new { r.AllianceIdA, r.AllianceIdB, r.RelationType, r.Status });
+                entity.HasCheckConstraint("CK_AllianceRelations_DifferentAlliances", "[AllianceIdA] <> [AllianceIdB]");
             });
 
             base.OnModelCreating(modelBuilder);

@@ -21,7 +21,7 @@
                 <ui:VisualElement class="points-display">
                     <ui:VisualElement class="side-bar-icon-base icon-research" style="width: 24px; height: 24px;" />
                     <ui:Label text="RESEARCH POINTS:" class="points-prefix" />
-                    <ui:Label name="Research-Points-Amount" text="0" class="points-value" />
+                    <ui:Label name="Research-Points-Amount" text="" class="points-value" />
                 </ui:VisualElement>
             </ui:VisualElement>
 
@@ -32,20 +32,27 @@
             </ui:VisualElement>
 
             <ui:VisualElement name="Active-Research-Panel" class="active-research-footer">
-                <ui:VisualElement style="flex-direction: row; align-items: center;">
+                <ui:VisualElement class="active-research-summary">
                     <ui:VisualElement class="loading-spinner" />
-                    <ui:VisualElement style="margin-left: 15px;">
+                    <ui:VisualElement class="active-research-copy">
                         <ui:Label text="CURRENTLY RESEARCHING:" class="active-label-hint" />
-                        <ui:Label name="Active-Research-Name" text="None" class="active-research-title" />
+                        <ui:Label name="Active-Research-Name" text="" class="active-research-title" />
                     </ui:VisualElement>
                 </ui:VisualElement>
 
-                <ui:VisualElement style="align-items: flex-end;">
-                    <ui:Label name="Active-Research-Timer" text="00:00:00" class="active-timer-text" />
-                    <ui:Button name="Button-Cancel-Research" text="CANCEL RESEARCH" class="btn-global-base btn-imperial-danger" style="height: 35px; font-size: 12px;" />
+                <ui:VisualElement class="active-research-actions">
+                    <ui:Label name="Active-Research-Timer" text="" class="active-timer-text" />
+                    <ui:Button name="Button-Cancel-Research" text="" class="btn-global-base btn-imperial-danger cancel-research-button" />
                 </ui:VisualElement>
             </ui:VisualElement>
 
+        </ui:VisualElement>
+
+        <ui:VisualElement name="Research-Lock-Tooltip" class="window-frame research-lock-tooltip" picking-mode="Ignore">
+            <ui:VisualElement class="research-lock-tooltip-header">
+                <ui:Label text="UNLOCKED BY" class="research-lock-tooltip-title" />
+            </ui:VisualElement>
+            <ui:Label name="Research-Lock-Tooltip-Body" text="" class="text-body research-lock-tooltip-body" />
         </ui:VisualElement>
     </ui:VisualElement>
 </ui:UXML>

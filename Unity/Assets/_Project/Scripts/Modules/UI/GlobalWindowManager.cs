@@ -78,6 +78,19 @@ namespace Project.Modules.UI
             }
         }
 
+        public void CloseAllWindows()
+        {
+            foreach (var window in _openWindows.Values.ToList())
+            {
+                if (window != null)
+                {
+                    Destroy(window.gameObject);
+                }
+            }
+
+            _openWindows.Clear();
+        }
+
         public void NotifyWindowFocused(BaseWindow window)
         {
             // Logic if you need to track the "Active" window

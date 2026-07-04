@@ -1,9 +1,10 @@
 using Project.Modules.UI;
-using UnityEngine;
-using UnityEngine.UIElements;
-using System.Collections.Generic;
 using Project.Network.Manager;
 using Project.Scripts.Domain.DTOs;
+using System;
+using System.Collections.Generic;
+using UnityEngine;
+using UnityEngine.UIElements;
 
 namespace Project.Modules.UI.Windows.Implementations
 {
@@ -17,23 +18,54 @@ namespace Project.Modules.UI.Windows.Implementations
         [SerializeField] private VisualTreeAsset _rankingRowTemplate;
 
         private ScrollView _rankingEntriesScrollView;
+        private int _requestVersion;
 
         public override void OnOpen(object dataPayload)
         {
-            // Komponent referencer
+            var version = BeginDeferredOpen();
+            _requestVersion = version;
             _rankingEntriesScrollView = Root.Q<ScrollView>("Ranking-List-Container");
 
-            RequestGlobalRankingDataFromServer();
+            if (_rankingEntriesScrollView == null)
+            {
+                Debug.LogError("[RankingWindow] Missing ranking list container.");
+                CompleteDeferredOpen(version);
+                return;
+            }
+
+            RequestGlobalRankingDataFromServer(version);
         }
 
-        private void RequestGlobalRankingDataFromServer()
+        private void OnDisable()
         {
-            if (_rankingEntriesScrollView != null) _rankingEntriesScrollView.Clear();
+            InvalidateDeferredOpen();
+            StopAllCoroutines();
+        }
 
-            string authenticationToken = NetworkManager.Instance.JwtToken;
-
-            StartCoroutine(NetworkManager.Instance.Ranking.GetGlobalRankings(authenticationToken, (rankingsList) =>
+        private void RequestGlobalRankingDataFromServer(int version)
+        {
+            if (_rankingEntriesScrollView != null)
             {
+                _rankingEntriesScrollView.Clear();
+            }
+
+            if (NetworkManager.Instance == null)
+            {
+                Debug.LogError("[RankingWindow] NetworkManager instance is not available.");
+                ShowRankingState("Ranking service unavailable.");
+                CompleteDeferredOpen(version);
+                return;
+            }
+
+            var authenticationToken = NetworkManager.Instance.JwtToken;
+
+            StartCoroutine(NetworkManager.Instance.Ranking.GetGlobalRankings(authenticationToken, rankingsList =>
+            {
+                if (!isActiveAndEnabled || version != _requestVersion)
+                {
+                    return;
+                }
+
                 if (rankingsList != null)
                 {
                     PopulateGlobalRankingStatisticsTable(rankingsList);
@@ -41,38 +73,123 @@ namespace Project.Modules.UI.Windows.Implementations
                 else
                 {
                     Debug.LogError("[RankingWindow] Failed to retrieve ranking data from the network service.");
+                    ShowRankingState("Failed to load rankings.");
                 }
+
+                CompleteDeferredOpen(version);
             }));
         }
 
         private void PopulateGlobalRankingStatisticsTable(List<RankingEntryDataDTO> rankingData)
         {
-            if (_rankingEntriesScrollView == null || _rankingRowTemplate == null) return;
+            if (_rankingEntriesScrollView == null)
+            {
+                return;
+            }
 
             _rankingEntriesScrollView.Clear();
 
+            if (_rankingRowTemplate == null)
+            {
+                Debug.LogError("[RankingWindow] Ranking row template is not assigned.");
+                ShowRankingState("Ranking UI is missing.");
+                return;
+            }
+
+            if (rankingData == null || rankingData.Count == 0)
+            {
+                ShowRankingState("No rankings available.");
+                return;
+            }
+
             foreach (var entry in rankingData)
             {
-                // Vi instantiere templaten
-                VisualElement rowInstance = _rankingRowTemplate.Instantiate();
+                var rowInstance = _rankingRowTemplate.Instantiate();
 
-                // Finder labels via de præcise navne fra UXML
-                Label rankLabel = rowInstance.Q<Label>("Row-Rank");
-                Label nameLabel = rowInstance.Q<Label>("Row-PlayerName");
-                Label ideologyLabel = rowInstance.Q<Label>("Row-Ideology");
-                Label allianceLabel = rowInstance.Q<Label>("Row-Alliance");
-                Label scoreLabel = rowInstance.Q<Label>("Row-Points");
+                var rankLabel = rowInstance.Q<Label>("Row-Rank");
+                var playerName = rowInstance.Q<Label>("Row-PlayerName");
+                var ideologyLabel = rowInstance.Q<Label>("Row-Ideology");
+                var allianceName = rowInstance.Q<Label>("Row-Alliance");
+                var scoreLabel = rowInstance.Q<Label>("Row-Points");
 
-                // Mapper data
-                if (rankLabel != null) rankLabel.text = entry.Rank.ToString();
-                if (nameLabel != null) nameLabel.text = entry.PlayerName;
-                if (ideologyLabel != null) ideologyLabel.text = entry.Ideology ?? "None";
-                if (allianceLabel != null) allianceLabel.text = entry.AllianceName ?? "";
-                if (scoreLabel != null) scoreLabel.text = entry.TotalPoints.ToString("N0");
+                if (rankLabel != null)
+                {
+                    rankLabel.text = entry.Rank.ToString();
+                }
 
-                // Tilføjer rækken til listen
+                ConfigurePlayerName(playerName, entry);
+                ConfigureAllianceName(allianceName, entry);
+
+                if (ideologyLabel != null)
+                {
+                    ideologyLabel.text = string.IsNullOrWhiteSpace(entry.Ideology) ? "None" : entry.Ideology;
+                }
+
+                if (scoreLabel != null)
+                {
+                    scoreLabel.text = entry.TotalPoints.ToString("N0");
+                }
+
                 _rankingEntriesScrollView.Add(rowInstance);
             }
+        }
+
+        private static void ConfigurePlayerName(Label label, RankingEntryDataDTO entry)
+        {
+            if (label == null || entry == null)
+            {
+                return;
+            }
+
+            label.text = string.IsNullOrWhiteSpace(entry.PlayerName) ? "Unknown" : entry.PlayerName;
+
+            if (TryParseGuid(entry.WorldPlayerId, out var worldPlayerId))
+            {
+                label.RegisterCallback<ClickEvent>(_ => WindowNavigationHelper.OpenProfile(worldPlayerId));
+            }
+            else
+            {
+                label.SetEnabled(false);
+            }
+        }
+
+        private static void ConfigureAllianceName(Label label, RankingEntryDataDTO entry)
+        {
+            if (label == null || entry == null)
+            {
+                return;
+            }
+
+            var allianceName = string.IsNullOrWhiteSpace(entry.AllianceName) ? "-" : entry.AllianceName;
+            label.text = allianceName;
+
+            if (TryParseGuid(entry.AllianceId, out var allianceId))
+            {
+                label.RegisterCallback<ClickEvent>(_ => WindowNavigationHelper.OpenAlliance(allianceId));
+            }
+            else
+            {
+                label.SetEnabled(false);
+            }
+        }
+
+        private static bool TryParseGuid(string value, out Guid parsedGuid)
+        {
+            return Guid.TryParse(value, out parsedGuid) && parsedGuid != Guid.Empty;
+        }
+
+        private void ShowRankingState(string message)
+        {
+            if (_rankingEntriesScrollView == null)
+            {
+                return;
+            }
+
+            _rankingEntriesScrollView.Clear();
+
+            var label = new Label(message ?? string.Empty);
+            label.AddToClassList("ranking-window-state-label");
+            _rankingEntriesScrollView.Add(label);
         }
     }
 }

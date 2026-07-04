@@ -3,16 +3,16 @@
     <ui:VisualElement class="focus-card">
         
         <ui:VisualElement class="focus-card-info">
-            <ui:Label name="Card-Name" class="focus-card-name" text="FOCUS NAME" />
-            <ui:Label name="Card-Description" class="focus-card-description" text="Focus description goes here." />
+            <ui:Label name="Card-Name" class="focus-card-name" text="" />
+            <ui:Label name="Card-Description" class="focus-card-description" text="" />
         </ui:VisualElement>
 
         <ui:VisualElement class="focus-card-action">
-            <ui:Label name="Card-CostInfo" class="focus-cost-label" text="100 PTS" />
+            <ui:Label name="Card-CostInfo" class="focus-cost-label" text="" />
             
             <ui:Button name="Btn-Enact" class="btn-global-base btn-imperial-success btn-enact-grid" text="ENACT" />
             
-            <ui:Label name="Lbl-Status" class="status-active-label" text="ACTIVE" style="display: none;" />
+            <ui:Label name="Lbl-Status" class="status-active-label" text="" style="display: none;" />
         </ui:VisualElement>
 
     </ui:VisualElement>

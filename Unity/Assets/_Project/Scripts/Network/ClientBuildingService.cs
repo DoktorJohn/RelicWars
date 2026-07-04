@@ -1,11 +1,10 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
-using UnityEngine;
-using UnityEngine.Networking;
 using Assets.Scripts.Domain.Enums;
-using Newtonsoft.Json;
+using Project.Network.Helper;
 using Project.Scripts.Domain.DTOs;
+using UnityEngine.Networking;
 
 namespace Project.Network
 {
@@ -21,26 +20,24 @@ namespace Project.Network
         public IEnumerator UpgradeBuilding(Guid cityId, BuildingTypeEnum type, string token, Action<bool, string> callback)
         {
             string url = $"{_baseUrl}/building/{cityId}/upgrade/{type}";
-            byte[] bodyRaw = new byte[0];
 
-            using (UnityWebRequest request = new UnityWebRequest(url, "POST"))
+            using (UnityWebRequest request = BackendRequestHelper.CreatePostRequest(url, new { }, token))
             {
-                request.uploadHandler = new UploadHandlerRaw(bodyRaw);
-                request.downloadHandler = new DownloadHandlerBuffer();
-
-                request.SetRequestHeader("Authorization", "Bearer " + token);
-                request.SetRequestHeader("Content-Type", "application/json");
-
                 yield return request.SendWebRequest();
+                bool success = request.result == UnityWebRequest.Result.Success;
+                callback?.Invoke(success, success ? request.downloadHandler.text : BackendRequestHelper.GetErrorMessage(request));
+            }
+        }
 
-                if (request.result == UnityWebRequest.Result.Success)
-                {
-                    callback?.Invoke(true, request.downloadHandler.text);
-                }
-                else
-                {
-                    callback?.Invoke(false, request.error + ": " + request.downloadHandler.text);
-                }
+        public IEnumerator RepairBuilding(Guid cityId, BuildingTypeEnum type, string token, Action<bool, string> callback)
+        {
+            string url = $"{_baseUrl}/building/{cityId}/repair/{type}";
+
+            using (UnityWebRequest request = BackendRequestHelper.CreatePostRequest(url, new { }, token))
+            {
+                yield return request.SendWebRequest();
+                bool success = request.result == UnityWebRequest.Result.Success;
+                callback?.Invoke(success, success ? request.downloadHandler.text : BackendRequestHelper.GetErrorMessage(request));
             }
         }
 
@@ -48,68 +45,27 @@ namespace Project.Network
         {
             string url = $"{_baseUrl}/building/{cityId}/buildingQueue";
 
-            using (UnityWebRequest request = UnityWebRequest.Get(url))
+            using (UnityWebRequest request = BackendRequestHelper.CreateGetRequest(url, token))
             {
-                request.SetRequestHeader("Authorization", "Bearer " + token);
-                request.SetRequestHeader("Accept", "application/json");
-
-                yield return request.SendWebRequest();
-
-                if (request.result == UnityWebRequest.Result.Success)
-                {
-                    try
-                    {
-                        string jsonResponse = request.downloadHandler.text;
-                        List<BuildingDTO> buildingQueue = JsonConvert.DeserializeObject<List<BuildingDTO>>(jsonResponse);
-
-                        Debug.Log($"[ClientBuildingService] Hentede {buildingQueue.Count} jobs i køen for by {cityId}");
-                        callback?.Invoke(buildingQueue);
-                    }
-                    catch (Exception exception)
-                    {
-                        Debug.LogError($"[ClientBuildingService] Fejl ved deserialisering af byggekø: {exception.Message}");
-                        callback?.Invoke(null);
-                    }
-                }
-                else
-                {
-                    Debug.LogError($"[ClientBuildingService] Kunne ikke hente byggekø: {request.error}");
-                    callback?.Invoke(null);
-                }
+                yield return BackendRequestHelper.SendJson(
+                    request,
+                    callback,
+                    "ClientBuildingService",
+                    _ => new List<BuildingDTO>());
             }
         }
 
         public IEnumerator GetUniversityInfo(Guid cityId, string token, Action<List<UniversityInfoDTO>> callback)
         {
-            // Antager endpoint: /api/building/{cityId}/university
             string url = $"{_baseUrl}/miscbuilding/{cityId}/university";
 
-            using (UnityWebRequest request = UnityWebRequest.Get(url))
+            using (UnityWebRequest request = BackendRequestHelper.CreateGetRequest(url, token))
             {
-                request.SetRequestHeader("Authorization", "Bearer " + token);
-                request.SetRequestHeader("Content-Type", "application/json");
-
-                yield return request.SendWebRequest();
-
-                if (request.result == UnityWebRequest.Result.Success)
-                {
-                    string json = request.downloadHandler.text;
-                    try
-                    {
-                        var data = JsonConvert.DeserializeObject<List<UniversityInfoDTO>>(json);
-                        callback?.Invoke(data);
-                    }
-                    catch (Exception e)
-                    {
-                        Debug.LogError($"[ClientBuildingService] JSON Parse Error: {e.Message}");
-                        callback?.Invoke(null);
-                    }
-                }
-                else
-                {
-                    Debug.LogError($"[ClientBuildingService] Network Error: {request.error} | {request.downloadHandler.text}");
-                    callback?.Invoke(null);
-                }
+                yield return BackendRequestHelper.SendJson(
+                    request,
+                    callback,
+                    "ClientBuildingService",
+                    _ => new List<UniversityInfoDTO>());
             }
         }
 
@@ -117,101 +73,41 @@ namespace Project.Network
         {
             string url = $"{_baseUrl}/miscbuilding/{cityId}/wall";
 
-            using (UnityWebRequest request = UnityWebRequest.Get(url))
+            using (UnityWebRequest request = BackendRequestHelper.CreateGetRequest(url, token))
             {
-                request.SetRequestHeader("Authorization", "Bearer " + token);
-                request.SetRequestHeader("Content-Type", "application/json");
-
-                yield return request.SendWebRequest();
-
-                if (request.result == UnityWebRequest.Result.Success)
-                {
-                    string json = request.downloadHandler.text;
-                    try
-                    {
-                        // Newtonsoft håndterer automatisk den nestede ModifierDTO
-                        var data = JsonConvert.DeserializeObject<List<WallInfoDTO>>(json);
-                        callback?.Invoke(data);
-                    }
-                    catch (Exception e)
-                    {
-                        Debug.LogError($"[ClientBuildingService] JSON Parse Error: {e.Message}");
-                        callback?.Invoke(null);
-                    }
-                }
-                else
-                {
-                    Debug.LogError($"[ClientBuildingService] Network Error: {request.error} | {request.downloadHandler.text}");
-                    callback?.Invoke(null);
-                }
+                yield return BackendRequestHelper.SendJson(
+                    request,
+                    callback,
+                    "ClientBuildingService",
+                    _ => new List<WallInfoDTO>());
             }
         }
+
         public IEnumerator GetHousingProjection(Guid cityId, string token, Action<List<HousingInfoDTO>> callback)
         {
             string url = $"{_baseUrl}/economybuilding/{cityId}/housing";
 
-            using (UnityWebRequest request = UnityWebRequest.Get(url))
+            using (UnityWebRequest request = BackendRequestHelper.CreateGetRequest(url, token))
             {
-                request.SetRequestHeader("Authorization", "Bearer " + token);
-                request.SetRequestHeader("Content-Type", "application/json");
-
-                yield return request.SendWebRequest();
-
-                if (request.result == UnityWebRequest.Result.Success)
-                {
-                    string json = request.downloadHandler.text;
-                    try
-                    {
-                        var data = JsonConvert.DeserializeObject<List<HousingInfoDTO>>(json);
-                        callback?.Invoke(data);
-                    }
-                    catch (Exception e)
-                    {
-                        Debug.LogError($"[ClientBuildingService] JSON Parse Error: {e.Message}");
-                        callback?.Invoke(null);
-                    }
-                }
-                else
-                {
-                    Debug.LogError($"[ClientBuildingService] Network Error: {request.error} | {request.downloadHandler.text}");
-                    callback?.Invoke(null);
-                }
+                yield return BackendRequestHelper.SendJson(
+                    request,
+                    callback,
+                    "ClientBuildingService",
+                    _ => new List<HousingInfoDTO>());
             }
         }
+
         public IEnumerator GetResourceProductionInfo(Guid cityId, BuildingTypeEnum type, string token, Action<List<ResourceBuildingInfoDTO>> callback)
         {
-            // URL matcher din backend controller: [HttpGet("{cityId}/resource/{buildingType}")]
             string url = $"{_baseUrl}/economybuilding/{cityId}/resource/{type}";
 
-            using (UnityWebRequest request = UnityWebRequest.Get(url))
+            using (UnityWebRequest request = BackendRequestHelper.CreateGetRequest(url, token))
             {
-                // Dev Environment Fix
-
-                request.SetRequestHeader("Authorization", "Bearer " + token);
-                request.SetRequestHeader("Content-Type", "application/json");
-
-                yield return request.SendWebRequest();
-
-                if (request.result == UnityWebRequest.Result.Success)
-                {
-                    string json = request.downloadHandler.text;
-                    try
-                    {
-                        // Newtonsoft klarer lister direkte
-                        var data = JsonConvert.DeserializeObject<List<ResourceBuildingInfoDTO>>(json);
-                        callback?.Invoke(data);
-                    }
-                    catch (Exception e)
-                    {
-                        Debug.LogError($"[ClientBuildingService] JSON Parse Error: {e.Message}");
-                        callback?.Invoke(null);
-                    }
-                }
-                else
-                {
-                    Debug.LogError($"[ClientBuildingService] Network Error: {request.error} | {request.downloadHandler.text}");
-                    callback?.Invoke(null);
-                }
+                yield return BackendRequestHelper.SendJson(
+                    request,
+                    callback,
+                    "ClientBuildingService",
+                    _ => new List<ResourceBuildingInfoDTO>());
             }
         }
 
@@ -219,35 +115,14 @@ namespace Project.Network
         {
             string url = $"{_baseUrl}/economybuilding/{cityId}/warehouse";
 
-            using (UnityWebRequest request = UnityWebRequest.Get(url))
+            using (UnityWebRequest request = BackendRequestHelper.CreateGetRequest(url, token))
             {
-                request.SetRequestHeader("Authorization", "Bearer " + token);
-                request.SetRequestHeader("Content-Type", "application/json");
-
-                yield return request.SendWebRequest();
-
-                if (request.result == UnityWebRequest.Result.Success)
-                {
-                    string json = request.downloadHandler.text;
-                    try
-                    {
-                        // Newtonsoft håndterer lister og case-sensitivity automatisk!
-                        var data = JsonConvert.DeserializeObject<List<WarehouseProjectionDTO>>(json);
-                        callback?.Invoke(data);
-                    }
-                    catch (Exception e)
-                    {
-                        Debug.LogError($"[ClientBuildingService] JSON Parse Error: {e.Message}");
-                        callback?.Invoke(null);
-                    }
-                }
-                else
-                {
-                    Debug.LogError($"[ClientBuildingService] Network Error: {request.error} | {request.downloadHandler.text}");
-                    callback?.Invoke(null);
-                }
+                yield return BackendRequestHelper.SendJson(
+                    request,
+                    callback,
+                    "ClientBuildingService",
+                    _ => new List<WarehouseProjectionDTO>());
             }
         }
-
     }
 }

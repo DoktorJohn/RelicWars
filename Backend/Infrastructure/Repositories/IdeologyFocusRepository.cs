@@ -13,15 +13,17 @@ namespace Infrastructure.Repositories
     public class IdeologyFocusRepository : IIdeologyFocusRepository
     {
         private readonly GameContext _context;
+        private readonly TimeProvider _timeProvider;
 
-        public IdeologyFocusRepository(GameContext context)
+        public IdeologyFocusRepository(GameContext context, TimeProvider timeProvider)
         {
             _context = context;
+            _timeProvider = timeProvider;
         }
 
         public async Task<List<IdeologyFocus>?> GetAllActive()
         {
-            var now = DateTime.UtcNow;
+            var now = _timeProvider.GetUtcNow().UtcDateTime;
 
             return await _context.IdeologyFocuses
                  .Where(x => x.TimeOfIdeologyFinished.HasValue && x.TimeOfIdeologyFinished >= now)
@@ -36,7 +38,7 @@ namespace Infrastructure.Repositories
 
         public async Task<List<IdeologyFocus>?> GetAllByCityPlayer(Guid cityId)
         {
-            var now = DateTime.UtcNow;
+            var now = _timeProvider.GetUtcNow().UtcDateTime;
 
             return await _context.IdeologyFocuses
                 .Where(x => x.CityId == cityId)
@@ -59,7 +61,7 @@ namespace Infrastructure.Repositories
 
         public async Task DeleteExpiredFocusesForCityAsync(Guid cityId)
         {
-            var now = DateTime.UtcNow;
+            var now = _timeProvider.GetUtcNow().UtcDateTime;
 
             var expiredFocuses = await _context.IdeologyFocuses
                 .Where(x => x.CityId == cityId &&
@@ -72,6 +74,12 @@ namespace Infrastructure.Repositories
                 _context.IdeologyFocuses.RemoveRange(expiredFocuses);
                 await _context.SaveChangesAsync();
             }
+        }
+
+        public async Task DeleteAsync(IdeologyFocus ideologyFocus)
+        {
+            _context.IdeologyFocuses.Remove(ideologyFocus);
+            await _context.SaveChangesAsync();
         }
     }
 }

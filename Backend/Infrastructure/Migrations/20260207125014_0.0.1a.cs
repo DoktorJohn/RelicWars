@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
@@ -195,7 +195,7 @@ namespace Infrastructure.Migrations
                 columns: table => new
                 {
                     Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    Silver = table.Column<double>(type: "float", nullable: false),
+                    Coins = table.Column<double>(type: "float", nullable: false),
                     IdeologyFocusPoints = table.Column<double>(type: "float", nullable: false),
                     ResearchPoints = table.Column<double>(type: "float", nullable: false),
                     Ideology = table.Column<int>(type: "int", nullable: false),

@@ -56,12 +56,13 @@ namespace Infrastructure.Repositories
                 .ToListAsync();
         }
 
-        public async Task<List<BaseJob>> GetDueJobsAsync(DateTime now)
+        public async Task<List<BaseJob>> GetDueJobsAsync(DateTime now, int batchSize)
         {
             return await ActiveJobs
-            .Where(j => j.ExecutionTime <= now)
-            .OrderBy(j => j.ExecutionTime)
-            .ToListAsync();
+                .Where(j => j.ExecutionTime <= now)
+                .OrderBy(j => j.ExecutionTime)
+                .Take(batchSize)
+                .ToListAsync();
         }
 
         public async Task<List<BuildingJob>> GetBuildingJobsAsync(Guid cityId)

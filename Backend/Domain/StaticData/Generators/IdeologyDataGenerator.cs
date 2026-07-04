@@ -1,4 +1,4 @@
-﻿using Domain.Entities;
+using Domain.Entities;
 using Domain.Enums;
 using Domain.StaticData.Data;
 using System;
@@ -24,7 +24,7 @@ namespace Domain.StaticData.Generators
                 IdeologyType = IdeologyTypeEnum.Feudalism,
                 ModifiersInternal = 
                 { 
-                    new Modifier { Tag = ModifierTagEnum.Silver, Type = ModifierTypeEnum.Increased, Value = 0.04, Source = "Feaudalism: 4% increased tax rate" },
+                    new Modifier { Tag = ModifierTagEnum.Coins, Type = ModifierTypeEnum.Increased, Value = 0.04, Source = "Feaudalism: 4% increased tax rate" },
                     new Modifier { Tag = ModifierTagEnum.ConstructionCost, Type = ModifierTypeEnum.Decreased, Value = 0.05, Source = "Feaudalism: 5% less building cost"}
                 },
                 ModifiersThatAffectsThis = { ModifierTagEnum.Ideology }
@@ -37,7 +37,7 @@ namespace Domain.StaticData.Generators
                 IdeologyType = IdeologyTypeEnum.Monarchy,
                 ModifiersInternal =
                 {
-                    new Modifier { Tag = ModifierTagEnum.Silver, Type = ModifierTypeEnum.Increased, Value = 0.08, Source = "Monarchy: 8% increased tax rate" },
+                    new Modifier { Tag = ModifierTagEnum.Coins, Type = ModifierTypeEnum.Increased, Value = 0.08, Source = "Monarchy: 8% increased tax rate" },
                 }
             });
 
@@ -50,7 +50,7 @@ namespace Domain.StaticData.Generators
                 {
                     new Modifier { Tag = ModifierTagEnum.Research, Type = ModifierTypeEnum.Increased, Value = 0.05, Source = "Democracy: 5% increased research rate" },
                     new Modifier { Tag = ModifierTagEnum.Population, Type = ModifierTypeEnum.Increased, Value = 0.10, Source = "Democracy: 10% increased population" },
-                    new Modifier { Tag = ModifierTagEnum.Silver, Type = ModifierTypeEnum.Decreased, Value = 0.6, Source = "Democracy: 6% decreased tax rate" },
+                    new Modifier { Tag = ModifierTagEnum.Coins, Type = ModifierTypeEnum.Decreased, Value = 0.6, Source = "Democracy: 6% decreased tax rate" },
                 },
                 ModifiersThatAffectsThis = { ModifierTagEnum.Ideology }
             });
@@ -64,8 +64,8 @@ namespace Domain.StaticData.Generators
                 {
                     new Modifier { Tag = ModifierTagEnum.TravelSpeed, Type = ModifierTypeEnum.Increased, Value = 0.05, Source = "Oligarchy: 5% increased travel speed" },
                     new Modifier { Tag = ModifierTagEnum.Upkeep, Type = ModifierTypeEnum.Increased, Value = 0.05, Source = "Oligarchy: 5% increased upkeep" },
-                    new Modifier { Tag = ModifierTagEnum.Market, Type = ModifierTypeEnum.Increased, Value = 0.30, Source = "Oligarchy: 30% increased market silver generation" },
-                    new Modifier { Tag = ModifierTagEnum.Silver, Type = ModifierTypeEnum.Increased, Value = 0.02, Source = "Oligarchy: 2% increased tax rate" },
+                    new Modifier { Tag = ModifierTagEnum.Market, Type = ModifierTypeEnum.Increased, Value = 0.30, Source = "Oligarchy: 30% increased market coins generation" },
+                    new Modifier { Tag = ModifierTagEnum.Coins, Type = ModifierTypeEnum.Increased, Value = 0.02, Source = "Oligarchy: 2% increased tax rate" },
                 },
                 ModifiersThatAffectsThis = { ModifierTagEnum.Ideology }
             });
@@ -77,7 +77,7 @@ namespace Domain.StaticData.Generators
                 IdeologyType = IdeologyTypeEnum.MilitaryJunta,
                 ModifiersInternal =
                 {
-                    new Modifier { Tag = ModifierTagEnum.Silver, Type = ModifierTypeEnum.Decreased, Value = 0.10, Source = "Military Junta: 10% decreased tax rate" },
+                    new Modifier { Tag = ModifierTagEnum.Coins, Type = ModifierTypeEnum.Decreased, Value = 0.10, Source = "Military Junta: 10% decreased tax rate" },
                     new Modifier { Tag = ModifierTagEnum.Upkeep, Type = ModifierTypeEnum.Decreased, Value = 0.08, Source = "Military Junta: 8% decreased upkeep" },
                     new Modifier { Tag = ModifierTagEnum.RecruitmentSpeed, Type = ModifierTypeEnum.Decreased, Value = 0.5, Source = "Military Junta: 5% increased recruitment speed" },
                 },

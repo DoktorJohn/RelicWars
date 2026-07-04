@@ -11,7 +11,7 @@ using Assets._Project.Scripts.Domain.Enums;
 
 namespace Project.Scripts.Modules.UI
 {
-    public class ResearchWindowController : BaseWindow
+    public partial class ResearchWindowController : BaseWindow
     {
         protected override string WindowName => "Research";
         protected override string VisualContainerName => "Research-Window-MainContainer";
@@ -23,18 +23,38 @@ namespace Project.Scripts.Modules.UI
         private Label _activeResearchNameLabel;
         private Label _activeResearchTimerLabel;
         private Button _cancelResearchButton;
+        private VisualElement _lockedResearchTooltip;
+        private Label _lockedResearchTooltipBodyLabel;
 
         private Button _tabButtonEconomy;
         private Button _tabButtonWar;
         private Button _tabButtonUtility;
+        private Button _closeButton;
         private ResearchTypeEnum _currentSelectedCategory = ResearchTypeEnum.Economy;
 
         private Guid _worldPlayerId;
+        private int _requestVersion;
         private List<ResearchNodeDTO> _cachedResearchNodes = new List<ResearchNodeDTO>();
+        private ActiveResearchJobDTO _activeResearchJob;
+        private Guid _currentCancelResearchJobId;
         private Coroutine _activeTimerCoroutine;
+        private bool _isCommandInFlight;
 
         public override void OnOpen(object dataPayload)
         {
+            var version = BeginDeferredOpen();
+            _requestVersion = version;
+            InitializeUserInterfaceReferences();
+
+            if (Root != null) Root.pickingMode = PickingMode.Ignore;
+
+            if (NetworkManager.Instance == null)
+            {
+                WindowAsyncStateHelper.ShowError(_researchTreeContainer, "Network unavailable.");
+                CompleteDeferredOpen(version);
+                return;
+            }
+
             if (Guid.TryParse(NetworkManager.Instance.WorldPlayerId, out Guid parsedWorldPlayerId))
             {
                 _worldPlayerId = parsedWorldPlayerId;
@@ -42,15 +62,47 @@ namespace Project.Scripts.Modules.UI
             else
             {
                 Debug.LogError($"[ResearchWindow] Ugyldig WorldPlayerId.");
+                WindowAsyncStateHelper.ShowError(_researchTreeContainer, "Invalid world player.");
+                CompleteDeferredOpen(version);
                 return;
             }
 
-            InitializeUserInterfaceReferences();
-
-            if (Root != null) Root.pickingMode = PickingMode.Ignore;
-
             InitializeTabNavigation();
-            RefreshResearchWindowState();
+            RefreshResearchWindowState(version);
+        }
+
+        private void OnDisable()
+        {
+            InvalidateDeferredOpen();
+            StopAllCoroutines();
+            _activeTimerCoroutine = null;
+            _isCommandInFlight = false;
+            HideLockedResearchTooltip();
+
+            if (_cancelResearchButton != null)
+            {
+                _cancelResearchButton.clicked -= OnCancelResearchClicked;
+            }
+
+            if (_closeButton != null)
+            {
+                _closeButton.clicked -= Close;
+            }
+
+            if (_tabButtonEconomy != null)
+            {
+                _tabButtonEconomy.clicked -= HandleEconomyTabClicked;
+            }
+
+            if (_tabButtonWar != null)
+            {
+                _tabButtonWar.clicked -= HandleWarTabClicked;
+            }
+
+            if (_tabButtonUtility != null)
+            {
+                _tabButtonUtility.clicked -= HandleUtilityTabClicked;
+            }
         }
 
         private void InitializeUserInterfaceReferences()
@@ -61,10 +113,30 @@ namespace Project.Scripts.Modules.UI
             _activeResearchNameLabel = Root.Q<Label>("Active-Research-Name");
             _activeResearchTimerLabel = Root.Q<Label>("Active-Research-Timer");
             _cancelResearchButton = Root.Q<Button>("Button-Cancel-Research");
+            _lockedResearchTooltip = Root.Q<VisualElement>("Research-Lock-Tooltip");
+            _lockedResearchTooltipBodyLabel = Root.Q<Label>("Research-Lock-Tooltip-Body");
+
+            if (_cancelResearchButton != null)
+            {
+                _cancelResearchButton.style.display = DisplayStyle.None;
+                _cancelResearchButton.SetEnabled(false);
+            }
+
+            if (_lockedResearchTooltip != null)
+            {
+                _lockedResearchTooltip.style.display = DisplayStyle.None;
+            }
+
+            if (_cancelResearchButton != null)
+            {
+                _cancelResearchButton.clicked -= OnCancelResearchClicked;
+                _cancelResearchButton.clicked += OnCancelResearchClicked;
+            }
 
             var closeButton = Root.Q<Button>("Header-Close-Button");
             if (closeButton != null)
             {
+                _closeButton = closeButton;
                 closeButton.clicked -= Close;
                 closeButton.clicked += Close;
             }
@@ -76,12 +148,30 @@ namespace Project.Scripts.Modules.UI
             _tabButtonWar = Root.Q<Button>("Tab-War");
             _tabButtonUtility = Root.Q<Button>("Tab-Utility");
 
-            _tabButtonEconomy.clicked += () => SwitchResearchCategoryTab(ResearchTypeEnum.Economy);
-            _tabButtonWar.clicked += () => SwitchResearchCategoryTab(ResearchTypeEnum.War);
-            _tabButtonUtility.clicked += () => SwitchResearchCategoryTab(ResearchTypeEnum.Utility);
+            if (_tabButtonEconomy != null)
+            {
+                _tabButtonEconomy.clicked -= HandleEconomyTabClicked;
+                _tabButtonEconomy.clicked += HandleEconomyTabClicked;
+            }
+
+            if (_tabButtonWar != null)
+            {
+                _tabButtonWar.clicked -= HandleWarTabClicked;
+                _tabButtonWar.clicked += HandleWarTabClicked;
+            }
+
+            if (_tabButtonUtility != null)
+            {
+                _tabButtonUtility.clicked -= HandleUtilityTabClicked;
+                _tabButtonUtility.clicked += HandleUtilityTabClicked;
+            }
 
             UpdateTabButtonVisualStates();
         }
+
+        private void HandleEconomyTabClicked() => SwitchResearchCategoryTab(ResearchTypeEnum.Economy);
+        private void HandleWarTabClicked() => SwitchResearchCategoryTab(ResearchTypeEnum.War);
+        private void HandleUtilityTabClicked() => SwitchResearchCategoryTab(ResearchTypeEnum.Utility);
 
         private void SwitchResearchCategoryTab(ResearchTypeEnum selectedCategory)
         {
@@ -97,188 +187,90 @@ namespace Project.Scripts.Modules.UI
             _tabButtonUtility.EnableInClassList("research-tab-button-active", _currentSelectedCategory == ResearchTypeEnum.Utility);
         }
 
-        private void RefreshResearchWindowState()
+        private void RefreshResearchWindowState(int version)
         {
             string jwtToken = NetworkManager.Instance.JwtToken;
+            WindowAsyncStateHelper.ShowLoading(_researchTreeContainer, "Loading research tree...");
 
             StartCoroutine(NetworkManager.Instance.Research.GetResearchTreeState(_worldPlayerId, jwtToken, (researchTreeData) =>
             {
-                if (researchTreeData == null) return;
+                if (!isActiveAndEnabled || version != _requestVersion)
+                {
+                    return;
+                }
+
+                if (researchTreeData == null)
+                {
+                    WindowAsyncStateHelper.ShowError(
+                        _researchTreeContainer,
+                        "Could not load research tree.",
+                        () => RefreshResearchWindowState(version));
+                    _isCommandInFlight = false;
+                    WindowAsyncStateHelper.SetButtonsEnabled(new[] { _cancelResearchButton, _tabButtonEconomy, _tabButtonWar, _tabButtonUtility }, true);
+                    CompleteDeferredOpen(version);
+                    return;
+                }
 
                 _cachedResearchNodes = researchTreeData.Nodes;
+                _activeResearchJob = researchTreeData.ActiveJob;
                 UpdateResearchPointsDisplay(researchTreeData.CurrentResearchPoints);
-                PopulateResearchTreeVisuals(_cachedResearchNodes);
-                HandleActiveResearchJobDisplay(researchTreeData.ActiveJob);
+                if (_cachedResearchNodes == null || _cachedResearchNodes.Count == 0)
+                {
+                    WindowAsyncStateHelper.ShowEmpty(_researchTreeContainer, "No research available.");
+                }
+                else
+                {
+                    PopulateResearchTreeVisuals(_cachedResearchNodes);
+                }
+                HandleActiveResearchJobDisplay(_activeResearchJob);
+                _isCommandInFlight = false;
+                WindowAsyncStateHelper.SetButtonsEnabled(new[] { _cancelResearchButton, _tabButtonEconomy, _tabButtonWar, _tabButtonUtility }, true);
+                CompleteDeferredOpen(version);
             }));
         }
 
-        private void UpdateResearchPointsDisplay(double currentPoints)
-        {
-            if (_researchPointsLabel != null) _researchPointsLabel.text = currentPoints.ToString("N0");
-        }
-
-        private void PopulateResearchTreeVisuals(List<ResearchNodeDTO> nodes)
-        {
-            if (_researchTreeContainer == null) return;
-            _researchTreeContainer.Clear();
-
-            var filteredNodes = nodes.Where(node => node.ResearchType == _currentSelectedCategory).ToList();
-
-            foreach (var node in filteredNodes)
-            {
-                AddResearchNodeToUI(node);
-            }
-        }
-
-        private void AddResearchNodeToUI(ResearchNodeDTO nodeData)
-        {
-            VisualElement nodeCard = new VisualElement();
-            nodeCard.AddToClassList("research-node");
-
-            Label title = new Label(nodeData.Name);
-            title.AddToClassList("node-title");
-            nodeCard.Add(title);
-
-            Label desc = new Label(nodeData.Description);
-            desc.AddToClassList("node-description");
-            nodeCard.Add(desc);
-
-            VisualElement costRow = new VisualElement();
-            costRow.AddToClassList("node-cost-row");
-
-            Label costLabel = new Label($"{nodeData.ResearchPointCost:N0} RP");
-            costLabel.AddToClassList("node-cost-label");
-            costRow.Add(costLabel);
-
-            if (nodeData.IsCompleted)
-            {
-                nodeCard.AddToClassList("node-completed");
-                Label completedLabel = new Label("DONE");
-                completedLabel.AddToClassList("node-status-text-done");
-                costRow.Add(completedLabel);
-            }
-            else if (nodeData.IsLocked)
-            {
-                nodeCard.AddToClassList("node-locked");
-
-                Button lockedBtn = new Button();
-                lockedBtn.text = "LOCKED";
-                lockedBtn.AddToClassList("btn-global-base");
-                lockedBtn.AddToClassList("node-button-locked");
-                lockedBtn.SetEnabled(false);
-                lockedBtn.style.height = 24;
-                lockedBtn.style.fontSize = 10;
-                lockedBtn.style.marginTop = 0;
-                costRow.Add(lockedBtn);
-            }
-            else if (nodeData.IsResearching)
-            {
-                nodeCard.AddToClassList("node-researching");
-
-                Button researchingBtn = new Button();
-                researchingBtn.text = "RESEARCHING";
-                researchingBtn.AddToClassList("btn-global-base");
-                researchingBtn.AddToClassList("node-button-researching");
-                researchingBtn.SetEnabled(false);
-                researchingBtn.style.height = 24;
-                researchingBtn.style.fontSize = 10;
-                researchingBtn.style.marginTop = 0;
-                costRow.Add(researchingBtn);
-            }
-            else
-            {
-                Button researchBtn = new Button(() => RequestStartResearch(nodeData.Id));
-                researchBtn.text = "START";
-
-                researchBtn.AddToClassList("btn-global-base");
-                researchBtn.AddToClassList("btn-imperial-success");
-
-                researchBtn.style.height = 24;
-                researchBtn.style.fontSize = 10;
-                researchBtn.style.marginTop = 0;
-
-                researchBtn.SetEnabled(nodeData.CanAfford);
-                costRow.Add(researchBtn);
-            }
-
-            nodeCard.Add(costRow);
-            _researchTreeContainer.Add(nodeCard);
-        }
-
-        private void HandleActiveResearchJobDisplay(ActiveResearchJobDTO activeJob)
-        {
-            if (_activeJobPanel != null) _activeJobPanel.style.display = DisplayStyle.Flex;
-
-            if (_activeTimerCoroutine != null) StopCoroutine(_activeTimerCoroutine);
-
-            if (activeJob == null)
-            {
-                // Ingen aktiv forskning: Vis "IDLE" og disable knappen
-                if (_activeResearchNameLabel != null) _activeResearchNameLabel.text = "IDLE";
-                if (_activeResearchTimerLabel != null) _activeResearchTimerLabel.text = "--:--:--";
-
-                if (_cancelResearchButton != null)
-                {
-                    _cancelResearchButton.SetEnabled(false);
-                    // Fjerner callbacks for en sikkerheds skyld
-                    _cancelResearchButton.clicked -= null;
-                }
-            }
-            else
-            {
-                // Aktiv forskning: Vis info og enable knappen
-                var researchInfo = _cachedResearchNodes.FirstOrDefault(n => n.Id == activeJob.ResearchId);
-                if (_activeResearchNameLabel != null)
-                    _activeResearchNameLabel.text = researchInfo != null ? researchInfo.Name.ToUpper() : activeJob.ResearchId;
-
-                if (_cancelResearchButton != null)
-                {
-                    _cancelResearchButton.SetEnabled(true);
-                    _cancelResearchButton.clicked -= () => RequestCancelResearch(activeJob.JobId);
-                    _cancelResearchButton.clicked += () => RequestCancelResearch(activeJob.JobId);
-                }
-
-                _activeTimerCoroutine = StartCoroutine(ExecuteActiveResearchCountdownTimer(activeJob.ExpectedCompletionTime));
-            }
-        }
-
-        private IEnumerator ExecuteActiveResearchCountdownTimer(DateTime completionTime)
-        {
-            while (true)
-            {
-                TimeSpan remainingTime = completionTime - DateTime.UtcNow;
-
-                if (remainingTime.TotalSeconds <= 0)
-                {
-                    if (_activeResearchTimerLabel != null) _activeResearchTimerLabel.text = "00:00:00";
-                    RefreshResearchWindowState();
-                    yield break;
-                }
-
-                if (_activeResearchTimerLabel != null)
-                {
-                    _activeResearchTimerLabel.text = remainingTime.ToString(@"hh\:mm\:ss");
-                }
-
-                yield return new WaitForSeconds(1.0f);
-            }
-        }
 
         public void RequestStartResearch(string researchId)
         {
+            if (_isCommandInFlight) return;
+
             string jwtToken = NetworkManager.Instance.JwtToken;
+            _isCommandInFlight = true;
+            WindowAsyncStateHelper.SetButtonsEnabled(new[] { _cancelResearchButton, _tabButtonEconomy, _tabButtonWar, _tabButtonUtility }, false);
             StartCoroutine(NetworkManager.Instance.Research.StartResearchProcess(_worldPlayerId, researchId, jwtToken, (success, message) =>
             {
-                if (success) RefreshResearchWindowState();
+                if (!isActiveAndEnabled) return;
+                if (success) RefreshResearchWindowState(_requestVersion);
+                else
+                {
+                    _isCommandInFlight = false;
+                    WindowAsyncStateHelper.SetButtonsEnabled(new[] { _cancelResearchButton, _tabButtonEconomy, _tabButtonWar, _tabButtonUtility }, true);
+                }
             }));
+        }
+
+        private void OnCancelResearchClicked()
+        {
+            if (_currentCancelResearchJobId == Guid.Empty) return;
+            RequestCancelResearch(_currentCancelResearchJobId);
         }
 
         private void RequestCancelResearch(Guid jobId)
         {
+            if (_isCommandInFlight) return;
+
             string jwtToken = NetworkManager.Instance.JwtToken;
+            _isCommandInFlight = true;
+            WindowAsyncStateHelper.SetButtonsEnabled(new[] { _cancelResearchButton, _tabButtonEconomy, _tabButtonWar, _tabButtonUtility }, false);
             StartCoroutine(NetworkManager.Instance.Research.CancelActiveResearch(_worldPlayerId, jobId, jwtToken, (success, message) =>
             {
-                if (success) RefreshResearchWindowState();
+                if (!isActiveAndEnabled) return;
+                if (success) RefreshResearchWindowState(_requestVersion);
+                else
+                {
+                    _isCommandInFlight = false;
+                    WindowAsyncStateHelper.SetButtonsEnabled(new[] { _cancelResearchButton, _tabButtonEconomy, _tabButtonWar, _tabButtonUtility }, true);
+                }
             }));
         }
     }

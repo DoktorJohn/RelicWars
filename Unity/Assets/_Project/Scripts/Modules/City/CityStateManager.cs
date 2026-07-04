@@ -28,6 +28,7 @@ namespace Project.Modules.City
         public event Action<List<RecruitmentQueueItemDTO>> OnWorkshopQueueChanged;
 
         public event Action<List<CityControllerGetDetailedCityInformationBuildingDTO>> OnBuildingStateReceived;
+        public event Action<List<AvailableBuildingDTO>> OnTownHallAvailableBuildingsChanged;
         public event Action<List<UnitStackDTO>> OnTroopsStateReceived;
 
         [Header("Konfiguration")]
@@ -36,31 +37,49 @@ namespace Project.Modules.City
         // --- Intern Tilstand ---
         private CityResourceState _currentResourceState = new CityResourceState();
         private List<BuildingDTO> _currentBuildingQueue = new List<BuildingDTO>();
+        private List<CityControllerGetDetailedCityInformationBuildingDTO> _currentBuildingState = new List<CityControllerGetDetailedCityInformationBuildingDTO>();
+        private List<AvailableBuildingDTO> _currentTownHallAvailableBuildings = new List<AvailableBuildingDTO>();
         private List<UnitStackDTO> _currentStationedUnits = new List<UnitStackDTO>();
         private List<UnitDeploymentDTO> _currentActiveDeployments = new List<UnitDeploymentDTO>();
 
         private List<RecruitmentQueueItemDTO> _currentBarracksQueue = new List<RecruitmentQueueItemDTO>();
         private List<RecruitmentQueueItemDTO> _currentStableQueue = new List<RecruitmentQueueItemDTO>();
         private List<RecruitmentQueueItemDTO> _currentWorkshopQueue = new List<RecruitmentQueueItemDTO>();
+        private List<CityExoticResourceDTO> _currentExoticResources = new List<CityExoticResourceDTO>();
+        private List<WorldIslandResourceDTO> _currentIslandExoticResources = new List<WorldIslandResourceDTO>();
 
 
         // --- Public Properties ---
         public CityResourceState CurrentResources => _currentResourceState;
         public List<BuildingDTO> CurrentBuildingQueue => _currentBuildingQueue;
+        public List<CityControllerGetDetailedCityInformationBuildingDTO> CurrentBuildingState => _currentBuildingState;
+        public List<AvailableBuildingDTO> CurrentTownHallAvailableBuildings => _currentTownHallAvailableBuildings;
         public List<UnitStackDTO> CurrentStationedUnits => _currentStationedUnits;
         public List<UnitDeploymentDTO> CurrentActiveDeployments => _currentActiveDeployments;
 
         public List<RecruitmentQueueItemDTO> CurrentBarracksQueue => _currentBarracksQueue;
         public List<RecruitmentQueueItemDTO> CurrentStableQueue => _currentStableQueue;
         public List<RecruitmentQueueItemDTO> CurrentWorkshopQueue => _currentWorkshopQueue;
+        public List<CityExoticResourceDTO> CurrentExoticResources => _currentExoticResources;
+        public List<WorldIslandResourceDTO> CurrentIslandExoticResources => _currentIslandExoticResources;
 
         public Guid CityId { get; set; }
         public string CurrentCityName { get; private set; }
         public int HomeCityX { get; private set; }
         public int HomeCityY { get; private set; }
+        public double Resistance { get; private set; }
+        public double ResistanceTarget { get; private set; }
+        public double ResistanceRecoveryPerHour { get; private set; }
+        public bool HasDetailedCityState => _isDataInitialized;
+        public bool HasBuildingQueueData => _hasBuildingQueueData;
+        public bool HasBuildingStateData => _hasBuildingStateData;
+        public bool HasTownHallAvailableBuildingsData => _hasTownHallAvailableBuildingsData;
 
         private bool _isRequestInProgress = false;
         private bool _isDataInitialized = false;
+        private bool _hasBuildingQueueData = false;
+        private bool _hasBuildingStateData = false;
+        private bool _hasTownHallAvailableBuildingsData = false;
         private Coroutine _activePollingCoroutine;
 
         private void Awake()
@@ -80,11 +99,9 @@ namespace Project.Modules.City
                 }
 
                 DontDestroyOnLoad(gameObject);
-                Debug.Log("[CityStateManager] Global instans initialiseret.");
             }
             else if (Instance != this)
             {
-                Debug.Log("[CityStateManager] Duplikat fundet og slettet.");
                 Destroy(gameObject);
             }
         }
@@ -118,7 +135,6 @@ namespace Project.Modules.City
 
         public void InitiateResourceRefresh(Guid cityIdentifier)
         {
-            Debug.Log($"[CityStateManager] InitiateResourceRefresh kaldet for by: {cityIdentifier}");
             if (_activePollingCoroutine != null)
             {
                 StopCoroutine(_activePollingCoroutine);
@@ -127,11 +143,31 @@ namespace Project.Modules.City
             _activePollingCoroutine = StartCoroutine(ExecuteResourcePollingCycleCoroutine(cityIdentifier));
         }
 
+        public void ResetForLogout()
+        {
+            StopAllCoroutines();
+            _activePollingCoroutine = null;
+            _isRequestInProgress = false;
+            _isDataInitialized = false;
+            CityId = Guid.Empty;
+            CurrentCityName = string.Empty;
+            _currentResourceState = new CityResourceState();
+            _currentBuildingQueue.Clear();
+            _currentBuildingState.Clear();
+            _currentTownHallAvailableBuildings.Clear();
+            _currentStationedUnits.Clear();
+            _currentActiveDeployments.Clear();
+            _currentBarracksQueue.Clear();
+            _currentStableQueue.Clear();
+            _currentWorkshopQueue.Clear();
+            _currentExoticResources.Clear();
+            _currentIslandExoticResources.Clear();
+        }
+
         private IEnumerator ExecuteResourcePollingCycleCoroutine(Guid cityIdentifier)
         {
             while (true)
             {
-                Debug.Log("[CityStateManager] Starter planlagt netværks-polling...");
                 yield return StartCoroutine(PerformFullCityStateSyncCoroutine(cityIdentifier));
                 yield return new WaitForSeconds(_networkSynchronizationIntervalInSeconds);
             }
@@ -156,6 +192,7 @@ namespace Project.Modules.City
                 if (queue != null)
                 {
                     _currentBuildingQueue = queue;
+                    _hasBuildingQueueData = true;
                     OnBuildingQueueChanged?.Invoke(_currentBuildingQueue);
                 }
             }));
@@ -183,17 +220,6 @@ namespace Project.Modules.City
         {
             try
             {
-                Debug.Log($"[CityStateManager] MODTAGET DATA fra server for {detailedInformationDto.CityName}. Analyserer tilstand...");
-
-                // Log befolkning før overskrivning
-                Debug.Log($"[STATE-SYNC] Population før: USED={_currentResourceState.CurrentPopulationUsage}, MAX={_currentResourceState.MaxPopulationCapacity}");
-                Debug.Log($"[STATE-SYNC] Population fra server: USED={detailedInformationDto.CurrentPopulationUsage}, MAX={detailedInformationDto.MaxPopulationCapacity}");
-
-                if (_currentResourceState.CurrentPopulationUsage != detailedInformationDto.CurrentPopulationUsage)
-                {
-                    Debug.LogWarning($"[DEBUG-POPULATION] AFVIGELSE FUNDET! Lokal: {_currentResourceState.CurrentPopulationUsage} vs Server: {detailedInformationDto.CurrentPopulationUsage}");
-                }
-
                 this.CityId = detailedInformationDto.CityId;
                 
                 if (this.CurrentCityName != detailedInformationDto.CityName)
@@ -221,8 +247,18 @@ namespace Project.Modules.City
                 // Befolknings-mapping
                 _currentResourceState.CurrentPopulationUsage = detailedInformationDto.CurrentPopulationUsage;
                 _currentResourceState.MaxPopulationCapacity = detailedInformationDto.MaxPopulationCapacity;
+                Resistance = detailedInformationDto.Resistance;
+                ResistanceTarget = detailedInformationDto.ResistanceTarget;
+                ResistanceRecoveryPerHour = detailedInformationDto.ResistanceRecoveryPerHour;
+                _currentExoticResources = detailedInformationDto.ExoticResources ?? new List<CityExoticResourceDTO>();
+                _currentIslandExoticResources = detailedInformationDto.IslandExoticResources ?? new List<WorldIslandResourceDTO>();
 
-                if (detailedInformationDto.BuildingList != null) OnBuildingStateReceived?.Invoke(detailedInformationDto.BuildingList);
+                if (detailedInformationDto.BuildingList != null)
+                {
+                    _currentBuildingState = detailedInformationDto.BuildingList;
+                    _hasBuildingStateData = true;
+                    OnBuildingStateReceived?.Invoke(_currentBuildingState);
+                }
 
                 _currentStationedUnits = detailedInformationDto.StationedUnits ?? new List<UnitStackDTO>();
                 OnTroopsStateReceived?.Invoke(_currentStationedUnits);
@@ -230,7 +266,6 @@ namespace Project.Modules.City
                 _isDataInitialized = true;
                 OnResourceStateChanged?.Invoke(_currentResourceState);
 
-                Debug.Log($"[CityStateManager] Synkronisering fuldført. Ny tilstand anvendt.");
             }
             catch (Exception exception)
             {
@@ -240,7 +275,6 @@ namespace Project.Modules.City
 
         public void DeductResourcesLocally(double wood, double stone, double metal)
         {
-            Debug.Log($"[CityStateManager] DeductResourcesLocally kaldet. Trækker Wood:{wood}, Stone:{stone}, Metal:{metal}");
             _currentResourceState.WoodAmount -= wood;
             _currentResourceState.StoneAmount -= stone;
             _currentResourceState.MetalAmount -= metal;
@@ -250,12 +284,17 @@ namespace Project.Modules.City
 
         public void UpdatePopulationState(int updatedUsage, int updatedMax)
         {
-            Debug.Log($"[CityStateManager] UpdatePopulationState kaldet MANUELT. Ny Usage: {updatedUsage}, Ny Max: {updatedMax}");
-
             _currentResourceState.CurrentPopulationUsage = updatedUsage;
             _currentResourceState.MaxPopulationCapacity = updatedMax;
 
             OnResourceStateChanged?.Invoke(_currentResourceState);
+        }
+
+        public void UpdateTownHallAvailableBuildings(List<AvailableBuildingDTO> availableBuildings)
+        {
+            _currentTownHallAvailableBuildings = availableBuildings ?? new List<AvailableBuildingDTO>();
+            _hasTownHallAvailableBuildingsData = true;
+            OnTownHallAvailableBuildingsChanged?.Invoke(_currentTownHallAvailableBuildings);
         }
     }
 }

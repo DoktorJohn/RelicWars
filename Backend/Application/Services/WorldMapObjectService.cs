@@ -37,16 +37,25 @@ namespace Application.Services
             _logger.LogInformation($"Registreret {entity.MapObjectType} ({entity.Id}) på kortet ved {entity.X},{entity.Y}");
         }
 
-        public async Task UpdateEntityPositionOnWorldMapAsync(IMapEntity entity, int oldX, int oldY)
+        public async Task UpdateEntityPositionOnWorldMapAsync(IMapEntity entity)
         {
-            await _mapObjectRepo.DeleteAtCoordinatesAsync(entity.WorldId, (short)oldX, (short)oldY);
+            var mapObject = await _mapObjectRepo.GetWorldMapObjectByReferenceIdAsync(entity.Id);
+            if (mapObject == null)
+            {
+                await AddEntityToWorldMapAsync(entity);
+                return;
+            }
 
-            await AddEntityToWorldMapAsync(entity);
+            mapObject.WorldId = entity.WorldId;
+            mapObject.X = (short)entity.X;
+            mapObject.Y = (short)entity.Y;
+            mapObject.Type = entity.MapObjectType;
+            await _mapObjectRepo.UpdateAsync(mapObject);
         }
 
         public async Task RemoveEntityFromWorldMapAsync(IMapEntity entity)
         {
-            await _mapObjectRepo.DeleteAtCoordinatesAsync(entity.WorldId, (short)entity.X, (short)entity.Y);
+            await _mapObjectRepo.DeleteByReferenceIdAsync(entity.Id);
             _logger.LogInformation($"Fjernet {entity.MapObjectType} ({entity.Id}) fra kortet.");
         }
     }

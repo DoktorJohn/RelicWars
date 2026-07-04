@@ -16,6 +16,8 @@ namespace Domain.Entities
         public string Description { get; set; } = string.Empty;
         public string BannerImageUrl { get; set; } = string.Empty;
         public int MaxPlayers { get; set; } = 50;
+        public Guid WorldId { get; set; }
+        public World World { get; set; } = null!;
 
         public List<Modifier> ModifiersInternal { get; set; } = new();
 
@@ -23,6 +25,8 @@ namespace Domain.Entities
         public List<WorldPlayer> Members { get; set; } = new();
         public List<Alliance> AlliancesAtWar { get; set; } = new();
         public List<Alliance> AlliancesPacted { get; set; } = new();
+        public List<AllianceRelation> RelationsAsAllianceA { get; set; } = new();
+        public List<AllianceRelation> RelationsAsAllianceB { get; set; } = new();
 
         public IEnumerable<Modifier> GetModifiers()
         {

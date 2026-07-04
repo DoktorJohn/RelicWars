@@ -11,7 +11,7 @@ namespace Project.Network.Manager
         public static NetworkManager Instance;
 
         [Header("Configuration")]
-        [SerializeField] private string _backendBaseUrl = "https://rorgamebackend-dmfadtcvdabpepd7.francecentral-01.azurewebsites.net/api";
+        [SerializeField] private string _backendBaseUrl = "https://reignofrelicswebapp-cdbgc5eyhvd2g0ah.belgiumcentral-01.azurewebsites.net/api";
         [SerializeField] private string _localBackendUrl = "https://localhost:55286/api";
         private string _activeBackendUrl;
 
@@ -38,9 +38,11 @@ namespace Project.Network.Manager
         public ClientAllianceService Alliance { get; private set; }
         public ClientMarketPlaceService MarketPlace { get; private set; }
         public ClientResearchService Research { get; private set; }
+        public ClientBattleReportService BattleReports { get; private set; }
         public ClientUnitDeploymentService UnitDeployment { get; private set; }
         public ClientIdeologyFocusService IdeologyFocus { get; private set; }
         public ClientMessagingService Messaging { get; private set; }
+        public ClientBugReportService BugReports { get; private set; }
 
         private void Awake()
         {
@@ -60,19 +62,11 @@ namespace Project.Network.Manager
 
         private void ConfigureBackendUrl()
         {
-#if UNITY_EDITOR
-            _activeBackendUrl = _localBackendUrl;
-            Debug.Log($"<color=green>NetworkManager:</color> Bruger LOKAL backend: {_activeBackendUrl}");
-#else
-            // Hvis det er en build (WebGL), brug Azure backend
-            _activeBackendUrl = _backendBaseUrl;
-            Debug.Log($"<color=blue>NetworkManager:</color> Bruger AZURE backend: {_activeBackendUrl}");
-#endif
+            _activeBackendUrl = Application.isEditor ? _localBackendUrl : _backendBaseUrl;
         }
 
         private void InitializeServices()
         {
-            // Vi skal bruge _activeBackendUrl her, ellers ignorerer koden din ConfigureBackendUrl logik
             Auth = new ClientAuthService(_activeBackendUrl);
             World = new ClientWorldService(_activeBackendUrl);
             City = new ClientCityService(_activeBackendUrl);
@@ -85,11 +79,11 @@ namespace Project.Network.Manager
             Alliance = new ClientAllianceService(_activeBackendUrl);
             MarketPlace = new ClientMarketPlaceService(_activeBackendUrl);
             Research = new ClientResearchService(_activeBackendUrl);
+            BattleReports = new ClientBattleReportService(_activeBackendUrl);
             UnitDeployment = new ClientUnitDeploymentService(_activeBackendUrl);
             IdeologyFocus = new ClientIdeologyFocusService(_activeBackendUrl);
             Messaging = new ClientMessagingService(_activeBackendUrl);
-
-            Debug.Log($"[NetworkManager] Services Initialized pointing to: {_activeBackendUrl}");
+            BugReports = new ClientBugReportService(_activeBackendUrl);
         }
 
         // --- Public Methods til UI ---
@@ -139,8 +133,6 @@ namespace Project.Network.Manager
                     if (response.WorldPlayerId.HasValue)
                         WorldPlayerId = response.WorldPlayerId.Value.ToString();
 
-                    Debug.Log($"[NetworkManager] Joined World. Ideology: {response.SelectedIdeology}");
-
                     onComplete?.Invoke(true, response.SelectedIdeology);
                 }
                 else
@@ -159,14 +151,12 @@ namespace Project.Network.Manager
                 return;
             }
 
-            // Vi parser string ID til Guid da servicen forventer Guid
             Guid worldPlayerGuid = Guid.Parse(WorldPlayerId);
 
             StartCoroutine(WorldPlayer.SelectIdeology(worldPlayerGuid, ideology, JwtToken, (response) =>
             {
                 if (response != null && response.ConnectionSuccessful)
                 {
-                    Debug.Log($"[NetworkManager] Ideology {ideology} successfully selected.");
                     onComplete?.Invoke(true);
                 }
                 else
@@ -177,6 +167,17 @@ namespace Project.Network.Manager
             }));
         }
 
+        public void ClearSession()
+        {
+            StopAllCoroutines();
+            JwtToken = null;
+            PlayerProfileId = null;
+            WorldPlayerId = null;
+            ActiveWorldId = Guid.Empty;
+            PlayerName = null;
+            ActiveCityId = null;
+        }
+
         private void SetSessionData(AuthenticationResponse response)
         {
             if (response.Profile != null)
@@ -184,7 +185,6 @@ namespace Project.Network.Manager
                 JwtToken = response.JwtToken;
                 PlayerProfileId = response.Profile.PlayerId;
                 PlayerName = response.Profile.UserName;
-                Debug.Log($"[NetworkManager] Session Startet: {PlayerName} ({PlayerProfileId})");
             }
         }
     }

@@ -1,54 +1,75 @@
 <?xml version="1.0" encoding="utf-8"?>
 <ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" editor-extension-mode="False">
-    
     <ui:Style src="project://database/Assets/UI/Windows/WindowTheme.uss" />
     <ui:Style src="ProfileWindow.uss" />
 
     <ui:VisualElement name="Profile-Window-Overlay" picking-mode="Ignore" class="screen-overlay">
-        
-        <ui:VisualElement name="Profile-Window-MainContainer" class="window-frame" style="width: 450px; height: 550px;">
-            
+        <ui:VisualElement name="Profile-Window-MainContainer" class="window-frame profile-window-size">
             <ui:VisualElement name="Profile-Window-Header" class="window-header">
-                <ui:Label name="Lbl-Title" class="window-header-label" text="PLAYER PROFILE" />
+                <ui:Label class="window-header-label" text="PLAYER PROFILE" />
                 <ui:Button name="Header-Close-Button" class="window-close-btn" text="x" />
             </ui:VisualElement>
-            
+
             <ui:VisualElement class="profile-content-container">
-                
-                <ui:VisualElement name="Img-PlayerAvatar" class="profile-avatar" />
-                
-                <ui:Label name="Lbl-PlayerName" class="profile-name" text="Loading..." />
-                <ui:Label name="Lbl-AllianceName" class="profile-alliance" text="-" />
+                <ui:VisualElement class="profile-columns">
+                    <ui:VisualElement class="profile-column profile-column-left">
+                        <ui:Label name="Lbl-PlayerName" class="profile-name btn-entity-link" text="" />
+                        <ui:Label name="Lbl-AllianceName" class="profile-alliance" text="" />
 
-                <ui:VisualElement class="divider" style="width: 100%; margin-bottom: 20px;" />
+                        <ui:VisualElement name="Profile-ActionRow" class="profile-action-row" style="display: none;">
+                            <ui:Button name="Btn-MessagePlayer" class="btn-global-base btn-imperial-primary profile-action-button" text="MESSAGE PLAYER" />
+                        </ui:VisualElement>
 
-                <ui:VisualElement class="profile-stats-grid">
-                    
-                    <ui:VisualElement class="stat-box">
-                        <ui:Label text="RANK" class="stat-label" />
-                        <ui:Label name="Lbl-RankValue" class="stat-value" text="0" />
+                        <ui:VisualElement class="divider profile-divider" />
+
+                        <ui:VisualElement class="profile-stats-grid">
+                            <ui:VisualElement class="stat-box">
+                                <ui:Label text="RANK" class="stat-label" />
+                                <ui:Label name="Lbl-RankValue" class="stat-value" text="" />
+                            </ui:VisualElement>
+
+                            <ui:VisualElement class="stat-box">
+                                <ui:Label text="POINTS" class="stat-label" />
+                                <ui:Label name="Lbl-PointsValue" class="stat-value" text="" />
+                            </ui:VisualElement>
+
+                            <ui:VisualElement class="stat-box">
+                                <ui:Label text="CITIES" class="stat-label" />
+                                <ui:Label name="Lbl-CitiesValue" class="stat-value" text="" />
+                            </ui:VisualElement>
+                        </ui:VisualElement>
+
+                        <ui:VisualElement class="profile-section profile-cities-section">
+                            <ui:Label text="CITIES" class="profile-section-title" />
+                            <ui:VisualElement class="profile-city-heading">
+                                <ui:Label text="CITY" class="profile-city-heading-name" />
+                                <ui:Label text="COORDINATES" class="profile-city-heading-coordinates" />
+                                <ui:Label text="POINTS" class="profile-city-heading-points" />
+                            </ui:VisualElement>
+                            <ui:ScrollView name="Profile-Cities-List" class="profile-cities-list" mode="Vertical" horizontal-scroller-visibility="Hidden" vertical-scroller-visibility="Auto" />
+                        </ui:VisualElement>
                     </ui:VisualElement>
-                    
-                    <ui:VisualElement class="stat-vertical-divider" />
 
-                    <ui:VisualElement class="stat-box">
-                        <ui:Label text="POINTS" class="stat-label" />
-                        <ui:Label name="Lbl-PointsValue" class="stat-value" text="0" />
+                    <ui:VisualElement class="profile-column profile-column-right">
+                        <ui:VisualElement name="Img-PlayerAvatar" class="profile-avatar" />
+
+                        <ui:VisualElement class="profile-section profile-description-section">
+                            <ui:VisualElement class="profile-description-header">
+                                <ui:Label text="DESCRIPTION" class="profile-section-title" />
+                                <ui:Button name="Btn-EditDescription" class="profile-description-edit-btn" text="✎" style="display: none;" />
+                            </ui:VisualElement>
+                            <ui:Label name="Lbl-Description" class="profile-description" text="" />
+                            <ui:VisualElement name="Profile-Description-Editor" class="profile-description-editor" style="display: none;">
+                                <ui:TextField name="Txt-DescriptionInput" class="profile-description-input" multiline="true" />
+                                <ui:VisualElement class="profile-description-actions">
+                                    <ui:Button name="Btn-SaveDescription" class="btn-global-base btn-imperial-success profile-save-description-btn" text="SAVE DESCRIPTION" />
+                                    <ui:Button name="Btn-CancelDescription" class="btn-global-base btn-imperial-primary profile-cancel-description-btn" text="CANCEL" />
+                                </ui:VisualElement>
+                            </ui:VisualElement>
+                        </ui:VisualElement>
                     </ui:VisualElement>
-
-                    <ui:VisualElement class="stat-vertical-divider" />
-
-                    <ui:VisualElement class="stat-box">
-                        <ui:Label text="CITIES" class="stat-label" />
-                        <ui:Label name="Lbl-CitiesValue" class="stat-value" text="0" />
-                    </ui:VisualElement>
-
                 </ui:VisualElement>
-
-                <ui:Label name="Lbl-Description" class="profile-description" text="No description available." />
-
             </ui:VisualElement>
-            
         </ui:VisualElement>
     </ui:VisualElement>
 </ui:UXML>

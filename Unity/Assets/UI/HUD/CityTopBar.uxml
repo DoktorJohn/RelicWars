@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <ui:UXML xmlns:ui="UnityEngine.UIElements" editor-extension-mode="False">
+    <ui:Style src="project://database/Assets/UI/Windows/WindowTheme.uss" />
     <ui:Style src="project://database/Assets/UI/HUD/CityTopBar.uss" />
 
     <ui:VisualElement name="City-TopBar-MainContainer" class="city-top-bar-main-container">
@@ -20,10 +21,19 @@
             </ui:VisualElement>
         </ui:VisualElement>
 
-        <ui:Button name="Alpha-Cheat-Button" text="+" class="cheat-button" />
-
         <ui:VisualElement name="City-TopBar-ResourceSection-Right" class="city-top-bar-resource-section-right">
-            
+
+            <ui:VisualElement name="City-TopBar-ExoticResources-Trigger" class="city-resource-group city-exotic-resource-trigger">
+                <ui:VisualElement class="city-resource-icon-container city-exotic-resource-icon-container">
+                    <ui:VisualElement class="city-exotic-resource-stack">
+                        <ui:VisualElement class="city-exotic-resource-stack-layer city-exotic-resource-stack-layer--top icon-diamond" />
+                        <ui:VisualElement class="city-exotic-resource-stack-layer city-exotic-resource-stack-layer--bottom-left icon-ivory" />
+                        <ui:VisualElement class="city-exotic-resource-stack-layer city-exotic-resource-stack-layer--bottom-right icon-sand" />
+                    </ui:VisualElement>
+                </ui:VisualElement>
+                <ui:Label name="City-ResourceLabel-ExoticAmount" class="city-resource-label-amount city-exotic-resource-total" text="0" />
+            </ui:VisualElement>
+
             <ui:VisualElement class="city-resource-group">
                 <ui:VisualElement class="city-resource-icon-container">
                     <ui:VisualElement class="city-resource-icon-base icon-population" />
@@ -58,9 +68,9 @@
 
             <ui:VisualElement class="city-resource-group">
                 <ui:VisualElement class="city-resource-icon-container">
-                    <ui:VisualElement class="city-resource-icon-base icon-silver" />
+                    <ui:VisualElement class="city-resource-icon-base icon-coins" />
                 </ui:VisualElement>
-                <ui:Label name="City-ResourceLabel-SilverAmount" class="city-resource-label-amount" text="0" />
+                <ui:Label name="City-ResourceLabel-CoinsAmount" class="city-resource-label-amount" text="0" />
             </ui:VisualElement>
 
             <ui:VisualElement class="city-resource-group">
@@ -79,6 +89,13 @@
             </ui:VisualElement>
 
         </ui:VisualElement>
+        <ui:Button name="City-TopBar-LogoutButton" class="city-top-bar-logout-button" text="LOG OUT" />
         <ui:Button name="City-TopBar-MapButton" class="city-top-bar-map-button" />
+    </ui:VisualElement>
+    <ui:VisualElement name="City-TopBar-ExoticResources-Tooltip" class="window-frame city-exotic-tooltip" picking-mode="Ignore">
+        <ui:VisualElement class="city-exotic-tooltip-header">
+            <ui:Label name="City-TopBar-ExoticResources-TooltipTitle" text="EXOTIC STOCKPILE" class="city-exotic-tooltip-title" />
+        </ui:VisualElement>
+        <ui:VisualElement name="City-TopBar-ExoticResources-TooltipGrid" class="city-exotic-tooltip-grid" />
     </ui:VisualElement>
 </ui:UXML>

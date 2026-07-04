@@ -1,5 +1,6 @@
 ﻿using Application.DTOs;
 using Application.Interfaces.IRepositories;
+using Application.Interfaces.IServices;
 using Application.Interfaces.IServices.IBuildings;
 using Domain.Enums;
 using Domain.StaticData.Data;
@@ -16,17 +17,18 @@ namespace Application.Services.Buildings
     {
         private readonly ICityRepository _cityRepo;
         private readonly BuildingDataReader _buildingDataReader;
+        private readonly IPlayerAccessService _playerAccessService;
 
-        public TownHallService(ICityRepository cityRepo, BuildingDataReader buildingDataReader)
+        public TownHallService(ICityRepository cityRepo, BuildingDataReader buildingDataReader, IPlayerAccessService playerAccessService)
         {
             _cityRepo = cityRepo;
             _buildingDataReader = buildingDataReader;
+            _playerAccessService = playerAccessService;
         }
 
         public async Task<TownHallInfoDTO> GetTownHallInfoAsync(Guid cityId)
         {
-            var city = await _cityRepo.GetByIdAsync(cityId);
-            if (city == null) throw new Exception("City not found");
+            var city = await _playerAccessService.RequireOwnedCityForTownHallAsync(cityId);
 
             var townHall = city.Buildings.FirstOrDefault(b => b.Type == BuildingTypeEnum.TownHall);
             int currentLevel = townHall?.Level ?? 0;

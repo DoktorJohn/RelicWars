@@ -32,6 +32,10 @@ namespace Project.Network.Models
         public double MaxMetalCapacity;
         public int CurrentPopulationUsage;
         public int MaxPopulationCapacity;
+        public double Resistance;
+        public double ResistanceTarget;
+        public double ResistanceRecoveryPerHour;
+        public List<CityExoticResourceDTO> ExoticResources = new();
     }
 
     [Serializable]
@@ -45,6 +49,22 @@ namespace Project.Network.Models
     }
 
     [Serializable]
+    public class CityInspectionDTO
+    {
+        public Guid CityId { get; set; }
+        public string CityName { get; set; } = string.Empty;
+        public int X { get; set; }
+        public int Y { get; set; }
+        public int Points { get; set; }
+        public Guid? WorldPlayerId { get; set; }
+        public string WorldPlayerName { get; set; } = string.Empty;
+        public Guid? AllianceId { get; set; }
+        public string AllianceName { get; set; } = string.Empty;
+        public bool CanAttack { get; set; }
+        public bool CanSupport { get; set; }
+    }
+
+    [Serializable]
     public class CityOverviewHUDDTO
     {
         public Guid CityId;
@@ -53,12 +73,25 @@ namespace Project.Network.Models
         public ResourceOverviewDTO Wood;
         public ResourceOverviewDTO Stone;
         public ResourceOverviewDTO Metal;
-        public SilverBreakdownDTO SilverProduction;
+        public CoinsBreakdownDTO CoinsProduction;
         public ProductionBreakdownDTO ResearchProduction;
         public ProductionBreakdownDTO IdeologyProduction;
         public PopulationBreakdownDTO Population;
+        public double Resistance;
+        public double ResistanceTarget;
+        public double ResistanceRecoveryPerHour;
         public BuildingQueueOverviewDTO TownHallStatus;
         public BarracksQueueOverviewDTO BarracksStatus;
+        public List<CityExoticResourceDTO> ExoticResources = new();
+        public List<CityExoticResourceProductionDTO> ExoticResourceProductions = new();
+    }
+
+    [Serializable]
+    public class CityExoticResourceProductionDTO
+    {
+        public int SlotIndex;
+        public ExoticResourceTypeEnum ResourceType;
+        public ProductionBreakdownDTO Production;
     }
 
     [Serializable]
@@ -78,7 +111,7 @@ namespace Project.Network.Models
     }
 
     [Serializable]
-    public class SilverBreakdownDTO
+    public class CoinsBreakdownDTO
     {
         public double BaseValue;
         public double BuildingBonus;
@@ -125,7 +158,7 @@ namespace Project.Network.Models
         public double CurrentWoodAmount;
         public double CurrentStoneAmount;
         public double CurrentMetalAmount;
-        public double CurrentSilverAmount;
+        public double CurrentCoinsAmount;
         public double CurrentResearchPoints;
         public double CurrentIdeologyFocusPoints;
 
@@ -136,12 +169,17 @@ namespace Project.Network.Models
         public double WoodProductionPerHour;
         public double StoneProductionPerHour;
         public double MetalProductionPerHour;
-        public double SilverProductionPerHour;
+        public double CoinsProductionPerHour;
         public double ResearchPointsPerHour;
         public double IdeologyFocusPointsPerHour;
 
         public int CurrentPopulationUsage;
         public int MaxPopulationCapacity;
+        public double Resistance;
+        public double ResistanceTarget;
+        public double ResistanceRecoveryPerHour;
+        public List<CityExoticResourceDTO> ExoticResources = new();
+        public List<WorldIslandResourceDTO> IslandExoticResources = new();
 
         public List<CityControllerGetDetailedCityInformationBuildingDTO> BuildingList = new();
         public List<UnitStackDTO> StationedUnits { get; set; } = new();
@@ -163,5 +201,33 @@ namespace Project.Network.Models
         public DateTime? UpgradeStartedAt;
         public DateTime? UpgradeFinishedAt;
         public bool IsCurrentlyUpgrading;
+    }
+
+    [Serializable]
+    public class CityExoticResourceDTO
+    {
+        public ExoticResourceTypeEnum ResourceType;
+        public double Amount;
+    }
+
+    [Serializable]
+    public class ExoticResourceInvestmentRequestDTO
+    {
+        public int SlotIndex;
+        public double WoodAmount;
+        public double StoneAmount;
+        public double MetalAmount;
+        public double CoinAmount;
+    }
+
+    [Serializable]
+    public class ExoticResourceInvestmentResponseDTO
+    {
+        public Guid CityId;
+        public Guid IslandId;
+        public int SlotIndex;
+        public int NewTier;
+        public List<WorldIslandResourceDTO> IslandExoticResources = new();
+        public List<CityExoticResourceDTO> CityExoticResources = new();
     }
 }

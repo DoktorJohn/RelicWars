@@ -6,8 +6,8 @@ namespace Assets.Scripts.Domain.State
     [System.Serializable]
     public class WorldPlayerState
     {
-        public double SilverAmount;
-        public double SilverProductionPerHour;
+        public double CoinsAmount;
+        public double CoinsProductionPerHour;
 
         public double ResearchPointsAmount;
         public double ResearchPointsProductionPerHour;

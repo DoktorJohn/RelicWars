@@ -1,7 +1,8 @@
-﻿using Application.Interfaces.IRepositories;
+using Application.Interfaces.IRepositories;
 using Application.Interfaces.IServices;
 using Application.Utility;
 using Domain.Entities;
+using Domain.Enums;
 using Domain.User;
 using Domain.Workers;
 using Domain.Workers.Abstraction;
@@ -15,6 +16,7 @@ namespace Application.Services.Jobs
 {
     public class JobService : IJobService
     {
+        private readonly IBattleReportRepository _battleReportRepository;
         private readonly IResourceService _resourceService;
         private readonly ICityRepository _cityRepo;
         private readonly IWorldPlayerService _worldPlayerService;
@@ -23,6 +25,7 @@ namespace Application.Services.Jobs
         private readonly ILogger<JobService> _logger;
 
         public JobService(
+            IBattleReportRepository battleReportRepository,
             IResourceService resourceService,
             ICityRepository cityRepo,
             ILogger<JobService> logger,
@@ -30,6 +33,7 @@ namespace Application.Services.Jobs
             IWorldPlayerService worldPlayerService,
             CityPointCalculator cityPointCalculator)
         {
+            _battleReportRepository = battleReportRepository;
             _resourceService = resourceService;
             _cityRepo = cityRepo;
             _logger = logger;
@@ -69,6 +73,7 @@ namespace Application.Services.Jobs
 
             // 3. Gem byen. Workeren gemmer selve job-tilstanden efterfølgende.
             await _cityRepo.UpdateAsync(city);
+            await CreateCompletionReportAsync(city, job);
         }
 
         private async Task ProcessResearchJob(ResearchJob job)
@@ -76,12 +81,15 @@ namespace Application.Services.Jobs
             var player = await _worldPlayerRepo.GetByIdWithResearchAsync(job.WorldPlayerId);
             if (player == null) return;
 
-            player.CompletedResearches.Add(new Research
+            if (!player.CompletedResearches.Any(research => research.ResearchId == job.ResearchId))
             {
-                WorldPlayerId = player.Id,
-                ResearchId = job.ResearchId,
-                CompletedAt = DateTime.UtcNow
-            });
+                player.CompletedResearches.Add(new Research
+                {
+                    WorldPlayerId = player.Id,
+                    ResearchId = job.ResearchId,
+                    CompletedAt = DateTime.UtcNow
+                });
+            }
 
             job.IsCompleted = true;
             await _worldPlayerRepo.UpdateAsync(player);
@@ -134,6 +142,48 @@ namespace Application.Services.Jobs
             }
         }
 
+        private async Task CreateCompletionReportAsync(City city, BaseJob job)
+        {
+            if (!job.IsCompleted)
+            {
+                return;
+            }
+
+            switch (job)
+            {
+                case BuildingJob buildingJob:
+                    await _battleReportRepository.AddAsync(new BattleReport
+                    {
+                        Id = Guid.NewGuid(),
+                        WorldPlayerId = buildingJob.WorldPlayerId,
+                        ReportType = ReportTypeEnum.BuildingCompleted,
+                        Title = $"Construction completed: {buildingJob.BuildingType}",
+                        Body = $"{buildingJob.BuildingType} level {buildingJob.TargetLevel} was completed in {city.Name}.",
+                        OccurredAt = DateTime.UtcNow,
+                        AttackerLossesJson = "[]",
+                        DefenderLossesJson = "[]",
+                        RevivedUnitsJson = "[]",
+                        AppliedModifiersJson = "[]"
+                    });
+                    break;
+                case RecruitmentJob recruitmentJob:
+                    await _battleReportRepository.AddAsync(new BattleReport
+                    {
+                        Id = Guid.NewGuid(),
+                        WorldPlayerId = recruitmentJob.WorldPlayerId,
+                        ReportType = ReportTypeEnum.RecruitmentCompleted,
+                        Title = $"Training completed: {recruitmentJob.UnitType}",
+                        Body = $"{recruitmentJob.TotalQuantity} {recruitmentJob.UnitType} finished training in {city.Name}.",
+                        OccurredAt = DateTime.UtcNow,
+                        AttackerLossesJson = "[]",
+                        DefenderLossesJson = "[]",
+                        RevivedUnitsJson = "[]",
+                        AppliedModifiersJson = "[]"
+                    });
+                    break;
+            }
+        }
+
         private void SyncResourcesToJobCompletion(City city, DateTime executionTime)
         {
             var snapshot = _resourceService.CalculateCityResources(city, executionTime);
@@ -143,7 +193,7 @@ namespace Application.Services.Jobs
             city.LastResourceUpdate = executionTime;
 
             if (city.WorldPlayer != null)
-                _worldPlayerService.UpdateGlobalResourceState(city.WorldPlayer, executionTime);
+                _worldPlayerService.SyncGlobalResources(city.WorldPlayer, executionTime);
         }
     }
 }

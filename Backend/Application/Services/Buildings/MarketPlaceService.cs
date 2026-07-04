@@ -1,4 +1,4 @@
-﻿using Application.DTOs;
+using Application.DTOs;
 using Application.Interfaces.IRepositories;
 using Application.Interfaces.IServices;
 using Application.Interfaces.IServices.IBuildings;
@@ -18,35 +18,36 @@ namespace Application.Services.Buildings
         private readonly ICityRepository _cityRepo;
         private readonly BuildingDataReader _buildingDataReader;
         private readonly IModifierService _modifierService;
+        private readonly IPlayerAccessService _playerAccessService;
 
         public MarketPlaceService(
             ICityRepository cityRepo,
             BuildingDataReader buildingDataReader,
-            IModifierService modifierService)
+            IModifierService modifierService,
+            IPlayerAccessService playerAccessService)
         {
             _cityRepo = cityRepo;
             _buildingDataReader = buildingDataReader;
             _modifierService = modifierService;
+            _playerAccessService = playerAccessService;
         }
 
         public async Task<List<MarketPlaceInfoDTO>> GetMarketPlaceInfoAsync(Guid cityId)
         {
-            var cityEntity = await _cityRepo.GetByIdAsync(cityId);
-            if (cityEntity == null)
-            {
-                throw new KeyNotFoundException($"City with ID {cityId} not found");
-            }
+            var cityEntity = await _playerAccessService.RequireOwnedCityAsync(cityId);
 
             var marketPlaceBuilding = cityEntity.Buildings.FirstOrDefault(b => b.Type == BuildingTypeEnum.MarketPlace);
             int currentBuildingLevel = marketPlaceBuilding?.Level ?? 0;
+            const int maxLevel = 20;
+            const int previewLevels = 5;
+            int previewStartLevel = Math.Max(0, Math.Min(currentBuildingLevel, maxLevel - previewLevels + 1));
 
             var marketPlaceProjectionList = new List<MarketPlaceInfoDTO>();
 
             for (int i = 0; i < 5; i++)
             {
-                int levelToCheck = currentBuildingLevel + i;
-
-                if (levelToCheck > 19) break;
+                int levelToCheck = previewStartLevel + i;
+                if (levelToCheck > maxLevel) break;
 
                 double baseMarketBonusValue = 0;
 
@@ -57,7 +58,7 @@ namespace Application.Services.Buildings
                     if (levelConfiguration == null) break;
 
                     baseMarketBonusValue = levelConfiguration.ModifiersInternal
-                        .FirstOrDefault(modifier => modifier.Tag == ModifierTagEnum.Silver)?.Value ?? 0;
+                        .FirstOrDefault(modifier => modifier.Tag == ModifierTagEnum.Coins)?.Value ?? 0;
                 }
 
                 var marketModifierResult = _modifierService.CalculateCityValue(

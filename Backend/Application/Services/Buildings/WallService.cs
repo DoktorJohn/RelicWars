@@ -18,22 +18,24 @@ namespace Application.Services.Buildings
         private readonly ICityRepository _cityRepository;
         private readonly BuildingDataReader _buildingDataReader;
         private readonly IModifierService _modifierService;
+        private readonly IPlayerAccessService _playerAccessService;
 
         public WallService(
             ICityRepository cityRepository,
             BuildingDataReader buildingDataReader,
-            IModifierService modifierService)
+            IModifierService modifierService,
+            IPlayerAccessService playerAccessService)
         {
             _cityRepository = cityRepository;
             _buildingDataReader = buildingDataReader;
             _modifierService = modifierService;
+            _playerAccessService = playerAccessService;
         }
 
         public async Task<List<WallInfoDTO>> GetWallInfoAsync(Guid cityId)
         {
             // 1. Hent byen for at få adgang til aktive modifier providers
-            var cityEntity = await _cityRepository.GetByIdAsync(cityId);
-            if (cityEntity == null) throw new Exception("City not found");
+            var cityEntity = await _playerAccessService.RequireOwnedCityAsync(cityId);
 
             var wallBuilding = cityEntity.Buildings.FirstOrDefault(b => b.Type == BuildingTypeEnum.Wall);
             int currentBuildingLevel = wallBuilding?.Level ?? 0;

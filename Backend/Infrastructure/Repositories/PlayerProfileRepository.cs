@@ -58,5 +58,11 @@ namespace Infrastructure.Repositories
             await _context.SaveChangesAsync();
         }
 
+        public async Task UpdateAsync(PlayerProfile playerProfile)
+        {
+            _context.PlayerProfiles.Update(playerProfile);
+            await _context.SaveChangesAsync();
+        }
+
     }
 }

@@ -42,6 +42,14 @@ namespace Game.Controllers
                 var result = await _rankingService.GetRankingById(worldPlayerId);
                 return Ok(result);
             }
+            catch (KeyNotFoundException)
+            {
+                return NotFound();
+            }
+            catch (UnauthorizedAccessException)
+            {
+                return Forbid();
+            }
             catch (Exception exception)
             {
                 _logger.LogError(exception, "Fejl ved hentning af rankings for spiller {worldPlayerId}", worldPlayerId);

@@ -24,6 +24,7 @@ namespace Infrastructure.Repositories
             return await _context.WorldPlayers
                 .AsNoTracking()
                 .Include(wp => wp.Cities)
+                    .ThenInclude(city => city.ExoticResources)
                 .FirstOrDefaultAsync(wp => wp.PlayerProfileId == profileId && wp.WorldId == worldId);
         }
 
@@ -39,6 +40,8 @@ namespace Infrastructure.Repositories
                     .ThenInclude(c => c.Buildings)
                 .Include(wp => wp.Cities)
                     .ThenInclude(c => c.UnitStacks)
+                .Include(wp => wp.Cities)
+                    .ThenInclude(c => c.ExoticResources)
                 .Include(wp => wp.Cities)
                     .ThenInclude(c => c.OriginUnitDeployments)
                         .ThenInclude(d => d.UnitStacks)

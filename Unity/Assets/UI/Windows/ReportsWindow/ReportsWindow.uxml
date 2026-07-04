@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" editor-extension-mode="False">
+    <ui:Style src="project://database/Assets/UI/Windows/WindowTheme.uss" />
+    <ui:Style src="ReportsWindow.uss" />
+
+    <ui:VisualElement class="screen-overlay" picking-mode="Ignore">
+        <ui:VisualElement name="Reports-Window-MainContainer" class="window-frame reports-window-size">
+            <ui:VisualElement name="Reports-Window-Header" class="window-header">
+                <ui:Label class="window-header-label" text="REPORTS" />
+                <ui:Button name="Reports-Close-Button" class="window-close-btn" text="x" />
+            </ui:VisualElement>
+
+            <ui:VisualElement class="reports-content">
+                <ui:VisualElement class="reports-list-panel">
+                    <ui:VisualElement class="reports-list-header">
+                        <ui:VisualElement class="reports-counts">
+                            <ui:Label name="ReportCountLabel" text="" class="reports-count-pill" />
+                            <ui:Label name="UnreadReportCountLabel" text="" class="reports-count-pill reports-count-pill--unread" />
+                        </ui:VisualElement>
+                    </ui:VisualElement>
+                    <ui:ScrollView name="ReportList" class="battle-report-list" />
+                </ui:VisualElement>
+
+                <ui:ScrollView name="ReportDetailsPanel" class="battle-report-details" />
+            </ui:VisualElement>
+        </ui:VisualElement>
+    </ui:VisualElement>
+</ui:UXML>

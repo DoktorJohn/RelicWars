@@ -8,7 +8,7 @@
 
 /* Den aflange bund-bar */
 .city-name-bar {
-    background-color: rgba(0, 31, 63, 0.9); /* Deep Blue - fjernet alpha for test */
+    background-color: rgba(0, 31, 63, 0.9);
     border-width: 0.5px;
     border-color: rgb(255, 255, 255);
     border-radius: 8px;
@@ -22,31 +22,6 @@
     color: rgb(255, 255, 255);
     -unity-font-style: bold;
     font-size: 8px;
-    -unity-text-align: middle-center;
-    margin: 0;
-    padding: 0;
-}
-
-/* Point badget på toppen (Trapez-ish) */
-.city-points-badge {
-    background-color: rgba(0, 45, 90, 0.9);
-    border-width: 0.5px;
-    border-color: rgb(255, 255, 255);
-    border-top-left-radius: 10px;
-    border-top-right-radius: 10px;
-    border-bottom-left-radius: 0;
-    border-bottom-right-radius: 0;
-    margin-bottom: -2px; /* Skaber overlap med navnebaren */
-    padding: 2px 12px;
-    min-width: 60px;
-    align-items: center;
-    justify-content: center;
-}
-
-.city-points-text {
-    color: rgb(255, 215, 0); /* Guld */
-    font-size: 7px;
-    -unity-font-style: bold;
     -unity-text-align: middle-center;
     margin: 0;
     padding: 0;

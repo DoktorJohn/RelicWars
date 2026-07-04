@@ -10,6 +10,7 @@ namespace Project.Scripts.Domain.DTOs
     public class RankingEntryDataDTO
     {
         public string WorldPlayerId { get; set; }
+        public string AllianceId { get; set; }
         public int Rank { get; set; }
         public string PlayerName { get; set; }
         public string AllianceName { get; set; }

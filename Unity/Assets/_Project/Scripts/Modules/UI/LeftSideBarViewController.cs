@@ -3,6 +3,21 @@ using UnityEngine.UIElements;
 using System;
 using Project.Network.Models;
 using Assets.Scripts.Domain.Enums;
+using Project.Modules.Messaging;
+using Project.Modules.Reports;
+
+namespace Project.Modules.Messaging
+{
+    public static class MessagingStateEvents
+    {
+        public static event Action UnreadStateChanged;
+
+        public static void RaiseUnreadStateChanged()
+        {
+            UnreadStateChanged?.Invoke();
+        }
+    }
+}
 
 namespace Project.Modules.UI
 {
@@ -17,14 +32,21 @@ namespace Project.Modules.UI
         private VisualElement _alliancePanelButton;
         private VisualElement _globalRankingsButton;
         private VisualElement _messageButton;
-        private VisualElement _inboxNotificationDot;
+        private VisualElement _reportsButton;
+        private Button _bugReportButton;
+        private Label _inboxNotificationBadge;
+        private Label _reportsNotificationBadge;
         
         private void OnEnable()
         {
             InitializeUserInterfaceRoots();
             RegisterNavigationButtonCallbacks();
+            MessagingStateEvents.UnreadStateChanged += CheckUnreadMessages;
+            BattleReportStateEvents.UnreadStateChanged += CheckUnreadBattleReports;
             CheckUnreadMessages();
+            CheckUnreadBattleReports();
             InvokeRepeating(nameof(CheckUnreadMessages), 10f, 10f);
+            InvokeRepeating(nameof(CheckUnreadBattleReports), 10f, 10f);
         }
 
         private void CheckUnreadMessages()
@@ -33,11 +55,29 @@ namespace Project.Modules.UI
 
             if (Guid.TryParse(Project.Network.Manager.NetworkManager.Instance.WorldPlayerId, out Guid wpId))
             {
-                StartCoroutine(Project.Network.Manager.NetworkManager.Instance.Messaging.HasUnreadMessages(wpId, Project.Network.Manager.NetworkManager.Instance.JwtToken, (hasUnread) =>
+                StartCoroutine(Project.Network.Manager.NetworkManager.Instance.Messaging.GetUnreadMessageCount(wpId, Project.Network.Manager.NetworkManager.Instance.JwtToken, (unreadCount) =>
                 {
-                    if (_inboxNotificationDot != null)
+                    if (_inboxNotificationBadge != null)
                     {
-                        _inboxNotificationDot.style.display = hasUnread ? DisplayStyle.Flex : DisplayStyle.None;
+                        _inboxNotificationBadge.style.display = unreadCount > 0 ? DisplayStyle.Flex : DisplayStyle.None;
+                        _inboxNotificationBadge.text = unreadCount > 99 ? "99+" : unreadCount.ToString();
+                    }
+                }));
+            }
+        }
+
+        private void CheckUnreadBattleReports()
+        {
+            if (Project.Network.Manager.NetworkManager.Instance == null || string.IsNullOrEmpty(Project.Network.Manager.NetworkManager.Instance.WorldPlayerId)) return;
+
+            if (Guid.TryParse(Project.Network.Manager.NetworkManager.Instance.WorldPlayerId, out Guid wpId))
+            {
+                StartCoroutine(Project.Network.Manager.NetworkManager.Instance.BattleReports.GetUnreadBattleReportCount(wpId, Project.Network.Manager.NetworkManager.Instance.JwtToken, (unreadCount) =>
+                {
+                    if (_reportsNotificationBadge != null)
+                    {
+                        _reportsNotificationBadge.style.display = unreadCount > 0 ? DisplayStyle.Flex : DisplayStyle.None;
+                        _reportsNotificationBadge.text = unreadCount > 99 ? "99+" : unreadCount.ToString();
                     }
                 }));
             }
@@ -46,7 +86,10 @@ namespace Project.Modules.UI
         private void OnDisable()
         {
             UnregisterNavigationButtonCallbacks();
+            MessagingStateEvents.UnreadStateChanged -= CheckUnreadMessages;
+            BattleReportStateEvents.UnreadStateChanged -= CheckUnreadBattleReports;
             CancelInvoke(nameof(CheckUnreadMessages));
+            CancelInvoke(nameof(CheckUnreadBattleReports));
         }
 
         private void InitializeUserInterfaceRoots()
@@ -61,11 +104,18 @@ namespace Project.Modules.UI
                 _alliancePanelButton = _rootVisualElement.Q<VisualElement>("SideBar-Button-Alliance");
                 _globalRankingsButton = _rootVisualElement.Q<VisualElement>("SideBar-Button-Rankings");
                 _messageButton = _rootVisualElement.Q<VisualElement>("SideBar-Button-Inbox");
+                _reportsButton = _rootVisualElement.Q<VisualElement>("SideBar-Button-Reports");
                 _researchButton = _rootVisualElement.Q<VisualElement>("SideBar-Button-Research");
+                _bugReportButton = _rootVisualElement.Q<Button>("SideBar-Button-BugReport");
                 
                 if (_messageButton != null)
                 {
-                    _inboxNotificationDot = _messageButton.Q<VisualElement>("Inbox-Notification-Dot");
+                    _inboxNotificationBadge = _messageButton.Q<Label>("Inbox-Notification-Dot");
+                }
+
+                if (_reportsButton != null)
+                {
+                    _reportsNotificationBadge = _reportsButton.Q<Label>("Reports-Notification-Dot");
                 }
 
                 ValidateButtonReferences();
@@ -79,7 +129,9 @@ namespace Project.Modules.UI
             if (_alliancePanelButton == null) Debug.LogError("[LeftSideBarViewController] Alliance Button reference missing.");
             if (_globalRankingsButton == null) Debug.LogError("[LeftSideBarViewController] Rankings Button reference missing.");
             if (_messageButton == null) Debug.LogError("[LeftSideBarViewController] Message Button reference missing.");
+            if (_reportsButton == null) Debug.LogError("[LeftSideBarViewController] Reports Button reference missing.");
             if (_researchButton == null) Debug.LogError("[LeftSideBarViewController] Research Button reference missing.");
+            if (_bugReportButton == null) Debug.LogError("[LeftSideBarViewController] Bug report Button reference missing.");
         }
 
         private void RegisterNavigationButtonCallbacks()
@@ -89,7 +141,13 @@ namespace Project.Modules.UI
             _alliancePanelButton?.RegisterCallback<ClickEvent>(OnAllianceButtonClicked);
             _globalRankingsButton?.RegisterCallback<ClickEvent>(OnRankingsButtonClicked);
             _messageButton?.RegisterCallback<ClickEvent>(OnMessageButtonClicked);
+            _reportsButton?.RegisterCallback<ClickEvent>(OnReportsButtonClicked);
             _researchButton?.RegisterCallback<ClickEvent>(OnResearchButtonClicked);
+            if (_bugReportButton != null)
+            {
+                _bugReportButton.clicked -= OnBugReportButtonClicked;
+                _bugReportButton.clicked += OnBugReportButtonClicked;
+            }
         }
 
         private void UnregisterNavigationButtonCallbacks()
@@ -99,7 +157,12 @@ namespace Project.Modules.UI
             _alliancePanelButton?.UnregisterCallback<ClickEvent>(OnAllianceButtonClicked);
             _globalRankingsButton?.UnregisterCallback<ClickEvent>(OnRankingsButtonClicked);
             _messageButton?.UnregisterCallback<ClickEvent>(OnMessageButtonClicked);
+            _reportsButton?.UnregisterCallback<ClickEvent>(OnReportsButtonClicked);
             _researchButton?.UnregisterCallback<ClickEvent>(OnResearchButtonClicked);
+            if (_bugReportButton != null)
+            {
+                _bugReportButton.clicked -= OnBugReportButtonClicked;
+            }
         }
 
         private void OnOverviewButtonClicked(ClickEvent clickEvent)
@@ -130,6 +193,16 @@ namespace Project.Modules.UI
         private void OnMessageButtonClicked(ClickEvent clickEvent)
         {
             ExecuteOpenWindowRequest(WindowTypeEnum.Message);
+        }
+
+        private void OnReportsButtonClicked(ClickEvent clickEvent)
+        {
+            ExecuteOpenWindowRequest(WindowTypeEnum.Reports);
+        }
+
+        private void OnBugReportButtonClicked()
+        {
+            ExecuteOpenWindowRequest(WindowTypeEnum.BugReport);
         }
 
         private void ExecuteOpenWindowRequest(WindowTypeEnum windowType)

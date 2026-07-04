@@ -19,6 +19,7 @@ namespace Application.Services
     {
         private readonly IWorldPlayerRepository _worldPlayerRepo;
         private readonly IWorldPlayerService _worldPlayerService;
+        private readonly IPlayerAccessService _playerAccessService;
         private readonly ICityRepository _cityRepo;
         private readonly IdeologyFocusDataReader _ideologyFocusDataReader;
         private readonly IdeologyDataReader _ideologyDataReader;
@@ -27,10 +28,16 @@ namespace Application.Services
         private readonly IJobRepository _jobRepository;
         private readonly IIdeologyFocusRepository _ideologyFocusRepository;
         private readonly IResourceService _resourceService;
+        private readonly UnitDataReader _unitDataReader;
+        private readonly IRandomService _random;
+        private readonly TimeProvider _timeProvider;
+        private readonly InstantFocusGrantService _instantGrantService;
+        private readonly FocusEnactmentPolicy _enactmentPolicy;
 
         public IdeologyFocusService(
             IWorldPlayerRepository worldPlayerRepo,
             IWorldPlayerService worldPlayerService,
+            IPlayerAccessService playerAccessService,
             ICityRepository cityRepo,
             IdeologyFocusDataReader ideologyFocusDataReader,
             IdeologyDataReader ideologyDataReader,
@@ -38,10 +45,16 @@ namespace Application.Services
             ICityStatService cityStatService,
             IJobRepository jobRepository,
             IResourceService resourceService,
-            IIdeologyFocusRepository ideologyFocusRepository)
+            IIdeologyFocusRepository ideologyFocusRepository,
+            UnitDataReader unitDataReader,
+            IRandomService random,
+            TimeProvider timeProvider,
+            InstantFocusGrantService instantGrantService,
+            FocusEnactmentPolicy enactmentPolicy)
         {
             _worldPlayerRepo = worldPlayerRepo;
             _worldPlayerService = worldPlayerService;
+            _playerAccessService = playerAccessService;
             _cityRepo = cityRepo;
             _ideologyFocusDataReader = ideologyFocusDataReader;
             _ideologyDataReader = ideologyDataReader;
@@ -50,19 +63,27 @@ namespace Application.Services
             _jobRepository = jobRepository;
             _resourceService = resourceService;
             _ideologyFocusRepository = ideologyFocusRepository;
+            _unitDataReader = unitDataReader;
+            _random = random;
+            _timeProvider = timeProvider;
+            _instantGrantService = instantGrantService;
+            _enactmentPolicy = enactmentPolicy;
         }
 
         public async Task<IdeologyFocusAnswerDTO?> EnactIdeologyFocus(IdeologyFocusRequestDTO ideologyFocusDTO)
         {
             await _ideologyFocusRepository.DeleteExpiredFocusesForCityAsync(ideologyFocusDTO.CityId);
 
-            var city = await _cityRepo.GetByIdAsync(ideologyFocusDTO.CityId);
-            if (city == null) return new IdeologyFocusAnswerDTO(null, null, "City not found", false);
+            var city = await _playerAccessService.RequireOwnedCityAsync(ideologyFocusDTO.CityId);
 
             var ideologyFocusData = _ideologyFocusDataReader.GetIdeology(ideologyFocusDTO.IdeologyFocusName);
             var worldPlayer = city.WorldPlayer;
 
-            if (city.ActiveFocuses != null && city.ActiveFocuses.Any(x => x.Name == ideologyFocusDTO.IdeologyFocusName))
+            if (worldPlayer == null || worldPlayer.Ideology != ideologyFocusData.RequiredIdeology)
+                return new IdeologyFocusAnswerDTO(ideologyFocusData.Name, city.Id, "The focus does not belong to the player's ideology", false);
+
+            var now = _timeProvider.GetUtcNow().UtcDateTime;
+            if (!_enactmentPolicy.CanEnact(ideologyFocusData, city.ActiveFocuses, now))
             {
                 return new IdeologyFocusAnswerDTO(null, null, "City is already affected by the specified ideology focus", false);
             }
@@ -72,30 +93,42 @@ namespace Application.Services
                 return new IdeologyFocusAnswerDTO(ideologyFocusData.Name, city.Id, "Insufficient Ideology Points", false);
             }
 
-            var resourceSnapshot = _resourceService.CalculateGlobalResources(worldPlayer, DateTime.UtcNow);
-            worldPlayer.IdeologyFocusPoints = resourceSnapshot.IdeologyFocusPoints - ideologyFocusData.IdeologyFocusPointCost;
-            worldPlayer.LastResourceUpdate = DateTime.UtcNow;
-
-            _worldPlayerService.UpdateGlobalResourceState(worldPlayer, DateTime.UtcNow);
-            await _worldPlayerRepo.UpdateAsync(worldPlayer);
-
-            if (ideologyFocusData.SpecialFlag)
+            IdeologyFocusEffectResultDTO? effectResult = null;
+            if (ideologyFocusData.EffectKind == IdeologyFocusEffectKindEnum.Instant)
             {
-                await HandleSpecialFocusLogic(ideologyFocusData.Name, city);
+                effectResult = await HandleInstantFocus(ideologyFocusData.Name, city);
+                if (effectResult.GrantedQuantity <= 0)
+                {
+                    return new IdeologyFocusAnswerDTO(
+                        ideologyFocusData.Name,
+                        city.Id,
+                        effectResult.Summary,
+                        false,
+                        effectResult);
+                }
             }
 
-            bool isBuffWithDuration = ideologyFocusData.TimeActive.HasValue;
+            var resourceSnapshot = _resourceService.CalculateGlobalResources(worldPlayer, now);
+            worldPlayer.IdeologyFocusPoints = resourceSnapshot.IdeologyFocusPoints - ideologyFocusData.IdeologyFocusPointCost;
+            worldPlayer.LastResourceUpdate = now;
 
-            if (isBuffWithDuration)
+            _worldPlayerService.SyncGlobalResources(worldPlayer, now);
+            await _worldPlayerRepo.UpdateAsync(worldPlayer);
+
+            bool shouldPersistFocus = _enactmentPolicy.ShouldPersist(ideologyFocusData);
+
+            if (shouldPersistFocus)
             {
                 IdeologyFocus ideologyFocusEntity = new()
                 {
                     Name = ideologyFocusDTO.IdeologyFocusName,
-                    DateCreated = DateTime.UtcNow,
-                    DateLastModified = DateTime.UtcNow,
+                    DateCreated = now,
+                    DateLastModified = now,
                     CityId = city.Id,
-                    TimeOfIdeologyStarted = DateTime.UtcNow,
-                    TimeOfIdeologyFinished = DateTime.UtcNow.Add(ideologyFocusData.TimeActive!.Value)
+                    TimeOfIdeologyStarted = now,
+                    TimeOfIdeologyFinished = ideologyFocusData.TimeActive.HasValue
+                        ? now.Add(ideologyFocusData.TimeActive.Value)
+                        : null
                 };
 
                 await _ideologyFocusRepository.AddAsync(ideologyFocusEntity);
@@ -103,7 +136,10 @@ namespace Application.Services
 
             await _cityRepo.UpdateAsync(city);
 
-            return new IdeologyFocusAnswerDTO(ideologyFocusData.Name, city.Id, $"{ideologyFocusData.Name} enacted successfully", true);
+            var successMessage = ideologyFocusData.EffectKind == IdeologyFocusEffectKindEnum.Instant
+                ? effectResult!.Summary
+                : $"{ideologyFocusData.Name} enacted successfully";
+            return new IdeologyFocusAnswerDTO(ideologyFocusData.Name, city.Id, successMessage, true, effectResult);
         }
 
 
@@ -119,19 +155,7 @@ namespace Application.Services
 
             await _ideologyFocusRepository.DeleteExpiredFocusesForCityAsync(cityId);
 
-            var city = await _cityRepo.GetByIdAsync(cityId);
-
-            if (city == null)
-            {
-                dto.Message = $"No city with ID {cityId}";
-                return dto;
-            }
-
-            if (city.WorldPlayer == null)
-            {
-                dto.Message = "No worldplayer owns this city";
-                return dto;
-            }
+            var city = await _playerAccessService.RequireOwnedCityAsync(cityId);
 
             var worldPlayerIdeologyConfiguration = _ideologyDataReader.GetIdeology(city.WorldPlayer.Ideology);
 
@@ -158,6 +182,10 @@ namespace Application.Services
             // Henter den nu RENSEDE liste fra databasen
             var cityIdeologyFocusesActive = await _ideologyFocusRepository.GetAllByCityPlayer(cityId) ?? new List<IdeologyFocus>();
             var allStaticIdeologyFocuses = _ideologyFocusDataReader.GetAll();
+            var cityJobs = new List<Domain.Workers.Abstraction.BaseJob>();
+            cityJobs.AddRange(await _jobRepository.GetRecruitmentJobsAsync(city.Id));
+            cityJobs.AddRange(await _jobRepository.GetBuildingJobsAsync(city.Id));
+            int availablePopulation = Math.Max(0, _cityStatService.GetAvailablePopulation(city, cityJobs));
 
             var allStaticIdeologyFocusesForIdeology = allStaticIdeologyFocuses.Where(x => x.RequiredIdeology == worldPlayerIdeologyConfiguration.IdeologyType);
 
@@ -180,9 +208,18 @@ namespace Application.Services
                             Value = modifier.Value
                         }).ToList() ?? new List<ModifierDTO>(),
 
-                        AlreadyEnacted = activeRecord != null,
+                        AlreadyEnacted = activeRecord != null &&
+                            !(staticFocus.EffectKind == IdeologyFocusEffectKindEnum.Instant && staticFocus.CanRepeat),
                         ActiveTime = staticFocus.TimeActive,
                         ExpirationTime = activeRecord?.TimeOfIdeologyFinished ?? DateTime.MinValue
+                        ,EffectKind = staticFocus.EffectKind
+                        ,TargetScope = staticFocus.TargetScope
+                        ,CanRepeat = staticFocus.CanRepeat
+                        ,ConsumesOnTrigger = staticFocus.ConsumesOnTrigger
+                        ,IsAvailable = staticFocus.Name != IdeologyFocusNameEnum.LordsLevy || availablePopulation >= 100
+                        ,UnavailableReason = staticFocus.Name == IdeologyFocusNameEnum.LordsLevy && availablePopulation < 100
+                            ? "Requires at least 100 available population"
+                            : string.Empty
                     };
                 }).ToList();
             }
@@ -194,29 +231,14 @@ namespace Application.Services
             return dto;
         }
 
-        private async Task HandleSpecialFocusLogic(IdeologyFocusNameEnum focusName, City city)
+        private async Task<IdeologyFocusEffectResultDTO> HandleInstantFocus(IdeologyFocusNameEnum focusName, City city)
         {
-            if (focusName == IdeologyFocusNameEnum.LordsLevy)
+            return focusName switch
             {
-                //Ideology focus grants the player 8 militia for each 100 free population in the given city.
-
-                var activeJobsInCity = new List<BaseJob>();
-                activeJobsInCity.AddRange(await _jobRepository.GetRecruitmentJobsAsync(city.Id));
-                activeJobsInCity.AddRange(await _jobRepository.GetBuildingJobsAsync(city.Id));
-
-                var totalFreePopulation = _cityStatService.GetAvailablePopulation(city, activeJobsInCity);
-
-                int completedPopulationBreakpoints = totalFreePopulation / 100;
-
-                int militiaUnitsToGrant = completedPopulationBreakpoints * 8;
-
-                await _instantUtility.AddInstantUnitsToCityAsync(city.Id, UnitTypeEnum.Militia, militiaUnitsToGrant);
-            }
-            if (focusName == IdeologyFocusNameEnum.NewRecruits)
-            {
-                await _instantUtility.AddInstantUnitsToCityAsync(city.Id, UnitTypeEnum.Militia, 15);
-            }
-
+                IdeologyFocusNameEnum.LordsLevy => await _instantGrantService.GrantLordsLevy(city),
+                IdeologyFocusNameEnum.NewRecruits => await _instantGrantService.GrantNewRecruits(city),
+                _ => throw new InvalidOperationException($"No instant handler exists for {focusName}.")
+            };
         }
     }
 }

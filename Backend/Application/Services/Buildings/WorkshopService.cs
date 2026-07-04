@@ -20,21 +20,23 @@ namespace Application.Services.Buildings
         private readonly ICityRepository _cityRepo;
         private readonly UnitDataReader _unitDataReader;
         private readonly IModifierService _modifierService;
+        private readonly IPlayerAccessService _playerAccessService;
 
         public WorkshopService(
             ICityRepository cityRepo,
             UnitDataReader unitDataReader,
-            IModifierService modifierService)
+            IModifierService modifierService,
+            IPlayerAccessService playerAccessService)
         {
             _cityRepo = cityRepo;
             _unitDataReader = unitDataReader;
             _modifierService = modifierService;
+            _playerAccessService = playerAccessService;
         }
 
         public async Task<WorkshopFullViewDTO> GetWorkshopOverviewAsync(Guid userId, Guid cityId)
         {
-            var cityEntity = await _cityRepo.GetByIdAsync(cityId);
-            if (cityEntity == null) throw new Exception("City not found");
+            var cityEntity = await _playerAccessService.RequireOwnedCityAsync(cityId);
 
             var workshopBuilding = cityEntity.Buildings.FirstOrDefault(b => b.Type == BuildingTypeEnum.Workshop);
             int currentBuildingLevel = workshopBuilding?.Level ?? 0;

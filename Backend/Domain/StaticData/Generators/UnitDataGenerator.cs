@@ -145,6 +145,14 @@ namespace Domain.StaticData.Generators
         }
         };
 
+            var eliteUnits = new HashSet<UnitTypeEnum>
+            {
+                UnitTypeEnum.Knights,
+                UnitTypeEnum.Cataphracts,
+                UnitTypeEnum.Cannon
+            };
+            foreach (var unit in units) unit.IsElite = eliteUnits.Contains(unit.Type);
+
             var options = new JsonSerializerOptions
             {
                 WriteIndented = true,

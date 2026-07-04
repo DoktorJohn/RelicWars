@@ -2,36 +2,89 @@
 <ui:UXML xmlns:ui="UnityEngine.UIElements" editor-extension-mode="False">
     <ui:Style src="project://database/Assets/UI/Windows/WindowTheme.uss" />
     <ui:Style src="project://database/Assets/UI/Windows/WorldHexagonWindow/WorldHexagonWindow.uss" />
+    <ui:Style src="project://database/Assets/UI/Windows/WorldHexagonWindow/WorldHexagonWindowCityInspection.uss" />
     
     <ui:VisualElement name="Hexagon-Window-MainContainer" class="window-frame strategy-window">
         
         <ui:VisualElement name="Hexagon-Window-Header" class="window-header strategy-header">
-            <ui:Label text="PROVINCE INSPECTION" name="Header-Title" class="window-header-label" />
-            <ui:Button name="WorldHexagonWindow-Close-Button" text="×" class="window-close-btn" />
+            <ui:Label text="CITY INSPECTION" name="Header-Title" class="window-header-label" />
+            <ui:Button name="WorldHexagonWindow-Close-Button" text="x" class="window-close-btn" />
         </ui:VisualElement>
 
         <ui:VisualElement class="hexagon-body">
-            <ui:VisualElement class="info-section">
-                <ui:VisualElement class="info-row">
-                    <ui:Label text="LOCATION" class="info-label" />
-                    <ui:Label name="Target-Coordinates-Label" text="0, 0" class="info-value" />
-                </ui:VisualElement>
-                <ui:VisualElement class="info-row">
-                    <ui:Label text="TERRAIN" class="info-label" />
-                    <ui:Label name="Biome-Type-Label" text="UNKNOWN" class="info-value" />
-                </ui:VisualElement>
-            </ui:VisualElement>
+            <ui:VisualElement name="Inspection-State-Container" class="inspection-state-container" />
 
-            <ui:VisualElement name="Action-Container" class="button-group">
-                <ui:Button name="Btn-Select-Unit" text="SELECT EXPEDITION" class="btn-global-base btn-imperial-success hidden" />
-                <ui:Button name="Btn-Move-Here" text="ORDER MARCH" class="btn-global-base btn-imperial-primary hidden" />
-                <ui:Button name="Btn-Open-Deploy-View" text="DEPLOY TROOPS" class="btn-global-base btn-imperial-primary" />
-            </ui:VisualElement>
-
-            <ui:VisualElement name="Deploy-Unit-View" class="hidden">
-                <ui:Label text="AVAILABLE RESERVES" class="section-title" />
-                <ui:ScrollView name="Unit-List-Container" class="unit-scroll-view" />
-                <ui:Button name="Btn-Confirm-Deployment" text="EXECUTE DEPLOYMENT" class="btn-global-base btn-imperial-success" />
+            <ui:VisualElement name="Inspection-Details-Container" class="inspection-details hidden">
+                <ui:VisualElement class="window-tabs inspection-tabs">
+                    <ui:Button name="City-Info-Tab" text="CITY" class="window-tab window-tab-active inspection-tab" />
+                    <ui:Button name="Attack-City-Tab" text="ATTACK" class="window-tab inspection-tab" />
+                    <ui:Button name="Support-City-Tab" text="SUPPORT" class="window-tab inspection-tab" />
+                </ui:VisualElement>
+                <ui:VisualElement name="City-Info-Panel" class="info-section">
+                    <ui:VisualElement class="info-row">
+                        <ui:Label text="LOCATION" class="info-label" />
+                        <ui:Label name="Target-Coordinates-Label" text="" class="info-value" />
+                    </ui:VisualElement>
+                    <ui:VisualElement class="info-row">
+                        <ui:Label text="MAP" class="info-label" />
+                        <ui:Button name="Move-Here-Button" text="MOVE HERE" class="btn-global-base btn-imperial-primary inspection-action-button" />
+                    </ui:VisualElement>
+                    <ui:VisualElement class="info-row">
+                        <ui:Label text="TERRAIN" class="info-label" />
+                        <ui:Label name="Terrain-Type-Label" text="" class="info-value" />
+                    </ui:VisualElement>
+                    <ui:VisualElement class="info-row">
+                        <ui:Label text="CITY" class="info-label" />
+                        <ui:Label name="City-Name-Label" text="" class="info-value" />
+                    </ui:VisualElement>
+                    <ui:VisualElement class="info-row">
+                        <ui:Label text="PLAYER" class="info-label" />
+                        <ui:Label name="Player-Name-Label" text="-" class="btn-entity-link inspection-link-label" />
+                    </ui:VisualElement>
+                    <ui:VisualElement class="info-row">
+                        <ui:Label text="ALLIANCE" class="info-label" />
+                        <ui:Label name="Alliance-Name-Label" text="-" class="btn-entity-link inspection-link-label" />
+                    </ui:VisualElement>
+                    <ui:VisualElement class="info-row">
+                        <ui:Label text="POINTS" class="info-label" />
+                        <ui:Label name="City-Points-Label" text="" class="info-value" />
+                    </ui:VisualElement>
+                    <ui:VisualElement name="Incoming-Attacks-Container" class="hidden">
+                        <ui:Label text="INCOMING ATTACKS" class="section-title" />
+                        <ui:VisualElement name="Incoming-Attacks-List" />
+                    </ui:VisualElement>
+                </ui:VisualElement>
+                <ui:VisualElement name="March-Orders-Panel" class="march-orders-panel hidden">
+                    <ui:VisualElement class="march-summary">
+                        <ui:VisualElement class="march-summary-row">
+                            <ui:Label text="SOURCE" class="march-summary-key" />
+                            <ui:Button name="March-Source-Link" text="" class="btn-entity-link march-city-link" />
+                        </ui:VisualElement>
+                        <ui:VisualElement class="march-summary-row">
+                            <ui:Label text="DESTINATION" class="march-summary-key" />
+                            <ui:Button name="March-Destination-Link" text="" class="btn-entity-link march-city-link" />
+                        </ui:VisualElement>
+                        <ui:VisualElement class="march-summary-row">
+                            <ui:Label text="TRAVEL TIME" class="march-summary-key" />
+                            <ui:Label name="March-Travel-Time-Label" text="--:--:--" class="march-summary-value" />
+                        </ui:VisualElement>
+                        <ui:VisualElement class="march-summary-row">
+                            <ui:Label text="ARRIVAL" class="march-summary-key" />
+                            <ui:Label name="March-Arrival-Label" text="--" class="march-summary-value" />
+                        </ui:VisualElement>
+                    </ui:VisualElement>
+                    <ui:VisualElement class="march-unit-header">
+                        <ui:Label text="UNIT" class="march-unit-name" />
+                        <ui:Label text="AVAILABLE" class="march-unit-available" />
+                        <ui:Label text="SEND" class="march-unit-send" />
+                    </ui:VisualElement>
+                    <ui:ScrollView mode="Vertical" class="march-unit-scroll">
+                        <ui:VisualElement name="March-Units-Container" />
+                    </ui:ScrollView>
+                    <ui:Label name="March-Total-Label" text="TOTAL: 0" class="march-total" />
+                    <ui:Label name="March-Status-Label" text="" class="march-status text-body" />
+                    <ui:Button name="March-Submit-Button" text="" class="btn-global-base march-submit" />
+                </ui:VisualElement>
             </ui:VisualElement>
         </ui:VisualElement>
 

@@ -31,10 +31,10 @@ namespace Application.Utility
             _unitDataReader = unitDataReader;
         }
 
-        public async Task AddInstantUnitsToCityAsync(Guid cityId, UnitTypeEnum unitType, int requestedQuantity)
+        public async Task<int> AddInstantUnitsToCityAsync(Guid cityId, UnitTypeEnum unitType, int requestedQuantity)
         {
             var cityEntity = await _cityRepository.GetByIdAsync(cityId);
-            if (cityEntity == null) return;
+            if (cityEntity == null) return 0;
 
             var unitStaticData = _unitDataReader.GetUnit(unitType);
 
@@ -47,7 +47,7 @@ namespace Application.Utility
             int maxUnitsPossible = availablePopulation / unitStaticData.PopulationCost;
             int finalQuantityToAdd = Math.Min(requestedQuantity, maxUnitsPossible);
 
-            if (finalQuantityToAdd <= 0) return;
+            if (finalQuantityToAdd <= 0) return 0;
 
             var existingStack = cityEntity.UnitStacks.FirstOrDefault(u => u.Type == unitType);
 
@@ -64,6 +64,7 @@ namespace Application.Utility
                     CityId = cityId
                 });
             }
+            return finalQuantityToAdd;
         }
     }
 }

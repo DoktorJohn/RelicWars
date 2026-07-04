@@ -8,6 +8,6 @@ namespace Domain.Enums
 {
     public enum UnitDeploymentTypeEnum
     {
-        Attack, Support, Conquest
+        Attack, Support, Conquest, Trade
     }
 }

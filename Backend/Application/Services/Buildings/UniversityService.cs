@@ -18,25 +18,24 @@ namespace Application.Services.Buildings
         private readonly ICityRepository _cityRepository;
         private readonly BuildingDataReader _buildingDataReader;
         private readonly IModifierService _modifierService;
+        private readonly IPlayerAccessService _playerAccessService;
 
         public UniversityService(
             ICityRepository cityRepository,
             BuildingDataReader buildingDataReader,
-            IModifierService modifierService)
+            IModifierService modifierService,
+            IPlayerAccessService playerAccessService)
         {
             _cityRepository = cityRepository;
             _buildingDataReader = buildingDataReader;
             _modifierService = modifierService;
+            _playerAccessService = playerAccessService;
         }
 
         public async Task<List<UniversityInfoDTO>> GetUniversityInfoAsync(Guid cityId)
         {
             // 1. Hent byen for at få adgang til alle aktive modifier providers (Research, Ideology, etc.)
-            var cityEntity = await _cityRepository.GetByIdAsync(cityId);
-            if (cityEntity == null)
-            {
-                throw new Exception($"City with ID {cityId} not found");
-            }
+            var cityEntity = await _playerAccessService.RequireOwnedCityAsync(cityId);
 
             var universityBuilding = cityEntity.Buildings.FirstOrDefault(b => b.Type == BuildingTypeEnum.University);
             int currentBuildingLevel = universityBuilding?.Level ?? 0;

@@ -1,0 +1,224 @@
+/* Assets/UI/Windows/ReportsWindow/ReportsWindow.uss */
+
+.reports-window-size {
+    width: 1180px;
+    height: 740px;
+}
+
+.reports-content {
+    flex-direction: row;
+    flex-grow: 1;
+    padding: 12px;
+}
+
+.reports-list-panel {
+    width: 36%;
+    flex-direction: column;
+    border-right-width: 2px;
+    border-right-color: rgba(165, 125, 50, 0.35);
+    padding-right: 10px;
+    margin-right: 12px;
+}
+
+.reports-list-header {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 8px;
+}
+
+.reports-counts {
+    margin-left: auto;
+    flex-direction: row;
+    align-items: center;
+}
+
+.reports-count-pill {
+    min-width: 34px;
+    height: 24px;
+    border-radius: 12px;
+    background-color: rgba(0, 0, 0, 0.12);
+    color: var(--c-text-body);
+    font-size: 12px;
+    -unity-font-style: bold;
+    -unity-text-align: middle-center;
+    padding-left: 8px;
+    padding-right: 8px;
+    margin-left: 6px;
+}
+
+.reports-count-pill--unread {
+    background-color: rgba(155, 45, 35, 0.18);
+    color: var(--c-btn-chill-bg);
+}
+
+.battle-report-list {
+    flex-grow: 1;
+    background-color: rgba(255, 255, 255, 0.18);
+    border-radius: 8px;
+    padding: 8px;
+}
+
+.battle-report-item {
+    min-height: 74px;
+    padding: 10px;
+    margin-bottom: 8px;
+    border-width: 1px;
+    border-color: rgba(165, 125, 50, 0.24);
+    border-radius: 8px;
+    background-color: rgba(255, 255, 255, 0.06);
+    flex-direction: column;
+}
+
+.battle-report-item:hover {
+    background-color: rgba(165, 125, 50, 0.12);
+    border-color: rgba(165, 125, 50, 0.55);
+}
+
+.battle-report-item--selected {
+    background-color: rgba(165, 125, 50, 0.20);
+    border-color: rgba(165, 125, 50, 0.85);
+}
+
+.battle-report-item--unread {
+    border-left-width: 4px;
+    border-left-color: rgb(155, 45, 35);
+}
+
+.battle-report-item__top-row {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.battle-report-item__title {
+    flex-grow: 1;
+    -unity-font-style: bold;
+    color: var(--c-text-header);
+    font-size: 14px;
+    margin-right: 8px;
+}
+
+.battle-report-item__type-badge {
+    min-width: 82px;
+    height: 18px;
+    padding-left: 6px;
+    padding-right: 6px;
+    border-radius: 9px;
+    color: white;
+    font-size: 10px;
+    -unity-font-style: bold;
+    -unity-text-align: middle-center;
+    margin-right: 8px;
+}
+
+.battle-report-item__type-badge--battle {
+    background-color: rgba(60, 104, 163, 0.90);
+}
+
+.battle-report-item__type-badge--building {
+    background-color: rgba(80, 130, 70, 0.90);
+}
+
+.battle-report-item__type-badge--recruitment {
+    background-color: rgba(163, 104, 60, 0.90);
+}
+
+.battle-report-item__badge {
+    min-width: 34px;
+    height: 18px;
+    padding-left: 6px;
+    padding-right: 6px;
+    border-radius: 9px;
+    background-color: rgb(155, 45, 35);
+    color: white;
+    font-size: 10px;
+    -unity-font-style: bold;
+    -unity-text-align: middle-center;
+}
+
+.battle-report-item__body {
+    margin-top: 5px;
+    color: var(--c-text-body);
+    font-size: 12px;
+    white-space: normal;
+}
+
+.battle-report-item__timestamp {
+    margin-top: 6px;
+    color: var(--c-text-muted);
+    font-size: 11px;
+}
+
+.battle-report-details {
+    flex-grow: 1;
+    background-color: rgba(255, 255, 255, 0.20);
+    border-radius: 8px;
+    padding: 12px;
+}
+
+.report-detail-title {
+    color: var(--c-text-header);
+    -unity-font-style: bold;
+    font-size: 22px;
+    margin-bottom: 6px;
+}
+
+.report-detail-timestamp {
+    color: var(--c-text-muted);
+    font-size: 12px;
+    margin-bottom: 14px;
+}
+
+.report-detail-type {
+    color: var(--c-btn-chill-bg);
+    -unity-font-style: bold;
+    font-size: 12px;
+    letter-spacing: 1px;
+    margin-bottom: 10px;
+}
+
+.report-detail-summary {
+    color: var(--c-text-body);
+    font-size: 14px;
+    white-space: normal;
+    margin-bottom: 14px;
+}
+
+.report-detail-section-block {
+    margin-top: 10px;
+    padding-top: 8px;
+    border-top-width: 1px;
+    border-top-color: rgba(165, 125, 50, 0.20);
+}
+
+.report-detail-section-title {
+    color: var(--c-text-header);
+    -unity-font-style: bold;
+    font-size: 13px;
+    margin-bottom: 4px;
+}
+
+.report-detail-section-value {
+    color: var(--c-text-body);
+    font-size: 13px;
+    white-space: normal;
+}
+
+.report-detail-section {
+    color: var(--c-text-body);
+    font-size: 13px;
+    white-space: normal;
+    margin-top: 8px;
+}
+
+.report-detail-actions {
+    flex-direction: row;
+    justify-content: flex-end;
+    margin-top: 16px;
+}
+
+.report-detail-delete-button {
+    min-width: 160px;
+    margin-top: 0;
+}

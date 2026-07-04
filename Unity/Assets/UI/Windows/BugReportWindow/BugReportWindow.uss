@@ -1,0 +1,48 @@
+.bug-report-window-size {
+    width: 520px;
+    min-height: 390px;
+}
+
+.bug-report-content {
+    padding: 20px;
+}
+
+.bug-report-description {
+    height: 210px;
+    margin-top: 12px;
+    padding: 0;
+    background-color: rgba(0, 0, 0, 0);
+    border-width: 0;
+    white-space: normal;
+}
+
+.bug-report-description > .unity-base-text-field__input {
+    height: 100%;
+    padding: 10px;
+    background-color: rgba(255, 255, 255, 0.48);
+    border-width: 1px;
+    border-color: var(--c-border);
+    border-radius: 4px;
+    color: var(--c-text-body);
+    -unity-text-align: upper-left;
+}
+
+.bug-report-description:focus > .unity-base-text-field__input {
+    border-color: rgb(143, 103, 45);
+}
+
+.bug-report-status {
+    min-height: 24px;
+    margin-top: 8px;
+    color: rgb(186, 207, 164);
+    -unity-font-definition: var(--font-body);
+}
+
+.bug-report-status--error {
+    color: rgb(221, 132, 118);
+}
+
+.bug-report-send {
+    align-self: flex-end;
+    width: 120px;
+}

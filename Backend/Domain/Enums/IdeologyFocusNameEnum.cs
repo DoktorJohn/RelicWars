@@ -15,7 +15,8 @@ namespace Domain.Enums
         RoyalDecree,
         RoyalMedics,
         CrownTax,
-        EnhancendWorkshop,
+        EnhancedWorkshop,
+        EnhancendWorkshop = EnhancedWorkshop,
         MarketSurge,
         CivicInitiative,
         PublicWorks,
@@ -26,7 +27,6 @@ namespace Domain.Enums
         FortifiedCity,
         NobleClemency,
         PrivateSecurity,
-        SpeculativeStockpiling,
         EconomicTransparency,
     }
 }

@@ -54,9 +54,9 @@
     "ModifiersThatAffectsThis": []
   },
   {
-    "Id": "MARKET_SILVER_1",
+    "Id": "MARKET_COINS_1",
     "Name": "Art of the deal",
-    "Description": "\u002B3% bonus to marketplaces silver generation",
+    "Description": "\u002B3% bonus to marketplaces coins generation",
     "ResearchType": "Economy",
     "ParentId": "ECON_PROD_1",
     "ResearchPointCost": 25,
@@ -76,7 +76,7 @@
     "Name": "Phoenican Inspiration",
     "Description": "\u002B1 to available merchants",
     "ResearchType": "Economy",
-    "ParentId": "MARKET_SILVER_1",
+    "ParentId": "MARKET_COINS_1",
     "ResearchPointCost": 30,
     "ResearchTimeInSeconds": 900,
     "ModifiersInternal": [
@@ -90,16 +90,16 @@
     "ModifiersThatAffectsThis": []
   },
   {
-    "Id": "SILVER_PROD_1",
+    "Id": "COINS_PROD_1",
     "Name": "Tax Solidarity",
-    "Description": "\u002B3% increased global silver income",
+    "Description": "\u002B3% increased global coins income",
     "ResearchType": "Economy",
     "ParentId": "MARKET_MERCHANT_1",
     "ResearchPointCost": 35,
     "ResearchTimeInSeconds": 900,
     "ModifiersInternal": [
       {
-        "Tag": "Silver",
+        "Tag": "Coins",
         "Type": "Increased",
         "Value": 0.03,
         "Source": "Research: Tax Solidarity"
@@ -270,16 +270,16 @@
     "ModifiersThatAffectsThis": []
   },
   {
-    "Id": "UTIL_SILVER_1",
+    "Id": "UTIL_COINS_1",
     "Name": "Bureaucratic Efficiency",
-    "Description": "1% increased silver income",
+    "Description": "1% increased coins income",
     "ResearchType": "Utility",
     "ParentId": "UTIL_SUBJ_2",
     "ResearchPointCost": 60,
     "ResearchTimeInSeconds": 3000,
     "ModifiersInternal": [
       {
-        "Tag": "Silver",
+        "Tag": "Coins",
         "Type": "Increased",
         "Value": 0.01,
         "Source": "Research: Bureaucratic Efficiency"
@@ -292,7 +292,7 @@
     "Name": "Urban Expansion",
     "Description": "\u002B3% population in all cities",
     "ResearchType": "Utility",
-    "ParentId": "UTIL_SILVER_1",
+    "ParentId": "UTIL_COINS_1",
     "ResearchPointCost": 75,
     "ResearchTimeInSeconds": 3600,
     "ModifiersInternal": [

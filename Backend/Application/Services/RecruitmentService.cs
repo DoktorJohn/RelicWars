@@ -1,6 +1,7 @@
 ﻿using Application.DTOs;
 using Application.Interfaces.IRepositories;
 using Application.Interfaces.IServices;
+using Application.Interfaces;
 using Application.Utility;
 using Domain.Entities;
 using Domain.Enums;
@@ -21,42 +22,44 @@ namespace Application.Services
         private readonly IJobRepository _jobRepository;
         private readonly IResourceService _resourceService;
         private readonly IWorldPlayerService _worldPlayerService;
+        private readonly IPlayerAccessService _playerAccessService;
         private readonly IResearchService _researchService;
         private readonly ICityStatService _cityStatService;
         private readonly UnitDataReader _unitDataReader;
         private readonly BuildingDataReader _buildingDataReader;
         private readonly RecruitmentTimeCalculationService _recruitmentTimeCalculationService;
+        private readonly ITransactionManager _transactionManager;
 
         public RecruitmentService(
             ICityRepository cityRepository,
             IJobRepository jobRepository,
             IResourceService resourceService,
             IWorldPlayerService worldPlayerService,
+            IPlayerAccessService playerAccessService,
             IResearchService researchService,
             UnitDataReader unitDataReader,
             BuildingDataReader buildingDataReader,
             ICityStatService cityStatService,
-            RecruitmentTimeCalculationService recruitmentTimeCalculationService)
+            RecruitmentTimeCalculationService recruitmentTimeCalculationService,
+            ITransactionManager transactionManager)
         {
             _cityRepository = cityRepository;
             _jobRepository = jobRepository;
             _resourceService = resourceService;
             _worldPlayerService = worldPlayerService;
+            _playerAccessService = playerAccessService;
             _researchService = researchService;
             _unitDataReader = unitDataReader;
             _buildingDataReader = buildingDataReader;
             _cityStatService = cityStatService;
             _recruitmentTimeCalculationService = recruitmentTimeCalculationService;
+            _transactionManager = transactionManager;
         }
 
         public async Task<RecruitmentResult> QueueRecruitmentAsync(Guid userId, Guid cityId, UnitTypeEnum type, int quantity)
         {
             // 1. Hent entiteten for byen
-            var cityEntity = await _cityRepository.GetByIdAsync(cityId);
-            if (cityEntity == null)
-            {
-                return new RecruitmentResult(false, "Den forespurgte by blev ikke fundet.");
-            }
+            var cityEntity = await _playerAccessService.RequireOwnedCityAsync(cityId);
 
             var unitStaticData = _unitDataReader.GetUnit(type);
             var currentDateTime = DateTime.UtcNow;
@@ -84,7 +87,7 @@ namespace Application.Services
             }
 
             // 4. Opdater ressourcetilstand (Globalt og lokalt) før fratrækning
-            _worldPlayerService.UpdateGlobalResourceState(cityEntity.WorldPlayer, currentDateTime);
+            _worldPlayerService.SyncGlobalResources(cityEntity.WorldPlayer, currentDateTime);
             var cityResourceSnapshot = _resourceService.CalculateCityResources(cityEntity, currentDateTime);
 
             // 5. Valider om byen har råd til rekrutteringen
@@ -108,9 +111,6 @@ namespace Application.Services
             cityEntity.LastResourceUpdate = currentDateTime;
 
             // 7. Persister ændringer til databasen
-            await _cityRepository.UpdateAsync(cityEntity);
-
-            // 8. Opret og gem selve rekrutterings-jobbet
             var recruitmentJob = new RecruitmentJob
             {
                 WorldPlayerId = userId,
@@ -124,7 +124,11 @@ namespace Application.Services
                 IsCompleted = false
             };
 
-            await _jobRepository.AddAsync(recruitmentJob);
+            await _transactionManager.ExecuteAsync(async () =>
+            {
+                await _cityRepository.UpdateAsync(cityEntity);
+                await _jobRepository.AddAsync(recruitmentJob);
+            });
 
             // 9. Returner resultatet (Uden populationstallet da det nu håndteres via DetailedCityInfo synkronisering)
             return new RecruitmentResult(true, $"Træning af {quantity} er påbegyndt i {cityEntity.Name}.");
@@ -133,7 +137,7 @@ namespace Application.Services
 
         public async Task<List<RecruitmentQueueItemDTO>> GetRecruitmentQueueAsync(GetRecruitmentQueueItemsDTO dto)
         {
-
+            await _playerAccessService.RequireOwnedCityAsync(dto.CityId);
             var allActiveJobs = await _jobRepository.GetRecruitmentJobsAsync(dto.CityId);
             var queueItemDTO = new List<RecruitmentQueueItemDTO>();
 

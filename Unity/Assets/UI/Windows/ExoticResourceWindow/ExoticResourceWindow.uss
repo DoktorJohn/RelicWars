@@ -1,0 +1,51 @@
+.exotic-resource-window-size { width: 760px; height: 710px; }
+.exotic-resource-window-body { flex-grow: 1; padding: 18px 22px 22px 22px; overflow: hidden; }
+.exotic-resource-tabs { height: 64px; flex-direction: row; margin-bottom: 8px; }
+.exotic-resource-tab { flex-grow: 1; margin: 0 4px; padding: 0 14px; flex-direction: row; align-items: center; justify-content: center; border-width: 1px; border-color: var(--c-border); border-radius: 6px; background-color: rgba(0, 0, 0, 0.08); color: var(--c-text-muted); }
+.exotic-resource-tab:hover { background-color: rgba(165, 125, 50, 0.18); }
+.exotic-resource-tab--selected { background-color: var(--c-btn-chill-bg); color: white; border-color: var(--c-btn-chill-border); }
+.exotic-resource-tab-icon { width: 30px; height: 30px; margin-right: 10px; flex-shrink: 0; background-position: center; background-size: contain; background-repeat: no-repeat; }
+.exotic-resource-tab-label { flex-shrink: 0; color: var(--c-text-muted); -unity-font-definition: var(--font-header); -unity-font-style: bold; -unity-text-align: middle-left; }
+.exotic-resource-tab--selected .exotic-resource-tab-label { color: white; }
+.exotic-resource-status { min-height: 22px; color: var(--c-text-highlight); -unity-font-style: bold; }
+.exotic-resource-status--error { color: #8a2a1f; }
+.exotic-resource-retry { display: none; width: 140px; margin-bottom: 10px; }
+.exotic-resource-content { flex-grow: 1; }
+.exotic-resource-hero { min-height: 112px; flex-direction: row; align-items: center; padding: 12px; margin-bottom: 14px; background-color: rgba(255, 255, 255, 0.2); border-width: 1px; border-color: rgba(181, 145, 70, 0.45); border-radius: 8px; }
+.exotic-resource-icon { width: 82px; height: 82px; margin-right: 18px; background-position: center; background-size: contain; background-repeat: no-repeat; }
+.exotic-resource-identity { flex-grow: 1; }
+.exotic-resource-name { -unity-font-definition: var(--font-header); -unity-font-style: bold; font-size: 25px; color: var(--c-text-header); }
+.exotic-resource-tier { margin-top: 4px; color: var(--c-text-highlight); -unity-font-style: bold; font-size: 15px; }
+.exotic-resource-output { margin-top: 5px; }
+.exotic-resource-section-title { margin: 8px 0 6px 0; -unity-font-definition: var(--font-header); -unity-font-style: bold; font-size: 13px; color: var(--c-text-highlight); letter-spacing: 1px; }
+.exotic-resource-progress { height: 28px; margin-bottom: 10px; }
+.exotic-resource-progress .unity-progress-bar__progress { background-color: var(--c-btn-action-bg); }
+.exotic-resource-availability { padding: 16px; margin-top: 12px; background-color: rgba(0, 0, 0, 0.06); border-radius: 6px; -unity-text-align: middle-center; }
+.exotic-resource-investment { flex-shrink: 0; margin-top: 10px; margin-bottom: 14px; padding: 14px 14px 18px 14px; background-color: rgba(255, 255, 255, 0.16); border-width: 1px; border-color: rgba(181, 145, 70, 0.42); border-radius: 8px; }
+.exotic-resource-investment > .exotic-resource-section-title { margin-top: 0; margin-bottom: 10px; }
+.exotic-resource-cost-grid { flex-direction: row; flex-shrink: 0; margin: 0 -3px; }
+.exotic-resource-cost-card { width: auto; min-width: 0; min-height: 156px; flex-grow: 1; flex-basis: 0; flex-shrink: 0; padding: 12px; margin: 0 3px; background-color: rgba(0, 0, 0, 0.045); border-width: 1px; border-color: rgba(181, 145, 70, 0.42); border-radius: 7px; }
+.exotic-resource-cost-header { flex-direction: row; align-items: center; margin-bottom: 8px; }
+.exotic-resource-cost-icon { width: 26px; height: 26px; margin-right: 8px; flex-shrink: 0; background-position: center; background-size: contain; background-repeat: no-repeat; }
+.exotic-resource-cost-name { -unity-font-definition: var(--font-header); -unity-font-style: bold; color: var(--c-text-header); font-size: 13px; }
+.exotic-resource-cost-caption { color: var(--c-text-muted); font-size: 9px; -unity-font-style: bold; letter-spacing: 0.7px; }
+.exotic-resource-cost-value { margin: 3px 0 10px 0; color: var(--c-text-body); font-size: 12px; -unity-font-style: bold; }
+.exotic-resource-input-label { margin-bottom: 4px; color: var(--c-text-muted); font-size: 9px; -unity-font-style: bold; letter-spacing: 0.7px; }
+.exotic-resource-input { width: 100%; height: 38px; margin: 0; padding: 0; }
+.exotic-resource-input > .unity-base-text-field__input { width: 100%; height: 38px; padding: 4px 8px; background-color: rgba(0, 0, 0, 0.08); border-width: 1px; border-color: rgba(165, 125, 50, 0.72); border-radius: 5px; color: var(--c-text-body); -unity-font-definition: var(--font-body); -unity-font-style: bold; -unity-text-align: middle-center; font-size: 14px; }
+.exotic-resource-input > .unity-base-text-field__input:focus { background-color: rgba(255, 255, 255, 0.62); border-color: var(--c-btn-chill-bg); }
+.exotic-resource-invest-button { align-self: center; flex-shrink: 0; width: 240px; margin-top: 18px; margin-bottom: 10px; }
+.icon-wood { background-image: url('project://database/Assets/UI/Icons/Wood.png'); }
+.icon-stone { background-image: url('project://database/Assets/UI/Icons/Stone.png'); }
+.icon-metal { background-image: url('project://database/Assets/UI/Icons/Metal.png'); }
+.icon-coins { background-image: url('project://database/Assets/UI/Icons/coins.png'); }
+.icon-cloth { background-image: url('project://database/Assets/UI/Icons/cloth.png'); }
+.icon-coal { background-image: url('project://database/Assets/UI/Icons/coal.png'); }
+.icon-copper { background-image: url('project://database/Assets/UI/Icons/copper.png'); }
+.icon-cotton { background-image: url('project://database/Assets/UI/Icons/cotton.png'); }
+.icon-diamond { background-image: url('project://database/Assets/UI/Icons/diamond.png'); }
+.icon-gold { background-image: url('project://database/Assets/UI/Icons/gold.png'); }
+.icon-ivory { background-image: url('project://database/Assets/UI/Icons/ivory.png'); }
+.icon-sand { background-image: url('project://database/Assets/UI/Icons/sand.png'); }
+.icon-silver { background-image: url('project://database/Assets/UI/Icons/Silver.png'); }
+.icon-sulphur { background-image: url('project://database/Assets/UI/Icons/sulphur.png'); }

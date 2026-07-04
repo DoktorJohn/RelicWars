@@ -16,20 +16,38 @@ namespace Project.Modules.UI.Windows.Implementations
 
         private Label _currentHousingLevelDisplayLabel;
         private ScrollView _housingStatisticsScrollView;
+        private int _requestVersion;
 
         public override void OnOpen(object dataPayload)
         {
+            var version = BeginDeferredOpen();
+            _requestVersion = version;
             InitializeUserInterfaceComponentReferences();
+
+            if (NetworkManager.Instance == null)
+            {
+                SetEmptyState();
+                CompleteDeferredOpen(version);
+                return;
+            }
 
             Guid activeCityIdentifier = (dataPayload is Guid cityGuid) ? cityGuid : NetworkManager.Instance.ActiveCityId ?? Guid.Empty;
 
             if (activeCityIdentifier == Guid.Empty)
             {
                 Debug.LogWarning("[HousingWindowController] Open failed: No valid City ID found.");
+                SetEmptyState();
+                CompleteDeferredOpen(version);
                 return;
             }
 
-            RequestAndRenderHousingProjectionData(activeCityIdentifier);
+            RequestAndRenderHousingProjectionData(activeCityIdentifier, version);
+        }
+
+        private void OnDisable()
+        {
+            InvalidateDeferredOpen();
+            StopAllCoroutines();
         }
 
         private void InitializeUserInterfaceComponentReferences()
@@ -45,7 +63,7 @@ namespace Project.Modules.UI.Windows.Implementations
             _housingStatisticsScrollView = Root.Q<ScrollView>("Housing-Stats-List");
         }
 
-        private void RequestAndRenderHousingProjectionData(Guid cityIdentifier)
+        private void RequestAndRenderHousingProjectionData(Guid cityIdentifier, int version)
         {
             if (_housingStatisticsScrollView != null)
             {
@@ -56,11 +74,22 @@ namespace Project.Modules.UI.Windows.Implementations
 
             StartCoroutine(NetworkManager.Instance.Building.GetHousingProjection(cityIdentifier, authenticationToken, (projectionDataList) =>
             {
+                if (!isActiveAndEnabled || version != _requestVersion)
+                {
+                    return;
+                }
+
                 if (projectionDataList != null && projectionDataList.Count > 0)
                 {
                     UpdateHousingHeaderInformation(projectionDataList);
                     PopulateHousingStatisticsTable(projectionDataList);
                 }
+                else
+                {
+                    SetEmptyState();
+                }
+
+                CompleteDeferredOpen(version);
             }));
         }
 
@@ -72,7 +101,7 @@ namespace Project.Modules.UI.Windows.Implementations
             {
                 _currentHousingLevelDisplayLabel.text = currentLevelEntry != null
                     ? $"Level {currentLevelEntry.Level}"
-                    : "Not Constructed";
+                    : "-";
             }
         }
 
@@ -113,6 +142,19 @@ namespace Project.Modules.UI.Windows.Implementations
             tableRowContainer.Add(prodLabel);
 
             _housingStatisticsScrollView.Add(tableRowContainer);
+        }
+
+        private void SetEmptyState()
+        {
+            if (_currentHousingLevelDisplayLabel != null)
+            {
+                _currentHousingLevelDisplayLabel.text = "-";
+            }
+
+            if (_housingStatisticsScrollView != null)
+            {
+                WindowAsyncStateHelper.ShowEmpty(_housingStatisticsScrollView, "No housing data available.");
+            }
         }
     }
 }

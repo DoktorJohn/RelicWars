@@ -9,6 +9,7 @@ namespace Domain.StaticData.Data
     public class RankingEntryData
     {
         public Guid WorldPlayerId { get; set; }
+        public Guid? AllianceId { get; set; }
         public int Rank { get; set; }
         public string PlayerName { get; set; } = string.Empty;
         public string AllianceName { get; set; } = string.Empty;

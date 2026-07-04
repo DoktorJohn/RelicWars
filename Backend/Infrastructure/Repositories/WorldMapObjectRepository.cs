@@ -24,7 +24,8 @@ namespace Infrastructure.Repositories
         {
             return await _context.WorldMapObjects
                 .AsNoTracking()
-                .Where(x => x.Type == MapObjectTypeEnum.City).ToListAsync();
+                .Where(x => x.WorldId == id && x.Type == type)
+                .ToListAsync();
         }
 
         public async Task<WorldMapObject?> GetCityOnCoordinatesAsync(Guid worldId, short X, short Y)

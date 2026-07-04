@@ -11,5 +11,7 @@ namespace Application.Interfaces.IServices
     {
         Task<List<WorldAvailableResponseDTO>> ObtainAllActiveGameWorldsAsync();
         Task<WorldMapChunkResponseDTO?> GetWorldMapChunk(GetWorldMapChunkDTO dto);
+        Task<CityInspectionDTO?> GetCityInspectionAsync(Guid cityId);
+        Task<WorldIslandDetailsDTO?> GetIslandDetailsAsync(Guid islandId);
     }
 }

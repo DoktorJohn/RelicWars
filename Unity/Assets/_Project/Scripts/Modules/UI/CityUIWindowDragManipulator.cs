@@ -92,8 +92,7 @@ namespace Project.Modules.UI
             _targetWindowToMove.style.right = StyleKeyword.Auto;
             _targetWindowToMove.style.bottom = StyleKeyword.Auto;
 
-            // Hvis I bruger transform: translate(-50%, -50%) til centrering, skal det fjernes her:
-            _targetWindowToMove.style.translate = new StyleTranslate(new Translate(0, 0, 0));
+            _targetWindowToMove.style.translate = StyleKeyword.None;
         }
     }
 }

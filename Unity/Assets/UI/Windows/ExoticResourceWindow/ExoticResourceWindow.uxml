@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ui:UXML xmlns:ui="UnityEngine.UIElements">
+    <ui:Style src="project://database/Assets/UI/Windows/WindowTheme.uss" />
+    <ui:Style src="ExoticResourceWindow.uss" />
+    <ui:VisualElement class="screen-overlay" picking-mode="Ignore">
+        <ui:VisualElement name="Exotic-Resource-Window-MainContainer" class="window-frame exotic-resource-window-size">
+            <ui:VisualElement name="Exotic-Resource-Window-Header" class="window-header">
+                <ui:Label class="window-header-label" text="ISLAND RESOURCES" />
+                <ui:Button name="ExoticResourceWindow-Close-Button" class="window-close-btn" text="X" />
+            </ui:VisualElement>
+            <ui:VisualElement class="exotic-resource-window-body">
+                <ui:VisualElement name="Exotic-Resource-Tabs" class="exotic-resource-tabs" />
+                <ui:Label name="Exotic-Resource-Status" class="exotic-resource-status" />
+                <ui:Button name="Exotic-Resource-Retry-Button" class="btn-global-base btn-imperial-primary exotic-resource-retry" text="RETRY" />
+                <ui:VisualElement name="Exotic-Resource-Content" class="exotic-resource-content">
+                    <ui:VisualElement class="exotic-resource-hero">
+                        <ui:VisualElement name="Exotic-Resource-Icon" class="exotic-resource-icon" />
+                        <ui:VisualElement class="exotic-resource-identity">
+                            <ui:Label name="Exotic-Resource-Name" class="exotic-resource-name" />
+                            <ui:Label name="Exotic-Resource-Tier" class="exotic-resource-tier" />
+                            <ui:Label name="Exotic-Resource-Output" class="text-body exotic-resource-output" />
+                        </ui:VisualElement>
+                    </ui:VisualElement>
+                    <ui:Label name="Exotic-Resource-Progress-Label" class="exotic-resource-section-title" />
+                    <ui:ProgressBar name="Exotic-Resource-Progress" class="exotic-resource-progress" low-value="0" high-value="100" />
+                    <ui:Label name="Exotic-Resource-Availability" class="text-body exotic-resource-availability" />
+                    <ui:VisualElement name="Exotic-Resource-Investment" class="exotic-resource-investment">
+                        <ui:Label class="exotic-resource-section-title" text="CONTRIBUTE TO THE NEXT TIER" />
+                        <ui:VisualElement class="exotic-resource-cost-grid">
+                            <ui:VisualElement class="exotic-resource-cost-card">
+                                <ui:VisualElement class="exotic-resource-cost-header"><ui:VisualElement class="exotic-resource-cost-icon icon-wood" /><ui:Label class="exotic-resource-cost-name" text="WOOD" /></ui:VisualElement>
+                                <ui:Label class="exotic-resource-cost-caption" text="INVESTED / REQUIRED" />
+                                <ui:Label name="Exotic-Resource-Wood-Cost" class="exotic-resource-cost-value" />
+                                <ui:Label class="exotic-resource-input-label" text="AMOUNT" />
+                                <ui:TextField name="Exotic-Resource-Wood-Input" class="exotic-resource-input" />
+                            </ui:VisualElement>
+                            <ui:VisualElement class="exotic-resource-cost-card">
+                                <ui:VisualElement class="exotic-resource-cost-header"><ui:VisualElement class="exotic-resource-cost-icon icon-stone" /><ui:Label class="exotic-resource-cost-name" text="STONE" /></ui:VisualElement>
+                                <ui:Label class="exotic-resource-cost-caption" text="INVESTED / REQUIRED" />
+                                <ui:Label name="Exotic-Resource-Stone-Cost" class="exotic-resource-cost-value" />
+                                <ui:Label class="exotic-resource-input-label" text="AMOUNT" />
+                                <ui:TextField name="Exotic-Resource-Stone-Input" class="exotic-resource-input" />
+                            </ui:VisualElement>
+                            <ui:VisualElement class="exotic-resource-cost-card">
+                                <ui:VisualElement class="exotic-resource-cost-header"><ui:VisualElement class="exotic-resource-cost-icon icon-metal" /><ui:Label class="exotic-resource-cost-name" text="METAL" /></ui:VisualElement>
+                                <ui:Label class="exotic-resource-cost-caption" text="INVESTED / REQUIRED" />
+                                <ui:Label name="Exotic-Resource-Metal-Cost" class="exotic-resource-cost-value" />
+                                <ui:Label class="exotic-resource-input-label" text="AMOUNT" />
+                                <ui:TextField name="Exotic-Resource-Metal-Input" class="exotic-resource-input" />
+                            </ui:VisualElement>
+                            <ui:VisualElement class="exotic-resource-cost-card">
+                                <ui:VisualElement class="exotic-resource-cost-header"><ui:VisualElement class="exotic-resource-cost-icon icon-coins" /><ui:Label class="exotic-resource-cost-name" text="COINS" /></ui:VisualElement>
+                                <ui:Label class="exotic-resource-cost-caption" text="INVESTED / REQUIRED" />
+                                <ui:Label name="Exotic-Resource-Coin-Cost" class="exotic-resource-cost-value" />
+                                <ui:Label class="exotic-resource-input-label" text="AMOUNT" />
+                                <ui:TextField name="Exotic-Resource-Coin-Input" class="exotic-resource-input" />
+                            </ui:VisualElement>
+                        </ui:VisualElement>
+                        <ui:Button name="Exotic-Resource-Invest-Button" class="btn-global-base btn-imperial-success exotic-resource-invest-button" text="INVEST RESOURCES" />
+                    </ui:VisualElement>
+                </ui:VisualElement>
+            </ui:VisualElement>
+        </ui:VisualElement>
+    </ui:VisualElement>
+</ui:UXML>

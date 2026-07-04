@@ -73,5 +73,35 @@ namespace Project.Network
                 }
             }
         }
+
+        public IEnumerator GetIslandDetails(Guid islandId, string token, Action<WorldIslandDetailsDTO> callback)
+        {
+            string url = $"{_baseUrl}/islands/{islandId}";
+
+            using (UnityWebRequest request = BackendRequestHelper.CreateGetRequest(url, token))
+            {
+                yield return request.SendWebRequest();
+
+                if (request.result == UnityWebRequest.Result.Success)
+                {
+                    callback?.Invoke(JsonConvert.DeserializeObject<WorldIslandDetailsDTO>(request.downloadHandler.text));
+                }
+                else
+                {
+                    Debug.LogError($"[ClientWorldService] Island request failed: {request.error} - URL: {url}");
+                    callback?.Invoke(null);
+                }
+            }
+        }
+
+        public IEnumerator GetCityInspection(Guid cityId, string token, Action<CityInspectionDTO> callback)
+        {
+            string url = $"{_baseUrl}/cities/{cityId}/inspection";
+
+            using (UnityWebRequest request = BackendRequestHelper.CreateGetRequest(url, token))
+            {
+                yield return BackendRequestHelper.SendJson(request, callback, "World", _ => null);
+            }
+        }
     }
 }

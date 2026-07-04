@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -15,7 +15,7 @@ namespace Assets.Scripts.Domain.Enums
 
     public enum ModifierTagEnum
     {
-        Wood, Stone, Metal, Silver,
+        Wood, Stone, Metal, Coins,
         ResourceProduction,
         RecruitmentSpeed, Construction, ConstructionCost, Research, Population,
         WarehouseCapacity, Market,
@@ -24,6 +24,6 @@ namespace Assets.Scripts.Domain.Enums
         Upkeep, BuildingUpkeep, UnitUpkeep, TravelSpeed, Power, Armor, Discipline, Casualties, Wall, LootCapacity,
         Ideology, IdeologyFocus,
 
-        Placeholder, ResistanceRecovery, Revival
+        Placeholder, ResistanceRecovery, Revival, RepairCost, MerchantDefense
     }
 }

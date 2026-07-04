@@ -1,4 +1,4 @@
-﻿using Domain.Abstraction;
+using Domain.Abstraction;
 using Domain.Entities;
 using Domain.Enums;
 using System;
@@ -11,7 +11,7 @@ namespace Domain.User
 {
     public class WorldPlayer : BaseEntity, IModifierProvider
     {
-        public double Silver { get; set; }
+        public double Coins { get; set; }
         public double IdeologyFocusPoints { get; set; }
         public double ResearchPoints { get; set; }
         public IdeologyTypeEnum Ideology { get; set; }
@@ -28,6 +28,7 @@ namespace Domain.User
         
         public List<Conversation> ConversationsAsParticipant1 { get; set; } = new();
         public List<Conversation> ConversationsAsParticipant2 { get; set; } = new();
+        public List<ConversationParticipant> ConversationParticipants { get; set; } = new();
 
         //Foreign keys
         public Guid? AllianceId { get; set; }

@@ -1,80 +1,104 @@
 <?xml version="1.0" encoding="utf-8"?>
-<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" editor-extension-mode="False">
-    
+<ui:UXML xmlns:ui="UnityEngine.UIElements" editor-extension-mode="False">
     <ui:Style src="project://database/Assets/UI/Windows/WindowTheme.uss" />
     <ui:Style src="AllianceWindow.uss" />
-
     <ui:VisualElement name="Alliance-Window-Overlay" picking-mode="Ignore" class="screen-overlay">
-        
-        <ui:VisualElement name="Alliance-Window-MainContainer" class="window-frame" style="width: 500px; height: 580px;">
-            
+        <ui:VisualElement name="Alliance-Window-MainContainer" class="window-frame" style="width: 640px; height: 760px;">
             <ui:VisualElement name="Alliance-Window-Header" class="window-header">
                 <ui:Label name="Lbl-Title" class="window-header-label" text="ALLIANCE" />
                 <ui:Button name="Header-Close-Button" class="window-close-btn" text="x" />
             </ui:VisualElement>
-            
-            <ui:VisualElement style="padding: 20px; flex-grow: 1;">
-
+            <ui:VisualElement class="alliance-body">
                 <ui:VisualElement name="View-CreateAlliance" class="view-container">
-                    
+                    <ui:Label name="Lbl-LoadingStatus" class="status-text" text="" />
+                    <ui:VisualElement name="Invitation-List" class="invitation-list" />
                     <ui:Label text="FORGE YOUR LEGACY" class="text-subtitle" />
                     <ui:Label text="Unite players under one banner. Conquer territories and rule the world together." class="text-flavor" />
-                    
                     <ui:VisualElement class="divider" />
-
                     <ui:VisualElement class="input-group">
                         <ui:Label text="ALLIANCE NAME" class="input-label" />
                         <ui:TextField name="Input-AllianceName" maxLength="20" class="alliance-input-field" />
                     </ui:VisualElement>
-
                     <ui:VisualElement class="input-group">
                         <ui:Label text="TAG (3-4 CHARS)" class="input-label" />
                         <ui:TextField name="Input-AllianceTag" maxLength="4" class="alliance-input-field" />
                     </ui:VisualElement>
-
-                    <ui:VisualElement style="flex-grow: 1; justify-content: flex-end;">
+                    <ui:VisualElement class="create-actions">
                         <ui:Label name="Lbl-ErrorStatus" class="error-text" text="" />
                         <ui:Button name="Btn-CreateAlliance" text="CREATE ALLIANCE" class="btn-global-base btn-imperial-success" />
                     </ui:VisualElement>
-
                 </ui:VisualElement>
 
                 <ui:VisualElement name="View-AllianceInfo" class="view-container" style="display: none;">
-                    
                     <ui:VisualElement class="alliance-header-info">
-                        <ui:VisualElement class="alliance-banner-placeholder" />
-                        <ui:VisualElement style="justify-content: center;">
-                            <ui:Label name="Lbl-AllianceName" class="info-alliance-name" text="Loading..." />
-                            <ui:Label name="Lbl-AllianceTag" class="info-alliance-tag" text="[TAG]" />
+                        <ui:VisualElement class="alliance-banner-frame" />
+                        <ui:VisualElement class="alliance-identity">
+                            <ui:Label name="Lbl-AllianceName" class="info-alliance-name btn-entity-link" text="" />
+                            <ui:Label name="Lbl-AllianceTag" class="info-alliance-tag" text="" />
+                        </ui:VisualElement>
+                    </ui:VisualElement>
+                    <ui:VisualElement class="alliance-tabs">
+                        <ui:Button name="Tab-Overview" text="OVERVIEW" class="alliance-tab alliance-tab-active" />
+                        <ui:Button name="Tab-Members" text="MEMBERS" class="alliance-tab" />
+                        <ui:Button name="Tab-Geopolitics" text="GEOPOLITICS" class="alliance-tab" />
+                    </ui:VisualElement>
+
+                    <ui:VisualElement name="Panel-Overview" class="tab-panel">
+                        <ui:VisualElement class="description-heading-row">
+                            <ui:Label text="DESCRIPTION" class="section-title" />
+                            <ui:Button name="Btn-EditDescription" text="✎" class="description-edit-button" style="display: none;" />
+                        </ui:VisualElement>
+                        <ui:Label name="Lbl-AllianceDescription" class="info-description" text="" />
+                        <ui:VisualElement name="Description-Editor" class="description-editor" style="display: none;">
+                            <ui:TextField name="Input-AllianceDescription" multiline="true" maxLength="500" class="alliance-input-field description-input" />
+                            <ui:VisualElement class="description-actions">
+                                <ui:Button name="Btn-SaveDescription" text="SAVE DESCRIPTION" class="btn-global-base btn-imperial-success" />
+                                <ui:Button name="Btn-CancelDescription" text="CANCEL" class="btn-global-base btn-imperial-primary" />
+                            </ui:VisualElement>
+                        </ui:VisualElement>
+                        <ui:VisualElement class="divider" />
+                        <ui:VisualElement class="stats-grid">
+                            <ui:VisualElement class="stat-box"><ui:Label text="MEMBERS" class="stat-label" /><ui:Label name="Lbl-MemberCount" class="stat-value" text="" /></ui:VisualElement>
+                            <ui:VisualElement class="stat-vertical-divider" />
+                            <ui:VisualElement class="stat-box"><ui:Label text="POINTS" class="stat-label" /><ui:Label name="Lbl-TotalPoints" class="stat-value" text="" /></ui:VisualElement>
+                            <ui:VisualElement class="stat-vertical-divider" />
+                            <ui:VisualElement class="stat-box"><ui:Label text="YOUR ROLE" class="stat-label" /><ui:Label name="Lbl-CurrentRole" class="stat-value stat-role" text="" /></ui:VisualElement>
                         </ui:VisualElement>
                     </ui:VisualElement>
 
-                    <ui:Label name="Lbl-AllianceDescription" class="info-description" text="Loading description..." />
-
-                    <ui:VisualElement class="divider" />
-
-                    <ui:VisualElement class="stats-grid">
-                        <ui:VisualElement class="stat-box">
-                            <ui:Label text="MEMBERS" class="stat-label" />
-                            <ui:Label name="Lbl-MemberCount" class="stat-value" text="0 / 50" />
-                        </ui:VisualElement>
-                        
-                        <ui:VisualElement class="stat-vertical-divider" />
-
-                        <ui:VisualElement class="stat-box">
-                            <ui:Label text="POINTS" class="stat-label" />
-                            <ui:Label name="Lbl-TotalPoints" class="stat-value" text="0" />
+                    <ui:VisualElement name="Panel-Members" class="tab-panel" style="display: none;">
+                        <ui:ScrollView name="Alliance-MemberList" class="member-list" />
+                        <ui:VisualElement name="Invite-Section" class="invite-section">
+                            <ui:Label text="INVITE PLAYER" class="section-title" />
+                            <ui:VisualElement class="invite-search-row">
+                                <ui:TextField name="Input-PlayerSearch" class="alliance-input-field invite-search-input" />
+                                <ui:Button name="Btn-SearchPlayer" text="SEARCH" class="btn-global-base" />
+                            </ui:VisualElement>
+                            <ui:VisualElement name="Player-SearchResults" class="search-results" />
                         </ui:VisualElement>
                     </ui:VisualElement>
 
-                    <ui:VisualElement style="flex-grow: 1; justify-content: flex-end;">
-                        <ui:Button name="Btn-LeaveAlliance" text="LEAVE ALLIANCE" class="btn-global-base btn-imperial-danger" />
+                    <ui:VisualElement name="Panel-Geopolitics" class="tab-panel" style="display: none;">
+                        <ui:VisualElement name="Diplomacy-Section">
+                            <ui:Label text="FIND ALLIANCE" class="section-title" />
+                            <ui:VisualElement class="invite-search-row">
+                                <ui:TextField name="Input-AllianceSearch" class="alliance-input-field invite-search-input" />
+                                <ui:Button name="Btn-SearchAlliance" text="SEARCH" class="btn-global-base" />
+                            </ui:VisualElement>
+                            <ui:VisualElement name="Alliance-SearchResults" class="search-results geopolitics-search" />
+                        </ui:VisualElement>
+                        <ui:ScrollView class="geopolitics-list">
+                            <ui:Label text="INCOMING PACT INVITES" class="section-title" /><ui:VisualElement name="Incoming-Pacts" />
+                            <ui:Label text="OUTGOING PACT INVITES" class="section-title" /><ui:VisualElement name="Outgoing-Pacts" />
+                            <ui:Label text="ACTIVE PACTS" class="section-title" /><ui:VisualElement name="Active-Pacts" />
+                            <ui:Label text="ACTIVE WARS" class="section-title" /><ui:VisualElement name="Active-Wars" />
+                        </ui:ScrollView>
                     </ui:VisualElement>
 
+                    <ui:Label name="Lbl-AllianceStatus" class="status-text" text="" />
+                    <ui:VisualElement class="alliance-actions"><ui:Button name="Btn-LeaveAlliance" text="LEAVE ALLIANCE" class="btn-global-base btn-imperial-danger" /></ui:VisualElement>
                 </ui:VisualElement>
-
             </ui:VisualElement>
-            
         </ui:VisualElement>
     </ui:VisualElement>
 </ui:UXML>

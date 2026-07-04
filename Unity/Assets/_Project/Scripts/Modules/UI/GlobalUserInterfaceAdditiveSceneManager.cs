@@ -1,4 +1,4 @@
-using Project.Scripts.Modules.UI;
+ï»¿using Project.Scripts.Modules.UI;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
@@ -12,7 +12,6 @@ namespace Project.Modules.UI
         [SerializeField] private string _topBarSceneName = "TopBarHUD";
         [SerializeField] private string _leftBarSceneName = "LeftSideBarHUD";
         [SerializeField] private string _UnitStackIdeologySceneName = "UnitStackIdeologyHUD";
-        [SerializeField] private string _UnitDeploymentSideBarSceneName = "UnitDeploymentSideBarHUD";
 
         private void Awake()
         {
@@ -52,11 +51,10 @@ namespace Project.Modules.UI
 
         private void ExecuteInterfaceSyncProcess(UserInterfaceSceneConfiguration config)
         {
-            // Vi håndterer hver bar individuelt: Load hvis nødvendig, Unload hvis ikke.
+            // Vi hÃ¥ndterer hver bar individuelt: Load hvis nÃ¸dvendig, Unload hvis ikke.
             ManageHudComponentStatus(_topBarSceneName, config.NeedTopBar);
             ManageHudComponentStatus(_leftBarSceneName, config.NeedLeftSideBar);
             ManageHudComponentStatus(_UnitStackIdeologySceneName, config.NeedUnitStackIdeology);
-            ManageHudComponentStatus(_UnitDeploymentSideBarSceneName, config.NeedUnitDeploymentSideBar);
         }
 
         private void ManageHudComponentStatus(string hudSceneName, bool shouldBeLoaded)
@@ -65,12 +63,16 @@ namespace Project.Modules.UI
 
             if (shouldBeLoaded && !isLoaded)
             {
-                Debug.Log($"[UI-Manager] Indlæser additivt: {hudSceneName}");
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+                Debug.Log($"[UI-Manager] IndlÃ¦ser additivt: {hudSceneName}");
+#endif
                 SceneManager.LoadScene(hudSceneName, LoadSceneMode.Additive);
             }
             else if (!shouldBeLoaded && isLoaded)
             {
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
                 Debug.Log($"[UI-Manager] Fjerner (Unloader): {hudSceneName}");
+#endif
                 SceneManager.UnloadSceneAsync(hudSceneName);
             }
         }
@@ -85,8 +87,7 @@ namespace Project.Modules.UI
         {
             return sceneName == _topBarSceneName ||
                    sceneName == _leftBarSceneName ||
-                   sceneName == _UnitStackIdeologySceneName ||
-                   sceneName == _UnitDeploymentSideBarSceneName;
+                   sceneName == _UnitStackIdeologySceneName;
         }
     }
 }

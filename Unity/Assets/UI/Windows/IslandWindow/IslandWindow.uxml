@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ui:UXML xmlns:ui="UnityEngine.UIElements">
+    <ui:Style src="project://database/Assets/UI/Windows/WindowTheme.uss" />
+    <ui:Style src="IslandWindow.uss" />
+
+    <ui:VisualElement class="screen-overlay" picking-mode="Ignore">
+        <ui:VisualElement name="Island-Window-MainContainer" class="window-frame island-window-size">
+            <ui:VisualElement name="Island-Window-Header" class="window-header">
+                <ui:Label class="window-header-label" text="ISLAND OVERVIEW" />
+                <ui:Button name="IslandWindow-Close-Button" class="window-close-btn" text="X" />
+            </ui:VisualElement>
+            <ui:VisualElement class="island-window-content">
+                <ui:Label name="Island-Status-Message" class="island-status-message island-status-message--info" text="" />
+
+                <ui:VisualElement class="island-city-section">
+                    <ui:Label class="island-section-title island-city-section-title" text="CITIES ON THIS ISLAND" />
+                    <ui:VisualElement class="island-city-heading">
+                        <ui:Label class="island-heading-player" text="PLAYER" />
+                        <ui:Label class="island-heading-name" text="CITY" />
+                        <ui:Label class="island-heading-alliance" text="ALLIANCE" />
+                        <ui:Label class="island-heading-coordinates" text="COORDINATES" />
+                        <ui:Label class="island-heading-points" text="POINTS" />
+                    </ui:VisualElement>
+                    <ui:ScrollView name="Island-City-List" class="island-city-list" mode="Vertical" horizontal-scroller-visibility="Hidden" vertical-scroller-visibility="Always" />
+                </ui:VisualElement>
+            </ui:VisualElement>
+        </ui:VisualElement>
+    </ui:VisualElement>
+</ui:UXML>

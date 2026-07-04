@@ -33,12 +33,11 @@
                         <!-- LEFT SIDE -->
                         <ui:VisualElement class="detail-left">
                             <ui:VisualElement class="unit-title-row">
-                                <ui:Label name="Lbl-UnitName" class="unit-name-large" text="SWORDSMAN" />
-                                <ui:Label name="Lbl-OwnedCount" class="unit-owned-badge" text="OWNED: 0" />
+                                <ui:Label name="Lbl-UnitName" class="unit-name-large" text="" />
+                                <ui:Label name="Lbl-OwnedCount" class="unit-owned-badge" text="" />
                             </ui:VisualElement>
 
-                            <ui:Label name="Lbl-Flavor" class="flavor-text"
-                                      text="Standard frontline infantry." />
+                            <ui:Label name="Lbl-Flavor" class="flavor-text" text="" />
                         </ui:VisualElement>
 
                         <!-- RIGHT SIDE -->
@@ -53,7 +52,7 @@
                                 <ui:VisualElement class="stat-column">
                                     <ui:VisualElement class="stat-row"><ui:Label text="DISCIPLINE" class="stat-label"/><ui:Label name="Stat-Discipline" class="stat-value"/></ui:VisualElement>
                                     <ui:VisualElement class="stat-row"><ui:Label text="MOBILITY" class="stat-label"/><ui:Label name="Stat-Mobility" class="stat-value"/></ui:VisualElement>
-                                    <ui:VisualElement class="stat-row"><ui:Label text="LOOT" class="stat-label"/><ui:Label name="Stat-Loot" class="stat-value"/></ui:VisualElement>
+                                    <ui:VisualElement class="stat-row"><ui:Label text="LOOT CAPACITY" class="stat-label"/><ui:Label name="Stat-Loot" class="stat-value"/></ui:VisualElement>
                                     <ui:VisualElement class="stat-row"><ui:Label text="TIME" class="stat-label"/><ui:Label name="Stat-Time" class="stat-value"/></ui:VisualElement>
                                 </ui:VisualElement>
                             </ui:VisualElement>
@@ -84,7 +83,7 @@
 
                 <!-- QUEUE -->
                 <ui:VisualElement name="Queue-Section" class="queue-section">
-                    <ui:Label name="Queue-Header-Label" text="RECRUITMENT QUEUE (0/5)" class="section-label" />
+                    <ui:Label name="Queue-Header-Label" text="RECRUITMENT QUEUE" class="section-label" />
                     <ui:ScrollView
                         name="Recruitment-Queue-List"
                         class="queue-scroll-view"

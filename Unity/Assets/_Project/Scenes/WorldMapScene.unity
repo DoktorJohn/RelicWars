@@ -672,7 +672,6 @@ MonoBehaviour:
   NeedTopBar: 1
   NeedLeftSideBar: 1
   NeedUnitStackIdeology: 0
-  NeedUnitDeploymentSideBar: 1
 --- !u!4 &1558872993
 Transform:
   m_ObjectHideFlags: 0
@@ -755,9 +754,12 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::Assets._Project.Scripts.Modules.Map.WorldMapEntityManager
   _cityPrefab: {fileID: 7219419925859750668, guid: 258046971f6eaf845b6bf32dc5cab2b2, type: 3}
   _unitDeploymentPrefab: {fileID: 1241472217021017828, guid: e9e1b3697be51cd4abd7f556aee01ef1, type: 3}
+  _islandButtonPrefab: {fileID: 823400000000000001, guid: a1b2c3d4e5f6478899aabbccddeeff05, type: 3}
   _objectContainer: {fileID: 1995729848}
   _cityLabelSortingOrder: 10
   _unitDeploymentLabelSortingOrder: 20
+  _islandButtonSortingOrder: 100
+  _islandResourceButtonSortingOrder: 90
   _unitLayerName: Units
   TerrainTilemap: {fileID: 2050413617}
 --- !u!1 &1749960709

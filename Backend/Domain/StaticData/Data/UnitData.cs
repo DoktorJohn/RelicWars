@@ -21,6 +21,7 @@ namespace Domain.StaticData.Data
         public int Discipline { get; set; }
         public int Mobility { get; set; }
         public int LootCapacity { get; set; }
+        public bool IsElite { get; set; }
 
         public int WoodCost { get; set; }
         public int StoneCost { get; set; }

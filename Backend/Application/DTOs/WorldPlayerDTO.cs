@@ -1,4 +1,4 @@
-﻿using Domain.Enums;
+using Domain.Enums;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -26,10 +26,10 @@ namespace Application.DTOs
     public class WorldPlayerEconomyDTO
     {
         public Guid WorldPlayerId { get; set; }
-        public double CurrentSilverAmount { get; set; }
+        public double CurrentCoinsAmount { get; set; }
         public double CurrentResearchPoints { get; set; }
         public double CurrentIdeologyFocusPoints { get; set; }
-        public double SilverProductionPerHour { get; set; }
+        public double CoinsProductionPerHour { get; set; }
         public double ResearchPointsPerHour { get; set; }
         public double IdeologyFocusPointsPerHour { get; set; }
         public List<CityDTO> PlayerCities { get; set; } = new();
@@ -42,9 +42,13 @@ namespace Application.DTOs
         int TotalPoints,
         int Ranking,
         int CityCount,
+        string Description,
         string AllianceName,
         IdeologyTypeEnum Ideology,
         Guid AllianceId,
-        Guid WorldId
+        Guid WorldId,
+        List<CityDTO> Cities
     );
+
+    public record UpdateWorldPlayerDescriptionRequestDTO(string Description);
 }

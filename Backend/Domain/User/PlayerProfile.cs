@@ -11,6 +11,7 @@ namespace Domain.User
     {
         public DateTime CreatedAt { get; set; }
         public DateTime ModifiedAt { get; set; }
+        public string Description { get; set; } = string.Empty;
         public List<WorldPlayer> WorldPlayers { get; set; } = new();
     }
 }

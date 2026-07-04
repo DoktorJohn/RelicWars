@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ui:UXML xmlns:ui="UnityEngine.UIElements" editor-extension-mode="False">
+    <ui:Style src="project://database/Assets/UI/Windows/WindowTheme.uss" />
+    <ui:Style src="BugReportWindow.uss" />
+    <ui:VisualElement class="screen-overlay" picking-mode="Ignore">
+        <ui:VisualElement name="BugReport-Window-MainContainer" class="window-frame bug-report-window-size">
+            <ui:VisualElement name="BugReport-Window-Header" class="window-header">
+                <ui:Label class="window-header-label" text="REPORT BUG" />
+                <ui:Button name="BugReport-Close-Button" class="window-close-btn" text="x" />
+            </ui:VisualElement>
+            <ui:VisualElement class="bug-report-content">
+                <ui:Label class="text-body" text="Describe the bug and what you were doing when it occurred." />
+                <ui:TextField name="BugReport-Description" class="game-input bug-report-description" multiline="true" />
+                <ui:Label name="BugReport-Status" class="bug-report-status" text="" />
+                <ui:Button name="BugReport-Send-Button" class="btn-global-base btn-imperial-primary bug-report-send" text="SEND" />
+            </ui:VisualElement>
+        </ui:VisualElement>
+    </ui:VisualElement>
+</ui:UXML>

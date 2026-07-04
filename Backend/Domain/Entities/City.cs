@@ -19,9 +19,14 @@ namespace Domain.Entities
         public double Wood { get; set; }
         public double Stone { get; set; }
         public double Metal { get; set; }
+        public List<CityExoticResource> ExoticResources { get; set; } = new();
         public int Population { get; set; }
+        public double Resistance { get; set; } = 100;
+        public double ResistanceTarget { get; set; } = 100;
+        public DateTime LastResistanceUpdate { get; set; } = DateTime.UtcNow;
 
         public DateTime LastResourceUpdate { get; set; } = DateTime.UtcNow;
+        public DateTime LastExoticResourceUpdate { get; set; } = DateTime.UtcNow;
 
         public bool IsNPC { get; set; }
 

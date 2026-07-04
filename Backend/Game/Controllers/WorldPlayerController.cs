@@ -1,6 +1,7 @@
-﻿using Application.DTOs;
+using Application.DTOs;
 using Application.Interfaces.IServices;
 using Application.Services;
+using Game.Contracts;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -28,10 +29,49 @@ namespace Game.Controllers
                 var result = await _worldPlayerService.GetWorldPlayerProfileAsync(worldPlayerId);
                 return Ok(result);
             }
+            catch (KeyNotFoundException)
+            {
+                return NotFound();
+            }
+            catch (UnauthorizedAccessException)
+            {
+                return Forbid();
+            }
             catch (Exception exception)
             {
                 _logger.LogError(exception, "Fejl ved hentning af worldPlayerProfile");
                 return BadRequest("Kunne ikke hente data for worldPlayerProfile.");
+            }
+        }
+
+        [HttpPut("{worldPlayerId}/description")]
+        public async Task<IActionResult> UpdateDescription(Guid worldPlayerId, [FromBody] UpdateWorldPlayerDescriptionRequestDTO request)
+        {
+            try
+            {
+                var result = await _worldPlayerService.UpdateWorldPlayerDescriptionAsync(worldPlayerId, request.Description);
+                return Ok(result);
+            }
+            catch (UnauthorizedAccessException)
+            {
+                return Forbid();
+            }
+            catch (KeyNotFoundException)
+            {
+                return NotFound();
+            }
+            catch (ArgumentException)
+            {
+                return BadRequest(new ApiError("request.invalid", "Anmodningen er ugyldig."));
+            }
+            catch (InvalidOperationException)
+            {
+                return Conflict(new ApiError("resource.conflict", "Handlingen er i konflikt med den aktuelle tilstand."));
+            }
+            catch (Exception exception)
+            {
+                _logger.LogError(exception, "Fejl ved opdatering af playerProfile description");
+                return StatusCode(500, new ApiError("server.error", "En intern serverfejl opstod."));
             }
         }
 
@@ -42,6 +82,10 @@ namespace Game.Controllers
             {
                 var result = await _worldPlayerService.SearchPlayersAsync(worldId, query);
                 return Ok(result);
+            }
+            catch (UnauthorizedAccessException)
+            {
+                return Forbid();
             }
             catch (Exception ex)
             {
@@ -57,8 +101,12 @@ namespace Game.Controllers
             try
             {
                 var result = await _worldPlayerService.GetWorldPlayerEconomyAsync(worldPlayerId);
-                _logger.LogInformation("[WorldPlayerController] Economy retrieved for {PlayerId}. Silver: {Silver}, Rate: {Rate}", worldPlayerId, result.CurrentSilverAmount, result.SilverProductionPerHour);
+                _logger.LogInformation("[WorldPlayerController] Economy retrieved for {PlayerId}. Coins: {Coins}, Rate: {Rate}", worldPlayerId, result.CurrentCoinsAmount, result.CoinsProductionPerHour);
                 return Ok(result);
+            }
+            catch (UnauthorizedAccessException)
+            {
+                return Forbid();
             }
             catch (KeyNotFoundException)
             {
@@ -82,6 +130,10 @@ namespace Game.Controllers
 
                 return Ok(result);
             }
+            catch (UnauthorizedAccessException)
+            {
+                return Forbid();
+            }
             catch (Exception exception)
             {
                 _logger.LogError(exception, "Fejl ved valg af ideologi");
@@ -89,37 +141,20 @@ namespace Game.Controllers
             }
         }
 
-
         [HttpPost("join")]
         public async Task<ActionResult<WorldPlayerJoinResponse>> ProcessPlayerWorldJoinRequest([FromBody] WorldPlayerDTO request)
         {
-            var result = await _worldPlayerService.AssignPlayerToGameWorldAsync(request.PlayerProfileId, request.WorldId);
+            var result = await _worldPlayerService.AssignPlayerToGameWorldAsync(request.WorldId);
 
             if (!result.ConnectionSuccessful)
             {
-                _logger.LogWarning("Join World failed for Player {PlayerId} on World {WorldId}. Reason: {Reason}",
-                    request.PlayerProfileId, request.WorldId, result.Message);
+                _logger.LogWarning("Join World failed for World {WorldId}. Reason: {Reason}",
+                    request.WorldId, result.Message);
                 return BadRequest(result);
             }
 
-            _logger.LogInformation("Player {PlayerId} successfully accessed World {WorldId}.", request.PlayerProfileId, request.WorldId);
+            _logger.LogInformation("World access granted for World {WorldId}.", request.WorldId);
             return Ok(result);
-        }
-
-        [HttpPost("{worldPlayerId}/cheat")]
-        public async Task<IActionResult> ApplyCheat(Guid worldPlayerId, [FromQuery] Guid cityId)
-        {
-            try
-            {
-                var success = await _worldPlayerService.ApplyAlphaCheatAsync(worldPlayerId, cityId);
-                if (!success) return BadRequest("Cheat failed.");
-                return Ok(new { Message = "Cheat Applied: +1000 Resources, +10 RP/IP" });
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error applying cheat");
-                return StatusCode(500, ex.Message);
-            }
         }
     }
 }

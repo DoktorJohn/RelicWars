@@ -20,6 +20,7 @@ namespace Domain.Entities
 
         // Navprop
         public ICollection<WorldMapObject> MapObjects { get; set; } = new List<WorldMapObject>();
+        public ICollection<WorldIsland> Islands { get; set; } = new List<WorldIsland>();
         public List<Modifier> ModifiersInternal { get; set; } = new();
 
 

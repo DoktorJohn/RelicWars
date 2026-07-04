@@ -4,6 +4,7 @@ using System.Collections;
 using Project.Network.Manager;
 using Assets.Scripts.Domain.State;
 using Project.Scripts.Domain.DTOs;
+using Project.Network.Models;
 
 namespace Project.Modules.WorldPlayer
 {
@@ -48,11 +49,11 @@ namespace Project.Modules.WorldPlayer
 
             if (_currentEconomyState == null) return;
 
-            _currentEconomyState.SilverAmount += _currentEconomyState.SilverProductionPerHour * hoursPassedThisFrame;
+            _currentEconomyState.CoinsAmount += _currentEconomyState.CoinsProductionPerHour * hoursPassedThisFrame;
             _currentEconomyState.ResearchPointsAmount += _currentEconomyState.ResearchPointsProductionPerHour * hoursPassedThisFrame;
             _currentEconomyState.IdeologyFocusPointsAmount += _currentEconomyState.IdeologyFocusPointsProductionPerHour * hoursPassedThisFrame;
 
-            // Debug.Log($"[WorldPlayerStateManager] Extrapolating: Silver={_currentEconomyState.SilverAmount:F2} (+{_currentEconomyState.SilverProductionPerHour:F2}/h)");
+            // Debug.Log($"[WorldPlayerStateManager] Extrapolating: Coins={_currentEconomyState.CoinsAmount:F2} (+{_currentEconomyState.CoinsProductionPerHour:F2}/h)");
             OnEconomyStateChanged?.Invoke(_currentEconomyState);
         }
 
@@ -61,6 +62,14 @@ namespace Project.Modules.WorldPlayer
             Debug.Log($"[WorldPlayerStateManager] Initiating economy refresh for WorldPlayerId: {worldPlayerId}");
             if (_activePollingCoroutine != null) StopCoroutine(_activePollingCoroutine);
             _activePollingCoroutine = StartCoroutine(ExecuteEconomyPollingCycleCoroutine(worldPlayerId));
+        }
+
+        public void ResetForLogout()
+        {
+            StopAllCoroutines();
+            _activePollingCoroutine = null;
+            _isRequestInProgress = false;
+            _currentEconomyState = new WorldPlayerState();
         }
 
         private IEnumerator ExecuteEconomyPollingCycleCoroutine(Guid worldPlayerId)
@@ -104,22 +113,23 @@ namespace Project.Modules.WorldPlayer
         {
             if (_currentEconomyState == null) _currentEconomyState = new WorldPlayerState();
 
-            _currentEconomyState.SilverAmount = dto.CurrentSilverAmount;
-            _currentEconomyState.SilverProductionPerHour = dto.SilverProductionPerHour;
+            _currentEconomyState.CoinsAmount = dto.CurrentCoinsAmount;
+            _currentEconomyState.CoinsProductionPerHour = dto.CoinsProductionPerHour;
 
             _currentEconomyState.ResearchPointsAmount = dto.CurrentResearchPoints;
             _currentEconomyState.ResearchPointsProductionPerHour = dto.ResearchPointsPerHour;
 
             _currentEconomyState.IdeologyFocusPointsAmount = dto.CurrentIdeologyFocusPoints;
             _currentEconomyState.IdeologyFocusPointsProductionPerHour = dto.IdeologyFocusPointsPerHour;
+            _currentEconomyState.PlayerCities = dto.PlayerCities ?? new System.Collections.Generic.List<CityDTO>();
 
             OnEconomyStateChanged?.Invoke(_currentEconomyState);
-            Debug.Log($"[WorldPlayerStateManager] Economy state synchronized. Silver: {dto.CurrentSilverAmount}, Research: {dto.CurrentResearchPoints}");
+            Debug.Log($"[WorldPlayerStateManager] Economy state synchronized. Coins: {dto.CurrentCoinsAmount}, Research: {dto.CurrentResearchPoints}");
         }
 
-        public void DeductResourcesLocally(double silver, double research, double ideology)
+        public void DeductResourcesLocally(double coins, double research, double ideology)
         {
-            _currentEconomyState.SilverAmount -= silver;
+            _currentEconomyState.CoinsAmount -= coins;
             _currentEconomyState.ResearchPointsAmount -= research;
             _currentEconomyState.IdeologyFocusPointsAmount -= ideology;
 

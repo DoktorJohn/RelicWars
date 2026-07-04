@@ -10,7 +10,7 @@ namespace Application.Interfaces.IServices
     public interface IWorldMapObjectService
     {
         Task AddEntityToWorldMapAsync(IMapEntity entity);
-        Task UpdateEntityPositionOnWorldMapAsync(IMapEntity entity, int oldX, int oldY);
+        Task UpdateEntityPositionOnWorldMapAsync(IMapEntity entity);
         Task RemoveEntityFromWorldMapAsync(IMapEntity entity);
     }
 }

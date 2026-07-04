@@ -13,6 +13,5 @@ namespace Project.Scripts.Modules.UI
         public bool NeedTopBar = true;
         public bool NeedLeftSideBar = true;
         public bool NeedUnitStackIdeology = true;
-        public bool NeedUnitDeploymentSideBar = true;
     }
 }

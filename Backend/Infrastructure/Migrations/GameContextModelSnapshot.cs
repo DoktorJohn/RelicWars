@@ -65,15 +65,111 @@ namespace Infrastructure.Migrations
 
                     b.Property<string>("Name")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("nvarchar(450)");
 
                     b.Property<string>("Tag")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<Guid>("WorldId")
+                        .HasColumnType("uniqueidentifier");
+
                     b.HasKey("Id");
 
+                    b.HasIndex("WorldId", "Name");
+
                     b.ToTable("Alliances");
+                });
+
+            modelBuilder.Entity("Domain.Entities.AllianceInvitation", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("AllianceId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("DateCreated")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime>("DateLastModified")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime>("ExpiresAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid>("InvitedByWorldPlayerId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("InvitedWorldPlayerId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("InvitedByWorldPlayerId");
+
+                    b.HasIndex("InvitedWorldPlayerId");
+
+                    b.HasIndex("AllianceId", "InvitedWorldPlayerId");
+
+                    b.ToTable("AllianceInvitations");
+                });
+
+            modelBuilder.Entity("Domain.Entities.AllianceRelation", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("AllianceIdA")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("AllianceIdB")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("DateCreated")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime>("DateLastModified")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid>("InitiatorAllianceId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<int>("RelationType")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("RespondedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid>("RespondingAllianceId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("int");
+
+                    b.Property<Guid>("WorldId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AllianceIdB");
+
+                    b.HasIndex("WorldId");
+
+                    b.HasIndex("AllianceIdA", "AllianceIdB", "RelationType", "Status");
+
+                    b.ToTable("AllianceRelations", t =>
+                        {
+                            t.HasCheckConstraint("CK_AllianceRelations_DifferentAlliances", "[AllianceIdA] <> [AllianceIdB]");
+                        });
                 });
 
             modelBuilder.Entity("Domain.Entities.BattleReport", b =>
@@ -81,6 +177,14 @@ namespace Infrastructure.Migrations
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("AppliedModifiersJson")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("AttackerLossesJson")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Body")
                         .IsRequired()
@@ -92,6 +196,10 @@ namespace Infrastructure.Migrations
                     b.Property<DateTime>("DateLastModified")
                         .HasColumnType("datetime2");
 
+                    b.Property<string>("DefenderLossesJson")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("bit");
 
@@ -100,6 +208,13 @@ namespace Infrastructure.Migrations
 
                     b.Property<DateTime>("OccurredAt")
                         .HasColumnType("datetime2");
+
+                    b.Property<int>("ReportType")
+                        .HasColumnType("int");
+
+                    b.Property<string>("RevivedUnitsJson")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Title")
                         .IsRequired()
@@ -113,6 +228,36 @@ namespace Infrastructure.Migrations
                     b.ToTable("BattleReports");
                 });
 
+            modelBuilder.Entity("Domain.Entities.BugReport", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("DateCreated")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime>("DateLastModified")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasMaxLength(4000)
+                        .HasColumnType("nvarchar(4000)");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<Guid>("PlayerProfileId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("PlayerProfileId");
+
+                    b.ToTable("BugReports");
+                });
+
             modelBuilder.Entity("Domain.Entities.Building", b =>
                 {
                     b.Property<Guid>("Id")
@@ -121,6 +266,9 @@ namespace Infrastructure.Migrations
 
                     b.Property<Guid>("CityId")
                         .HasColumnType("uniqueidentifier");
+
+                    b.Property<double>("Damage")
+                        .HasColumnType("float");
 
                     b.Property<DateTime>("DateCreated")
                         .HasColumnType("datetime2");
@@ -168,6 +316,12 @@ namespace Infrastructure.Migrations
                     b.Property<bool>("IsNPC")
                         .HasColumnType("bit");
 
+                    b.Property<DateTime>("LastExoticResourceUpdate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime>("LastResistanceUpdate")
+                        .HasColumnType("datetime2");
+
                     b.Property<DateTime>("LastResourceUpdate")
                         .HasColumnType("datetime2");
 
@@ -187,6 +341,12 @@ namespace Infrastructure.Migrations
 
                     b.Property<int>("Population")
                         .HasColumnType("int");
+
+                    b.Property<double>("Resistance")
+                        .HasColumnType("float");
+
+                    b.Property<double>("ResistanceTarget")
+                        .HasColumnType("float");
 
                     b.Property<double>("Stone")
                         .HasColumnType("float");
@@ -216,6 +376,39 @@ namespace Infrastructure.Migrations
                         .HasDatabaseName("IX_City_Coordinates");
 
                     b.ToTable("Cities");
+                });
+
+            modelBuilder.Entity("Domain.Entities.CityExoticResource", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<double>("Amount")
+                        .HasColumnType("float");
+
+                    b.Property<Guid>("CityId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("DateCreated")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime>("DateLastModified")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<int>("ResourceType")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CityId", "ResourceType")
+                        .IsUnique()
+                        .HasDatabaseName("IX_CityExoticResources_City_Type");
+
+                    b.ToTable("CityExoticResources");
                 });
 
             modelBuilder.Entity("Domain.Entities.Conversation", b =>
@@ -253,6 +446,46 @@ namespace Infrastructure.Migrations
                     b.HasIndex("Participant2Id");
 
                     b.ToTable("Conversations");
+                });
+
+            modelBuilder.Entity("Domain.Entities.ConversationParticipant", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("ConversationId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("DateCreated")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime>("DateLastModified")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<DateTime>("JoinedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("LastReadAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid>("WorldPlayerId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("WorldPlayerId");
+
+                    b.HasIndex("ConversationId", "WorldPlayerId")
+                        .IsUnique();
+
+                    b.ToTable("ConversationParticipants");
                 });
 
             modelBuilder.Entity("Domain.Entities.IdeologyFocus", b =>
@@ -368,13 +601,7 @@ namespace Infrastructure.Migrations
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<DateTime>("ArrivalTime")
-                        .HasColumnType("datetime2");
-
-                    b.Property<int>("CurrentX")
-                        .HasColumnType("int");
-
-                    b.Property<int>("CurrentY")
-                        .HasColumnType("int");
+                        .HasColumnType("datetime2(3)");
 
                     b.Property<DateTime>("DateCreated")
                         .HasColumnType("datetime2");
@@ -383,19 +610,22 @@ namespace Infrastructure.Migrations
                         .HasColumnType("datetime2");
 
                     b.Property<DateTime>("DepartureTime")
-                        .HasColumnType("datetime2");
-
-                    b.Property<int>("FinalX")
-                        .HasColumnType("int");
-
-                    b.Property<int>("FinalY")
-                        .HasColumnType("int");
+                        .HasColumnType("datetime2(3)");
 
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("bit");
 
-                    b.Property<DateTime>("LastStepTime")
-                        .HasColumnType("datetime2");
+                    b.Property<int>("LegEndX")
+                        .HasColumnType("int");
+
+                    b.Property<int>("LegEndY")
+                        .HasColumnType("int");
+
+                    b.Property<int>("LegStartX")
+                        .HasColumnType("int");
+
+                    b.Property<int>("LegStartY")
+                        .HasColumnType("int");
 
                     b.Property<double>("LootMetal")
                         .HasColumnType("float");
@@ -417,23 +647,20 @@ namespace Infrastructure.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<DateTime>("NextStepTime")
-                        .HasColumnType("datetime2");
-
-                    b.Property<int>("NextX")
-                        .HasColumnType("int");
-
-                    b.Property<int>("NextY")
-                        .HasColumnType("int");
-
                     b.Property<Guid>("OriginCityId")
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<string>("RemainingPathJson")
-                        .HasColumnType("nvarchar(max)");
+                    b.Property<int>("Phase")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("StationedAt")
+                        .HasColumnType("datetime2(3)");
 
                     b.Property<Guid?>("TargetCityId")
                         .HasColumnType("uniqueidentifier");
+
+                    b.Property<int>("Type")
+                        .HasColumnType("int");
 
                     b.Property<int>("UnitDeploymentMovementStatus")
                         .HasColumnType("int");
@@ -448,11 +675,16 @@ namespace Infrastructure.Migrations
 
                     b.HasIndex("OriginCityId");
 
-                    b.HasIndex("TargetCityId");
-
-                    b.HasIndex("WorldId");
+                    b.HasIndex("WorldId")
+                        .HasDatabaseName("IX_UnitDeployments_WorldId");
 
                     b.HasIndex("WorldPlayerId");
+
+                    b.HasIndex("Phase", "UnitDeploymentMovementStatus", "ArrivalTime")
+                        .HasDatabaseName("IX_UnitDeployments_DueMovement");
+
+                    b.HasIndex("TargetCityId", "Type", "Phase")
+                        .HasDatabaseName("IX_UnitDeployments_TargetSupport");
 
                     b.ToTable("UnitDeployments");
                 });
@@ -542,6 +774,118 @@ namespace Infrastructure.Migrations
                     b.ToTable("World");
                 });
 
+            modelBuilder.Entity("Domain.Entities.WorldIsland", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int>("CellX")
+                        .HasColumnType("int");
+
+                    b.Property<int>("CellY")
+                        .HasColumnType("int");
+
+                    b.Property<int>("CenterX")
+                        .HasColumnType("int");
+
+                    b.Property<int>("CenterY")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("DateCreated")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime>("DateLastModified")
+                        .HasColumnType("datetime2");
+
+                    b.Property<float>("EdgeRoughness")
+                        .HasColumnType("real");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<float>("MajorRadius")
+                        .HasColumnType("real");
+
+                    b.Property<float>("MinorRadius")
+                        .HasColumnType("real");
+
+                    b.Property<float>("RotationDegrees")
+                        .HasColumnType("real");
+
+                    b.Property<int>("Shape")
+                        .HasColumnType("int");
+
+                    b.Property<Guid>("WorldId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("WorldId", "CellX", "CellY")
+                        .IsUnique()
+                        .HasDatabaseName("IX_WorldIslands_World_Cell");
+
+                    b.ToTable("WorldIslands");
+                });
+
+            modelBuilder.Entity("Domain.Entities.WorldIslandExoticResource", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<double>("CoinInvestment")
+                        .HasColumnType("float");
+
+                    b.Property<DateTime>("DateCreated")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime>("DateLastModified")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<double>("MetalInvestment")
+                        .HasColumnType("float");
+
+                    b.Property<int>("ResourceType")
+                        .HasColumnType("int");
+
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .IsRequired()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("rowversion");
+
+                    b.Property<int>("SlotIndex")
+                        .HasColumnType("int");
+
+                    b.Property<double>("StoneInvestment")
+                        .HasColumnType("float");
+
+                    b.Property<int>("Tier")
+                        .HasColumnType("int");
+
+                    b.Property<double>("WoodInvestment")
+                        .HasColumnType("float");
+
+                    b.Property<Guid>("WorldIslandId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("WorldIslandId", "ResourceType")
+                        .IsUnique()
+                        .HasDatabaseName("IX_WorldIslandExoticResources_Island_Type");
+
+                    b.HasIndex("WorldIslandId", "SlotIndex")
+                        .IsUnique()
+                        .HasDatabaseName("IX_WorldIslandExoticResources_Island_Slot");
+
+                    b.ToTable("WorldIslandExoticResources");
+                });
+
             modelBuilder.Entity("Domain.Entities.WorldMapObject", b =>
                 {
                     b.Property<Guid>("Id")
@@ -594,6 +938,10 @@ namespace Infrastructure.Migrations
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Email")
                         .HasColumnType("nvarchar(max)");
@@ -651,6 +999,9 @@ namespace Infrastructure.Migrations
                     b.Property<int>("AllianceRole")
                         .HasColumnType("int");
 
+                    b.Property<double>("Coins")
+                        .HasColumnType("float");
+
                     b.Property<DateTime>("DateCreated")
                         .HasColumnType("datetime2");
 
@@ -679,9 +1030,6 @@ namespace Infrastructure.Migrations
                     b.Property<double>("ResearchPoints")
                         .HasColumnType("float");
 
-                    b.Property<double>("Silver")
-                        .HasColumnType("float");
-
                     b.Property<Guid>("WorldId")
                         .HasColumnType("uniqueidentifier");
 
@@ -691,7 +1039,8 @@ namespace Infrastructure.Migrations
 
                     b.HasIndex("PlayerProfileId");
 
-                    b.HasIndex("WorldId");
+                    b.HasIndex("WorldId")
+                        .HasDatabaseName("IX_WorldPlayers_WorldId");
 
                     b.ToTable("WorldPlayers");
                 });
@@ -726,6 +1075,9 @@ namespace Infrastructure.Migrations
                         .HasColumnType("uniqueidentifier");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("IsCompleted", "ExecutionTime")
+                        .HasDatabaseName("IX_Jobs_Due");
 
                     b.ToTable("Jobs");
 
@@ -811,6 +1163,12 @@ namespace Infrastructure.Migrations
 
             modelBuilder.Entity("Domain.Entities.Alliance", b =>
                 {
+                    b.HasOne("Domain.Entities.World", "World")
+                        .WithMany()
+                        .HasForeignKey("WorldId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
                     b.OwnsMany("Domain.Entities.Modifier", "ModifiersInternal", b1 =>
                         {
                             b1.Property<int>("Id")
@@ -821,6 +1179,12 @@ namespace Infrastructure.Migrations
 
                             b1.Property<Guid>("AllianceId")
                                 .HasColumnType("uniqueidentifier");
+
+                            b1.Property<int?>("AppliesToCategory")
+                                .HasColumnType("int");
+
+                            b1.Property<bool>("ExcludeElite")
+                                .HasColumnType("bit");
 
                             b1.Property<string>("Source")
                                 .IsRequired()
@@ -846,6 +1210,73 @@ namespace Infrastructure.Migrations
                         });
 
                     b.Navigation("ModifiersInternal");
+
+                    b.Navigation("World");
+                });
+
+            modelBuilder.Entity("Domain.Entities.AllianceInvitation", b =>
+                {
+                    b.HasOne("Domain.Entities.Alliance", "Alliance")
+                        .WithMany()
+                        .HasForeignKey("AllianceId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Domain.User.WorldPlayer", "InvitedByWorldPlayer")
+                        .WithMany()
+                        .HasForeignKey("InvitedByWorldPlayerId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Domain.User.WorldPlayer", "InvitedWorldPlayer")
+                        .WithMany()
+                        .HasForeignKey("InvitedWorldPlayerId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Alliance");
+
+                    b.Navigation("InvitedByWorldPlayer");
+
+                    b.Navigation("InvitedWorldPlayer");
+                });
+
+            modelBuilder.Entity("Domain.Entities.AllianceRelation", b =>
+                {
+                    b.HasOne("Domain.Entities.Alliance", "AllianceA")
+                        .WithMany("RelationsAsAllianceA")
+                        .HasForeignKey("AllianceIdA")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Domain.Entities.Alliance", "AllianceB")
+                        .WithMany("RelationsAsAllianceB")
+                        .HasForeignKey("AllianceIdB")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Domain.Entities.World", "World")
+                        .WithMany()
+                        .HasForeignKey("WorldId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("AllianceA");
+
+                    b.Navigation("AllianceB");
+
+                    b.Navigation("World");
+                });
+
+            modelBuilder.Entity("Domain.Entities.BugReport", b =>
+                {
+                    b.HasOne("Domain.User.PlayerProfile", "PlayerProfile")
+                        .WithMany()
+                        .HasForeignKey("PlayerProfileId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("PlayerProfile");
                 });
 
             modelBuilder.Entity("Domain.Entities.Building", b =>
@@ -879,8 +1310,14 @@ namespace Infrastructure.Migrations
 
                             SqlServerPropertyBuilderExtensions.UseIdentityColumn(b1.Property<int>("Id"));
 
+                            b1.Property<int?>("AppliesToCategory")
+                                .HasColumnType("int");
+
                             b1.Property<Guid>("CityId")
                                 .HasColumnType("uniqueidentifier");
+
+                            b1.Property<bool>("ExcludeElite")
+                                .HasColumnType("bit");
 
                             b1.Property<string>("Source")
                                 .IsRequired()
@@ -912,6 +1349,17 @@ namespace Infrastructure.Migrations
                     b.Navigation("WorldPlayer");
                 });
 
+            modelBuilder.Entity("Domain.Entities.CityExoticResource", b =>
+                {
+                    b.HasOne("Domain.Entities.City", "City")
+                        .WithMany("ExoticResources")
+                        .HasForeignKey("CityId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("City");
+                });
+
             modelBuilder.Entity("Domain.Entities.Conversation", b =>
                 {
                     b.HasOne("Domain.User.WorldPlayer", "Participant1")
@@ -929,6 +1377,25 @@ namespace Infrastructure.Migrations
                     b.Navigation("Participant1");
 
                     b.Navigation("Participant2");
+                });
+
+            modelBuilder.Entity("Domain.Entities.ConversationParticipant", b =>
+                {
+                    b.HasOne("Domain.Entities.Conversation", "Conversation")
+                        .WithMany("Participants")
+                        .HasForeignKey("ConversationId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Domain.User.WorldPlayer", "WorldPlayer")
+                        .WithMany("ConversationParticipants")
+                        .HasForeignKey("WorldPlayerId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Conversation");
+
+                    b.Navigation("WorldPlayer");
                 });
 
             modelBuilder.Entity("Domain.Entities.IdeologyFocus", b =>
@@ -1005,6 +1472,12 @@ namespace Infrastructure.Migrations
 
                             SqlServerPropertyBuilderExtensions.UseIdentityColumn(b1.Property<int>("Id"));
 
+                            b1.Property<int?>("AppliesToCategory")
+                                .HasColumnType("int");
+
+                            b1.Property<bool>("ExcludeElite")
+                                .HasColumnType("bit");
+
                             b1.Property<string>("Source")
                                 .IsRequired()
                                 .HasColumnType("nvarchar(max)");
@@ -1066,6 +1539,12 @@ namespace Infrastructure.Migrations
 
                             SqlServerPropertyBuilderExtensions.UseIdentityColumn(b1.Property<int>("Id"));
 
+                            b1.Property<int?>("AppliesToCategory")
+                                .HasColumnType("int");
+
+                            b1.Property<bool>("ExcludeElite")
+                                .HasColumnType("bit");
+
                             b1.Property<string>("Source")
                                 .IsRequired()
                                 .HasColumnType("nvarchar(max)");
@@ -1111,6 +1590,12 @@ namespace Infrastructure.Migrations
 
                             SqlServerPropertyBuilderExtensions.UseIdentityColumn(b1.Property<int>("Id"));
 
+                            b1.Property<int?>("AppliesToCategory")
+                                .HasColumnType("int");
+
+                            b1.Property<bool>("ExcludeElite")
+                                .HasColumnType("bit");
+
                             b1.Property<string>("Source")
                                 .IsRequired()
                                 .HasColumnType("nvarchar(max)");
@@ -1138,6 +1623,28 @@ namespace Infrastructure.Migrations
                         });
 
                     b.Navigation("ModifiersInternal");
+                });
+
+            modelBuilder.Entity("Domain.Entities.WorldIsland", b =>
+                {
+                    b.HasOne("Domain.Entities.World", "World")
+                        .WithMany("Islands")
+                        .HasForeignKey("WorldId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("World");
+                });
+
+            modelBuilder.Entity("Domain.Entities.WorldIslandExoticResource", b =>
+                {
+                    b.HasOne("Domain.Entities.WorldIsland", "WorldIsland")
+                        .WithMany("ExoticResources")
+                        .HasForeignKey("WorldIslandId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("WorldIsland");
                 });
 
             modelBuilder.Entity("Domain.Entities.WorldMapObject", b =>
@@ -1176,6 +1683,12 @@ namespace Infrastructure.Migrations
                                 .HasColumnType("int");
 
                             SqlServerPropertyBuilderExtensions.UseIdentityColumn(b1.Property<int>("Id"));
+
+                            b1.Property<int?>("AppliesToCategory")
+                                .HasColumnType("int");
+
+                            b1.Property<bool>("ExcludeElite")
+                                .HasColumnType("bit");
 
                             b1.Property<string>("Source")
                                 .IsRequired()
@@ -1224,6 +1737,10 @@ namespace Infrastructure.Migrations
             modelBuilder.Entity("Domain.Entities.Alliance", b =>
                 {
                     b.Navigation("Members");
+
+                    b.Navigation("RelationsAsAllianceA");
+
+                    b.Navigation("RelationsAsAllianceB");
                 });
 
             modelBuilder.Entity("Domain.Entities.City", b =>
@@ -1233,6 +1750,8 @@ namespace Infrastructure.Migrations
                     b.Navigation("BuildingQueue");
 
                     b.Navigation("Buildings");
+
+                    b.Navigation("ExoticResources");
 
                     b.Navigation("OriginUnitDeployments");
 
@@ -1244,6 +1763,8 @@ namespace Infrastructure.Migrations
             modelBuilder.Entity("Domain.Entities.Conversation", b =>
                 {
                     b.Navigation("Messages");
+
+                    b.Navigation("Participants");
                 });
 
             modelBuilder.Entity("Domain.Entities.UnitDeployment", b =>
@@ -1253,7 +1774,14 @@ namespace Infrastructure.Migrations
 
             modelBuilder.Entity("Domain.Entities.World", b =>
                 {
+                    b.Navigation("Islands");
+
                     b.Navigation("MapObjects");
+                });
+
+            modelBuilder.Entity("Domain.Entities.WorldIsland", b =>
+                {
+                    b.Navigation("ExoticResources");
                 });
 
             modelBuilder.Entity("Domain.User.PlayerProfile", b =>
@@ -1266,6 +1794,8 @@ namespace Infrastructure.Migrations
                     b.Navigation("Cities");
 
                     b.Navigation("CompletedResearches");
+
+                    b.Navigation("ConversationParticipants");
 
                     b.Navigation("ConversationsAsParticipant1");
 

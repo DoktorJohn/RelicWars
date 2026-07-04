@@ -1,13 +1,11 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
-using UnityEngine;
-using UnityEngine.Networking;
-using Newtonsoft.Json;
-using Project.Scripts.Domain.DTOs;
-using Assets.Scripts.Domain.Enums;
 using Assets._Project.Scripts.Domain.Enums;
+using Assets.Scripts.Domain.Enums;
 using Project.Network.Helper;
+using Project.Scripts.Domain.DTOs;
+using UnityEngine.Networking;
 
 namespace Project.Network
 {
@@ -30,37 +28,13 @@ namespace Project.Network
                 UnitCategories = new List<UnitCategoryEnum> { UnitCategoryEnum.Infantry, UnitCategoryEnum.Ranged }
             };
 
-            string json = JsonConvert.SerializeObject(requestDataContainer);
-            byte[] bodyRaw = System.Text.Encoding.UTF8.GetBytes(json);
-
-            // Vi tvinger den til POST her, da WebGL + GET + Body = Fejl
-            using (UnityWebRequest request = new UnityWebRequest(url, "POST"))
+            using (UnityWebRequest request = BackendRequestHelper.CreatePostRequest(url, requestDataContainer, token))
             {
-                request.uploadHandler = new UploadHandlerRaw(bodyRaw);
-                request.downloadHandler = new DownloadHandlerBuffer();
-                request.SetRequestHeader("Content-Type", "application/json");
-                request.SetRequestHeader("Authorization", "Bearer " + token);
-
-                yield return request.SendWebRequest();
-
-                if (request.result == UnityWebRequest.Result.Success)
-                {
-                    try
-                    {
-                        var data = JsonConvert.DeserializeObject<List<RecruitmentQueueItemDTO>>(request.downloadHandler.text);
-                        callback?.Invoke(data);
-                    }
-                    catch (Exception e)
-                    {
-                        Debug.LogError($"[BarracksService] JSON Error: {e.Message}");
-                        callback?.Invoke(new List<RecruitmentQueueItemDTO>());
-                    }
-                }
-                else
-                {
-                    Debug.LogError($"[BarracksService] Network Error ({request.responseCode}): {request.error}");
-                    callback?.Invoke(new List<RecruitmentQueueItemDTO>());
-                }
+                yield return BackendRequestHelper.SendJson(
+                    request,
+                    callback,
+                    "BarracksService",
+                    _ => new List<RecruitmentQueueItemDTO>());
             }
         }
 
@@ -68,31 +42,9 @@ namespace Project.Network
         {
             string url = $"{_baseUrl}/militarybuilding/{cityId}/barracksOverview";
 
-            using (UnityWebRequest request = UnityWebRequest.Get(url))
+            using (UnityWebRequest request = BackendRequestHelper.CreateGetRequest(url, token))
             {
-                request.SetRequestHeader("Authorization", "Bearer " + token);
-                request.SetRequestHeader("Content-Type", "application/json");
-
-                yield return request.SendWebRequest();
-
-                if (request.result == UnityWebRequest.Result.Success)
-                {
-                    try
-                    {
-                        var data = JsonConvert.DeserializeObject<BarracksFullViewDTO>(request.downloadHandler.text);
-                        callback?.Invoke(data);
-                    }
-                    catch (Exception e)
-                    {
-                        Debug.LogError($"[BarracksService] JSON Error: {e.Message}");
-                        callback?.Invoke(null);
-                    }
-                }
-                else
-                {
-                    Debug.LogError($"[BarracksService] Network Error: {request.error}");
-                    callback?.Invoke(null);
-                }
+                yield return BackendRequestHelper.SendJson(request, callback, "BarracksService");
             }
         }
 
@@ -106,56 +58,22 @@ namespace Project.Network
                 Amount = amount
             };
 
-            string jsonBody = JsonConvert.SerializeObject(requestBody);
-            byte[] bodyRaw = System.Text.Encoding.UTF8.GetBytes(jsonBody);
-
-            using (UnityWebRequest request = new UnityWebRequest(url, "POST"))
+            using (UnityWebRequest request = BackendRequestHelper.CreatePostRequest(url, requestBody, token))
             {
-                request.uploadHandler = new UploadHandlerRaw(bodyRaw);
-                request.downloadHandler = new DownloadHandlerBuffer();
-
-                request.SetRequestHeader("Authorization", "Bearer " + token);
-                request.SetRequestHeader("Content-Type", "application/json");
-
-                yield return request.SendWebRequest();
-
-                RecruitmentResult recruitmentResult = new RecruitmentResult();
-
-                if (request.result == UnityWebRequest.Result.Success)
-                {
-                    try
+                yield return BackendRequestHelper.SendJson(
+                    request,
+                    response => callback?.Invoke(response ?? new RecruitmentResult
                     {
-                        // Vi parser det fulde svar inkl. remainingFreePopulation
-                        recruitmentResult = JsonConvert.DeserializeObject<RecruitmentResult>(request.downloadHandler.text);
-                    }
-                    catch (Exception ex)
+                        Success = false,
+                        Message = "Kunne ikke tolke succes-svar fra serveren."
+                    }),
+                    "BarracksService",
+                    errorRequest => new RecruitmentResult
                     {
-                        recruitmentResult.Success = false;
-                        recruitmentResult.Message = "Kunne ikke tolke succes-svar fra serveren.";
-                        Debug.LogError($"[BarracksService] JSON Parse Error: {ex.Message}");
-                    }
-                }
-                else
-                {
-                    // Ved fejl (400, 500 osv.) forsøger vi stadig at læse backends fejlbesked
-                    try
-                    {
-                        recruitmentResult = JsonConvert.DeserializeObject<RecruitmentResult>(request.downloadHandler.text);
-                    }
-                    catch
-                    {
-                        // Hvis det ikke er JSON, bruger vi den rå fejlbesked
-                        recruitmentResult.Success = false;
-                        recruitmentResult.Message = string.IsNullOrEmpty(request.downloadHandler.text) ? request.error : request.downloadHandler.text;
-                    }
-
-                    Debug.LogError($"[BarracksService] Recruit Failed: {recruitmentResult.Message}");
-                }
-
-                // Vi returnerer hele objektet til controlleren
-                callback?.Invoke(recruitmentResult);
+                        Success = false,
+                        Message = BackendRequestHelper.GetErrorMessage(errorRequest)
+                    });
             }
         }
-
     }
 }

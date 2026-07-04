@@ -6,9 +6,12 @@ using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using Project.Network.Models;
 
 namespace Project.Scripts.Domain.DTOs
 {
+    public enum IdeologyFocusEffectKindEnum { Modifier, Instant, Triggered, Conditional }
+    public enum IdeologyFocusTargetScopeEnum { City, WorldPlayer, OutgoingDeployment, CombatAtCity }
     public static class IdeologyFocusExtensions
     {
         public static string ToFriendlyName(this IdeologyFocusNameEnum focus)
@@ -46,6 +49,7 @@ namespace Project.Scripts.Domain.DTOs
         public Guid? CityId { get; set; }
         public string Message { get; set; } = string.Empty;
         public bool Success { get; set; }
+        public IdeologyFocusEffectResultDTO EffectResult { get; set; }
 
         public IdeologyFocusAnswerDTO() { }
 
@@ -58,6 +62,14 @@ namespace Project.Scripts.Domain.DTOs
         }
     }
 
+    public class IdeologyFocusEffectResultDTO
+    {
+        public string Summary { get; set; } = string.Empty;
+        public int RequestedQuantity { get; set; }
+        public int GrantedQuantity { get; set; }
+        public List<UnitStackDTO> GrantedUnits { get; set; } = new List<UnitStackDTO>();
+    }
+
     public class IdeologyFocusDTO
     {
         public IdeologyFocusNameEnum Name { get; set; }
@@ -67,5 +79,11 @@ namespace Project.Scripts.Domain.DTOs
         public bool AlreadyEnacted { get; set; }
         public TimeSpan? ActiveTime { get; set; }
         public DateTime ExpirationTime { get; set; }
+        public IdeologyFocusEffectKindEnum EffectKind { get; set; }
+        public IdeologyFocusTargetScopeEnum TargetScope { get; set; }
+        public bool CanRepeat { get; set; }
+        public bool ConsumesOnTrigger { get; set; }
+        public bool IsAvailable { get; set; } = true;
+        public string UnavailableReason { get; set; }
     }
 }

@@ -4,9 +4,6 @@ using Project.Scripts.Domain.DTOs;
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.Networking;
 
@@ -18,133 +15,104 @@ namespace Project.Scripts.Network
 
         public ClientUnitDeploymentService(string baseUrl)
         {
-            // Vi mapper til din UnitDeploymentController
             _baseUrl = $"{baseUrl}/UnitDeployment";
         }
 
-        /// <summary>
-        /// Sender en anmodning til backenden om at deploye enheder fra en by ud på verdenskortet.
-        /// </summary>
-        public IEnumerator DeployUnits(DeployUnitRequestDTO deployUnitRequestDto, string jwtToken, Action<UnitDeploymentDTO> callback)
+        public IEnumerator AttackCityDeployment(AttackCityDeploymentRequestDTO attackCityDeploymentRequestDto, string jwtToken, Action<UnitDeploymentDTO> callback, Action<string> errorCallback = null)
         {
-            string url = $"{_baseUrl}/deployUnitDeployment";
+            string url = $"{_baseUrl}/attacks";
 
-            using (UnityWebRequest webRequest = BackendRequestHelper.CreatePostRequest(url, deployUnitRequestDto, jwtToken))
+            using (UnityWebRequest webRequest = BackendRequestHelper.CreatePostRequest(url, attackCityDeploymentRequestDto, jwtToken))
             {
-                yield return webRequest.SendWebRequest();
+                yield return BackendRequestHelper.SendJson<UnitDeploymentDTO>(
+                    webRequest,
+                    responseData =>
+                    {
+                        if (responseData != null)
+                        {
+                            Debug.Log($"[Deployment] Angreb oprettet. ID: {responseData.Id}");
+                        }
 
-                if (webRequest.result == UnityWebRequest.Result.Success)
-                {
-                    try
-                    {
-                        UnitDeploymentDTO responseData = JsonConvert.DeserializeObject<UnitDeploymentDTO>(webRequest.downloadHandler.text);
-                        Debug.Log($"[Hexagon] Deployment succesfuld. ID: {responseData.Id}");
                         callback?.Invoke(responseData);
-                    }
-                    catch (Exception exception)
-                    {
-                        Debug.LogError($"[Hexagon] Fejl ved deserialisering af data: {exception.Message}");
-                        callback?.Invoke(null);
-                    }
-                }
-                else
-                {
-                    // Vi logger både fejlen og svaret fra serveren (da din controller returnerer BadRequest med fejlbesked)
-                    string errorDetail = webRequest.downloadHandler?.text;
-                    Debug.LogError($"[Hexagon] DeployUnits Error: {webRequest.error} - Detaljer: {errorDetail}");
-                    callback?.Invoke(null);
-                }
+                    },
+                    "Deployment",
+                    request => { errorCallback?.Invoke(BackendRequestHelper.GetErrorMessage(request)); return null; });
             }
         }
 
-        public IEnumerator MoveUnits(MoveUnitRequestDTO moveUnitRequestDto, string jwtToken, Action<UnitDeploymentDTO> callback)
+        public IEnumerator GetActiveDeployments(Guid worldPlayerId, string jwtToken, Action<List<UnitDeploymentDTO>> callback)
         {
-            string url = $"{_baseUrl}/moveUnitDeployment";
+            string url = $"{_baseUrl}/worldPlayers/{worldPlayerId}/deployments";
 
-            using (UnityWebRequest webRequest = BackendRequestHelper.CreatePostRequest(url, moveUnitRequestDto, jwtToken))
+            using (UnityWebRequest webRequest = BackendRequestHelper.CreateGetRequest(url, jwtToken))
             {
-                yield return webRequest.SendWebRequest();
-
-                if (webRequest.result == UnityWebRequest.Result.Success)
-                {
-                    try
-                    {
-                        UnitDeploymentDTO responseData = JsonConvert.DeserializeObject<UnitDeploymentDTO>(webRequest.downloadHandler.text);
-                        Debug.Log($"[Hexagon] March-ordre modtaget for enhed: {responseData.Id}");
-                        callback?.Invoke(responseData);
-                    }
-                    catch (Exception exception)
-                    {
-                        Debug.LogError($"[Hexagon] Fejl ved deserialisering af Move-data: {exception.Message}");
-                        callback?.Invoke(null);
-                    }
-                }
-                else
-                {
-                    string errorDetail = webRequest.downloadHandler?.text;
-                    Debug.LogError($"[Hexagon] MoveUnits Error: {webRequest.error} - Detaljer: {errorDetail}");
-                    callback?.Invoke(null);
-                }
+                yield return BackendRequestHelper.SendJson(
+                    webRequest,
+                    callback,
+                    "Deployment",
+                    _ => new List<UnitDeploymentDTO>());
             }
         }
 
-        public IEnumerator AbortMovementUnits(Guid deploymentId, string jwtToken, Action<UnitDeploymentDTO> callback)
+        public IEnumerator SupportCityDeployment(SupportCityDeploymentRequestDTO requestDto, string jwtToken, Action<UnitDeploymentDTO> callback, Action<string> errorCallback = null)
         {
-            string url = $"{_baseUrl}/haltUnitDeployment/{deploymentId}";
+            string url = $"{_baseUrl}/supports";
 
-            using (UnityWebRequest webRequest = BackendRequestHelper.CreatePostRequest(url, "", jwtToken))
+            using (UnityWebRequest webRequest = BackendRequestHelper.CreatePostRequest(url, requestDto, jwtToken))
             {
-                yield return webRequest.SendWebRequest();
+                yield return BackendRequestHelper.SendJson<UnitDeploymentDTO>(
+                    webRequest,
+                    responseData =>
+                    {
+                        if (responseData != null)
+                        {
+                            Debug.Log($"[Deployment] Support created. ID: {responseData.Id}");
+                        }
 
-                if (webRequest.result == UnityWebRequest.Result.Success)
-                {
-                    try
-                    {
-                        UnitDeploymentDTO responseData = JsonConvert.DeserializeObject<UnitDeploymentDTO>(webRequest.downloadHandler.text);
-                        Debug.Log($"[Expeditions] March afbrudt for enhed: {deploymentId}");
                         callback?.Invoke(responseData);
-                    }
-                    catch (Exception exception)
-                    {
-                        Debug.LogError($"[Expeditions] Fejl ved deserialisering af Abort-data: {exception.Message}");
-                        callback?.Invoke(null);
-                    }
-                }
-                else
-                {
-                    Debug.LogError($"[Expeditions] AbortUnits Error: {webRequest.error}");
-                    callback?.Invoke(null);
-                }
+                    },
+                    "Deployment",
+                    request => { errorCallback?.Invoke(BackendRequestHelper.GetErrorMessage(request)); return null; });
             }
         }
 
-        public IEnumerator ReturnToOriginCityUnits(Guid deploymentId, string jwtToken, Action<UnitDeploymentDTO> callback)
+        public IEnumerator EstimateTravel(DeploymentTravelEstimateRequestDTO requestDto, string jwtToken, Action<DeploymentTravelEstimateDTO> callback)
         {
-            string url = $"{_baseUrl}/returnToOriginCity/{deploymentId}";
-
-            using (UnityWebRequest webRequest = BackendRequestHelper.CreatePostRequest(url, "", jwtToken))
+            string url = $"{_baseUrl}/travel-estimate";
+            using (UnityWebRequest webRequest = BackendRequestHelper.CreatePostRequest(url, requestDto, jwtToken))
             {
-                yield return webRequest.SendWebRequest();
+                yield return BackendRequestHelper.SendJson(webRequest, callback, "Deployment estimate");
+            }
+        }
 
-                if (webRequest.result == UnityWebRequest.Result.Success)
-                {
-                    try
+        public IEnumerator GetIncomingAttacks(Guid worldPlayerId, string jwtToken, Action<List<IncomingAttackDTO>> callback)
+        {
+            string url = $"{_baseUrl}/worldPlayers/{worldPlayerId}/incoming-attacks";
+            using (UnityWebRequest webRequest = BackendRequestHelper.CreateGetRequest(url, jwtToken))
+            {
+                yield return BackendRequestHelper.SendJson(webRequest, callback, "Incoming attacks", _ => new List<IncomingAttackDTO>());
+            }
+        }
+
+        public IEnumerator Recall(Guid deploymentId, string jwtToken, Action<UnitDeploymentDTO> callback, Action<string> errorCallback = null)
+        {
+            string url = $"{_baseUrl}/{deploymentId}/recall";
+
+            using (UnityWebRequest webRequest = BackendRequestHelper.CreatePostRequest(url, new { }, jwtToken))
+            {
+                yield return BackendRequestHelper.SendJson<UnitDeploymentDTO>(
+                    webRequest,
+                    responseData =>
                     {
-                        UnitDeploymentDTO responseData = JsonConvert.DeserializeObject<UnitDeploymentDTO>(webRequest.downloadHandler.text);
-                        Debug.Log($"[Expeditions] Retur-ordre bekræftet for: {deploymentId}");
+                        if (responseData != null)
+                        {
+                            Debug.Log($"[Deployment] Recall accepted: {responseData.Id}");
+                        }
+
                         callback?.Invoke(responseData);
-                    }
-                    catch (Exception exception)
-                    {
-                        Debug.LogError($"[Expeditions] Fejl ved deserialisering af Return-data: {exception.Message}");
-                        callback?.Invoke(null);
-                    }
-                }
-                else
-                {
-                    Debug.LogError($"[Expeditions] ReturnToOrigin Error: {webRequest.error}");
-                    callback?.Invoke(null);
-                }
+                    },
+                    "Deployment",
+                    request => { errorCallback?.Invoke(BackendRequestHelper.GetErrorMessage(request)); return null; });
             }
         }
     }

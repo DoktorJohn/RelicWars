@@ -1,10 +1,8 @@
 ﻿using Newtonsoft.Json;
-using Project.Network;
+using Project.Network.Helper;
 using Project.Scripts.Domain.DTOs;
 using System;
 using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
 using UnityEngine.Networking;
 
 namespace Project.Scripts.Network
@@ -22,22 +20,9 @@ namespace Project.Scripts.Network
         {
             string url = $"{_controllerBaseUrl}/tree/{worldPlayerId}";
 
-            using (UnityWebRequest request = UnityWebRequest.Get(url))
+            using (UnityWebRequest request = BackendRequestHelper.CreateGetRequest(url, jwtToken))
             {
-                request.SetRequestHeader("Authorization", "Bearer " + jwtToken);
-
-                yield return request.SendWebRequest();
-
-                if (request.result == UnityWebRequest.Result.Success)
-                {
-                    var data = JsonConvert.DeserializeObject<ResearchTreeDTO>(request.downloadHandler.text);
-                    callback?.Invoke(data);
-                }
-                else
-                {
-                    Debug.LogError($"[ClientResearchService] Kunne ikke hente research træ: {request.error}");
-                    callback?.Invoke(null);
-                }
+                yield return BackendRequestHelper.SendJson(request, callback, "ClientResearchService");
             }
         }
 
@@ -45,11 +30,8 @@ namespace Project.Scripts.Network
         {
             string url = $"{_controllerBaseUrl}/start/{worldPlayerId}/{researchId}";
 
-            using (UnityWebRequest request = new UnityWebRequest(url, "POST"))
+            using (UnityWebRequest request = BackendRequestHelper.CreatePostRequest(url, new { }, jwtToken))
             {
-                request.downloadHandler = new DownloadHandlerBuffer();
-                request.SetRequestHeader("Authorization", "Bearer " + jwtToken);
-
                 yield return request.SendWebRequest();
 
                 if (request.result == UnityWebRequest.Result.Success)
@@ -58,7 +40,7 @@ namespace Project.Scripts.Network
                 }
                 else
                 {
-                    callback?.Invoke(false, request.downloadHandler.text);
+                    callback?.Invoke(false, BackendRequestHelper.GetErrorMessage(request));
                 }
             }
         }
@@ -67,11 +49,8 @@ namespace Project.Scripts.Network
         {
             string url = $"{_controllerBaseUrl}/cancel/{worldPlayerId}/{jobId}";
 
-            using (UnityWebRequest request = new UnityWebRequest(url, "POST"))
+            using (UnityWebRequest request = BackendRequestHelper.CreatePostRequest(url, new { }, jwtToken))
             {
-                request.downloadHandler = new DownloadHandlerBuffer();
-                request.SetRequestHeader("Authorization", "Bearer " + jwtToken);
-
                 yield return request.SendWebRequest();
 
                 if (request.result == UnityWebRequest.Result.Success)
@@ -80,7 +59,7 @@ namespace Project.Scripts.Network
                 }
                 else
                 {
-                    callback?.Invoke(false, request.downloadHandler.text);
+                    callback?.Invoke(false, BackendRequestHelper.GetErrorMessage(request));
                 }
             }
         }

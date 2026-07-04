@@ -1,4 +1,4 @@
-﻿using Application.DTOs;
+using Application.DTOs;
 using Application.Interfaces.IRepositories;
 using Application.Interfaces.IServices;
 using Application.Utility;
@@ -11,7 +11,6 @@ using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Security.Cryptography;
 using System.Threading.Tasks;
 
 namespace Application.Services
@@ -19,15 +18,16 @@ namespace Application.Services
     public class WorldPlayerService : IWorldPlayerService
     {
         private readonly IWorldMapObjectRepository _worldMapObjectRepository;
+        private readonly IWorldMapObjectService _worldMapObjectService;
         private readonly ICityRepository _cityRepository;
         private readonly IWorldPlayerRepository _worldPlayerRepository;
         private readonly IPlayerProfileRepository _profileRepository;
+        private readonly IPlayerAccessService _playerAccessService;
         private readonly IRankingService _rankingService;
         private readonly IResourceService _resourceService;
         private readonly IWorldRepository _worldRepo;
         private readonly CityPointCalculator _cityPointCalculator;
         private readonly ILogger<WorldPlayerService> _logger;
-        private readonly Random _randomGenerator = new Random();
 
         public WorldPlayerService(
             IWorldPlayerRepository worldPlayerRepository,
@@ -37,6 +37,8 @@ namespace Application.Services
             IResourceService resourceService,
             IWorldRepository worldRepo,
             IWorldMapObjectRepository worldMapObjectRepository,
+            IWorldMapObjectService worldMapObjectService,
+            IPlayerAccessService playerAccessService,
             ILogger<WorldPlayerService> logger,
             CityPointCalculator cityPointCalculator)
         {
@@ -48,39 +50,36 @@ namespace Application.Services
             _worldRepo = worldRepo;
             _logger = logger;
             _worldMapObjectRepository = worldMapObjectRepository;
+            _worldMapObjectService = worldMapObjectService;
+            _playerAccessService = playerAccessService;
             _cityPointCalculator = cityPointCalculator;
         }
 
-        public void UpdateGlobalResourceState(WorldPlayer player, DateTime currentDateTime)
+        public void SyncGlobalResources(WorldPlayer player, DateTime currentDateTime)
         {
-            _logger.LogInformation("[WorldPlayerService] Updating Global Resource State for Player {PlayerId}. Old Silver: {Silver}, Old LastUpdate: {LastUpdate}", player.Id, player.Silver, player.LastResourceUpdate);
+            _logger.LogInformation("[WorldPlayerService] Updating Global Resource State for Player {PlayerId}. Old Coins: {Coins}, Old LastUpdate: {LastUpdate}", player.Id, player.Coins, player.LastResourceUpdate);
             var globalSnapshot = _resourceService.CalculateGlobalResources(player, currentDateTime);
 
-            player.Silver = globalSnapshot.SilverAmount;
+            player.Coins = globalSnapshot.CoinsAmount;
             player.ResearchPoints = globalSnapshot.ResearchPoints;
             player.IdeologyFocusPoints = globalSnapshot.IdeologyFocusPoints;
             player.LastResourceUpdate = currentDateTime;
 
-            _logger.LogInformation("[WorldPlayerService] Global economy state synchronized for Player: {PlayerId}. New Silver: {Silver}, Rate: {Rate}", player.Id, player.Silver, globalSnapshot.SilverProductionPerHour);
+            _logger.LogInformation("[WorldPlayerService] Global economy state synchronized for Player: {PlayerId}. New Coins: {Coins}, Rate: {Rate}", player.Id, player.Coins, globalSnapshot.CoinsProductionPerHour);
         }
 
         public async Task<WorldPlayerEconomyDTO> GetWorldPlayerEconomyAsync(Guid worldPlayerId)
         {
             _logger.LogInformation("[WorldPlayerService] GetWorldPlayerEconomyAsync called for Player {PlayerId}", worldPlayerId);
-            var player = await _worldPlayerRepository.GetByIdAsync(worldPlayerId);
-            if (player == null)
-            {
-                _logger.LogWarning("[WorldPlayerService] Player {PlayerId} not found", worldPlayerId);
-                throw new KeyNotFoundException($"WorldPlayer med ID {worldPlayerId} blev ikke fundet.");
-            }
+            var player = await _playerAccessService.RequireOwnedWorldPlayerAsync(worldPlayerId);
 
             var currentDateTime = DateTime.UtcNow;
-            UpdateGlobalResourceState(player, currentDateTime);
+            SyncGlobalResources(player, currentDateTime);
             await _worldPlayerRepository.UpdateAsync(player); // Persist the updated resources
 
             var globalSnapshot = _resourceService.CalculateGlobalResources(player, currentDateTime);
             
-            _logger.LogInformation("[WorldPlayerService] Returning economy DTO for {PlayerId}. Silver: {Silver}, Rate: {Rate}", player.Id, player.Silver, globalSnapshot.SilverProductionPerHour);
+            _logger.LogInformation("[WorldPlayerService] Returning economy DTO for {PlayerId}. Coins: {Coins}, Rate: {Rate}", player.Id, player.Coins, globalSnapshot.CoinsProductionPerHour);
 
             // Fetch cities efficiently for the dropdown
             var cities = await _cityRepository.GetCitiesByWorldPlayerIdAsync(player.Id);
@@ -89,10 +88,10 @@ namespace Application.Services
             return new WorldPlayerEconomyDTO
             {
                 WorldPlayerId = player.Id,
-                CurrentSilverAmount = Math.Floor(player.Silver),
+                CurrentCoinsAmount = Math.Floor(player.Coins),
                 CurrentResearchPoints = Math.Floor(player.ResearchPoints),
                 CurrentIdeologyFocusPoints = Math.Floor(player.IdeologyFocusPoints),
-                SilverProductionPerHour = globalSnapshot.SilverProductionPerHour,
+                CoinsProductionPerHour = globalSnapshot.CoinsProductionPerHour,
                 ResearchPointsPerHour = globalSnapshot.ResearchPointsPerHour,
                 IdeologyFocusPointsPerHour = globalSnapshot.IdeologyFocusPointsPerHour,
                 PlayerCities = cityDtos,
@@ -102,11 +101,10 @@ namespace Application.Services
 
         public async Task<WorldPlayerProfileDTO> GetWorldPlayerProfileAsync(Guid worldPlayerId)
         {
-            var worldPlayer = await _worldPlayerRepository.GetByIdAsync(worldPlayerId);
-            if (worldPlayer == null)
-            {
-                throw new KeyNotFoundException($"OwnerWorldPlayer med ID {worldPlayerId} blev ikke fundet.");
-            }
+            var worldPlayer = await _worldPlayerRepository.GetByIdAsync(worldPlayerId)
+                ?? throw new KeyNotFoundException("World player not found.");
+
+            await _playerAccessService.RequireWorldMembershipAsync(worldPlayer.WorldId);
 
             int rank = 0;
             int totalPoints = worldPlayer.Cities.Sum(c => c.Points);
@@ -126,15 +124,39 @@ namespace Application.Services
                 totalPoints,
                 rank,
                 cityCount,
+                worldPlayer.PlayerProfile?.Description ?? string.Empty,
                 worldPlayer.Alliance?.Name ?? "Ingen Alliance",
                 worldPlayer.Ideology,
                 worldPlayer.Alliance?.Id ?? Guid.Empty,
-                worldPlayer.WorldId
+                worldPlayer.WorldId,
+                (worldPlayer.Cities ?? new List<City>())
+                    .OrderByDescending(city => city.Points)
+                    .ThenBy(city => city.Name)
+                    .Select(city => new CityDTO(city.Id, city.Name, city.X, city.Y, city.Points))
+                    .ToList()
             );
+        }
+
+        public async Task<WorldPlayerProfileDTO> UpdateWorldPlayerDescriptionAsync(Guid worldPlayerId, string description)
+        {
+            var worldPlayer = await _playerAccessService.RequireOwnedWorldPlayerAsync(worldPlayerId);
+            var sanitizedDescription = SanitizeDescription(description);
+
+            if (worldPlayer.PlayerProfile == null)
+            {
+                throw new KeyNotFoundException("Player profile not found.");
+            }
+
+            worldPlayer.PlayerProfile.Description = sanitizedDescription;
+            worldPlayer.PlayerProfile.ModifiedAt = DateTime.UtcNow;
+            await _profileRepository.UpdateAsync(worldPlayer.PlayerProfile);
+
+            return await GetWorldPlayerProfileAsync(worldPlayerId);
         }
 
         public async Task<List<PlayerSearchResultDTO>> SearchPlayersAsync(Guid worldId, string query)
         {
+            await _playerAccessService.RequireWorldMembershipAsync(worldId);
             if (string.IsNullOrWhiteSpace(query)) return new List<PlayerSearchResultDTO>();
 
             var players = await _worldPlayerRepository.SearchPlayersByUsernameAsync(worldId, query);
@@ -145,8 +167,9 @@ namespace Application.Services
             }).ToList();
         }
 
-        public async Task<WorldPlayerJoinResponse> AssignPlayerToGameWorldAsync(Guid playerProfileId, Guid targetWorldId)
+        public async Task<WorldPlayerJoinResponse> AssignPlayerToGameWorldAsync(Guid targetWorldId)
         {
+            var playerProfileId = _playerAccessService.GetAuthenticatedProfileId();
             var existingGameWorldParticipation = await _worldPlayerRepository.GetByProfileAndWorldAsync(playerProfileId, targetWorldId);
 
             if (existingGameWorldParticipation != null)
@@ -187,22 +210,20 @@ namespace Application.Services
             }
 
             // Beregn spawn koordinater baseret på eksisterende byer i verdenen
-            var spawnCoordinates = await CalculateNextAlphaTestSpawnCoordinatesAsync(targetWorldId);
+            var spawnCoordinates = await CalculateNextCoastalSpawnCoordinatesAsync(targetGameWorld);
 
             var newlyCreatedWorldParticipation = new WorldPlayer
             {
                 Id = Guid.NewGuid(),
                 PlayerProfileId = playerProfileId,
                 WorldId = targetWorldId,
-                Silver = 1000,
+                Coins = 1000,
                 ResearchPoints = 10,
                 IdeologyFocusPoints = 100,
                 Ideology = IdeologyTypeEnum.None,
                 LastResourceUpdate = DateTime.UtcNow,
                 Cities = new List<City>()
             };
-
-            targetGameWorld.PlayerCount++;
 
             var initialPlayerCapitalCity = CreateStartingCity(
                 playerProfileUsername,
@@ -214,16 +235,7 @@ namespace Application.Services
             newlyCreatedWorldParticipation.Cities.Add(initialPlayerCapitalCity);
             await _worldPlayerRepository.AddAsync(newlyCreatedWorldParticipation);
 
-            var worldMapObject = new WorldMapObject
-            {
-                WorldId = targetWorldId,
-                X = (short)initialPlayerCapitalCity.X,
-                Y = (short)initialPlayerCapitalCity.Y,
-                Type = MapObjectTypeEnum.City,
-                ReferenceEntityId = initialPlayerCapitalCity.Id
-            };
-
-            await _worldMapObjectRepository.AddAsync(worldMapObject);
+            await _worldMapObjectService.AddEntityToWorldMapAsync(initialPlayerCapitalCity);
 
             _logger.LogInformation("Player {Username} spawned at coordinates {X},{Y}", playerProfileUsername, spawnCoordinates.X, spawnCoordinates.Y);
 
@@ -239,10 +251,7 @@ namespace Application.Services
 
         public async Task<WorldPlayerSelectIdeologyResponse> SelectIdeology(SelectIdeologyRequest request)
         {
-            var worldPlayer = await _worldPlayerRepository.GetByIdAsync(request.WorldPlayerId);
-
-            if (worldPlayer == null)
-                return new WorldPlayerSelectIdeologyResponse(false, "OwnerWorldPlayer not found.");
+            var worldPlayer = await _playerAccessService.RequireOwnedWorldPlayerAsync(request.WorldPlayerId);
 
             if (worldPlayer.Ideology != IdeologyTypeEnum.None)
                 return new WorldPlayerSelectIdeologyResponse(false, "Ideology already selected.");
@@ -256,110 +265,109 @@ namespace Application.Services
             return new WorldPlayerSelectIdeologyResponse(true, $"Ideology {request.Ideology} confirmed.");
         }
 
-        public async Task<bool> ApplyAlphaCheatAsync(Guid worldPlayerId, Guid cityId)
+        private async Task<(int X, int Y)> CalculateNextCoastalSpawnCoordinatesAsync(World world)
         {
-            var worldPlayer = await _worldPlayerRepository.GetByIdAsync(worldPlayerId);
-            if (worldPlayer == null)
+            const int minimumCityDistance = 3;
+            const int islandCellSize = WorldGenerationService.IslandCellSize;
+            const int islandSearchRadius = WorldGenerationService.MaximumIslandRadius + 2;
+
+            var existingCities = await _worldMapObjectRepository.GetObjectsByTypeAsync(world.Id, MapObjectTypeEnum.City);
+            var occupied = existingCities.Select(city => ((int)city.X, (int)city.Y)).ToHashSet();
+            var citiesByIsland = existingCities
+                .Select(city => WorldGenerationService.TryGetIslandCoordinates(city.X, city.Y, world.MapSeed, out int islandX, out int islandY)
+                    ? new { City = city, Island = (islandX, islandY) }
+                    : null)
+                .Where(entry => entry != null)
+                .GroupBy(entry => entry!.Island)
+                .ToDictionary(group => group.Key, group => group.Select(entry => entry!.City).ToList());
+
+            int minimumX = -world.Width / 2;
+            int maximumX = minimumX + world.Width - 1;
+            int minimumY = -world.Height / 2;
+            int maximumY = minimumY + world.Height - 1;
+            int minimumCellX = minimumX / islandCellSize - 1;
+            int maximumCellX = maximumX / islandCellSize + 1;
+            int minimumCellY = minimumY / WorldGenerationService.IslandRowHeight - 1;
+            int maximumCellY = maximumY / WorldGenerationService.IslandRowHeight + 1;
+
+            var islandCandidates = citiesByIsland
+                .OrderByDescending(pair => pair.Value.Count)
+                .ThenBy(pair => Math.Abs(pair.Key.Item1 - 1) + Math.Abs(pair.Key.Item2 - 1))
+                .ThenBy(pair => pair.Key.Item1)
+                .ThenBy(pair => pair.Key.Item2)
+                .Select(pair => pair.Key)
+                .Concat(
+                    from islandX in Enumerable.Range(minimumCellX, maximumCellX - minimumCellX + 1)
+                    from islandY in Enumerable.Range(minimumCellY, maximumCellY - minimumCellY + 1)
+                    let island = (islandX, islandY)
+                    where !citiesByIsland.ContainsKey(island)
+                    where WorldGenerationService.IsIslandCellActive(islandX, islandY, world.MapSeed)
+                    orderby Math.Abs(islandX - 1) + Math.Abs(islandY - 1), islandX, islandY
+                    select island);
+
+            foreach (var island in islandCandidates)
             {
-                _logger.LogWarning("[WorldPlayerService] ApplyAlphaCheatAsync: WorldPlayer {PlayerId} not found.", worldPlayerId);
-                return false;
+                citiesByIsland.TryGetValue(island, out var islandCities);
+                islandCities ??= new List<WorldMapObject>();
+                var islandDefinition = WorldGenerationService.GetIslandDefinition(island.Item1, island.Item2, world.MapSeed);
+
+                var bestCandidate = (
+                    from x in Enumerable.Range(islandDefinition.CenterX - islandSearchRadius, islandSearchRadius * 2 + 1)
+                    from y in Enumerable.Range(islandDefinition.CenterY - islandSearchRadius, islandSearchRadius * 2 + 1)
+                    where x >= minimumX && x <= maximumX && y >= minimumY && y <= maximumY
+                    where !occupied.Contains((x, y))
+                    where WorldGenerationService.IsCoastal(x, y, world.MapSeed)
+                    where WorldGenerationService.TryGetIslandCoordinates(x, y, world.MapSeed, out int candidateIslandX, out int candidateIslandY)
+                        && candidateIslandX == island.Item1 && candidateIslandY == island.Item2
+                    let spacing = islandCities.Count == 0
+                        ? int.MaxValue
+                        : islandCities.Min(city => HexDistance(x, y, city.X, city.Y))
+                    where spacing >= minimumCityDistance
+                    orderby spacing descending, x, y
+                    select ((int X, int Y)?)(x, y)).FirstOrDefault();
+
+                if (bestCandidate.HasValue)
+                    return bestCandidate.Value;
             }
 
-            var city = await _cityRepository.GetByIdAsync(cityId);
-            if (city == null)
-            {
-                _logger.LogWarning("[WorldPlayerService] ApplyAlphaCheatAsync: City {CityId} not found.", cityId);
-                return false;
-            }
-
-            if (city.WorldPlayerId != worldPlayerId)
-            {
-                _logger.LogWarning("[WorldPlayerService] ApplyAlphaCheatAsync: City {CityId} does not belong to player {PlayerId}.", cityId, worldPlayerId);
-                return false;
-            }
-
-            var currentDateTime = DateTime.UtcNow;
-            
-            // Opdater ressourcer før cheat, så vi ikke overskriver produktion
-            var citySnapshot = _resourceService.CalculateCityResources(city, currentDateTime);
-            city.Wood = citySnapshot.Wood;
-            city.Stone = citySnapshot.Stone;
-            city.Metal = citySnapshot.Metal;
-            city.LastResourceUpdate = currentDateTime;
-
-            UpdateGlobalResourceState(worldPlayer, currentDateTime);
-
-            // Apply Cheat
-            city.Wood += 1000;
-            city.Stone += 1000;
-            city.Metal += 1000;
-
-            worldPlayer.ResearchPoints += 10;
-            worldPlayer.IdeologyFocusPoints += 10;
-
-            await _cityRepository.UpdateAsync(city);
-            await _worldPlayerRepository.UpdateAsync(worldPlayer);
-
-            _logger.LogInformation("[WorldPlayerService] Alpha Cheat Applied for Player {PlayerId} in City {CityId}", worldPlayerId, cityId);
-            return true;
+            throw new InvalidOperationException("No coastal city position is available in this world.");
         }
 
-        private async Task<(int X, int Y)> CalculateNextAlphaTestSpawnCoordinatesAsync(Guid worldId)
+        private static string SanitizeDescription(string description)
         {
-            // Hent alle eksisterende byer på kortet for at tjekke distancer
-            var existingCities = await _worldMapObjectRepository.GetObjectsByTypeAsync(worldId, MapObjectTypeEnum.City);
-
-            // Regel 1: Første by på serveren er altid 50,50
-            if (existingCities == null || !existingCities.Any())
+            var sanitizedDescription = description?.Trim() ?? string.Empty;
+            if (sanitizedDescription.Length > 500)
             {
-                return (50, 50);
+                throw new ArgumentException("Profile description must be 500 characters or fewer.");
             }
 
-            int attempts = 0;
-            while (attempts < 500) // Sikkerheds-loop for at undgå uendelige beregninger
-            {
-                attempts++;
+            return sanitizedDescription;
+        }
 
-                // Regel 2: Vælg en tilfældig eksisterende by som udgangspunkt for det nye spawn
-                int randomIndex = _randomGenerator.Next(0, existingCities.Count());
-                var anchorCity = existingCities.ElementAt(randomIndex);
+        private static int HexDistance(int firstX, int firstY, int secondX, int secondY)
+        {
+            int firstCubeX = firstX - (firstY - (firstY & 1)) / 2;
+            int firstCubeZ = firstY;
+            int firstCubeY = -firstCubeX - firstCubeZ;
+            int secondCubeX = secondX - (secondY - (secondY & 1)) / 2;
+            int secondCubeZ = secondY;
+            int secondCubeY = -secondCubeX - secondCubeZ;
 
-                // Regel 3: Generer offset inden for 3-6 (Next er eksklusiv øvre grænse, så 3, 7)
-                int offsetX = _randomGenerator.Next(3, 7);
-                int offsetY = _randomGenerator.Next(3, 7);
+            return Math.Max(
+                Math.Abs(firstCubeX - secondCubeX),
+                Math.Max(Math.Abs(firstCubeY - secondCubeY), Math.Abs(firstCubeZ - secondCubeZ)));
+        }
 
-                // Tilfældig retning (positiv eller negativ)
-                if (_randomGenerator.Next(0, 2) == 0) offsetX *= -1;
-                if (_randomGenerator.Next(0, 2) == 0) offsetY *= -1;
-
-                int candidateX = anchorCity.X + offsetX;
-                int candidateY = anchorCity.Y + offsetY;
-
-                // Regel 4: Valider mod ALLE byer. Må aldrig være inden for 2 x og 2 y.
-                // Det betyder at afstanden i både X og Y skal være mindst 3 til samtlige byer.
-                bool isPositionValid = true;
-                foreach (var otherCity in existingCities)
+        private static List<CityExoticResource> CreateInitialExoticResources()
+        {
+            return Enum.GetValues<ExoticResourceTypeEnum>()
+                .Select(resourceType => new CityExoticResource
                 {
-                    int distanceX = Math.Abs(candidateX - otherCity.X);
-                    int distanceY = Math.Abs(candidateY - otherCity.Y);
-
-                    // Hvis vi er inden for 2 felter på begge akser, er det en kollision med sikkerhedszonen
-                    if (distanceX <= 2 && distanceY <= 2)
-                    {
-                        isPositionValid = false;
-                        break;
-                    }
-                }
-
-                if (isPositionValid)
-                {
-                    return (candidateX, candidateY);
-                }
-            }
-
-            // Fallback hvis clusteret er totalt proppet (ekstremt usandsynligt i alpha)
-            _logger.LogWarning("[WorldPlayerService] Kunne ikke finde valid cluster-plads efter 500 forsøg. Ekspanderer søgning.");
-            return (50 + attempts, 50 + attempts);
+                    Id = Guid.NewGuid(),
+                    ResourceType = resourceType,
+                    Amount = 0
+                })
+                .ToList();
         }
 
         private City CreateStartingCity(string userName, Guid worldPlayerId, Guid worldId, int x, int y)
@@ -375,21 +383,17 @@ namespace Application.Services
                 Stone = 5000,
                 Metal = 5000,
                 LastResourceUpdate = DateTime.UtcNow,
+                LastExoticResourceUpdate = DateTime.UtcNow,
+                ExoticResources = CreateInitialExoticResources(),
                 Buildings = new List<Building>()
             };
 
-            city.Buildings.Add(new Building { Type = BuildingTypeEnum.TownHall, Level = 18 });
-            city.Buildings.Add(new Building { Type = BuildingTypeEnum.Warehouse, Level = 18 });
+            city.Buildings.Add(new Building { Type = BuildingTypeEnum.TownHall, Level = 1 });
+            city.Buildings.Add(new Building { Type = BuildingTypeEnum.Warehouse, Level = 1 });
             city.Buildings.Add(new Building { Type = BuildingTypeEnum.Housing, Level = 1 });
-            city.Buildings.Add(new Building { Type = BuildingTypeEnum.TimberCamp, Level = 18 });
+            city.Buildings.Add(new Building { Type = BuildingTypeEnum.TimberCamp, Level = 1 });
             city.Buildings.Add(new Building { Type = BuildingTypeEnum.StoneQuarry, Level = 1 });
             city.Buildings.Add(new Building { Type = BuildingTypeEnum.MetalMine, Level = 1 });
-            city.Buildings.Add(new Building { Type = BuildingTypeEnum.Workshop, Level = 1 });
-            city.Buildings.Add(new Building { Type = BuildingTypeEnum.University, Level = 1 });
-            city.Buildings.Add(new Building { Type = BuildingTypeEnum.Barracks, Level = 1 });
-            city.Buildings.Add(new Building { Type = BuildingTypeEnum.Wall, Level = 1 });
-            city.Buildings.Add(new Building { Type = BuildingTypeEnum.Stable, Level = 1 });
-            city.Buildings.Add(new Building { Type = BuildingTypeEnum.MarketPlace, Level = 18 });
 
             city.Points = _cityPointCalculator.CalculateTotalPointsForCity(city);
 

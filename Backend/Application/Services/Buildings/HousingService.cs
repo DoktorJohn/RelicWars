@@ -19,21 +19,23 @@ namespace Application.Services.Buildings
         private readonly ICityRepository _cityRepo;
         private readonly BuildingDataReader _buildingDataReader;
         private readonly IModifierService _modifierService;
+        private readonly IPlayerAccessService _playerAccessService;
 
         public HousingService(
             ICityRepository cityRepo,
             BuildingDataReader buildingDataReader,
-            IModifierService modifierService)
+            IModifierService modifierService,
+            IPlayerAccessService playerAccessService)
         {
             _cityRepo = cityRepo;
             _buildingDataReader = buildingDataReader;
             _modifierService = modifierService;
+            _playerAccessService = playerAccessService;
         }
 
         public async Task<List<HousingInfoDTO>> GetHousingInfoAsync(Guid cityId)
         {
-            var city = await _cityRepo.GetByIdAsync(cityId);
-            if (city == null) throw new Exception("City not found");
+            var city = await _playerAccessService.RequireOwnedCityAsync(cityId);
 
             var housing = city.Buildings.FirstOrDefault(b => b.Type == BuildingTypeEnum.Housing);
             int currentLevel = housing?.Level ?? 0;

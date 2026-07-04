@@ -9,9 +9,13 @@ namespace Application.Interfaces.IServices
 {
     public interface IUnitDeploymentService
     {
-        Task<UnitDeploymentDTO> DeployUnitDeploymentAsync(DeployUnitRequestDTO dto);
-        Task<UnitDeploymentDTO> MoveUnitDeployment(MoveUnitRequestDTO dto);
-        Task<UnitDeploymentDTO> HaltUnitDeploymentAsync(Guid unitDeploymentId);
-        Task<UnitDeploymentDTO> ReturnToOriginCityAsync(Guid unitDeploymentId);
+        Task<OwnedUnitDeploymentDTO> AttackCityDeploymentAsync(AttackCityDeploymentRequestDTO dto);
+        Task<OwnedUnitDeploymentDTO> SupportCityDeploymentAsync(SupportCityDeploymentRequestDTO dto);
+        Task<OwnedUnitDeploymentDTO> RecallAsync(Guid deploymentId);
+        Task<DeploymentTravelEstimateDTO> EstimateTravelAsync(DeploymentTravelEstimateRequestDTO dto) =>
+            Task.FromResult(new DeploymentTravelEstimateDTO(0, DateTime.UtcNow));
+        Task<List<OwnedUnitDeploymentDTO>> GetDeploymentsAsync(Guid worldPlayerId);
+        Task<List<IncomingAttackDTO>> GetIncomingAttacksAsync(Guid worldPlayerId) =>
+            Task.FromResult(new List<IncomingAttackDTO>());
     }
 }

@@ -1,4 +1,4 @@
-﻿using Domain.Enums;
+using Domain.Enums;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -15,6 +15,19 @@ namespace Application.DTOs
         int Y,
         int Points
         );
+
+    public record CityInspectionDTO(
+        Guid CityId,
+        string CityName,
+        int X,
+        int Y,
+        int Points,
+        Guid? WorldPlayerId,
+        string? WorldPlayerName,
+        Guid? AllianceId,
+        string? AllianceName,
+        bool CanAttack,
+        bool CanSupport);
 
 
     public class CityControllerGetDetailedCityInformationDTO
@@ -39,6 +52,11 @@ namespace Application.DTOs
 
         public int CurrentPopulationUsage { get; set; }
         public int MaxPopulationCapacity { get; set; }
+        public double Resistance { get; set; }
+        public double ResistanceTarget { get; set; }
+        public double ResistanceRecoveryPerHour { get; set; }
+        public List<CityExoticResourceDTO> ExoticResources { get; set; } = new();
+        public List<WorldIslandExoticResourceDTO> IslandExoticResources { get; set; } = new();
 
         // Liste over bygninger med dedikeret DTO til denne specifikke forespørgsel
         public List<CityControllerGetDetailedCityInformationBuildingDTO> BuildingList { get; set; } = new();
@@ -59,6 +77,10 @@ namespace Application.DTOs
         public double MaxMetalCapacity { get; set; }
         public int CurrentPopulationUsage { get; set; }
         public int MaxPopulationCapacity { get; set; }
+        public double Resistance { get; set; }
+        public double ResistanceTarget { get; set; }
+        public double ResistanceRecoveryPerHour { get; set; }
+        public List<CityExoticResourceDTO> ExoticResources { get; set; } = new();
     }
 
     public record CityOverviewHUD(
@@ -71,17 +93,28 @@ namespace Application.DTOs
         ResourceOverviewDTO Metal,
 
         // 3. Produktions-detaljer (Hvor kommer tallene fra?)
-        SilverBreakdownDTO SilverProduction,
+        CoinsBreakdownDTO CoinsProduction,
         ProductionBreakdownDTO ResearchProduction,
         ProductionBreakdownDTO IdeologyProduction,
 
         // 4. Befolknings-detaljer
         PopulationBreakdownDTO Population,
 
+        double Resistance,
+        double ResistanceTarget,
+        double ResistanceRecoveryPerHour,
+
         // 5. By-status (Hvor travlt er der?)
         BuildingQueueOverviewDTO TownHallStatus,
-        BarracksQueueOverviewDTO BarracksStatus
+        BarracksQueueOverviewDTO BarracksStatus,
+        List<CityExoticResourceDTO> ExoticResources,
+        List<CityExoticResourceProductionDTO> ExoticResourceProductions
     );
+
+    public record CityExoticResourceProductionDTO(
+        int SlotIndex,
+        ExoticResourceTypeEnum ResourceType,
+        ProductionBreakdownDTO Production);
 
     public record ResourceOverviewDTO(
         double MaxCapacity,
@@ -95,7 +128,7 @@ namespace Application.DTOs
         double FinalValuePerHour       // Det endelige tal efter alle beregninger
     );
 
-    public record SilverBreakdownDTO(
+    public record CoinsBreakdownDTO(
     double BaseValue,              // Grundproduktion (fx fra bygningens level)
     double BuildingBonus,          // Flade bonusser fra andre bygninger
     double GlobalModifierMultiplier, // Procentvise bonusser fra Alliance/Research (fx 1.10 for +10%)
@@ -143,4 +176,8 @@ namespace Application.DTOs
         public bool Success { get; set; }
 
     }
+
+    public record CityExoticResourceDTO(
+        ExoticResourceTypeEnum ResourceType,
+        double Amount);
 }

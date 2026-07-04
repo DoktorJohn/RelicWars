@@ -39,7 +39,7 @@ namespace Project.Scripts.Modules.UI
             {
                 // Henter automatisk versionen fra Project Settings -> Player -> Version
                 string buildVersion = Application.version;
-                _versionLabel.text = $"VERSION {buildVersion} - ALPHA BUILD";
+                _versionLabel.text = $"VERSION {buildVersion}";
             }
             else
             {

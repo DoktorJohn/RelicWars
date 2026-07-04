@@ -5,15 +5,19 @@
    ============================================================ */
 :root {
     /* --- ROMAN PALETTE --- */
-    --c-window-bg: rgb(220, 210, 195);
-    --c-header-bg: rgb(185, 175, 160);
-    --c-border: rgb(165, 125, 50);
+    --c-window-bg: rgb(211, 199, 181);
+    --c-header-bg: rgb(66, 54, 45);
+    --c-border: rgb(181, 145, 70);
+    --c-window-edge: rgb(55, 43, 31);
+    --c-window-title: rgb(239, 220, 174);
     
     /* --- TEXT COLORS --- */
     --c-text-header: rgb(110, 20, 20); 
     --c-text-body: rgb(15, 15, 15);
     --c-text-muted: rgb(90, 80, 70);
     --c-text-highlight: rgb(165, 125, 50);
+    --c-entity-link: rgb(145, 45, 45);
+    --c-entity-link-hover: rgb(100, 180, 255);
 
     /* --- IMPERIAL BUTTONS --- */
     /* Chill / Primary (Red) */
@@ -24,7 +28,7 @@
     --c-btn-warn-bg: rgb(90, 40, 30);
     --c-btn-warn-border: rgb(70, 25, 15);
 
-    /* Action / Success (Green/Gold - NY TILFØJET GLOBAL) */
+    /* Action / Success (Green/Gold - NY TILFÃ˜JET GLOBAL) */
     --c-btn-action-bg: rgb(60, 110, 60);
     --c-btn-action-border: rgb(40, 80, 40);
 
@@ -92,6 +96,71 @@
     background-color: rgb(180, 60, 50);
 }
 
+/* Shared tab navigation */
+.window-tabs {
+    flex-direction: row;
+    border-bottom-width: 1px;
+    border-bottom-color: var(--c-border);
+}
+
+.window-tab {
+    flex-grow: 1;
+    height: 40px;
+    background-color: rgba(0, 0, 0, 0.12);
+    border-width: 0;
+    border-bottom-width: 3px;
+    border-bottom-color: rgba(0, 0, 0, 0);
+    color: var(--c-text-muted);
+    -unity-font-definition: var(--font-header);
+    -unity-font-style: bold;
+    font-size: 13px;
+    transition-duration: 0.1s;
+}
+
+.window-tab:hover {
+    background-color: rgba(255, 255, 255, 0.28);
+    color: var(--c-text-header);
+}
+
+.window-tab:active {
+    background-color: rgba(0, 0, 0, 0.2);
+}
+
+.window-tab-active {
+    background-color: rgba(0, 0, 0, 0.2);
+    border-bottom-color: var(--c-text-highlight);
+    color: var(--c-text-header);
+}
+
+/* Shared text link for navigation to players, cities and alliances */
+.btn-entity-link {
+    background-color: rgba(0, 0, 0, 0);
+    border-width: 0;
+    color: var(--c-entity-link);
+    -unity-font-style: bold;
+    margin-top: 0;
+    padding: 0;
+    min-height: 0;
+    height: auto;
+    cursor: link;
+    transition-duration: 0.1s;
+}
+
+.btn-entity-link:hover {
+    color: var(--c-entity-link-hover);
+    scale: 1.05;
+}
+
+.btn-entity-link:active {
+    scale: 0.98;
+}
+
+.btn-entity-link:disabled {
+    color: var(--c-text-muted);
+    opacity: 0.55;
+    scale: 1;
+}
+
 /* ============================================================
    WINDOW STRUCTURE
    ============================================================ */
@@ -107,10 +176,23 @@
 .window-frame {
     position: absolute;
     background-color: var(--c-window-bg);
-    border-radius: 12px;
-    border-width: 2px;
-    border-color: var(--c-border);
+    background-image: var(--img-window-background);
+    -unity-background-scale-mode: scale-and-crop;
+    -unity-background-image-tint-color: rgba(225, 214, 196, 0.97);
+    border-radius: 7px;
+    border-width: 4px;
+    border-top-color: rgb(214, 177, 95);
+    border-right-color: var(--c-window-edge);
+    border-bottom-color: rgb(45, 34, 25);
+    border-left-color: rgb(112, 82, 42);
+    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.58);
     overflow: hidden;
+}
+
+.window-content-container {
+    background-color: rgba(232, 222, 205, 0.38);
+    border-top-width: 1px;
+    border-top-color: rgba(255, 239, 196, 0.45);
 }
 
 /* ============================================================
@@ -118,44 +200,54 @@
    ============================================================ */
 .window-header {
     flex-direction: row; 
-    height: 50px;
+    height: 54px;
     background-color: var(--c-header-bg);
-    border-bottom-width: 2px;
-    border-bottom-color: var(--c-border);
+    background-image: var(--img-window-background);
+    -unity-background-scale-mode: scale-and-crop;
+    -unity-background-image-tint-color: rgba(76, 61, 49, 0.96);
+    border-top-width: 1px;
+    border-top-color: rgba(241, 205, 126, 0.58);
+    border-bottom-width: 4px;
+    border-bottom-color: rgb(143, 103, 45);
     align-items: center; 
     justify-content: space-between;
-    padding-left: 20px; 
-    padding-right: 10px;
+    padding-left: 22px;
+    padding-right: 9px;
     cursor: move-arrow;
 }
 
 .window-header-label {
     -unity-font-definition: var(--font-header);
-    color: var(--c-text-header);
-    font-size: 24px; 
+    color: var(--c-window-title);
+    font-size: 22px;
     -unity-font-style: bold;
-    letter-spacing: 2px;
-    -unity-text-outline-width: 0.2px;
-    -unity-text-outline-color: rgba(0, 0, 0, 0.2);
+    letter-spacing: 2.4px;
+    -unity-text-outline-width: 0.7px;
+    -unity-text-outline-color: rgba(19, 13, 9, 0.95);
+    text-shadow: 1px 2px 2px rgba(0, 0, 0, 0.72);
 }
 
 /* --- THE CLOSE "X" BUTTON --- */
 .window-close-btn {
-    width: 36px; 
-    height: 36px;
-    background-color: var(--c-btn-chill-bg);
-    border-width: 1px;
-    border-color: var(--c-btn-chill-border);
-    border-radius: 6px;
+    width: 34px;
+    height: 34px;
+    background-color: rgb(116, 39, 31);
+    border-width: 2px;
+    border-top-color: rgb(187, 91, 70);
+    border-right-color: rgb(64, 24, 19);
+    border-bottom-color: rgb(52, 19, 15);
+    border-left-color: rgb(137, 53, 41);
+    border-radius: 3px;
     color: white; 
-    font-size: 26px;
+    font-size: 24px;
     -unity-text-align: middle-center;
     -unity-font-style: bold;
     margin-right: 5px;
 }
 
 .window-close-btn:hover { 
-    background-color: rgb(180, 60, 50); 
+    background-color: rgb(155, 51, 40);
+    border-top-color: rgb(231, 139, 105);
     scale: 1.05;
 }
 

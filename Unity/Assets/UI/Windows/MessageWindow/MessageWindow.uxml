@@ -3,7 +3,7 @@
     <ui:Style src="project://database/Assets/UI/Windows/WindowTheme.uss" />
     <ui:Style src="MessageWindow.uss" />
     
-    <ui:VisualElement name="Overlay" class="screen-overlay">
+    <ui:VisualElement name="Overlay" class="screen-overlay" picking-mode="Ignore">
         <ui:VisualElement name="WindowFrame" class="window-frame size-large">
             <!-- Header -->
             <ui:VisualElement name="Header" class="window-header">
@@ -12,9 +12,9 @@
             </ui:VisualElement>
             
             <!-- Content -->
-            <ui:VisualElement class="message-content">
+            <ui:VisualElement name="MessageContent" class="message-content">
                 <!-- Left: Conversations -->
-                <ui:VisualElement class="conversation-list-panel">
+                <ui:VisualElement name="ConversationListPanel" class="conversation-list-panel">
                     <ui:Button name="NewConversationButton" text="+ NEW MESSAGE" class="btn-global-base btn-imperial-primary new-conversation-btn" />
                     <ui:ScrollView name="ConversationList" />
                 </ui:VisualElement>
@@ -23,7 +23,8 @@
                 <ui:VisualElement name="MessageArea" class="message-area-panel">
                     <!-- Title Bar for active conversation -->
                     <ui:VisualElement name="ActiveConversationHeader" class="active-conversation-header">
-                        <ui:Label name="ConversationTitle" text="Select a conversation" class="conversation-title-label" />
+                        <ui:Label name="ConversationTitle" text="" class="conversation-title-label" />
+                        <ui:Button name="DeleteConversationButton" text="DELETE" class="delete-conversation-button" />
                     </ui:VisualElement>
 
                     <!-- New Conversation Header (Hidden by default) -->
@@ -31,12 +32,12 @@
                         <ui:VisualElement class="recipient-row">
                             <ui:Label text="To:" class="recipient-label" />
                             <ui:VisualElement class="recipient-input-container">
-                                <ui:TextField name="RecipientInput" class="game-input recipient-input-field" />
+                                <ui:TextField name="RecipientInput" class="game-input compose-input-field recipient-input-field" />
                             </ui:VisualElement>
                         </ui:VisualElement>
                         <ui:VisualElement class="subject-row">
                             <ui:Label text="Subject:" class="recipient-label" />
-                            <ui:TextField name="SubjectInput" class="game-input recipient-input-field" />
+                            <ui:TextField name="SubjectInput" class="game-input compose-input-field recipient-input-field" />
                         </ui:VisualElement>
                         <!-- Moved SuggestionList here to render ON TOP of everything else -->
                         <ui:VisualElement name="SuggestionList" class="suggestion-list-container" style="display: none;" />

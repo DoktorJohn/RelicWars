@@ -15,14 +15,14 @@
 
                 <ui:VisualElement class="overview-section">
                     <ui:VisualElement class="overview-left">
-                        <ui:Label name="Lbl-IdeologyName" class="ideology-title" text="LOADING IDEOLOGY..." />
-                        <ui:Label name="Lbl-IdeologyDescription" class="ideology-description" text="Fetching societal data..." />
+                        <ui:Label name="Lbl-IdeologyName" class="ideology-title" text="" />
+                        <ui:Label name="Lbl-IdeologyDescription" class="ideology-description" text="" />
                     </ui:VisualElement>
 
                     <ui:VisualElement class="overview-right">
                         <ui:Label class="points-title" text="IDEOLOGY POINTS" />
-                        <ui:Label name="Lbl-AvailablePoints" class="points-value" text="0 PTS" />
-                        <ui:Label name="Lbl-PointsProduction" class="points-production" text="+0.0 / HR" />
+                        <ui:Label name="Lbl-AvailablePoints" class="points-value" text="" />
+                        <ui:Label name="Lbl-PointsProduction" class="points-production" text="" />
                     </ui:VisualElement>
                 </ui:VisualElement>
 

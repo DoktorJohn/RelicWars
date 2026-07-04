@@ -8,11 +8,11 @@ namespace Project.Scripts.Modules.Map
     {
         private VisualElement _labelContainer;
         private Label _cityNameLabel;
-        private Label _cityPointsLabel;
         private Camera _mainCamera;
 
         [Header("Positionering")]
         [SerializeField] private float _verticalWorldOffset = 1.0f;
+        [SerializeField, Min(0.01f)] private float _labelWorldHeight = 0.5f;
 
         private void OnEnable()
         {
@@ -27,7 +27,6 @@ namespace Project.Scripts.Modules.Map
 
             _labelContainer = uiDocument.rootVisualElement.Q<VisualElement>("city-label-container");
             _cityNameLabel = uiDocument.rootVisualElement.Q<Label>("city-name-text");
-            _cityPointsLabel = uiDocument.rootVisualElement.Q<Label>("city-points-text");
 
             uiDocument.rootVisualElement.pickingMode = PickingMode.Ignore;
 
@@ -40,11 +39,10 @@ namespace Project.Scripts.Modules.Map
             }
         }
 
-        public void InitializeCityInteractionLabel(string cityName, int cityPoints)
+        public void InitializeCityInteractionLabel(string cityName)
         {
             if (_cityNameLabel == null) SetupVisualElements();
             if (_cityNameLabel != null) _cityNameLabel.text = cityName.ToUpper();
-            if (_cityPointsLabel != null) _cityPointsLabel.text = cityPoints.ToString();
             UpdatePosition();
         }
 
@@ -65,15 +63,28 @@ namespace Project.Scripts.Modules.Map
                 _mainCamera
             );
 
+            Vector2 heightEdgePanelPos = RuntimePanelUtils.CameraTransformWorldToPanel(
+                _labelContainer.panel,
+                worldAnchorPoint + _mainCamera.transform.up * _labelWorldHeight,
+                _mainCamera
+            );
+
             float width = _labelContainer.resolvedStyle.width;
             float height = _labelContainer.resolvedStyle.height;
 
-            if (float.IsNaN(width) || width <= 0) return;
+            if (float.IsNaN(width) || width <= 0 || float.IsNaN(height) || height <= 0) return;
+
+            float panelHeight = Vector2.Distance(panelPos, heightEdgePanelPos);
+            if (float.IsNaN(panelHeight) || panelHeight <= 0) return;
+
+            float labelScale = panelHeight / height;
+            _labelContainer.style.scale = new Scale(new Vector2(labelScale, labelScale));
 
             float centerX = panelPos.x - (width * 0.5f);
             float centerY = panelPos.y - (height * 0.5f);
 
-            _labelContainer.transform.position = new Vector2(Mathf.Round(centerX), Mathf.Round(centerY));
+            _labelContainer.style.left = Mathf.Round(centerX);
+            _labelContainer.style.top = Mathf.Round(centerY);
         }
     }
 }

@@ -1,4 +1,4 @@
-using UnityEngine;
+ï»¿using UnityEngine;
 using UnityEngine.UIElements;
 
 [RequireComponent(typeof(UIDocument))]
@@ -34,7 +34,7 @@ public class WorldMapUnitDeploymentLabelController : MonoBehaviour
             _labelContainer.style.position = Position.Absolute;
             _labelContainer.style.left = 0;
             _labelContainer.style.top = 20;
-            // Vi fjerner translate herfra og gør det manuelt i matematikken for at sikre 100% centrering
+            // Vi fjerner translate herfra og gÃ¸r det manuelt i matematikken for at sikre 100% centrering
             _labelContainer.style.translate = StyleKeyword.None;
         }
     }
@@ -56,10 +56,10 @@ public class WorldMapUnitDeploymentLabelController : MonoBehaviour
     {
         if (_labelContainer == null || _mainCamera == null) return;
 
-        // 1. Find punktet i VERDEN. Ved at lægge offset til her, følger det med zoomet perfekt.
+        // 1. Find punktet i VERDEN. Ved at lÃ¦gge offset til her, fÃ¸lger det med zoomet perfekt.
         Vector3 worldAnchorPoint = transform.position + new Vector3(0, _verticalWorldOffset, 0);
 
-        // 2. Konverter til Panel-pixels (1:1 med skærm-pixels i dit setup)
+        // 2. Konverter til Panel-pixels (1:1 med skÃ¦rm-pixels i dit setup)
         Vector2 panelPos = RuntimePanelUtils.CameraTransformWorldToPanel(
             _labelContainer.panel,
             worldAnchorPoint,
@@ -67,18 +67,18 @@ public class WorldMapUnitDeploymentLabelController : MonoBehaviour
         );
 
         // 3. MANUEL CENTRERING
-        // Vi tager panel-positionen og trækker præcis halvdelen af labellens bredde/højde fra.
-        // resolvedStyle sikrer at vi bruger den faktiske størrelse efter USS er anvendt.
+        // Vi tager panel-positionen og trÃ¦kker prÃ¦cis halvdelen af labellens bredde/hÃ¸jde fra.
+        // resolvedStyle sikrer at vi bruger den faktiske stÃ¸rrelse efter USS er anvendt.
         float width = _labelContainer.resolvedStyle.width;
         float height = _labelContainer.resolvedStyle.height;
 
-        // Undgå NaN fejl hvis layout ikke er klar
+        // UndgÃ¥ NaN fejl hvis layout ikke er klar
         if (float.IsNaN(width) || width <= 0) return;
 
         float centerX = panelPos.x - (width * 0.5f);
         float centerY = panelPos.y - (height * 0.5f);
 
-        // 4. Sæt positionen (GPU-baseret transform fjerner jitter)
-        _labelContainer.transform.position = new Vector2(Mathf.Round(centerX), Mathf.Round(centerY));
+        _labelContainer.style.left = Mathf.Round(centerX);
+        _labelContainer.style.top = Mathf.Round(centerY);
     }
 }

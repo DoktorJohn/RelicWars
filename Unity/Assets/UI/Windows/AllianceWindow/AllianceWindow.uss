@@ -83,7 +83,7 @@
     border-color: rgba(255,255,255,0.05);
 }
 
-.alliance-banner-placeholder {
+.alliance-banner-frame {
     width: 60px; height: 60px; 
     background-color: rgba(0,0,0,0.5);
     border-width: 1px; 
@@ -92,10 +92,14 @@
 }
 
 .info-alliance-name { 
-    color: var(--c-text-header); 
     font-size: 24px; 
     -unity-font-style: bold; 
     -unity-font-definition: var(--font-header);
+}
+
+.btn-entity-link {
+    font-size: 12px;
+    -unity-text-align: middle-left;
 }
 
 .info-alliance-tag { 
@@ -123,7 +127,7 @@
     border-color: rgba(255,255,255,0.1);
 }
 
-.stat-box { align-items: center; width: 40%; }
+.stat-box { align-items: center; flex-grow: 1; }
 
 .stat-label { 
     color: var(--c-text-muted); 
@@ -142,3 +146,64 @@
     width: 1px; height: 100%;
     background-color: rgba(255,255,255,0.1);
 }
+
+.description-heading-row {
+    min-height: 34px;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.description-edit-button {
+    width: 32px;
+    height: 32px;
+    padding: 0;
+    border-radius: 16px;
+    background-color: var(--c-btn-chill-bg);
+    border-width: 1px;
+    border-color: var(--c-btn-chill-border);
+    color: white;
+    font-size: 17px;
+    -unity-text-align: middle-center;
+}
+
+.description-edit-button:hover {
+    border-color: var(--c-border);
+}
+.stat-role { font-size: 15px; }
+
+.section-title { color: var(--c-text-highlight); font-size: 12px; -unity-font-style: bold; margin-top: 12px; margin-bottom: 6px; }
+.member-list { height: 150px; background-color: rgba(0,0,0,0.25); border-width: 1px; border-color: rgba(255,255,255,0.1); }
+.member-row, .invitation-row, .search-result-row { flex-direction: row; align-items: center; min-height: 34px; padding-left: 8px; padding-right: 8px; border-bottom-width: 1px; border-bottom-color: rgba(255,255,255,0.08); }
+.member-name, .invitation-name { flex-grow: 1; color: var(--c-text-body); }
+.member-role { width: 75px; color: var(--c-text-muted); }
+.member-points { width: 75px; color: var(--c-text-highlight); -unity-text-align: middle-right; }
+.invite-section { margin-top: 4px; }
+.invite-search-row { flex-direction: row; }
+.invite-search-input { flex-grow: 1; margin-right: 6px; }
+.search-results, .invitation-list { max-height: 100px; }
+.status-text { color: var(--c-text-muted); font-size: 12px; margin-top: 5px; }
+.invitation-actions { flex-direction: row; }
+.small-action { height: 26px; margin-left: 4px; font-size: 10px; }
+.alliance-actions { justify-content: flex-end; margin-top: 8px; }
+
+.alliance-body { padding: 18px; flex-grow: 1; }
+.create-actions { flex-grow: 1; justify-content: flex-end; }
+.alliance-identity { justify-content: center; }
+.alliance-tabs { flex-direction: row; margin-bottom: 12px; border-bottom-width: 1px; border-bottom-color: var(--c-border); }
+.alliance-tab { flex-grow: 1; height: 38px; color: var(--c-text-muted); background-color: rgba(0,0,0,0.22); border-width: 0; border-bottom-width: 3px; border-bottom-color: transparent; -unity-font-definition: var(--font-header); }
+.alliance-tab:hover { color: var(--c-text-header); background-color: rgba(255,255,255,0.05); }
+.alliance-tab-active { color: var(--c-text-highlight); border-bottom-color: var(--c-text-highlight); background-color: rgba(0,0,0,0.4); }
+.tab-panel { flex-grow: 1; }
+.description-editor { margin-bottom: 12px; }
+.description-input { height: 96px; margin-bottom: 6px; }
+.description-input > .unity-base-text-field__input { white-space: normal; -unity-text-align: upper-left; }
+.description-actions { flex-direction: row; justify-content: flex-end; }
+.description-actions .btn-global-base { margin-left: 6px; }
+.member-list { height: 300px; }
+.member-role-select { width: 105px; margin-right: 6px; }
+.member-role-select > .unity-base-field__input { min-height: 26px; background-color: rgba(0,0,0,0.35); color: var(--c-text-body); }
+.geopolitics-search { max-height: 120px; margin-bottom: 8px; }
+.geopolitics-list { flex-grow: 1; max-height: 330px; }
+.relation-row { flex-direction: row; align-items: center; min-height: 34px; padding-left: 8px; padding-right: 8px; background-color: rgba(0,0,0,0.18); border-bottom-width: 1px; border-bottom-color: rgba(255,255,255,0.08); }
+.danger-action { color: rgb(255, 120, 110); }

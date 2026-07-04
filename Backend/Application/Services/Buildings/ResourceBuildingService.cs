@@ -19,21 +19,23 @@ namespace Application.Services.Buildings
         private readonly ICityRepository _cityRepo;
         private readonly BuildingDataReader _buildingDataReader;
         private readonly IModifierService _modifierService;
+        private readonly IPlayerAccessService _playerAccessService;
 
         public ResourceBuildingService(
             ICityRepository cityRepo,
             BuildingDataReader buildingDataReader,
-            IModifierService modifierService)
+            IModifierService modifierService,
+            IPlayerAccessService playerAccessService)
         {
             _cityRepo = cityRepo;
             _buildingDataReader = buildingDataReader;
             _modifierService = modifierService;
+            _playerAccessService = playerAccessService;
         }
 
         public async Task<List<ResourceBuildingInfoDTO>> GetResourceBuildingInfoAsync(Guid cityId, BuildingTypeEnum resourceBuildingType)
         {
-            var targetCity = await _cityRepo.GetByIdAsync(cityId);
-            if (targetCity == null) throw new Exception($"City with ID {cityId} not found");
+            var targetCity = await _playerAccessService.RequireOwnedCityAsync(cityId);
 
             var existingBuilding = targetCity.Buildings.FirstOrDefault(b => b.Type == resourceBuildingType);
             int currentBuildingLevel = existingBuilding?.Level ?? 0;

@@ -1,6 +1,7 @@
-﻿using UnityEngine;
+using UnityEngine;
 using UnityEngine.UIElements;
 using System;
+using Project.Modules.UI;
 using Project.Network.Manager;
 using Project.Scripts.Domain.DTOs;
 using Project.Modules.UI.Windows;
@@ -16,20 +17,38 @@ namespace Project.Modules.UI.Windows.Implementations
 
         private Label _currentLevelDisplayLabel;
         private ScrollView _marketStatisticsScrollView;
+        private int _requestVersion;
 
         public override void OnOpen(object dataPayload)
         {
+            var version = BeginDeferredOpen();
+            _requestVersion = version;
             InitializeUserInterfaceComponentReferences();
+
+            if (NetworkManager.Instance == null)
+            {
+                SetEmptyState();
+                CompleteDeferredOpen(version);
+                return;
+            }
 
             Guid activeCityIdentifier = (dataPayload is Guid id) ? id : NetworkManager.Instance.ActiveCityId ?? Guid.Empty;
 
             if (activeCityIdentifier == Guid.Empty)
             {
                 Debug.LogWarning("[MarketPlaceWindowController] Open failed: No valid City ID found.");
+                SetEmptyState();
+                CompleteDeferredOpen(version);
                 return;
             }
 
-            RequestAndRenderMarketPlaceProjectionData(activeCityIdentifier);
+            RequestAndRenderMarketPlaceProjectionData(activeCityIdentifier, version);
+        }
+
+        private void OnDisable()
+        {
+            InvalidateDeferredOpen();
+            StopAllCoroutines();
         }
 
         private void InitializeUserInterfaceComponentReferences()
@@ -45,7 +64,7 @@ namespace Project.Modules.UI.Windows.Implementations
             _marketStatisticsScrollView = Root.Q<ScrollView>("Market-Stats-List");
         }
 
-        private void RequestAndRenderMarketPlaceProjectionData(Guid cityIdentifier)
+        private void RequestAndRenderMarketPlaceProjectionData(Guid cityIdentifier, int version)
         {
             if (_marketStatisticsScrollView != null)
             {
@@ -56,11 +75,22 @@ namespace Project.Modules.UI.Windows.Implementations
 
             StartCoroutine(NetworkManager.Instance.MarketPlace.GetMarketPlaceInfo(cityIdentifier, authenticationToken, (projectionDataList) =>
             {
+                if (!isActiveAndEnabled || version != _requestVersion)
+                {
+                    return;
+                }
+
                 if (projectionDataList != null && projectionDataList.Count > 0)
                 {
                     UpdateMarketPlaceHeaderInformation(projectionDataList);
                     PopulateMarketPlaceStatisticsTable(projectionDataList);
                 }
+                else
+                {
+                    SetEmptyState();
+                }
+
+                CompleteDeferredOpen(version);
             }));
         }
 
@@ -72,7 +102,7 @@ namespace Project.Modules.UI.Windows.Implementations
             {
                 _currentLevelDisplayLabel.text = currentLevelEntry != null
                     ? $"Level {currentLevelEntry.Level}"
-                    : "Not Constructed";
+                    : "-";
             }
         }
 
@@ -104,19 +134,32 @@ namespace Project.Modules.UI.Windows.Implementations
             if (marketPlaceProjectionData.IsCurrentLevel) levelValueLabel.style.unityFontStyleAndWeight = FontStyle.Bold;
             tableRowContainer.Add(levelValueLabel);
 
-            // 2. Production Cell (Silver bonus)
+            // 2. Production Cell (Coins bonus)
             // Vi formaterer det som en procentvis bonus jf. din database logik (+0.10 = +10%)
             string percentageText = $"+{(marketPlaceProjectionData.ModifierIncrease * 100):N0}%";
-            Label silverBonusLabel = new Label(percentageText);
-            silverBonusLabel.AddToClassList("row-label");
+            Label coinsBonusLabel = new Label(percentageText);
+            coinsBonusLabel.AddToClassList("row-label");
 
-            // COLOR: Silver/Success Green
-            silverBonusLabel.style.color = new StyleColor(new Color(0.2f, 0.6f, 0.2f));
-            if (marketPlaceProjectionData.IsCurrentLevel) silverBonusLabel.style.unityFontStyleAndWeight = FontStyle.Bold;
+            // COLOR: Coins/Success Green
+            coinsBonusLabel.style.color = new StyleColor(new Color(0.2f, 0.6f, 0.2f));
+            if (marketPlaceProjectionData.IsCurrentLevel) coinsBonusLabel.style.unityFontStyleAndWeight = FontStyle.Bold;
 
-            tableRowContainer.Add(silverBonusLabel);
+            tableRowContainer.Add(coinsBonusLabel);
 
             _marketStatisticsScrollView.Add(tableRowContainer);
+        }
+
+        private void SetEmptyState()
+        {
+            if (_currentLevelDisplayLabel != null)
+            {
+                _currentLevelDisplayLabel.text = "-";
+            }
+
+            if (_marketStatisticsScrollView != null)
+            {
+                WindowAsyncStateHelper.ShowEmpty(_marketStatisticsScrollView, "No marketplace data available.");
+            }
         }
     }
 }

@@ -8,5 +8,7 @@ namespace Domain.Entities
         public ModifierTypeEnum Type { get; set; }
         public double Value { get; set; }
         public string Source { get; set; } = string.Empty;
+        public UnitCategoryEnum? AppliesToCategory { get; set; }
+        public bool ExcludeElite { get; set; }
     }
 }

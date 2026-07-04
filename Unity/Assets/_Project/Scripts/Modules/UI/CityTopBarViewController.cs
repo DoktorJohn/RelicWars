@@ -14,17 +14,26 @@ using Project.Scripts.Domain.DTOs;
 namespace Project.Modules.UI
 {
     [RequireComponent(typeof(UIDocument))]
-    public class CityTopBarViewController : MonoBehaviour
+    public partial class CityTopBarViewController : MonoBehaviour
     {
+        private const string WorldMapSceneName = "WorldMapScene";
+        private const string CityViewSceneName = "CityViewScene";
+        private const string LoginSceneName = "LoginScene";
+
         private VisualElement _rootVisualElement;
 
         private Label _woodResourceAmountLabel;
         private Label _stoneResourceAmountLabel;
         private Label _metalResourceAmountLabel;
-        private Label _silverResourceAmountLabel;
+        private Label _coinsResourceAmountLabel;
         private Label _populationAmountLabel;
         private Label _researchAmountLabel;
         private Label _ideologyFocusPointsAmountLabel;
+        private Label _exoticResourcesTotalLabel;
+        private VisualElement _exoticResourcesTrigger;
+        private VisualElement _exoticResourcesTooltip;
+        private VisualElement _exoticResourcesTooltipGrid;
+        private Label _exoticResourcesTooltipTitle;
 
         // Server Time Label
         private Label _serverTimeLabel;
@@ -40,7 +49,7 @@ namespace Project.Modules.UI
         private Button _nextCityButton;
 
         private Button _navigationButton;
-        private Button _alphaCheatButton;
+        private Button _logoutButton;
 
         private WarehouseCapacityProgressPainter _woodWarehousePainter;
         private WarehouseCapacityProgressPainter _stoneWarehousePainter;
@@ -53,11 +62,9 @@ namespace Project.Modules.UI
 
         // Data
         private List<CityDTO> _playerCities = new List<CityDTO>();
-        private bool _isFetchingCities = false;
 
         private void OnEnable()
         {
-            Debug.Log("[CityTopBar_DEBUG] OnEnable started.");
             var uiDocumentComponent = GetComponent<UIDocument>();
             if (uiDocumentComponent == null) return;
 
@@ -66,18 +73,12 @@ namespace Project.Modules.UI
             InitializeUserInterfaceResourceLabels();
             InitializeCitySelector();
             InitializeNavigationButtons();
+            InitializeLogoutButton();
             InitializeWarehouseCapacityPainters();
+            InitializeExoticResourcesSection();
             
-            _alphaCheatButton = _rootVisualElement.Q<Button>("Alpha-Cheat-Button");
-            if (_alphaCheatButton != null)
-            {
-                _alphaCheatButton.clicked -= OnAlphaCheatClicked;
-                _alphaCheatButton.clicked += OnAlphaCheatClicked;
-            }
-
             if (CityStateManager.Instance != null)
             {
-                Debug.Log($"[CityTopBar] OnEnable - CityStateManager found. Current City: {CityStateManager.Instance.CurrentCityName}");
                 CityStateManager.Instance.OnResourceStateChanged += HandleCityResourceStateChanged;
                 CityStateManager.Instance.OnCityNameChanged += HandleCityNameChanged;
 
@@ -94,7 +95,6 @@ namespace Project.Modules.UI
             {
                 WorldPlayerStateManager.Instance.OnEconomyStateChanged += HandleWorldPlayerEconomyStateChanged;
                 
-                // Initial update from state if available
                 if (WorldPlayerStateManager.Instance.CurrentEconomy != null)
                 {
                     UpdateWorldPlayerUserInterfaceLabels(WorldPlayerStateManager.Instance.CurrentEconomy);
@@ -107,33 +107,8 @@ namespace Project.Modules.UI
                 }
             }
 
-            // Start Uret
             if (_timeUpdateCoroutine != null) StopCoroutine(_timeUpdateCoroutine);
             _timeUpdateCoroutine = StartCoroutine(UpdateServerTimeRoutine());
-        }
-
-        private void OnAlphaCheatClicked()
-        {
-            if (NetworkManager.Instance == null || string.IsNullOrEmpty(NetworkManager.Instance.WorldPlayerId)) return;
-            if (CityStateManager.Instance == null || CityStateManager.Instance.CityId == Guid.Empty) return;
-
-            if (Guid.TryParse(NetworkManager.Instance.WorldPlayerId, out Guid wpId))
-            {
-                Guid cityId = CityStateManager.Instance.CityId;
-                
-                // Call the service
-                StartCoroutine(NetworkManager.Instance.WorldPlayer.ApplyAlphaCheat(wpId, cityId, NetworkManager.Instance.JwtToken, (success) =>
-                {
-                    if (success)
-                    {
-                        Debug.Log("[CityTopBar] Cheat Applied! Refreshing data...");
-                        // Request updates to show new resources immediately
-                        // Ideally, we'd trigger a full refresh of City and WorldPlayer state.
-                        // For now, let's assume the periodic updates will catch it, or we can force one if methods exist.
-                        // NetworkManager.Instance.City.GetCityDetails... but that logic is usually in a Manager.
-                    }
-                }));
-            }
         }
 
         private void OnDisable()
@@ -149,7 +124,37 @@ namespace Project.Modules.UI
                 WorldPlayerStateManager.Instance.OnEconomyStateChanged -= HandleWorldPlayerEconomyStateChanged;
             }
 
+            HideExoticResourceTooltip();
+            CleanupExoticResourcesSection();
+
+            if (_logoutButton != null)
+            {
+                _logoutButton.clicked -= HandleLogoutRequested;
+            }
+
             if (_timeUpdateCoroutine != null) StopCoroutine(_timeUpdateCoroutine);
+        }
+
+        private void InitializeLogoutButton()
+        {
+            _logoutButton = _rootVisualElement.Q<Button>("City-TopBar-LogoutButton");
+            if (_logoutButton == null)
+            {
+                return;
+            }
+
+            _logoutButton.clicked -= HandleLogoutRequested;
+            _logoutButton.clicked += HandleLogoutRequested;
+        }
+
+        private void HandleLogoutRequested()
+        {
+            CityStateManager.Instance?.ResetForLogout();
+            WorldPlayerStateManager.Instance?.ResetForLogout();
+            WorldMapStateManager.Instance?.ResetForLogout();
+            GlobalWindowManager.Instance?.CloseAllWindows();
+            NetworkManager.Instance?.ClearSession();
+            SceneManager.LoadScene(LoginSceneName);
         }
 
         private void InitializeUserInterfaceResourceLabels()
@@ -157,48 +162,12 @@ namespace Project.Modules.UI
             _woodResourceAmountLabel = _rootVisualElement.Q<Label>("City-ResourceLabel-WoodAmount");
             _stoneResourceAmountLabel = _rootVisualElement.Q<Label>("City-ResourceLabel-StoneAmount");
             _metalResourceAmountLabel = _rootVisualElement.Q<Label>("City-ResourceLabel-MetalAmount");
-            _silverResourceAmountLabel = _rootVisualElement.Q<Label>("City-ResourceLabel-SilverAmount");
+            _coinsResourceAmountLabel = _rootVisualElement.Q<Label>("City-ResourceLabel-CoinsAmount");
             _populationAmountLabel = _rootVisualElement.Q<Label>("City-ResourceLabel-PopulationAmount");
             _researchAmountLabel = _rootVisualElement.Q<Label>("City-ResourceLabel-ResearchAmount");
             _ideologyFocusPointsAmountLabel = _rootVisualElement.Q<Label>("City-ResourceLabel-IdeologyAmount");
 
             _serverTimeLabel = _rootVisualElement.Q<Label>("City-ServerTime-Label");
-        }
-
-        private void InitializeCitySelector()
-        {
-            _citySelectorSection = _rootVisualElement.Q<VisualElement>("City-Selector-Section");
-            _citySelectorCurrentCityLabel = _rootVisualElement.Q<Label>("City-Selector-CurrentCity-Label");
-            _citySelectorRenameInput = _rootVisualElement.Q<TextField>("City-Selector-Rename-Input");
-            _citySelectorDropdownContainer = _rootVisualElement.Q<VisualElement>("City-Selector-Dropdown-Container");
-            _citySelectorDropdownScroll = _rootVisualElement.Q<ScrollView>("City-Selector-Dropdown-Scroll");
-
-            _previousCityButton = _rootVisualElement.Q<Button>("City-Selector-Arrow-Left");
-            _nextCityButton = _rootVisualElement.Q<Button>("City-Selector-Arrow-Right");
-
-            if (_citySelectorCurrentCityLabel != null)
-            {
-                _citySelectorCurrentCityLabel.RegisterCallback<ClickEvent>(OnCityLabelClicked);
-            }
-
-            if (_citySelectorRenameInput != null)
-            {
-                _citySelectorRenameInput.RegisterCallback<FocusOutEvent>(OnRenameInputFocusOut);
-                _citySelectorRenameInput.RegisterCallback<KeyDownEvent>(OnRenameInputKeyDown);
-            }
-
-            if (_previousCityButton != null) _previousCityButton.clicked += OnPreviousCityClicked;
-            if (_nextCityButton != null) _nextCityButton.clicked += OnNextCityClicked;
-        }
-
-        private void InitializeNavigationButtons()
-        {
-            _navigationButton = _rootVisualElement.Q<Button>("City-TopBar-MapButton");
-            if (_navigationButton != null)
-            {
-                _navigationButton.clicked -= HandleContextualNavigationRequested;
-                _navigationButton.clicked += HandleContextualNavigationRequested;
-            }
         }
 
         private void InitializeWarehouseCapacityPainters()
@@ -210,224 +179,11 @@ namespace Project.Modules.UI
             _ideologyPainter = new WarehouseCapacityProgressPainter(_rootVisualElement.Q<VisualElement>("City-WarehouseBar-Ideology"));
         }
 
-        private IEnumerator FetchPlayerCities(Guid currentCityId)
-        {
-            if (NetworkManager.Instance == null) yield break;
-
-            yield return NetworkManager.Instance.City.GetPlayerCities(currentCityId, NetworkManager.Instance.JwtToken, (cities) =>
-            {
-                if (cities != null)
-                {
-                    _playerCities = cities;
-                    PopulateCityDropdown();
-                    UpdateCitySelectorLabel(currentCityId.ToString());
-                }
-            });
-        }
-
-        private void PopulateCityDropdown()
-        {
-            if (_citySelectorDropdownScroll == null) return;
-
-            _citySelectorDropdownScroll.Clear();
-
-            foreach (var city in _playerCities)
-            {
-                var cityLabel = new Label(city.CityName);
-                cityLabel.AddToClassList("city-selector-item");
-                cityLabel.RegisterCallback<ClickEvent>(evt => OnCityDropdownItemClicked(city));
-                _citySelectorDropdownScroll.Add(cityLabel);
-            }
-        }
-
-        private void UpdateCitySelectorLabel(string cityName)
-        {
-            if (_citySelectorCurrentCityLabel == null) return;
-            
-            if (!string.IsNullOrEmpty(cityName))
-            {
-                _citySelectorCurrentCityLabel.text = cityName;
-            }
-        }
-
-        // --- Interaction Handlers ---
-
-        private void OnCityLabelClicked(ClickEvent evt)
-        {
-            if (evt.clickCount == 2)
-            {
-                // Double click -> Rename
-                EnableRenameMode();
-            }
-            else
-            {
-                // Single click -> Toggle Dropdown
-                ToggleDropdown();
-            }
-        }
-
-        private void ToggleDropdown()
-        {
-            if (_citySelectorDropdownContainer == null) return;
-
-            bool isVisible = _citySelectorDropdownContainer.style.display == DisplayStyle.Flex;
-            _citySelectorDropdownContainer.style.display = isVisible ? DisplayStyle.None : DisplayStyle.Flex;
-        }
-
-        private void OnCityDropdownItemClicked(CityDTO city)
-        {
-            Debug.Log($"[CityTopBar] Player selected city: {city.CityName} ({city.Id}). Switching state is ignored for now.");
-            // Hide dropdown
-            if (_citySelectorDropdownContainer != null)
-                _citySelectorDropdownContainer.style.display = DisplayStyle.None;
-        }
-
-        private void EnableRenameMode()
-        {
-            if (_citySelectorCurrentCityLabel == null || _citySelectorRenameInput == null) return;
-
-            _citySelectorCurrentCityLabel.style.display = DisplayStyle.None;
-            _citySelectorDropdownContainer.style.display = DisplayStyle.None; // Ensure dropdown is closed
-
-            _citySelectorRenameInput.style.display = DisplayStyle.Flex;
-            _citySelectorRenameInput.value = _citySelectorCurrentCityLabel.text;
-            _citySelectorRenameInput.Focus();
-        }
-
-        private void OnRenameInputFocusOut(FocusOutEvent evt)
-        {
-            CommitRename();
-        }
-
-        private void OnRenameInputKeyDown(KeyDownEvent evt)
-        {
-            if (evt.keyCode == KeyCode.Return || evt.keyCode == KeyCode.KeypadEnter)
-            {
-                CommitRename();
-            }
-            else if (evt.keyCode == KeyCode.Escape)
-            {
-                CancelRename();
-            }
-        }
-
-        private void CancelRename()
-        {
-             if (_citySelectorCurrentCityLabel == null || _citySelectorRenameInput == null) return;
-
-            _citySelectorRenameInput.style.display = DisplayStyle.None;
-            _citySelectorCurrentCityLabel.style.display = DisplayStyle.Flex;
-        }
-
-        private void CommitRename()
-        {
-            if (_citySelectorRenameInput == null || _citySelectorCurrentCityLabel == null) return;
-            
-            // Avoid double commit (e.g. enter then focus out) if already hidden
-            if (_citySelectorRenameInput.style.display == DisplayStyle.None) return;
-
-            string newName = _citySelectorRenameInput.value;
-            
-            if (string.IsNullOrWhiteSpace(newName) || newName.Length < 3)
-            {
-                Debug.LogWarning("[CityTopBar] Name too short.");
-                CancelRename(); // Or keep focus? For now just cancel.
-                return;
-            }
-
-            Guid currentCityId = CityStateManager.Instance.CityId;
-            if (currentCityId == Guid.Empty)
-            {
-                CancelRename();
-                return;
-            }
-
-            StartCoroutine(NetworkManager.Instance.City.ChangeCityName(currentCityId, newName, NetworkManager.Instance.JwtToken, (response) =>
-            {
-                if (response.Success)
-                {
-                    _citySelectorCurrentCityLabel.text = response.CityName;
-                    
-                    // Update local list
-                    var cityInList = _playerCities.Find(c => c.Id == response.CityId);
-                    if (cityInList != null) cityInList.CityName = response.CityName;
-                    PopulateCityDropdown(); // Refresh list names
-                }
-                else
-                {
-                    Debug.LogError($"[CityTopBar] Rename failed: {response.Message}");
-                    // Optionally show error to user
-                }
-                CancelRename(); // Go back to label mode
-            }));
-        }
-
-        private void OnPreviousCityClicked()
-        {
-            if (_playerCities == null || _playerCities.Count <= 1) return;
-
-            var currentCityId = CityStateManager.Instance.CityId;
-            var currentIndex = _playerCities.FindIndex(c => c.Id == currentCityId);
-
-            if (currentIndex == -1) currentIndex = 0; // Default if not found
-
-            // Cycle backwards
-            int newIndex = currentIndex - 1;
-            if (newIndex < 0) newIndex = _playerCities.Count - 1;
-
-            var newCity = _playerCities[newIndex];
-            OnCityDropdownItemClicked(newCity);
-            UpdateCitySelectorLabel(newCity.CityName);
-        }
-
-        private void OnNextCityClicked()
-        {
-            if (_playerCities == null || _playerCities.Count <= 1) return;
-
-            var currentCityId = CityStateManager.Instance.CityId;
-            var currentIndex = _playerCities.FindIndex(c => c.Id == currentCityId);
-
-            if (currentIndex == -1) currentIndex = 0; // Default if not found
-
-            // Cycle forwards
-            int newIndex = currentIndex + 1;
-            if (newIndex >= _playerCities.Count) newIndex = 0;
-
-            var newCity = _playerCities[newIndex];
-            OnCityDropdownItemClicked(newCity);
-            UpdateCitySelectorLabel(newCity.CityName);
-        }
-
-        private void UpdateNavigationButtonsState()
-        {
-            bool hasMultipleCities = _playerCities != null && _playerCities.Count > 1;
-            
-            if (_previousCityButton != null) _previousCityButton.SetEnabled(hasMultipleCities);
-            if (_nextCityButton != null) _nextCityButton.SetEnabled(hasMultipleCities);
-        }
-
-        // --- Standard Logic ---
-
-        private void HandleContextualNavigationRequested()
-        {
-            string currentSceneName = SceneManager.GetActiveScene().name;
-
-            if (currentSceneName == "WorldMapScene")
-            {
-                Debug.Log("[CityTopBar] Navigation back to City requested.");
-                SceneManager.LoadScene("CityViewScene");
-            }
-            else
-            {
-                Debug.Log("[CityTopBar] Navigation to World Map requested.");
-                SceneManager.LoadScene("WorldMapScene");
-            }
-        }
-
         private void HandleCityResourceStateChanged(CityResourceState currentResourceState)
         {
             UpdateCityUserInterfaceLabels(currentResourceState);
             UpdateWarehouseVisuals(currentResourceState);
+            RefreshExoticResourcesSection();
         }
 
         private void HandleCityNameChanged(string newCityName)
@@ -439,7 +195,7 @@ namespace Project.Modules.UI
         {
             UpdateWorldPlayerUserInterfaceLabels(economyState);
 
-            if (economyState.PlayerCities != null)
+            if (economyState.PlayerCities != null && !ReferenceEquals(_playerCities, economyState.PlayerCities))
             {
                 _playerCities = economyState.PlayerCities;
                 PopulateCityDropdown();
@@ -468,8 +224,8 @@ namespace Project.Modules.UI
 
         private void UpdateWorldPlayerUserInterfaceLabels(WorldPlayerState state)
         {
-            if (_silverResourceAmountLabel != null)
-                _silverResourceAmountLabel.text = Math.Floor(state.SilverAmount).ToString("N0");
+            if (_coinsResourceAmountLabel != null)
+                _coinsResourceAmountLabel.text = Math.Floor(state.CoinsAmount).ToString("N0");
 
             if (_researchAmountLabel != null)
                 _researchAmountLabel.text = Math.Floor(state.ResearchPointsAmount).ToString("N0");

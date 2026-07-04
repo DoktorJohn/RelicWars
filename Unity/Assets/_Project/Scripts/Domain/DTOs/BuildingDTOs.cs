@@ -84,7 +84,8 @@ namespace Project.Scripts.Domain.DTOs
         // Identifikation
         public BuildingTypeEnum BuildingType;
         public string BuildingName;
-        public int CurrentLevel;
+        public int? CurrentLevel;
+        public bool IsConstructed;
 
         // Ressourcekrav for næste niveau
         public double WoodCost;

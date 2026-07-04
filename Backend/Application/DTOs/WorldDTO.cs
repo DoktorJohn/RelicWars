@@ -1,27 +1,23 @@
-﻿using Application.DTOs;
+using Application.DTOs;
+using Domain.Enums;
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Application.DTOs
 {
     public record WorldDTO(
-    Guid Id,
-    string Name,
-    string Abbreviation,
-    int XAxis,
-    int YAxis
-);
+        Guid Id,
+        string Name,
+        string Abbreviation,
+        int XAxis,
+        int YAxis
+    );
 
     public record WorldAvailableResponseDTO(
         Guid WorldId,
         string WorldName,
         int CurrentPlayerCount,
-        int MaxPlayerCapacity,
         bool IsCurrentPlayerMember);
-
 }
 
 public class WorldMapObjectDTO
@@ -40,9 +36,45 @@ public class WorldMapChunkResponseDTO
     public int Width { get; set; }
     public int Height { get; set; }
     public List<WorldMapObjectDTO> MapObjects { get; set; } = new();
-    public List<UnitDeploymentDTO> UnitDeployments { get; set; } = new();
     public List<CityDTO> Cities { get; set; } = new();
+    public List<WorldIslandMapDTO> Islands { get; set; } = new();
 }
+
+public record WorldIslandMapDTO(Guid Id, int CenterX, int CenterY);
+
+public record WorldIslandDetailsDTO(
+    Guid Id,
+    int CenterX,
+    int CenterY,
+    bool HasOwnedCity,
+    List<WorldIslandCityDTO> Cities,
+    List<WorldIslandExoticResourceDTO> ExoticResources);
+
+public record WorldIslandCityDTO(
+    Guid Id,
+    string CityName,
+    Guid? WorldPlayerId,
+    string? WorldPlayerName,
+    int X,
+    int Y,
+    int Points,
+    Guid? AllianceId,
+    string? AllianceName);
+
+public record WorldIslandExoticResourceDTO(
+    int SlotIndex,
+    ExoticResourceTypeEnum ResourceType,
+    int Tier,
+    double ProgressPercent,
+    double OutputPerHour,
+    double WoodInvestment,
+    double StoneInvestment,
+    double MetalInvestment,
+    double CoinInvestment,
+    double NextTierWoodCost,
+    double NextTierStoneCost,
+    double NextTierMetalCost,
+    double NextTierCoinCost);
 
 public class GetWorldMapChunkDTO
 {

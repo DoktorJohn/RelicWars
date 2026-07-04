@@ -8,7 +8,7 @@ namespace Domain.Enums
 {
     public enum BiomeGroup
     {
-        Plains, Forest, Desert, Tundra, IceMountains, SandMountains, PlainHills, SandHills, Wetland, Sand, Jungle, DesertHills, IceMountainTundraTransition
+        Plains, Forest, Desert, Tundra, IceMountains, SandMountains, PlainHills, SandHills, Wetland, Sand, Jungle, DesertHills, IceMountainTundraTransition, Ocean
     }
 
     public enum WorldBiomeVariantType : ushort
@@ -105,6 +105,11 @@ namespace Domain.Enums
         Jungle_5,
         Jungle_6,
         Jungle_7,
+
+        Ocean_1,
+        Ocean_2,
+        Ocean_3,
+        Ocean_4,
 
     }
 }

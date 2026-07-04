@@ -36,5 +36,7 @@ namespace Domain.StaticData.Readers
             if (_units.TryGetValue(type, out var unit)) return unit;
             throw new Exception($"Enheden {type} blev ikke fundet i data!");
         }
+
+        public IReadOnlyCollection<UnitData> GetAll() => _units.Values.ToList();
     }
 }

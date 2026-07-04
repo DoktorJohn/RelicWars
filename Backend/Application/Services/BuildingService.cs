@@ -11,17 +11,22 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Application.Utility;
+using Application.Interfaces;
 
 namespace Application.Services
 {
     public class BuildingService : IBuildingService
     {
         private readonly IModifierService _modifierService;
+        private readonly IPlayerAccessService _playerAccessService;
         private readonly ICityRepository _cityRepo;
         private readonly IJobRepository _jobRepo;
         private readonly IResourceService _resService;
         private readonly ICityStatService _statService;
         private readonly BuildingDataReader _buildingDataReader;
+        private readonly ConstructionTimeCalculator _constructionTimeCalculator;
+        private readonly ITransactionManager _transactionManager;
 
         public BuildingService(
             IModifierService modifierService,
@@ -29,7 +34,10 @@ namespace Application.Services
             IJobRepository jobRepo,
             IResourceService resService,
             BuildingDataReader buildingDataReader,
-            ICityStatService statService)
+            ICityStatService statService,
+            ConstructionTimeCalculator constructionTimeCalculator,
+            IPlayerAccessService playerAccessService,
+            ITransactionManager transactionManager)
         {
             _modifierService = modifierService;
             _cityRepo = cityRepo;
@@ -37,10 +45,14 @@ namespace Application.Services
             _resService = resService;
             _buildingDataReader = buildingDataReader;
             _statService = statService;
+            _constructionTimeCalculator = constructionTimeCalculator;
+            _playerAccessService = playerAccessService;
+            _transactionManager = transactionManager;
         }
 
         public async Task<List<BuildingDTO>> GetBuildingQueueAsync(Guid cityId)
         {
+            await _playerAccessService.RequireOwnedCityAsync(cityId);
             var activeJobsInCity = await _jobRepo.GetBuildingJobsAsync(cityId);
 
             return activeJobsInCity
@@ -58,9 +70,7 @@ namespace Application.Services
 
         public async Task<BuildingResult> QueueUpgradeAsync(Guid cityId, BuildingTypeEnum type)
         {
-            var city = await _cityRepo.GetByIdAsync(cityId);
-            if (city == null || !city.WorldPlayerId.HasValue)
-                return new BuildingResult(false, "Byen eller ejeren blev ikke fundet.");
+            var city = await _playerAccessService.RequireOwnedCityAsync(cityId);
 
             var activeJobs = await _jobRepo.GetBuildingJobsAsync(cityId);
             var buildingJobs = activeJobs.OfType<BuildingJob>().ToList();
@@ -69,8 +79,10 @@ namespace Application.Services
                 return new BuildingResult(false, "Byggekøen er fuld.");
 
             var currentBuilding = city.Buildings.FirstOrDefault(b => b.Type == type);
-            int currentLevel = currentBuilding?.Level ?? 0;
-            int nextLevel = currentLevel + buildingJobs.Count(j => j.BuildingType == type) + 1;
+            int queuedLevels = buildingJobs.Count(j => j.BuildingType == type);
+            int nextLevel = currentBuilding is null
+                ? queuedLevels + 1
+                : currentBuilding.Level + queuedLevels + 1;
 
             if (nextLevel > 30) return new BuildingResult(false, "Maksimum niveau nået.");
 
@@ -83,15 +95,20 @@ namespace Application.Services
             var buildingMetalCost = _modifierService.CalculateCityValue(city, config.MetalCost, ModifierTagEnum.ConstructionCost);
 
             // Bonus: Hvis du også vil anvende modifiers på byggetiden (fx en 'Construction' tag):
-            var buildingTimeResult = _modifierService.CalculateCityValue(city, config.BuildTime.TotalSeconds, ModifierTagEnum.Construction);
-            TimeSpan finalBuildTime = TimeSpan.FromSeconds(buildingTimeResult.FinalValue);
+            TimeSpan finalBuildTime = TimeSpan.FromSeconds(
+                _constructionTimeCalculator.CalculateSeconds(city, config.BuildTime.TotalSeconds));
 
 
             // --- PREREQUISITES ---
             foreach (var req in config.Prerequisites)
             {
-                var baseLevel = city.Buildings.FirstOrDefault(b => b.Type == req.Type)?.Level ?? 0;
-                if ((baseLevel + buildingJobs.Count(j => j.BuildingType == req.Type)) < req.RequiredLevel)
+                var prerequisiteBuilding = city.Buildings.FirstOrDefault(b => b.Type == req.Type);
+                int queuedPrerequisiteLevels = buildingJobs.Count(j => j.BuildingType == req.Type);
+                int effectivePrerequisiteLevel = prerequisiteBuilding is null
+                    ? queuedPrerequisiteLevels
+                    : prerequisiteBuilding.Level + queuedPrerequisiteLevels;
+
+                if (effectivePrerequisiteLevel < req.RequiredLevel)
                     return new BuildingResult(false, $"Mangler krav: {req.Type} lvl {req.RequiredLevel}.");
             }
 
@@ -115,18 +132,38 @@ namespace Application.Services
 
             city.LastResourceUpdate = DateTime.UtcNow;
 
-            await _cityRepo.UpdateAsync(city);
-
-            await _jobRepo.AddAsync(new BuildingJob
+            var buildingJob = new BuildingJob
             {
                 WorldPlayerId = city.WorldPlayerId.Value,
                 CityId = cityId,
                 BuildingType = type,
                 TargetLevel = nextLevel,
                 ExecutionTime = startTime.Add(finalBuildTime)
+            };
+
+            await _transactionManager.ExecuteAsync(async () =>
+            {
+                await _cityRepo.UpdateAsync(city);
+                await _jobRepo.AddAsync(buildingJob);
             });
 
             return new BuildingResult(true, $"{type} lvl {nextLevel} i kø.");
+        }
+
+        public async Task<BuildingResult> RepairAsync(Guid cityId, BuildingTypeEnum type)
+        {
+            var city = await _playerAccessService.RequireOwnedCityAsync(cityId);
+            var building = city?.Buildings.FirstOrDefault(x => x.Type == type);
+            if (city == null || building == null) return new BuildingResult(false, "Building not found.");
+            if (building.Damage <= 0) return new BuildingResult(false, "Building is not damaged.");
+
+            double baseCost = building.Damage * Math.Max(1, building.Level) * 10;
+            double cost = _modifierService.CalculateCityValue(city, baseCost, ModifierTagEnum.RepairCost).FinalValue;
+            if (city.Stone < cost) return new BuildingResult(false, "Not enough stone.");
+            city.Stone -= cost;
+            building.Damage = 0;
+            await _cityRepo.UpdateAsync(city);
+            return new BuildingResult(true, $"{type} repaired for {cost:0} stone.");
         }
     }
 }

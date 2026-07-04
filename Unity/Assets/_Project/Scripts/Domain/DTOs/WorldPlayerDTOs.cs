@@ -1,4 +1,4 @@
-﻿using Project.Network.Models;
+using Project.Network.Models;
 using Project.Scripts.Domain.Enums;
 using System;
 using System.Collections.Generic;
@@ -12,10 +12,10 @@ namespace Project.Scripts.Domain.DTOs
     public class WorldPlayerEconomyDTO
     {
         public Guid WorldPlayerId;
-        public double CurrentSilverAmount;
+        public double CurrentCoinsAmount;
         public double CurrentResearchPoints;
         public double CurrentIdeologyFocusPoints;
-        public double SilverProductionPerHour;
+        public double CoinsProductionPerHour;
         public double ResearchPointsPerHour;
         public double IdeologyFocusPointsPerHour;
         public List<CityDTO> PlayerCities;
@@ -40,10 +40,18 @@ namespace Project.Scripts.Domain.DTOs
         public int TotalPoints { get; set; }
         public int Ranking { get; set; }
         public int CityCount { get; set; }
+        public string Description { get; set; }
         public string AllianceName { get; set; }
         public IdeologyTypeEnum Ideology { get; set; }
         public Guid AllianceId { get; set; }
         public Guid WorldId { get; set; }
+        public List<CityDTO> Cities { get; set; } = new();
+    }
+
+    [Serializable]
+    public class UpdateWorldPlayerDescriptionRequestDTO
+    {
+        public string Description { get; set; }
     }
 
     [Serializable]

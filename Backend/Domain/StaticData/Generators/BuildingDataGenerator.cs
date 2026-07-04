@@ -1,4 +1,4 @@
-﻿using Domain.Entities;
+using Domain.Entities;
 using Domain.Enums;
 using Domain.StaticData.Data;
 using System;
@@ -61,8 +61,8 @@ namespace Domain.StaticData.Generators
         {
             var progressionLevels = new List<object>();
 
-            // Silver bonus data fra din tabel (omregnet til decimalværdier)
-            var silverBonusData = new double[]
+            // Coins bonus data fra din tabel (omregnet til decimalværdier)
+            var coinsBonusData = new double[]
             {
                 0.00, 0.02, 0.04, 0.06, 0.08, 0.10, 0.12, 0.15, 0.18, 0.21,
                 0.25, 0.28, 0.33, 0.37, 0.42, 0.47, 0.52, 0.56, 0.60, 0.66
@@ -110,13 +110,13 @@ namespace Domain.StaticData.Generators
                 };
 
                 townHallEntry.ModifiersThatAffectsThis.Add(ModifierTagEnum.Construction);
-                townHallEntry.ModifiersThatAffectsThis.Add(ModifierTagEnum.Silver);
+                townHallEntry.ModifiersThatAffectsThis.Add(ModifierTagEnum.Coins);
 
                 townHallEntry.ModifiersInternal.Add(new Modifier
                 {
-                    Tag = ModifierTagEnum.Silver,
+                    Tag = ModifierTagEnum.Coins,
                     Type = ModifierTypeEnum.Increased,
-                    Value = silverBonusData[currentLvl - 1],
+                    Value = coinsBonusData[currentLvl - 1],
                     Source = $"TownHall Level {currentLvl}"
                 });
 
@@ -252,7 +252,7 @@ namespace Domain.StaticData.Generators
                     MetalCost = data.metal,
                     Population = calculatedPopulation,
                     UpkeepCost = 0,
-                    ModifiersThatAffectsThis = { ModifierTagEnum.Population, ModifierTagEnum.Silver }
+                    ModifiersThatAffectsThis = { ModifierTagEnum.Population, ModifierTagEnum.Coins }
                 };
 
                 progressionLevels.Add(housingEntry);
@@ -431,8 +431,8 @@ namespace Domain.StaticData.Generators
         {
             var progressionLevels = new List<object>();
 
-            // Silver produktion (Flat rate) pr. time (Lvl 1 - 20)
-            var silverBonusData = new double[]
+            // Coins produktion (Flat rate) pr. time (Lvl 1 - 20)
+            var coinsBonusData = new double[]
              {
                 0.00, 0.02, 0.03, 0.05, 0.08, 0.10, 0.12, 0.15, 0.18, 0.21,
                 0.23, 0.26, 0.31, 0.34, 0.39, 0.44, 0.48, 0.52, 0.55, 0.58
@@ -467,7 +467,7 @@ namespace Domain.StaticData.Generators
             for (int currentLvl = 1; currentLvl <= 20; currentLvl++)
             {
                 var data = manualMarketPlaceData[currentLvl - 1];
-                double currentSilverValue = silverBonusData[currentLvl - 1];
+                double currentCoinsValue = coinsBonusData[currentLvl - 1];
 
                 var marketPlaceEntry = new MarketPlaceLevelData
                 {
@@ -482,14 +482,14 @@ namespace Domain.StaticData.Generators
             {
                 new Modifier
                 {
-                    Tag = ModifierTagEnum.Silver,
+                    Tag = ModifierTagEnum.Coins,
                     Type = ModifierTypeEnum.Increased,
-                    Value = currentSilverValue,
+                    Value = currentCoinsValue,
                     Source = $"MarketPlace Level {currentLvl}"
                 }
             },
 
-                    ModifiersThatAffectsThis = { ModifierTagEnum.Silver }
+                    ModifiersThatAffectsThis = { ModifierTagEnum.Coins }
                 };
 
                 progressionLevels.Add(marketPlaceEntry);
@@ -571,6 +571,8 @@ namespace Domain.StaticData.Generators
         private static List<object> GenerateWallData()
         {
             var progressionLevels = new List<object>();
+            const double minWallBonus = 0.05;
+            const double maxWallBonus = 1.11;
 
             // Statisk data baseret på din tabel
             // Format: (BuildTime i minutter, Wood/Timber, Stone, Metal/Ore, Upkeep)
@@ -616,11 +618,12 @@ namespace Domain.StaticData.Generators
                 };
 
                 // Forsvarsbonus modifier (Typisk brugt til at øge byens defensive styrke)
+                double wallBonusProgression = minWallBonus * Math.Pow(maxWallBonus / minWallBonus, (currentLvl - 1) / 19.0);
                 wallEntry.ModifiersInternal.Add(new Modifier
                 {
                     Tag = ModifierTagEnum.Wall,
                     Type = ModifierTypeEnum.Increased,
-                    Value = currentLvl * 2.2,
+                    Value = Math.Round(wallBonusProgression, 6),
                     Source = $"Wall Level {currentLvl}"
                 });
 

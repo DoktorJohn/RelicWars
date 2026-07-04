@@ -1,6 +1,7 @@
 ﻿using Application.DTOs;
 using Application.Interfaces.IRepositories;
 using Application.Interfaces.IServices;
+using Application.Interfaces;
 using Domain.Entities;
 using Domain.Enums;
 using Domain.StaticData.Readers;
@@ -17,22 +18,27 @@ namespace Application.Services
     {
         private readonly IJobRepository _jobRepo;
         private readonly IWorldPlayerRepository _userRepo;
+        private readonly IPlayerAccessService _playerAccessService;
         private readonly ResearchDataReader _researchReader;
+        private readonly ITransactionManager _transactionManager;
 
         public ResearchService(
             IJobRepository jobRepo,
             IWorldPlayerRepository userRepo,
-            ResearchDataReader researchReader)
+            IPlayerAccessService playerAccessService,
+            ResearchDataReader researchReader,
+            ITransactionManager transactionManager)
         {
             _jobRepo = jobRepo;
             _userRepo = userRepo;
+            _playerAccessService = playerAccessService;
             _researchReader = researchReader;
+            _transactionManager = transactionManager;
         }
 
         public async Task<ResearchTreeDTO> GetResearchTreeAsync(Guid userId)
         {
-            var user = await _userRepo.GetByIdWithResearchAsync(userId);
-            if (user == null) throw new Exception("Bruger ikke fundet.");
+            var user = await _playerAccessService.RequireOwnedWorldPlayerAsync(userId);
 
             // Hent alle jobs ÉN gang uden for loopet for at undgå N+1
             var activeJob = await _jobRepo.GetResearchJobAsync(userId);
@@ -84,13 +90,8 @@ namespace Application.Services
 
         public async Task<BuildingResult> QueueResearchAsync(Guid worldPlayerId, string researchId)
         {
-            var worldPlayer = await _userRepo.GetByIdWithResearchAsync(worldPlayerId);
+            var worldPlayer = await _playerAccessService.RequireOwnedWorldPlayerAsync(worldPlayerId);
             var researchNode = _researchReader.GetNode(researchId);
-
-            if (worldPlayer == null)
-            {
-                return new BuildingResult(false, "Spilleren blev ikke fundet i systemet.");
-            }
 
             // Tjek om teknologien allerede er udforsket
             if (worldPlayer.CompletedResearches.Any(research => research.ResearchId == researchId))
@@ -133,9 +134,11 @@ namespace Application.Services
                 IsCompleted = false
             };
 
-            // Gem begge dele. Ideelt set bør dette ligge i en Unit of Work / Transaction.
-            await _userRepo.UpdateAsync(worldPlayer);
-            await _jobRepo.AddAsync(newResearchJob);
+            await _transactionManager.ExecuteAsync(async () =>
+            {
+                await _userRepo.UpdateAsync(worldPlayer);
+                await _jobRepo.AddAsync(newResearchJob);
+            });
 
             return new BuildingResult(true, $"Forskningen af {researchNode.Name} er nu sat i gang.");
         }
@@ -144,22 +147,25 @@ namespace Application.Services
         {
             var job = await _jobRepo.GetByIdAsync(jobId) as ResearchJob;
             if (job == null || job.WorldPlayerId != userId) return new BuildingResult(false, "Job ikke fundet.");
+            await _playerAccessService.RequireOwnedWorldPlayerAsync(userId);
 
             var user = await _userRepo.GetByIdAsync(userId);
             var node = _researchReader.GetNode(job.ResearchId);
 
             user.ResearchPoints += node.ResearchPointCost;
 
-            await _userRepo.UpdateAsync(user);
-            await _jobRepo.DeleteAsync(jobId);
+            await _transactionManager.ExecuteAsync(async () =>
+            {
+                await _userRepo.UpdateAsync(user);
+                await _jobRepo.DeleteAsync(jobId);
+            });
 
             return new BuildingResult(true, "Forskning annulleret og point refunderet.");
         }
 
         public async Task<List<Modifier>> GetUserResearchModifiersAsync(Guid userId)
         {
-            var user = await _userRepo.GetByIdWithResearchAsync(userId);
-            if (user == null) return new List<Modifier>();
+            var user = await _playerAccessService.RequireOwnedWorldPlayerAsync(userId);
 
             return user.CompletedResearches
                 .Select(ur => _researchReader.GetNode(ur.ResearchId))

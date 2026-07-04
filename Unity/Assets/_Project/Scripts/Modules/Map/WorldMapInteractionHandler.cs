@@ -6,7 +6,6 @@ using UnityEngine.Tilemaps;
 using System;
 using System.Collections.Generic;
 using Project.Modules.City;
-using Project.Network.Manager;
 using Project.Modules.UI.Windows.Implementations;
 using Project.Modules.UI;
 using Domain.StaticData.Generators;
@@ -18,18 +17,11 @@ namespace Project.Scripts.Modules.Map
     public class WorldMapInteractionHandler : MonoBehaviour
     {
         public static WorldMapInteractionHandler Instance { get; private set; }
-        public event Action<Guid?> OnSelectionChanged;
-
-        [Header("Indstillinger for Interaktion")]
-        [SerializeField] private LayerMask _unitLayerMask;
 
         private Tilemap _terrainTilemap;
         private Tilemap _highlightTilemap;
         private TileBase _selectionFrameTile;
         private Camera _mainCamera;
-
-        public Guid? SelectedDeploymentId { get; private set; }
-        public bool HasActiveSelection => SelectedDeploymentId.HasValue;
         public bool IsMouseOverUI { get; private set; }
 
         private Vector3Int _lastHoveredCellCoordinate = new Vector3Int(-9999, -9999, 0);
@@ -62,25 +54,6 @@ namespace Project.Scripts.Modules.Map
             _selectionFrameTile = selectionTile;
             _mainCamera = mapCamera;
             _lastHoveredCellCoordinate = new Vector3Int(-9999, -9999, 0);
-        }
-
-        public void SetSelectedDeployment(Guid deploymentIdentifier)
-        {
-            if (SelectedDeploymentId == deploymentIdentifier)
-            {
-                ClearSelection();
-                return;
-            }
-            SelectedDeploymentId = deploymentIdentifier;
-            Debug.Log($"<color=cyan>[InteractionHandler]</color> Enhed markeret: {deploymentIdentifier}");
-            OnSelectionChanged?.Invoke(deploymentIdentifier);
-        }
-
-        public void ClearSelection()
-        {
-            SelectedDeploymentId = null;
-            Debug.Log("<color=yellow>[InteractionHandler]</color> Markering ryddet.");
-            OnSelectionChanged?.Invoke(null);
         }
 
         private void Update()
@@ -188,55 +161,42 @@ namespace Project.Scripts.Modules.Map
 
         private void ExecuteGlobalWorldMapClickHandling()
         {
-            Vector2 mousePos = Mouse.current.position.ReadValue();
-            Vector3 worldPos = _mainCamera.ScreenToWorldPoint(new Vector3(mousePos.x, mousePos.y, 1f));
-            worldPos.z = 0;
-
-            // 1. Tjek om vi rammer en hær (Collider2D)
-            Collider2D hit = Physics2D.OverlapPoint(worldPos, _unitLayerMask);
-            if (hit != null)
-            {
-                var trigger = hit.GetComponent<WorldMapUnitClickTrigger>();
-                if (trigger != null)
-                {
-                    SetSelectedDeployment(trigger.DeploymentId);
-                    return;
-                }
-            }
-
-            // 2. Ellers tjek hexagon/by
             ExecuteHexagonClickInteraction(
-                new Vector2Int(_lastHoveredCellCoordinate.x, _lastHoveredCellCoordinate.y),
-                new Vector2(mousePos.x, Screen.height - mousePos.y)
+                new Vector2Int(_lastHoveredCellCoordinate.x, _lastHoveredCellCoordinate.y)
             );
         }
 
-        private void ExecuteHexagonClickInteraction(Vector2Int coords, Vector2 screenPos)
+        private void ExecuteHexagonClickInteraction(Vector2Int coords)
         {
-            if (HasActiveSelection)
+            if (WorldMapStateManager.Instance == null)
             {
-                MapInteractionPayload payload = new MapInteractionPayload { Coordinates = coords, ScreenClickPosition = screenPos };
-                GlobalWindowManager.Instance.OpenWindow(WindowTypeEnum.UnitDeployment, payload);
+                return;
             }
-            else
+
+            var city = WorldMapStateManager.Instance.AllVisibleCities
+                .FirstOrDefault(candidate => candidate.X == coords.x && candidate.Y == coords.y);
+
+            if (city == null)
             {
-                var unit = WorldMapStateManager.Instance.AllVisibleDeployments
-                    .FirstOrDefault(d => d.CurrentX == coords.x && d.CurrentY == coords.y);
-
-                var seed = WorldMapStateManager.Instance.CurrentWorldSeed ?? 0;
-                var biome = WorldGenerationService.CalculateWorldMapBiomeVariant((short)coords.x, (short)coords.y, seed);
-
-                MapInteractionPayload payload = new MapInteractionPayload
-                {
-                    Coordinates = coords,
-                    BiomeName = biome.ToString(),
-                    ScreenClickPosition = screenPos,
-                    DeploymentIdOnTile = unit?.Id,
-                    IsPlayerOwned = unit != null && unit.WorldPlayerId == Guid.Parse(NetworkManager.Instance.WorldPlayerId)
-                };
-
-                GlobalWindowManager.Instance.OpenWindow(WindowTypeEnum.Hexagon, payload);
+                return;
             }
+
+            var seed = WorldMapStateManager.Instance.CurrentWorldSeed ?? 0;
+            var biome = WorldGenerationService.CalculateWorldMapBiomeVariant((short)coords.x, (short)coords.y, seed);
+
+            if (GlobalWindowManager.Instance == null)
+            {
+                return;
+            }
+
+            CityInspectionPayload payload = new CityInspectionPayload
+            {
+                CityId = city.Id,
+                Coordinates = coords,
+                TerrainName = biome.ToString(),
+            };
+
+            GlobalWindowManager.Instance.OpenWindow(WindowTypeEnum.Hexagon, payload);
         }
     }
 }

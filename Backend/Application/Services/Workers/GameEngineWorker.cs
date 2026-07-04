@@ -15,9 +15,7 @@ namespace Application.Services.Workers
     {
         private readonly IServiceProvider _services;
         private readonly ILogger<GameEngineWorker> _logger;
-        private DateTime _lastResourceSave = DateTime.UtcNow;
         private DateTime _lastRankingGeneration = DateTime.UtcNow;
-        private DateTime _lastDailySave = DateTime.UtcNow;
 
         public GameEngineWorker(IServiceProvider services, ILogger<GameEngineWorker> logger)
         {

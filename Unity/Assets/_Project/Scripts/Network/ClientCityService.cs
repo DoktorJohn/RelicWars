@@ -1,11 +1,9 @@
-using Newtonsoft.Json;
-using Project.Network.Helper;
+﻿using Project.Network.Helper;
 using Project.Network.Models;
 using Project.Scripts.Domain.DTOs;
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using UnityEngine;
 using UnityEngine.Networking;
 
 namespace Project.Network
@@ -25,26 +23,7 @@ namespace Project.Network
 
             using (var request = BackendRequestHelper.CreateGetRequest(url, jwtToken))
             {
-                yield return request.SendWebRequest();
-
-                if (request.result == UnityWebRequest.Result.Success)
-                {
-                    try
-                    {
-                        var data = JsonConvert.DeserializeObject<CityResourcesDTO>(request.downloadHandler.text);
-                        callback?.Invoke(data);
-                    }
-                    catch (Exception ex)
-                    {
-                        Debug.LogError($"[City] Deserialization Error (Resources): {ex.Message}");
-                        callback?.Invoke(null);
-                    }
-                }
-                else
-                {
-                    Debug.LogError($"[City] GetCityResources Failed: {request.error}");
-                    callback?.Invoke(null);
-                }
+                yield return BackendRequestHelper.SendJson(request, callback, "City");
             }
         }
 
@@ -54,29 +33,9 @@ namespace Project.Network
 
             using (var request = BackendRequestHelper.CreateGetRequest(url, jwtToken))
             {
-                yield return request.SendWebRequest();
-
-                if (request.result == UnityWebRequest.Result.Success)
-                {
-                    try
-                    {
-                        var data = JsonConvert.DeserializeObject<CityOverviewHUDDTO>(request.downloadHandler.text);
-                        callback?.Invoke(data);
-                    }
-                    catch (Exception ex)
-                    {
-                        Debug.LogError($"[City] Deserialization Error (OverviewHUD): {ex.Message}");
-                        callback?.Invoke(null);
-                    }
-                }
-                else
-                {
-                    Debug.LogError($"[City] GetCityOverviewHUD Failed: {request.error}");
-                    callback?.Invoke(null);
-                }
+                yield return BackendRequestHelper.SendJson(request, callback, "City");
             }
         }
-
 
         public IEnumerator GetDetailedCityInfo(Guid cityId, string jwtToken, Action<CityControllerGetDetailedCityInformationDTO> callback)
         {
@@ -84,26 +43,7 @@ namespace Project.Network
 
             using (var request = BackendRequestHelper.CreateGetRequest(url, jwtToken))
             {
-                yield return request.SendWebRequest();
-
-                if (request.result == UnityWebRequest.Result.Success)
-                {
-                    try
-                    {
-                        var data = JsonConvert.DeserializeObject<CityControllerGetDetailedCityInformationDTO>(request.downloadHandler.text);
-                        callback?.Invoke(data);
-                    }
-                    catch (Exception ex)
-                    {
-                        Debug.LogError($"[City] Deserialization Error: {ex.Message}");
-                        callback?.Invoke(null);
-                    }
-                }
-                else
-                {
-                    Debug.LogError($"[City] GetDetailedInfo Failed: {request.error}");
-                    callback?.Invoke(null);
-                }
+                yield return BackendRequestHelper.SendJson(request, callback, "City");
             }
         }
 
@@ -113,18 +53,7 @@ namespace Project.Network
 
             using (var request = BackendRequestHelper.CreateGetRequest(url, jwtToken))
             {
-                yield return request.SendWebRequest();
-
-                if (request.result == UnityWebRequest.Result.Success)
-                {
-                    var data = JsonConvert.DeserializeObject<List<AvailableBuildingDTO>>(request.downloadHandler.text);
-                    callback?.Invoke(data);
-                }
-                else
-                {
-                    Debug.LogError($"[City] GetSenateData Failed: {request.error}");
-                    callback?.Invoke(null);
-                }
+                yield return BackendRequestHelper.SendJson(request, callback, "City", _ => new List<AvailableBuildingDTO>());
             }
         }
 
@@ -134,88 +63,61 @@ namespace Project.Network
 
             using (var request = BackendRequestHelper.CreateGetRequest(url, jwtToken))
             {
-                yield return request.SendWebRequest();
-
-                if (request.result == UnityWebRequest.Result.Success)
-                {
-                    try
-                    {
-                        var data = JsonConvert.DeserializeObject<List<CityDTO>>(request.downloadHandler.text);
-                        callback?.Invoke(data);
-                    }
-                    catch (Exception ex)
-                    {
-                        Debug.LogError($"[City] Deserialization Error (GetPlayerCities): {ex.Message}");
-                        callback?.Invoke(null);
-                    }
-                }
-                else
-                {
-                    Debug.LogError($"[City] GetPlayerCities Failed: {request.error}");
-                    callback?.Invoke(null);
-                }
+                yield return BackendRequestHelper.SendJson(request, callback, "City", _ => new List<CityDTO>());
             }
         }
 
         public IEnumerator ChangeCityName(Guid cityId, string newName, string authenticationToken, Action<ChangeCityNameResponseDTO> callback)
         {
             string url = $"{_baseUrl}/ChangeCityName/{cityId}/{newName}";
-            byte[] bodyRaw = new byte[0];
 
-            using (UnityWebRequest request = new UnityWebRequest(url, "POST"))
+            using (UnityWebRequest request = BackendRequestHelper.CreatePostRequest(url, new { }, authenticationToken))
             {
-                request.uploadHandler = new UploadHandlerRaw(bodyRaw);
-                request.downloadHandler = new DownloadHandlerBuffer();
-
-                request.SetRequestHeader("Content-Type", "application/json");
-                request.SetRequestHeader("Authorization", "Bearer " + authenticationToken);
-
-                yield return request.SendWebRequest();
-
-                ChangeCityNameResponseDTO resultData;
-
-                if (request.result == UnityWebRequest.Result.Success)
-                {
-                    try
+                yield return BackendRequestHelper.SendJson(
+                    request,
+                    response =>
                     {
-                        resultData = JsonConvert.DeserializeObject<ChangeCityNameResponseDTO>(request.downloadHandler.text);
-                    }
-                    catch (Exception exception)
-                    {
-                        Debug.LogError($"[IdeologyFocusService] JSON Parse Error on Enact: {exception.Message}");
-                        resultData = new ChangeCityNameResponseDTO();
-                        resultData.Success = false;
-                        resultData.Message = "Exception thrown";
-                    }
-                }
-                else
-                {
-                    try
-                    {
-                        string errorFromBackend = request.downloadHandler.text;
-                        resultData = new ChangeCityNameResponseDTO
+                        if (response == null)
                         {
-                            CityId = cityId,
-                            CityName = newName,
-                            Success = false,
-                            Message = "Some error happened in the backend"
-                        };
-                    }
-                    catch
+                            callback?.Invoke(new ChangeCityNameResponseDTO
+                            {
+                                CityId = cityId,
+                                CityName = newName,
+                                Success = false,
+                                Message = "Kunne ikke tolke serverens svar."
+                            });
+                            return;
+                        }
+
+                        callback?.Invoke(response);
+                    },
+                    "City",
+                    _ => new ChangeCityNameResponseDTO
                     {
-                        resultData = new ChangeCityNameResponseDTO
-                        {
-                            CityId = cityId,
-                            CityName = newName,
-                            Success = false,
-                            Message = "Unknown error"
-                        };
-                    }
+                        CityId = cityId,
+                        CityName = newName,
+                        Success = false,
+                        Message = BackendRequestHelper.GetErrorMessage(request)
+                    });
+            }
+        }
 
-                    Debug.LogWarning($"[IdeologyFocusService] Enact Failed: {resultData.Message}");
-                }
+        public IEnumerator InvestInExoticResource(Guid cityId, ExoticResourceInvestmentRequestDTO request, string authenticationToken, Action<ExoticResourceInvestmentResponseDTO> callback)
+        {
+            string url = $"{_baseUrl}/{cityId}/exotic-resources/invest";
 
-                callback?.Invoke(resultData);
+            using (UnityWebRequest requestObject = BackendRequestHelper.CreatePostRequest(url, request, authenticationToken))
+            {
+                yield return BackendRequestHelper.SendJson(
+                    requestObject,
+                    callback,
+                    "City",
+                    _ => new ExoticResourceInvestmentResponseDTO
+                    {
+                        CityId = cityId,
+                        SlotIndex = request.SlotIndex,
+                        NewTier = 0
+                    });
             }
         }
     }

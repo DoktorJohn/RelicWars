@@ -2,6 +2,7 @@ using Application.DTOs;
 using Application.Interfaces.IRepositories;
 using Application.Interfaces.IServices;
 using Domain.Entities;
+using Domain.User;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -11,156 +12,204 @@ namespace Application.Services
 {
     public class MessagingService : IMessagingService
     {
+        private const int MaxSubjectLength = 120;
+        private const int MaxMessageContentLength = 5000;
+        private const int MinSearchQueryLength = 2;
+        private const int MaxSearchQueryLength = 50;
+        private const int DefaultMessagePageSize = 50;
+        private const int MaxMessagePageSize = 100;
+
         private readonly IMessagingRepository _messagingRepository;
         private readonly IWorldPlayerRepository _worldPlayerRepository;
+        private readonly IPlayerAccessService _playerAccessService;
 
-        public MessagingService(IMessagingRepository messagingRepository, IWorldPlayerRepository worldPlayerRepository)
+        public MessagingService(IMessagingRepository messagingRepository, IWorldPlayerRepository worldPlayerRepository, IPlayerAccessService playerAccessService)
         {
             _messagingRepository = messagingRepository;
             _worldPlayerRepository = worldPlayerRepository;
+            _playerAccessService = playerAccessService;
         }
 
-        public async Task<MessageDTO> SendMessageAsync(Guid senderId, Guid receiverId, string content, string? subject = null, Guid? conversationId = null)
+        public async Task<ConversationDTO> StartConversationAsync(Guid senderId, IEnumerable<Guid> participantIds, string subject, string content)
         {
-            if (string.IsNullOrWhiteSpace(content)) throw new ArgumentException("Message content cannot be empty.");
+            var sanitizedContent = ValidateMessageContent(content);
+            var sanitizedSubject = ValidateSubject(subject);
 
-            Conversation? conversation = null;
+            var sender = await _playerAccessService.RequireOwnedWorldPlayerAsync(senderId);
 
-            // 1. If conversationId provided, try finding it
-            if (conversationId.HasValue && conversationId.Value != Guid.Empty)
+            if (participantIds == null)
+                throw new ArgumentException("You must add at least one recipient.", nameof(participantIds));
+
+            var normalizedParticipantIds = participantIds
+                .Where(id => id != Guid.Empty && id != senderId)
+                .Distinct()
+                .ToList();
+
+            if (normalizedParticipantIds.Count == 0)
+                throw new ArgumentException("You must add at least one recipient.");
+
+            var participants = new List<WorldPlayer>();
+            foreach (var participantId in normalizedParticipantIds)
             {
-                conversation = await _messagingRepository.GetConversationByIdAsync(conversationId.Value);
+                var participant = await _worldPlayerRepository.GetByIdAsync(participantId);
+                if (participant == null) throw new KeyNotFoundException("Participant not found");
+                if (participant.WorldId != sender.WorldId)
+                    throw new ArgumentException("All participants must be in the same world.");
+                participants.Add(participant);
             }
-            
-            // 2. If no conversation found (or none provided), create a NEW one
-            // Previously: Found *the* conversation between sender and receiver.
-            // Now: We want to support multiple conversations.
-            // If "subject" is provided, we assume it's a NEW thread unless conversationId was explicitly given.
-            if (conversation == null)
-            {
-                // New logic: Don't search for "existing" conversation by participants alone if subject is provided.
-                // Or maybe we still should? The user requested: "I can have many conversations with the same user."
-                // So, if sending a NEW message from the UI, we should create a NEW conversation.
-                
-                // If it's a reply in an existing thread, the UI should provide conversationId.
-                // If it's a new message, UI should provide subject (and NO conversationId).
-                
-                var receiver = await _worldPlayerRepository.GetByIdAsync(receiverId);
-                if (receiver == null) throw new KeyNotFoundException("Receiver not found");
-                
-                var sender = await _worldPlayerRepository.GetByIdAsync(senderId);
-                if (sender == null) throw new KeyNotFoundException("Sender not found");
 
-                conversation = new Conversation
+            var sentAt = DateTime.UtcNow;
+            var allParticipants = new List<WorldPlayer> { sender };
+            allParticipants.AddRange(participants);
+            var conversationId = Guid.NewGuid();
+
+            var conversation = new Conversation
+            {
+                Id = conversationId,
+                Participant1Id = senderId,
+                Participant2Id = participants[0].Id,
+                LastMessageDate = sentAt,
+                Participant1 = sender,
+                Participant2 = participants[0],
+                Subject = sanitizedSubject,
+                Participants = allParticipants.Select(player => new ConversationParticipant
                 {
-                    Participant1Id = senderId,
-                    Participant2Id = receiverId,
-                    LastMessageDate = DateTime.UtcNow,
-                    Participant1 = sender,
-                    Participant2 = receiver,
-                    Subject = !string.IsNullOrWhiteSpace(subject) ? subject : "No Subject"
-                };
-                await _messagingRepository.AddConversationAsync(conversation);
-            }
-
-            // Need sender name for DTO later
-            string senderName = "Unknown";
-            if (conversation.Participant1Id == senderId) senderName = conversation.Participant1?.PlayerProfile?.UserName ?? "Unknown";
-            else if (conversation.Participant2Id == senderId) senderName = conversation.Participant2?.PlayerProfile?.UserName ?? "Unknown";
-            
-            // If senderName is still unknown (e.g. freshly created without full load), try loading it or accept it might be null for now
-            if (senderName == "Unknown")
-            {
-                var s = await _worldPlayerRepository.GetByIdAsync(senderId);
-                if (s != null) senderName = s.PlayerProfile?.UserName ?? "Unknown";
-            }
+                    Id = Guid.NewGuid(),
+                    ConversationId = conversationId,
+                    WorldPlayerId = player.Id,
+                    WorldPlayer = player,
+                    JoinedAt = sentAt,
+                    LastReadAt = player.Id == senderId ? sentAt : null
+                }).ToList()
+            };
 
             var message = new Message
             {
-                ConversationId = conversation.Id,
+                Id = Guid.NewGuid(),
+                ConversationId = conversationId,
                 SenderId = senderId,
-                Content = content,
-                SentAt = DateTime.UtcNow,
+                Content = sanitizedContent,
+                SentAt = sentAt,
+                IsRead = false
+            };
+
+            conversation.Messages.Add(message);
+            await _messagingRepository.AddConversationAsync(conversation);
+
+            return BuildConversationDto(conversation, senderId);
+        }
+
+        public async Task<MessageDTO> ReplyToConversationAsync(Guid requestorId, Guid conversationId, string content)
+        {
+            var sanitizedContent = ValidateMessageContent(content);
+            await _playerAccessService.RequireOwnedWorldPlayerAsync(requestorId);
+
+            var conversation = await _messagingRepository.GetConversationByIdAsync(conversationId);
+            if (conversation == null) throw new KeyNotFoundException("Conversation not found");
+            EnsureActiveParticipant(conversation, requestorId);
+
+            var participant = conversation.Participants.FirstOrDefault(p => p.WorldPlayerId == requestorId);
+            if (participant == null) throw new UnauthorizedAccessException("User is not a participant in this conversation");
+
+            var sentAt = DateTime.UtcNow;
+            var message = new Message
+            {
+                Id = Guid.NewGuid(),
+                ConversationId = conversation.Id,
+                SenderId = requestorId,
+                Content = sanitizedContent,
+                SentAt = sentAt,
                 IsRead = false
             };
 
             await _messagingRepository.AddMessageAsync(message);
-            
-            conversation.LastMessageDate = message.SentAt;
+
+            conversation.LastMessageDate = sentAt;
             await _messagingRepository.UpdateConversationAsync(conversation);
+
+            participant.LastReadAt = sentAt;
+            await _messagingRepository.UpdateConversationParticipantAsync(participant);
 
             return new MessageDTO
             {
                 Id = message.Id,
                 Content = message.Content,
                 SenderId = message.SenderId,
-                SenderName = senderName,
+                SenderAllianceId = GetParticipantAllianceId(conversation, requestorId),
+                SenderName = GetParticipantName(conversation, requestorId),
+                SenderAllianceName = GetParticipantAllianceName(conversation, requestorId),
                 SentAt = message.SentAt,
-                IsRead = message.IsRead
+                IsRead = true
             };
         }
 
         public async Task<List<ConversationDTO>> GetConversationsAsync(Guid worldPlayerId)
         {
-            var conversations = await _messagingRepository.GetConversationsForPlayerAsync(worldPlayerId);
-            var result = new List<ConversationDTO>();
-
-            foreach (var conv in conversations)
-            {
-                var otherParticipant = conv.Participant1Id == worldPlayerId ? conv.Participant2 : conv.Participant1;
-                var lastMessage = conv.Messages.OrderByDescending(m => m.SentAt).FirstOrDefault();
-                var unreadCount = conv.Messages.Count(m => m.SenderId != worldPlayerId && !m.IsRead);
-
-                result.Add(new ConversationDTO
-                {
-                    Id = conv.Id,
-                    ParticipantId = otherParticipant?.Id ?? Guid.Empty,
-                    ParticipantName = otherParticipant?.PlayerProfile?.UserName ?? "Unknown",
-                    Subject = conv.Subject,
-                    LastMessageContent = lastMessage?.Content ?? string.Empty,
-                    LastMessageDate = conv.LastMessageDate,
-                    UnreadCount = unreadCount
-                });
-            }
-
-            return result;
+            await _playerAccessService.RequireOwnedWorldPlayerAsync(worldPlayerId);
+            return await _messagingRepository.GetConversationSummariesForPlayerAsync(worldPlayerId);
         }
 
-        public async Task<List<MessageDTO>> GetMessagesAsync(Guid conversationId, Guid requestorId)
+        public async Task<List<MessageDTO>> GetMessagesAsync(Guid conversationId, Guid requestorId, DateTime? before, int take)
         {
-            var conversation = await _messagingRepository.GetConversationByIdAsync(conversationId);
+            await _playerAccessService.RequireOwnedWorldPlayerAsync(requestorId);
+            var conversation = await _messagingRepository.GetConversationForAccessAsync(conversationId);
             if (conversation == null) throw new KeyNotFoundException("Conversation not found");
 
-            if (conversation.Participant1Id != requestorId && conversation.Participant2Id != requestorId)
-                throw new UnauthorizedAccessException("User is not a participant in this conversation");
+            EnsureActiveParticipant(conversation, requestorId);
 
-            var dtos = conversation.Messages.Select(m => new MessageDTO
+            var participant = conversation.Participants.FirstOrDefault(p => p.WorldPlayerId == requestorId);
+            var lastReadAt = participant?.LastReadAt;
+            var pageSize = NormalizePageSize(take);
+            var messages = await _messagingRepository.GetMessagesForConversationAsync(conversationId, before, pageSize);
+
+            var dtos = messages.Select(m => new MessageDTO
             {
                 Id = m.Id,
                 Content = m.Content,
                 SenderId = m.SenderId,
+                SenderAllianceId = m.Sender.Alliance?.Id,
                 SenderName = m.Sender.PlayerProfile?.UserName ?? "Unknown",
+                SenderAllianceName = m.Sender.Alliance?.Name ?? string.Empty,
                 SentAt = m.SentAt,
-                IsRead = m.IsRead
+                IsRead = m.SenderId == requestorId || (lastReadAt.HasValue && m.SentAt <= lastReadAt.Value)
             }).ToList();
 
             return dtos;
         }
 
+        public async Task MarkConversationAsReadAsync(Guid conversationId, Guid requestorId)
+        {
+            await _playerAccessService.RequireOwnedWorldPlayerAsync(requestorId);
+            var participant = await _messagingRepository.GetConversationParticipantAsync(conversationId, requestorId);
+            EnsureActiveParticipant(participant);
+
+            participant!.LastReadAt = DateTime.UtcNow;
+            await _messagingRepository.UpdateConversationParticipantAsync(participant);
+        }
+
         public async Task MarkMessageAsReadAsync(Guid messageId, Guid requestorId)
         {
+            await _playerAccessService.RequireOwnedWorldPlayerAsync(requestorId);
             var message = await _messagingRepository.GetMessageAsync(messageId);
-            if (message != null && message.SenderId != requestorId && !message.IsRead)
+            if (message == null) throw new KeyNotFoundException("Message not found");
+
+            var participant = await _messagingRepository.GetConversationParticipantAsync(message.ConversationId, requestorId);
+            EnsureActiveParticipant(participant);
+
+            if (message.SenderId != requestorId)
             {
-                 await _messagingRepository.UpdateMessageAsync(message);
+                participant!.LastReadAt = DateTime.UtcNow;
+                await _messagingRepository.UpdateConversationParticipantAsync(participant);
             }
         }
 
         public async Task<List<PlayerSearchResultDTO>> SearchPlayersAsync(Guid worldId, string query)
         {
-            if (string.IsNullOrWhiteSpace(query)) return new List<PlayerSearchResultDTO>();
+            await _playerAccessService.RequireWorldMembershipAsync(worldId);
+            var sanitizedQuery = ValidateSearchQuery(query);
+            if (sanitizedQuery == null) return new List<PlayerSearchResultDTO>();
 
-            var players = await _worldPlayerRepository.SearchPlayersByUsernameAsync(worldId, query);
+            var players = await _worldPlayerRepository.SearchPlayersByUsernameAsync(worldId, sanitizedQuery);
             return players.Select(p => new PlayerSearchResultDTO
             {
                 WorldPlayerId = p.Id,
@@ -170,15 +219,151 @@ namespace Application.Services
 
         public async Task<bool> HasUnreadMessagesAsync(Guid worldPlayerId)
         {
-            var conversations = await _messagingRepository.GetConversationsForPlayerAsync(worldPlayerId);
-            foreach (var conv in conversations)
+            await _playerAccessService.RequireOwnedWorldPlayerAsync(worldPlayerId);
+            return await _messagingRepository.HasUnreadMessagesAsync(worldPlayerId);
+        }
+
+        public async Task DeleteConversationAsync(Guid conversationId, Guid requestorId)
+        {
+            await _playerAccessService.RequireOwnedWorldPlayerAsync(requestorId);
+            var participant = await _messagingRepository.GetConversationParticipantAsync(conversationId, requestorId);
+            EnsureActiveParticipant(participant);
+
+            participant!.DeletedAt = DateTime.UtcNow;
+            await _messagingRepository.UpdateConversationParticipantAsync(participant);
+        }
+
+        public async Task<int> CountUnreadMessagesAsync(Guid worldPlayerId)
+        {
+            await _playerAccessService.RequireOwnedWorldPlayerAsync(worldPlayerId);
+            return await _messagingRepository.CountUnreadMessagesAsync(worldPlayerId);
+        }
+
+        private static ConversationDTO BuildConversationDto(Conversation conversation, Guid viewerId)
+        {
+            var viewerParticipant = conversation.Participants.FirstOrDefault(p => p.WorldPlayerId == viewerId);
+            var participantDtos = conversation.Participants.Select(p => new ConversationParticipantDTO
             {
-                if (conv.Messages.Any(m => m.SenderId != worldPlayerId && !m.IsRead))
-                {
-                    return true;
-                }
+                WorldPlayerId = p.WorldPlayerId,
+                Username = p.WorldPlayer?.PlayerProfile?.UserName ?? "Unknown",
+                LastReadAt = p.LastReadAt
+            }).ToList();
+
+            var otherNames = conversation.Participants
+                .Where(p => p.WorldPlayerId != viewerId)
+                .Select(p => p.WorldPlayer?.PlayerProfile?.UserName ?? "Unknown")
+                .Where(name => !string.IsNullOrWhiteSpace(name))
+                .ToList();
+
+            if (otherNames.Count == 0)
+            {
+                otherNames = conversation.Participants
+                    .Select(p => p.WorldPlayer?.PlayerProfile?.UserName ?? "Unknown")
+                    .Where(name => !string.IsNullOrWhiteSpace(name))
+                    .ToList();
             }
-            return false;
+
+            return new ConversationDTO
+            {
+                Id = conversation.Id,
+                ParticipantId = conversation.Participants.FirstOrDefault(p => p.WorldPlayerId != viewerId)?.WorldPlayerId ?? Guid.Empty,
+                ParticipantName = otherNames.Count > 0 ? string.Join(", ", otherNames) : "Unknown",
+                Participants = participantDtos,
+                IsGroupConversation = conversation.Participants.Count > 2,
+                Subject = conversation.Subject,
+                LastMessageContent = conversation.Messages.OrderByDescending(m => m.SentAt).FirstOrDefault()?.Content ?? string.Empty,
+                LastMessageDate = conversation.LastMessageDate,
+                UnreadCount = viewerParticipant == null
+                    ? 0
+                    : conversation.Messages.Count(m => m.SenderId != viewerId && m.SentAt > (viewerParticipant.LastReadAt ?? DateTime.MinValue))
+            };
+        }
+
+        private static string ValidateMessageContent(string content)
+        {
+            var sanitizedContent = content?.Trim() ?? string.Empty;
+            if (string.IsNullOrWhiteSpace(sanitizedContent)) throw new ArgumentException("Message content cannot be empty.");
+            if (sanitizedContent.Length > MaxMessageContentLength) throw new ArgumentException($"Message content cannot exceed {MaxMessageContentLength} characters.");
+            return sanitizedContent;
+        }
+
+        private static string ValidateSubject(string subject)
+        {
+            var sanitizedSubject = string.IsNullOrWhiteSpace(subject) ? "No Subject" : subject.Trim();
+            if (sanitizedSubject.Length > MaxSubjectLength) throw new ArgumentException($"Subject cannot exceed {MaxSubjectLength} characters.");
+            return sanitizedSubject;
+        }
+
+        private static string? ValidateSearchQuery(string query)
+        {
+            var sanitizedQuery = query?.Trim() ?? string.Empty;
+            if (sanitizedQuery.Length < MinSearchQueryLength) return null;
+            if (sanitizedQuery.Length > MaxSearchQueryLength) throw new ArgumentException($"Search query cannot exceed {MaxSearchQueryLength} characters.");
+            return sanitizedQuery;
+        }
+
+        private static int NormalizePageSize(int take)
+        {
+            if (take <= 0) return DefaultMessagePageSize;
+            return Math.Min(take, MaxMessagePageSize);
+        }
+
+        private static void EnsureActiveParticipant(Conversation conversation, Guid worldPlayerId)
+        {
+            var participant = conversation.Participants.FirstOrDefault(p => p.WorldPlayerId == worldPlayerId);
+            if (participant == null || participant.DeletedAt.HasValue)
+                throw new UnauthorizedAccessException("User is not a participant in this conversation");
+        }
+
+        private static void EnsureActiveParticipant(ConversationParticipant? participant)
+        {
+            if (participant == null || participant.DeletedAt.HasValue)
+                throw new UnauthorizedAccessException("User is not a participant in this conversation");
+        }
+
+        private static string GetParticipantName(Conversation conversation, Guid worldPlayerId)
+        {
+            var participant = conversation.Participants.FirstOrDefault(p => p.WorldPlayerId == worldPlayerId);
+            if (participant != null)
+                return participant.WorldPlayer?.PlayerProfile?.UserName ?? "Unknown";
+
+            if (conversation.Participant1Id == worldPlayerId)
+                return conversation.Participant1?.PlayerProfile?.UserName ?? "Unknown";
+
+            if (conversation.Participant2Id == worldPlayerId)
+                return conversation.Participant2?.PlayerProfile?.UserName ?? "Unknown";
+
+            return "Unknown";
+        }
+
+        private static string GetParticipantAllianceName(Conversation conversation, Guid worldPlayerId)
+        {
+            var participant = conversation.Participants.FirstOrDefault(p => p.WorldPlayerId == worldPlayerId);
+            if (participant != null)
+                return participant.WorldPlayer?.Alliance?.Name ?? string.Empty;
+
+            if (conversation.Participant1Id == worldPlayerId)
+                return conversation.Participant1?.Alliance?.Name ?? string.Empty;
+
+            if (conversation.Participant2Id == worldPlayerId)
+                return conversation.Participant2?.Alliance?.Name ?? string.Empty;
+
+            return string.Empty;
+        }
+
+        private static Guid? GetParticipantAllianceId(Conversation conversation, Guid worldPlayerId)
+        {
+            var participant = conversation.Participants.FirstOrDefault(p => p.WorldPlayerId == worldPlayerId);
+            if (participant != null)
+                return participant.WorldPlayer?.Alliance?.Id;
+
+            if (conversation.Participant1Id == worldPlayerId)
+                return conversation.Participant1?.Alliance?.Id;
+
+            if (conversation.Participant2Id == worldPlayerId)
+                return conversation.Participant2?.Alliance?.Id;
+
+            return null;
         }
     }
 }

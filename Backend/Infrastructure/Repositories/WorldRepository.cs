@@ -25,6 +25,14 @@ namespace Infrastructure.Repositories
             return worlds;
         }
 
+        public async Task<Dictionary<Guid, int>> GetPlayerCountsByWorldAsync()
+        {
+            return await _context.WorldPlayers
+                .AsNoTracking()
+                .GroupBy(player => player.WorldId)
+                .ToDictionaryAsync(group => group.Key, group => group.Count());
+        }
+
         public async Task<World?> GetByIdAsync(Guid id)
         {
             return await _context.World.FindAsync(id);

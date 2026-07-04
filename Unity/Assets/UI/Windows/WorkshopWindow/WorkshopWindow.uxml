@@ -91,7 +91,7 @@
                                         <ui:Label name="Stat-Mobility" class="stat-value"/>
                                     </ui:VisualElement>
                                     <ui:VisualElement class="stat-row">
-                                        <ui:Label text="LOOT" class="stat-label"/>
+                                        <ui:Label text="LOOT CAPACITY" class="stat-label"/>
                                         <ui:Label name="Stat-Loot" class="stat-value"/>
                                     </ui:VisualElement>
                                     <ui:VisualElement class="stat-row">
@@ -136,7 +136,7 @@
                 <ui:VisualElement name="Queue-Section"
                                   class="queue-section">
                     <ui:Label name="Queue-Header-Label"
-                              text="CONSTRUCTION QUEUE (0/5)"
+                              text="CONSTRUCTION QUEUE"
                               class="section-label" />
                     <ui:ScrollView name="Recruitment-Queue-List"
                                    class="queue-scroll-view"

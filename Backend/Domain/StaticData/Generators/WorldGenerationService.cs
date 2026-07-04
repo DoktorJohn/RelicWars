@@ -8,6 +8,11 @@ namespace Domain.StaticData.Generators
     {
         private const float BiomeGroupFrequency = 0.18f;
         private const float MountainPassFrequency = 0.09f;
+        public const int IslandCellSize = 24;
+        public const int IslandRowHeight = 24;
+        public const int MaximumIslandRadius = 21;
+        private const int IslandLookupRadius = 2;
+        private const float MinimumOceanGap = 7f;
 
         private static readonly Dictionary<BiomeGroup, int> BiomeVariantCounts = new Dictionary<BiomeGroup, int>
     {
@@ -27,14 +32,22 @@ namespace Domain.StaticData.Generators
     };
 
         // Static readonly for at undgå array-allokering ved hver klynge-check
-        private static readonly int[][] NeighborOffsets = new int[][] {
-        new int[] { 0, -1 }, new int[] { 1, -1 },
-        new int[] { -1, 0 }, new int[] { 1, 0 },
-        new int[] { -1, 1 }, new int[] { 0, 1 }
-    };
+        private static readonly int[][][] NeighborOffsetsByRowParity = {
+            new[] {
+                new[] { 1, 0 }, new[] { 0, 1 }, new[] { -1, 1 },
+                new[] { -1, 0 }, new[] { -1, -1 }, new[] { 0, -1 }
+            },
+            new[] {
+                new[] { 1, 0 }, new[] { 1, 1 }, new[] { 0, 1 },
+                new[] { -1, 0 }, new[] { 0, -1 }, new[] { 1, -1 }
+            }
+        };
 
         public static WorldBiomeVariantType CalculateWorldMapBiomeVariant(short x, short y, int mapSeed)
         {
+            if (!IsLand(x, y, mapSeed))
+                return ResolveOceanVariant(x, y, mapSeed);
+
             // Lokal cache eliminerer 6/7 Perlin-beregninger per tile
             var cache = new Dictionary<(int, int), BiomeGroup>(7);
 
@@ -47,6 +60,267 @@ namespace Domain.StaticData.Generators
             // 5. Resolve variant (zero-allocation)
             float randomVariantValue = PseudoRandomHash(x, y, mapSeed);
             return ResolveVariant(coreGroup, randomVariantValue);
+        }
+
+        public static bool IsLand(int x, int y, int mapSeed)
+        {
+            return TryGetIslandCoordinates(x, y, mapSeed, out _, out _);
+        }
+
+        public static bool IsCoastal(int x, int y, int mapSeed)
+        {
+            if (!IsLand(x, y, mapSeed))
+                return false;
+
+            foreach (var offset in GetNeighborOffsets(y))
+            {
+                if (!IsLand(x + offset[0], y + offset[1], mapSeed))
+                    return true;
+            }
+
+            return false;
+        }
+
+        public static bool TryGetIslandCoordinates(int x, int y, int mapSeed, out int islandX, out int islandY)
+        {
+            int baseCellX = FloorDivide(x, IslandCellSize);
+            int baseCellY = FloorDivide(y, IslandRowHeight);
+
+            for (int cellOffsetX = -IslandLookupRadius; cellOffsetX <= IslandLookupRadius; cellOffsetX++)
+            {
+                for (int cellOffsetY = -IslandLookupRadius; cellOffsetY <= IslandLookupRadius; cellOffsetY++)
+                {
+                    int cellX = baseCellX + cellOffsetX;
+                    int cellY = baseCellY + cellOffsetY;
+                    var island = GetIslandDefinition(cellX, cellY, mapSeed);
+                    GetHexVisualDelta(x, y, island, out float worldX, out float worldY);
+                    if (worldX * worldX + worldY * worldY > MaximumIslandRadius * MaximumIslandRadius
+                        || !IsIslandCellActive(cellX, cellY, mapSeed))
+                        continue;
+
+                    if (IsInsideIsland(x, y, mapSeed, island))
+                    {
+                        islandX = cellX;
+                        islandY = cellY;
+                        return true;
+                    }
+                }
+            }
+
+            islandX = 0;
+            islandY = 0;
+            return false;
+        }
+
+        public static IslandDefinition GetIslandDefinition(int cellX, int cellY, int mapSeed)
+        {
+            int shape = HashToRange(cellX, cellY, mapSeed, 47, 4);
+            float majorRadius = 11.5f + HashToRange(cellX, cellY, mapSeed, 53, 26) / 10f;
+            float aspectRatio = shape switch
+            {
+                0 => 0.82f + HashToRange(cellX, cellY, mapSeed, 59, 16) / 100f,
+                1 => 0.48f + HashToRange(cellX, cellY, mapSeed, 59, 20) / 100f,
+                2 => 0.68f + HashToRange(cellX, cellY, mapSeed, 59, 20) / 100f,
+                _ => 0.62f + HashToRange(cellX, cellY, mapSeed, 59, 34) / 100f
+            };
+            float roughness = shape == 0
+                ? 0.08f + HashToRange(cellX, cellY, mapSeed, 67, 8) / 100f
+                : 0.14f + HashToRange(cellX, cellY, mapSeed, 67, 17) / 100f;
+
+            return new IslandDefinition(
+                cellX,
+                cellY,
+                cellX * IslandCellSize + HashToRange(cellX, cellY, mapSeed, 17, 17) - 8,
+                cellY * IslandRowHeight + HashToRange(cellX, cellY, mapSeed, 31, 17) - 8,
+                shape,
+                majorRadius,
+                majorRadius * aspectRatio,
+                HashToRange(cellX, cellY, mapSeed, 61, 360),
+                roughness);
+        }
+
+        public static bool IsIslandCellActive(int cellX, int cellY, int mapSeed)
+        {
+            var candidate = GetIslandDefinition(cellX, cellY, mapSeed);
+            int candidatePhase = GetPlacementPhase(cellX, cellY, mapSeed);
+            return IsActiveCandidate(candidate, candidatePhase, mapSeed);
+        }
+
+        private static bool IsActiveCandidate(IslandDefinition candidate, int phase, int mapSeed)
+        {
+            for (int offsetX = -IslandLookupRadius; offsetX <= IslandLookupRadius; offsetX++)
+            {
+                for (int offsetY = -IslandLookupRadius; offsetY <= IslandLookupRadius; offsetY++)
+                {
+                    if (offsetX == 0 && offsetY == 0)
+                        continue;
+
+                    int otherCellX = candidate.CellX + offsetX;
+                    int otherCellY = candidate.CellY + offsetY;
+                    int otherPhase = GetPlacementPhase(otherCellX, otherCellY, mapSeed);
+                    if (otherPhase >= phase)
+                        continue;
+
+                    var other = GetIslandDefinition(otherCellX, otherCellY, mapSeed);
+                    if (!ViolatesMinimumSpacing(candidate, other, mapSeed))
+                        continue;
+
+                    if (IsActiveCandidate(other, otherPhase, mapSeed))
+                        return false;
+                }
+            }
+
+            return true;
+        }
+
+        private static int GetPlacementPhase(int cellX, int cellY, int mapSeed)
+        {
+            int offsetX = HashToRange(0, 0, mapSeed, 79, 3);
+            int offsetY = HashToRange(0, 0, mapSeed, 83, 3);
+            return PositiveModulo(cellX + offsetX, 3) + PositiveModulo(cellY + offsetY, 3) * 3;
+        }
+
+        private static bool IsInsideIsland(int x, int y, int mapSeed, IslandDefinition island)
+        {
+            GetHexVisualDelta(x, y, island, out float worldX, out float worldY);
+
+            if (worldX * worldX + worldY * worldY > MaximumIslandRadius * MaximumIslandRadius)
+                return false;
+
+            float radians = island.RotationDegrees * (float)Math.PI / 180f;
+            float localX = worldX * (float)Math.Cos(radians) + worldY * (float)Math.Sin(radians);
+            float localY = -worldX * (float)Math.Sin(radians) + worldY * (float)Math.Cos(radians);
+            float distance = (float)Math.Sqrt(localX * localX + localY * localY);
+            float angle = (float)Math.Atan2(localY, localX);
+            return distance <= GetBoundaryRadius(island, mapSeed, angle);
+        }
+
+        private static float GetBoundaryRadius(IslandDefinition island, int mapSeed, float angle)
+        {
+            float ellipseRadius = EllipseRadiusAtAngle(angle, island.MajorRadius, island.MinorRadius);
+            float phaseA = ToRadians(HashToRange(island.CellX, island.CellY, mapSeed, 113, 360));
+            float phaseB = ToRadians(HashToRange(island.CellX, island.CellY, mapSeed, 127, 360));
+            float phaseC = ToRadians(HashToRange(island.CellX, island.CellY, mapSeed, 139, 360));
+
+            float radialNoise = island.EdgeRoughness * ellipseRadius
+                * (0.58f * (float)Math.Sin(angle * 2f + phaseA)
+                    + 0.27f * (float)Math.Sin(angle * 5f + phaseB)
+                    + 0.15f * (float)Math.Sin(angle * 9f + phaseC));
+            float lobe = LobeInfluence(angle, phaseA, island.Shape == 3 ? 1.7f : 0.8f);
+            float bay = BayInfluence(angle, phaseB, island.Shape == 0 ? 0.45f : 1.35f);
+
+            return ellipseRadius + radialNoise + lobe - bay;
+        }
+
+        private static void GetHexVisualDelta(int x, int y, IslandDefinition island, out float worldX, out float worldY)
+        {
+            float tileX = x + (((y & 1) != 0) ? 0.5f : 0f);
+            float centerTileX = island.CenterX + (((island.CenterY & 1) != 0) ? 0.5f : 0f);
+
+            worldX = tileX - centerTileX;
+            worldY = (y - island.CenterY) * 0.8660254f;
+        }
+
+        private static float EllipseRadiusAtAngle(float angle, float majorRadius, float minorRadius)
+        {
+            float cosine = (float)Math.Cos(angle);
+            float sine = (float)Math.Sin(angle);
+            float denominator = (float)Math.Sqrt(
+                cosine * cosine / (majorRadius * majorRadius)
+                + sine * sine / (minorRadius * minorRadius));
+            return 1f / denominator;
+        }
+
+        private static float LobeInfluence(float angle, float phase, float strength)
+        {
+            float aligned = Math.Max(0f, (float)Math.Cos(angle - phase));
+            return strength * aligned * aligned * aligned;
+        }
+
+        private static float BayInfluence(float angle, float phase, float strength)
+        {
+            float aligned = Math.Max(0f, (float)Math.Cos(angle - phase - 2.2f));
+            return strength * aligned * aligned * aligned * aligned * aligned * aligned;
+        }
+
+        private static bool ViolatesMinimumSpacing(IslandDefinition first, IslandDefinition second, int mapSeed)
+        {
+            float firstX = first.CenterX + (((first.CenterY & 1) != 0) ? 0.5f : 0f);
+            float secondX = second.CenterX + (((second.CenterY & 1) != 0) ? 0.5f : 0f);
+            float deltaX = secondX - firstX;
+            float deltaY = (second.CenterY - first.CenterY) * 0.8660254f;
+            float centerDistance = (float)Math.Sqrt(deltaX * deltaX + deltaY * deltaY);
+            float direction = (float)Math.Atan2(deltaY, deltaX);
+            float firstLocalAngle = direction - ToRadians((int)first.RotationDegrees);
+            float secondLocalAngle = direction + (float)Math.PI - ToRadians((int)second.RotationDegrees);
+            float minimumDistance = GetBoundaryRadius(first, mapSeed, firstLocalAngle)
+                + GetBoundaryRadius(second, mapSeed, secondLocalAngle)
+                + MinimumOceanGap;
+            return centerDistance < minimumDistance;
+        }
+
+        private static float ToRadians(int degrees) => degrees * (float)Math.PI / 180f;
+
+        private static int[][] GetNeighborOffsets(int y) => NeighborOffsetsByRowParity[y & 1];
+
+        public readonly struct IslandDefinition
+        {
+            public IslandDefinition(int cellX, int cellY, int centerX, int centerY, int shape,
+                float majorRadius, float minorRadius, float rotationDegrees, float edgeRoughness)
+            {
+                CellX = cellX;
+                CellY = cellY;
+                CenterX = centerX;
+                CenterY = centerY;
+                Shape = shape;
+                MajorRadius = majorRadius;
+                MinorRadius = minorRadius;
+                RotationDegrees = rotationDegrees;
+                EdgeRoughness = edgeRoughness;
+            }
+
+            public int CellX { get; }
+            public int CellY { get; }
+            public int CenterX { get; }
+            public int CenterY { get; }
+            public int Shape { get; }
+            public float MajorRadius { get; }
+            public float MinorRadius { get; }
+            public float RotationDegrees { get; }
+            public float EdgeRoughness { get; }
+        }
+
+        private static WorldBiomeVariantType ResolveOceanVariant(int x, int y, int mapSeed)
+        {
+            return HashToRange(x, y, mapSeed, 73, 4) switch
+            {
+                0 => WorldBiomeVariantType.Ocean_1,
+                1 => WorldBiomeVariantType.Ocean_2,
+                2 => WorldBiomeVariantType.Ocean_3,
+                _ => WorldBiomeVariantType.Ocean_4
+            };
+        }
+
+        private static int HexDistance(int deltaX, int deltaY)
+        {
+            return Math.Max(Math.Abs(deltaX), Math.Max(Math.Abs(deltaY), Math.Abs(deltaX + deltaY)));
+        }
+
+        private static int FloorDivide(int value, int divisor)
+        {
+            int quotient = value / divisor;
+            int remainder = value % divisor;
+            return remainder < 0 ? quotient - 1 : quotient;
+        }
+
+        private static int PositiveModulo(int value, int divisor) => (value % divisor + divisor) % divisor;
+
+        private static int HashToRange(int x, int y, int seed, int salt, int range)
+        {
+            int hash = seed + salt;
+            hash = unchecked(hash + x * 374761393 + y * 668265263);
+            hash = unchecked((hash ^ (hash >> 13)) * 1274126177);
+            return (hash & 0x7FFFFFFF) % range;
         }
 
         private static BiomeGroup DetermineCoreBiomeFromNoise(float noise)
@@ -86,7 +360,7 @@ namespace Domain.StaticData.Generators
             bool touchesIceMountain = false;
             bool touchesSandMountain = false;  // ADD
 
-            foreach (var offset in NeighborOffsets)  // Use the static readonly array
+            foreach (var offset in GetNeighborOffsets(y))
             {
                 BiomeGroup neighbor = GetCachedBaseBiome(x + offset[0], y + offset[1], mapSeed, cache);
 

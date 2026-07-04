@@ -62,6 +62,13 @@ namespace Project.Scripts.Modules.Map
             MainCamera.transform.position = new Vector3(worldPos.x, worldPos.y, -10f);
         }
 
+        public void CenterCameraOnCoordinates(int x, int y)
+        {
+            if (TargetTilemap == null || MainCamera == null) return;
+            Vector3 worldPos = TargetTilemap.GetCellCenterWorld(new Vector3Int(x, y, 0));
+            MainCamera.transform.position = new Vector3(worldPos.x, worldPos.y, MainCamera.transform.position.z);
+        }
+
         private void OnDestroy()
         {
             if (WorldMapStateManager.Instance != null)

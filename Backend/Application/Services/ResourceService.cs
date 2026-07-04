@@ -1,4 +1,4 @@
-﻿using Application.DTOs;
+using Application.DTOs;
 using Application.Interfaces.IServices;
 using Domain.Abstraction;
 using Domain.Entities;
@@ -23,10 +23,10 @@ namespace Application.Services
         DateTime Timestamp);
 
     public record GlobalResourceSnapshot(
-        double SilverAmount,
+        double CoinsAmount,
         double ResearchPoints,
         double IdeologyFocusPoints,
-        double SilverProductionPerHour,
+        double CoinsProductionPerHour,
         double ResearchPointsPerHour,
         double IdeologyFocusPointsPerHour,
         DateTime Timestamp);
@@ -86,15 +86,15 @@ namespace Application.Services
             _logger.LogInformation("[ResourceService] Calculating global resources for Player {PlayerId}. Hours passed: {HoursPassed:F4}. Last Update: {LastUpdate}, Current: {Current}", 
                 playerEntity.Id, hoursPassed, playerEntity.LastResourceUpdate, currentDateTime);
 
-            double totalSilverRate = 0;
+            double totalCoinsRate = 0;
             double totalResearchRate = 0;
 
             foreach (var city in playerEntity.Cities)
             {
-                var silverResult = GetSilverProductionResult(city);
+                var coinsResult = GetCoinsProductionResult(city);
                 var researchResult = GetProductionResult(city, BuildingTypeEnum.University, new[] { ModifierTagEnum.Research });
 
-                totalSilverRate += silverResult;
+                totalCoinsRate += coinsResult;
                 totalResearchRate += researchResult.FinalValue;
             }
 
@@ -106,18 +106,18 @@ namespace Application.Services
             );
 
             // Globale ressourcer
-            double newSilverAmount = playerEntity.Silver + (totalSilverRate * hoursPassed);
+            double newCoinsAmount = playerEntity.Coins + (totalCoinsRate * hoursPassed);
             double newResearchAmount = playerEntity.ResearchPoints + (totalResearchRate * hoursPassed);
             double newIdeologyAmount = playerEntity.IdeologyFocusPoints + (ideologyCalculation.FinalValue * hoursPassed);
 
-            _logger.LogInformation("[ResourceService] Global Calc Result: Total Silver Rate: {TotalSilverRate}, Old Silver: {OldSilver}, New Silver: {NewSilver}", 
-                totalSilverRate, playerEntity.Silver, newSilverAmount);
+            _logger.LogInformation("[ResourceService] Global Calc Result: Total Coins Rate: {TotalCoinsRate}, Old Coins: {OldCoins}, New Coins: {NewCoins}", 
+                totalCoinsRate, playerEntity.Coins, newCoinsAmount);
 
             return new GlobalResourceSnapshot(
-                newSilverAmount,
+                newCoinsAmount,
                 newResearchAmount,
                 newIdeologyAmount,
-                totalSilverRate,
+                totalCoinsRate,
                 totalResearchRate,
                 ideologyCalculation.FinalValue,
                 currentDateTime
@@ -140,52 +140,17 @@ namespace Application.Services
         private ModifierCalculationResult GetProductionResult(City cityEntity, BuildingTypeEnum buildingType, IEnumerable<ModifierTagEnum> targetTags)
         {
             double baseValue = GetBaseProductionValue(cityEntity, buildingType);
-            var providers = new List<IModifierProvider> { cityEntity };
-
-            if (cityEntity.WorldPlayer != null)
-            {
-                providers.Add(cityEntity.WorldPlayer);
-                if (cityEntity.WorldPlayer.Alliance != null) providers.Add(cityEntity.WorldPlayer.Alliance);
-            }
-
-            var targetBuilding = cityEntity.Buildings.FirstOrDefault(b => b.Type == buildingType);
-            if (targetBuilding != null && targetBuilding.Level > 0)
-            {
-                providers.Add(_buildingData.GetConfig<BuildingLevelData>(buildingType, targetBuilding.Level));
-            }
-
-            return _modifierService.CalculateEntityValueWithModifiers(baseValue, targetTags, providers);
+            return _modifierService.CalculateCityValue(cityEntity, baseValue, targetTags.ToArray());
         }
 
-        private double GetSilverProductionResult(City cityEntity)
+        private double GetCoinsProductionResult(City cityEntity)
         {
-            IEnumerable<ModifierTagEnum> silverIncomeTags = new[] { ModifierTagEnum.Silver };
-            IEnumerable<ModifierTagEnum> silverExpenditureTags = new[] { ModifierTagEnum.Upkeep };
-
-            //Calculate silver INCOME
+            //Calculate coins INCOME
             double baseProductionValue = _statService.GetMaxPopulation(cityEntity) * 7.0;
+            var coinsProduction = _modifierService.CalculateCityValue(cityEntity, baseProductionValue,
+                ModifierTagEnum.Coins, ModifierTagEnum.Market);
 
-            var modifierProviders = new List<IModifierProvider> { cityEntity, cityEntity.WorldPlayer };
-            if (cityEntity.WorldPlayer?.Alliance != null) modifierProviders.Add(cityEntity.WorldPlayer.Alliance);
-
-            foreach (var cityBuilding in cityEntity.Buildings.Where(b => b.Level > 0))
-            {
-                var levelConfig = _buildingData.GetConfig<BuildingLevelData>(cityBuilding.Type, cityBuilding.Level);
-                if (levelConfig != null) modifierProviders.Add(levelConfig);
-            }
-
-            foreach (var research in cityEntity.WorldPlayer.CompletedResearches)
-            {
-                var researchToGetModifiers = _researchData.GetNode(research.ResearchId);
-                modifierProviders.Add(researchToGetModifiers);
-            }
-
-            var ideology = _ideologyData.GetIdeology(cityEntity.WorldPlayer.Ideology);
-            if (ideology != null) modifierProviders.Add(ideology);
-
-            var silverProduction = _modifierService.CalculateEntityValueWithModifiers(baseProductionValue, silverIncomeTags, modifierProviders);
-
-            //Calculate silver EXPENDITURE
+            //Calculate coins EXPENDITURE
             int stationedPopulation = cityEntity.UnitStacks
                 .Sum(stack => _unitData.GetUnit(stack.Type).PopulationCost * stack.Quantity);
 
@@ -197,18 +162,18 @@ namespace Application.Services
 
             int buildingUpkeepCost = cityEntity.Buildings.Sum(building => _buildingData.GetConfig<BuildingLevelData>(building.Type, building.Level).UpkeepCost);
 
-            double flatUnitSilverExpenditure = (stationedPopulation + deployedPopulation) * 7;
-            double flatTotalSilverExpenditure = flatUnitSilverExpenditure + buildingUpkeepCost;
+            double flatUnitCoinsExpenditure = (stationedPopulation + deployedPopulation) * 7;
+            var unitExpenditure = _modifierService.CalculateCityValue(cityEntity, flatUnitCoinsExpenditure,
+                ModifierTagEnum.Upkeep, ModifierTagEnum.UnitUpkeep);
+            var buildingExpenditure = _modifierService.CalculateCityValue(cityEntity, buildingUpkeepCost,
+                ModifierTagEnum.Upkeep, ModifierTagEnum.BuildingUpkeep);
+            double finalExpenditure = unitExpenditure.FinalValue + buildingExpenditure.FinalValue;
+            double netCoins = coinsProduction.FinalValue - finalExpenditure;
 
+            _logger.LogInformation("[ResourceService] City {CityName} Coins Breakdown: Income Base={IncomeBase} -> Final={IncomeFinal}. Expenditure Base={ExpBase} (Units={UnitExp}, Buildings={BuildExp}) -> Final={ExpFinal}. Net={Net}",
+                cityEntity.Name, baseProductionValue, coinsProduction.FinalValue, flatUnitCoinsExpenditure + buildingUpkeepCost, flatUnitCoinsExpenditure, buildingUpkeepCost, finalExpenditure, netCoins);
 
-            var silverExpenditure = _modifierService.CalculateEntityValueWithModifiers(flatTotalSilverExpenditure, silverExpenditureTags, modifierProviders);
-
-            double netSilver = silverProduction.FinalValue - silverExpenditure.FinalValue;
-
-            _logger.LogInformation("[ResourceService] City {CityName} Silver Breakdown: Income Base={IncomeBase} -> Final={IncomeFinal}. Expenditure Base={ExpBase} (Units={UnitExp}, Buildings={BuildExp}) -> Final={ExpFinal}. Net={Net}",
-                cityEntity.Name, baseProductionValue, silverProduction.FinalValue, flatTotalSilverExpenditure, flatUnitSilverExpenditure, buildingUpkeepCost, silverExpenditure.FinalValue, netSilver);
-
-            return netSilver;
+            return netCoins;
         }
 
         private double GetBaseProductionValue(City cityEntity, BuildingTypeEnum buildingType)

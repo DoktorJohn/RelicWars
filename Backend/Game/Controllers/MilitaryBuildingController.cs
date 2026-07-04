@@ -40,8 +40,19 @@ namespace Game.Controllers
         [HttpPost("recruitmentQueue")]
         public async Task<IActionResult> GetRecruitmentQueue([FromBody] GetRecruitmentQueueItemsDTO dto)
         {
-            var queue = await _recruitmentService.GetRecruitmentQueueAsync(dto);
-            return Ok(queue);
+            try
+            {
+                var queue = await _recruitmentService.GetRecruitmentQueueAsync(dto);
+                return Ok(queue);
+            }
+            catch (KeyNotFoundException)
+            {
+                return NotFound();
+            }
+            catch (UnauthorizedAccessException)
+            {
+                return Forbid();
+            }
         }
 
         [HttpPost("{cityId}/stableRecruit")]
@@ -61,6 +72,14 @@ namespace Game.Controllers
 
                 return BadRequest(result);
             }
+            catch (KeyNotFoundException)
+            {
+                return NotFound();
+            }
+            catch (UnauthorizedAccessException)
+            {
+                return Forbid();
+            }
             catch (Exception exception)
             {
                 _logger.LogError(exception, "Fejl ved rekruttering af kavaleri i by {OriginCityId}", cityId);
@@ -76,6 +95,14 @@ namespace Game.Controllers
                 var userId = GetUserIdFromClaims();
                 var result = await _stableService.GetStableOverviewAsync(userId, cityId);
                 return Ok(result);
+            }
+            catch (KeyNotFoundException)
+            {
+                return NotFound();
+            }
+            catch (UnauthorizedAccessException)
+            {
+                return Forbid();
             }
             catch (Exception exception)
             {
@@ -93,6 +120,14 @@ namespace Game.Controllers
                 var result = await _barracksService.GetBarracksOverviewAsync(userId, cityId);
                 return Ok(result);
             }
+            catch (KeyNotFoundException)
+            {
+                return NotFound();
+            }
+            catch (UnauthorizedAccessException)
+            {
+                return Forbid();
+            }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Failed to get barracks overview for city {OriginCityId}", cityId);
@@ -103,10 +138,20 @@ namespace Game.Controllers
         [HttpGet("{cityId}/workshopOverview")]
         public async Task<IActionResult> GetWorkshopOverview(Guid cityId)
         {
-            var userId = Guid.Parse(User.FindFirst(ClaimTypes.NameIdentifier).Value);
-
-            var result = await _workshopService.GetWorkshopOverviewAsync(userId, cityId);
-            return Ok(result);
+            try
+            {
+                var userId = GetUserIdFromClaims();
+                var result = await _workshopService.GetWorkshopOverviewAsync(userId, cityId);
+                return Ok(result);
+            }
+            catch (KeyNotFoundException)
+            {
+                return NotFound();
+            }
+            catch (UnauthorizedAccessException)
+            {
+                return Forbid();
+            }
         }
 
         [HttpPost("{cityId}/barracksRecruit")]
@@ -124,6 +169,10 @@ namespace Game.Controllers
 
                 return BadRequest(result);
             }
+            catch (UnauthorizedAccessException)
+            {
+                return Forbid();
+            }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Failed to recruit units in city {OriginCityId}", cityId);
@@ -134,12 +183,18 @@ namespace Game.Controllers
         [HttpPost("{cityId}/workshopRecruit")]
         public async Task<IActionResult> WorkshopRecruit(Guid cityId, [FromBody] RecruitUnitRequestDTO request)
         {
-            var userId = Guid.Parse(User.FindFirst(ClaimTypes.NameIdentifier).Value);
+            try
+            {
+                var userId = GetUserIdFromClaims();
+                var result = await _recruitmentService.QueueRecruitmentAsync(userId, cityId, request.UnitType, request.Amount);
 
-            var result = await _recruitmentService.QueueRecruitmentAsync(userId, cityId, request.UnitType, request.Amount);
-
-            if (result.Success) return Ok(result);
-            return BadRequest(result);
+                if (result.Success) return Ok(result);
+                return BadRequest(result);
+            }
+            catch (UnauthorizedAccessException)
+            {
+                return Forbid();
+            }
         }
 
         private Guid GetUserIdFromClaims()

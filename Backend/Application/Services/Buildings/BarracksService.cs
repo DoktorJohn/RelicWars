@@ -18,21 +18,23 @@ namespace Application.Services.Buildings
         private readonly ICityRepository _cityRepo;
         private readonly UnitDataReader _unitDataReader;
         private readonly IModifierService _modifierService;
+        private readonly IPlayerAccessService _playerAccessService;
 
         public BarracksService(
             ICityRepository cityRepo,
             UnitDataReader unitDataReader,
-            IModifierService modifierService)
+            IModifierService modifierService,
+            IPlayerAccessService playerAccessService)
         {
             _cityRepo = cityRepo;
             _unitDataReader = unitDataReader;
             _modifierService = modifierService;
+            _playerAccessService = playerAccessService;
         }
 
         public async Task<BarracksFullViewDTO> GetBarracksOverviewAsync(Guid userId, Guid cityId)
         {
-            var cityEntity = await _cityRepo.GetByIdAsync(cityId);
-            if (cityEntity == null) throw new Exception("City not found");
+            var cityEntity = await _playerAccessService.RequireOwnedCityAsync(cityId);
 
             var barracksBuilding = cityEntity.Buildings.FirstOrDefault(b => b.Type == BuildingTypeEnum.Barracks);
             int currentBuildingLevel = barracksBuilding?.Level ?? 0;

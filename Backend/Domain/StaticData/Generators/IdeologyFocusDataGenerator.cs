@@ -1,4 +1,4 @@
-﻿using Domain.Entities;
+using Domain.Entities;
 using Domain.Enums;
 using Domain.StaticData.Data;
 using System;
@@ -58,20 +58,34 @@ namespace Domain.StaticData.Generators
             //    ModifiersThatAffectsThis = { ModifierTagEnum.IdeologyFocus }
             //});
 
-            //ideologyFocus.Add(new IdeologyFocusData
-            //{
-            //    Name = IdeologyFocusNameEnum.OathOfBlood,
-            //    RequiredIdeology = IdeologyTypeEnum.Feudalism,
-            //    TimeActive = TimeSpan.FromMinutes(120),
-            //    IdeologyFocusPointCost = 18,
-            //    SpecialFlag = false,
-            //    Description = "-5% allied casualties in the city",
-            //    ModifiersInternal = new List<Modifier>
-            //    {
-            //        new Modifier { Tag = ModifierTagEnum.Casualties, Type = ModifierTypeEnum.Increased, Value = 0.05, Source = "Oath of Blood focus: -5% allied casualties" }
-            //    },
-            //    ModifiersThatAffectsThis = { ModifierTagEnum.IdeologyFocus }
-            //});
+            ideologyFocus.Add(new IdeologyFocusData
+            {
+                Name = IdeologyFocusNameEnum.OathOfBlood,
+                RequiredIdeology = IdeologyTypeEnum.Feudalism,
+                TimeActive = TimeSpan.FromMinutes(120),
+                IdeologyFocusPointCost = 18,
+                SpecialFlag = false,
+                Description = "-5% allied casualties in the city for 2h",
+                ModifiersInternal = new List<Modifier>
+                {
+                    new Modifier { Tag = ModifierTagEnum.Casualties, Type = ModifierTypeEnum.Decreased, Value = 0.05, Source = "Oath of Blood focus: -5% allied casualties" }
+                },
+                ModifiersThatAffectsThis = { ModifierTagEnum.IdeologyFocus }
+            });
+
+            ideologyFocus.Add(new IdeologyFocusData
+            {
+                Name = IdeologyFocusNameEnum.NobleClemency,
+                RequiredIdeology = IdeologyTypeEnum.Feudalism,
+                TimeActive = TimeSpan.FromHours(3),
+                IdeologyFocusPointCost = 12,
+                Description = "+10% resistance recovery for 3h",
+                ModifiersInternal = new()
+                {
+                    new Modifier { Tag = ModifierTagEnum.ResistanceRecovery, Type = ModifierTypeEnum.Increased, Value = 0.1, Source = "Noble Clemency focus: +10% resistance recovery" }
+                },
+                ModifiersThatAffectsThis = { ModifierTagEnum.IdeologyFocus }
+            });
 
             ideologyFocus.Add(new IdeologyFocusData
             {
@@ -103,20 +117,20 @@ namespace Domain.StaticData.Generators
                 ModifiersThatAffectsThis = { ModifierTagEnum.IdeologyFocus }
             });
 
-            //ideologyFocus.Add(new IdeologyFocusData
-            //{
-            //    Name = IdeologyFocusNameEnum.RoyalMedics,
-            //    RequiredIdeology = IdeologyTypeEnum.Monarchy,
-            //    TimeActive = TimeSpan.FromMinutes(120),
-            //    IdeologyFocusPointCost = 10,
-            //    Description = "Revive 10% of your army",
-            //    SpecialFlag = false,
-            //    ModifiersInternal = new List<Modifier>
-            //    {
-            //        new Modifier { Tag = ModifierTagEnum.Revival, Type = ModifierTypeEnum.Increased, Value = 0.10, Source = "Royal Medics focus: Revive 10% of your army" }
-            //    },
-            //    ModifiersThatAffectsThis = { ModifierTagEnum.IdeologyFocus }
-            //});
+            ideologyFocus.Add(new IdeologyFocusData
+            {
+                Name = IdeologyFocusNameEnum.RoyalMedics,
+                RequiredIdeology = IdeologyTypeEnum.Monarchy,
+                TimeActive = TimeSpan.FromMinutes(120),
+                IdeologyFocusPointCost = 10,
+                Description = "Revive 10% of defensive casualties for 2h",
+                SpecialFlag = false,
+                ModifiersInternal = new List<Modifier>
+                {
+                    new Modifier { Tag = ModifierTagEnum.Revival, Type = ModifierTypeEnum.Increased, Value = 0.10, Source = "Royal Medics focus: Revive 10%" }
+                },
+                ModifiersThatAffectsThis = { ModifierTagEnum.IdeologyFocus }
+            });
 
             ideologyFocus.Add(new IdeologyFocusData
             {
@@ -125,10 +139,10 @@ namespace Domain.StaticData.Generators
                 TimeActive = TimeSpan.FromMinutes(120),
                 IdeologyFocusPointCost = 14,
                 SpecialFlag = false,
-                Description = "Improve Silver production from all sources by 100% for 1h",
+                Description = "Improve Coins production from all sources by 100% for 2h",
                 ModifiersInternal = new List<Modifier>
                 {
-                    new Modifier { Tag = ModifierTagEnum.Silver, Type = ModifierTypeEnum.Increased, Value = 1.0, Source = "Crown Tax focus: +100% Silver production" }
+                    new Modifier { Tag = ModifierTagEnum.Coins, Type = ModifierTypeEnum.Increased, Value = 1.0, Source = "Crown Tax focus: +100% Coins production" }
                 },
                 ModifiersThatAffectsThis = { ModifierTagEnum.IdeologyFocus }
             });
@@ -137,7 +151,7 @@ namespace Domain.StaticData.Generators
 
             ideologyFocus.Add(new IdeologyFocusData
             {
-                Name = IdeologyFocusNameEnum.EnhancendWorkshop,
+                Name = IdeologyFocusNameEnum.EnhancedWorkshop,
                 RequiredIdeology = IdeologyTypeEnum.Oligarchy,
                 TimeActive = TimeSpan.FromMinutes(120),
                 IdeologyFocusPointCost = 6,
@@ -171,27 +185,27 @@ namespace Domain.StaticData.Generators
                 TimeActive = TimeSpan.FromMinutes(120),
                 IdeologyFocusPointCost = 10,
                 SpecialFlag = false,
-                Description = "Gain +20% silver production for 2h",
+                Description = "Gain +20% coins production for 2h",
                 ModifiersInternal = new List<Modifier>
                 {
-                    new Modifier { Tag = ModifierTagEnum.Silver, Type = ModifierTypeEnum.Increased, Value = 0.2, Source = "Market Surge focus: +20% silver" }
+                    new Modifier { Tag = ModifierTagEnum.Coins, Type = ModifierTypeEnum.Increased, Value = 0.2, Source = "Market Surge focus: +20% coins" }
                 },
                 ModifiersThatAffectsThis = { ModifierTagEnum.IdeologyFocus }
             });
 
-            //ideologyFocus.Add(new IdeologyFocusData
-            //{
-            //    Name = IdeologyFocusNameEnum.SpeculativeStockpiling,
-            //    RequiredIdeology = IdeologyTypeEnum.Oligarchy,
-            //    IdeologyFocusPointCost = 12,
-            //    Description = "-10% crafting cost for 1h",
-            //    SpecialFlag = false,
-            //    ModifiersInternal = new List<Modifier>
-            //    {
-            //        new Modifier { Tag = ModifierTagEnum.Placeholder, Type = ModifierTypeEnum.Decreased, Value = 0.1, Source = "Speculative Stockpiling focus: -10% crafting cost" }
-            //    },
-            //    ModifiersThatAffectsThis = { ModifierTagEnum.IdeologyFocus }
-            //});
+            ideologyFocus.Add(new IdeologyFocusData
+            {
+                Name = IdeologyFocusNameEnum.PrivateSecurity,
+                RequiredIdeology = IdeologyTypeEnum.Oligarchy,
+                TimeActive = TimeSpan.FromMinutes(30),
+                IdeologyFocusPointCost = 8,
+                Description = "Merchants leaving the city gain +15% armor",
+                ModifiersInternal = new()
+                {
+                    new Modifier { Tag = ModifierTagEnum.MerchantDefense, Type = ModifierTypeEnum.Increased, Value = 0.15, Source = "Private Security focus: +15% merchant armor" }
+                },
+                ModifiersThatAffectsThis = { ModifierTagEnum.IdeologyFocus }
+            });
 
             //Democracy
 
@@ -221,6 +235,7 @@ namespace Domain.StaticData.Generators
                 ModifiersInternal = new List<Modifier>
                 {
                     new Modifier { Tag = ModifierTagEnum.ConstructionCost, Type = ModifierTypeEnum.Decreased, Value = 0.1, Source = "Public Works focus: -10% construction cost" }
+                    ,new Modifier { Tag = ModifierTagEnum.RepairCost, Type = ModifierTypeEnum.Decreased, Value = 0.1, Source = "Public Works focus: -10% repair cost" }
                 },
                 ModifiersThatAffectsThis = { ModifierTagEnum.IdeologyFocus }
             });
@@ -232,10 +247,10 @@ namespace Domain.StaticData.Generators
                 TimeActive = TimeSpan.FromMinutes(120),
                 IdeologyFocusPointCost = 10,
                 SpecialFlag = false,
-                Description = "Non-elite infantry gain +5% discipline for 3h",
+                Description = "Non-elite infantry gain +5% discipline for 2h",
                 ModifiersInternal = new List<Modifier>
                 {
-                    new Modifier { Tag = ModifierTagEnum.Discipline, Type = ModifierTypeEnum.Increased, Value = 0.05, Source = "Citizen Morale focus: +5% discipline" }
+                    new Modifier { Tag = ModifierTagEnum.Discipline, Type = ModifierTypeEnum.Increased, Value = 0.05, AppliesToCategory = UnitCategoryEnum.Infantry, ExcludeElite = true, Source = "Citizen Morale focus: +5% discipline" }
                 },
                 ModifiersThatAffectsThis = { ModifierTagEnum.IdeologyFocus }
             });
@@ -244,6 +259,7 @@ namespace Domain.StaticData.Generators
             {
                 Name = IdeologyFocusNameEnum.EconomicTransparency,
                 RequiredIdeology = IdeologyTypeEnum.Democracy,
+                TimeActive = TimeSpan.FromMinutes(120),
                 IdeologyFocusPointCost = 12,
                 SpecialFlag = false,
                 Description = "-20% Building Upkeep for 2h",
@@ -304,13 +320,32 @@ namespace Domain.StaticData.Generators
                 TimeActive = TimeSpan.FromMinutes(120),
                 SpecialFlag = false,
                 IdeologyFocusPointCost = 14,
-                Description = "Walls have +10% defense bonus for 3h",
+                Description = "Walls have +10% defense bonus for 2h",
                 ModifiersInternal = new List<Modifier>
                 {
                     new Modifier { Tag = ModifierTagEnum.Wall, Type = ModifierTypeEnum.Increased, Value = 0.1, Source = "Fortified City focus: +10% wall defense" }
                 },
                 ModifiersThatAffectsThis = { ModifierTagEnum.IdeologyFocus }
             });
+
+            foreach (var focus in ideologyFocus)
+            {
+                focus.EffectKind = focus.Name is IdeologyFocusNameEnum.LordsLevy or IdeologyFocusNameEnum.NewRecruits
+                    ? IdeologyFocusEffectKindEnum.Instant
+                    : focus.Name == IdeologyFocusNameEnum.RoyalMedics
+                        ? IdeologyFocusEffectKindEnum.Triggered
+                        : focus.Name == IdeologyFocusNameEnum.PrivateSecurity
+                            ? IdeologyFocusEffectKindEnum.Conditional
+                            : IdeologyFocusEffectKindEnum.Modifier;
+                focus.TargetScope = focus.Name == IdeologyFocusNameEnum.PrivateSecurity
+                    ? IdeologyFocusTargetScopeEnum.OutgoingDeployment
+                    : focus.Name is IdeologyFocusNameEnum.FeudalMuster or IdeologyFocusNameEnum.OathOfBlood or IdeologyFocusNameEnum.RoyalMedics or IdeologyFocusNameEnum.CitizenMorale or IdeologyFocusNameEnum.FortifiedCity
+                        ? IdeologyFocusTargetScopeEnum.CombatAtCity
+                        : IdeologyFocusTargetScopeEnum.City;
+                focus.CanRepeat = focus.EffectKind != IdeologyFocusEffectKindEnum.Instant ||
+                    focus.Name == IdeologyFocusNameEnum.LordsLevy;
+                focus.ConsumesOnTrigger = focus.Name == IdeologyFocusNameEnum.RoyalMedics;
+            }
 
             var options = new JsonSerializerOptions { WriteIndented = true, Converters = { new JsonStringEnumConverter() } };
             File.WriteAllText(path, JsonSerializer.Serialize(ideologyFocus, options));

@@ -13,62 +13,25 @@ namespace Application.Utility
 {
     public class RecruitmentTimeCalculationService 
     {
-        private readonly BuildingDataReader _dataReader;
-        private readonly IResearchService _userResearchModifierService;
+        private readonly IModifierService _modifierService;
 
         public RecruitmentTimeCalculationService(
-            BuildingDataReader dataReader,
-            IResearchService userResearchModifierService)
+            IModifierService modifierService)
         {
-            _dataReader = dataReader;
-            _userResearchModifierService = userResearchModifierService;
+            _modifierService = modifierService;
         }
 
         public async Task<double> CalculateFinalRecruitmentTimeAsync(Guid userId, City city, UnitData unit)
         {
-            List<ModifierTagEnum> applicableModifierTags = new List<ModifierTagEnum>(unit.ModifiersThatAffectsThis);
-
-            if (!applicableModifierTags.Contains(ModifierTagEnum.RecruitmentSpeed))
+            ModifierTagEnum categoryTag = unit.Category switch
             {
-                applicableModifierTags.Add(ModifierTagEnum.RecruitmentSpeed);
-            }
-
-            List<Modifier> applicableModifiersGathered = new List<Modifier>();
-
-            // Bestem produktionsbygning baseret på enhedens kategori
-            BuildingTypeEnum productionBuildingType = unit.Category switch
-            {
-                UnitCategoryEnum.Infantry => BuildingTypeEnum.Barracks,
-                UnitCategoryEnum.Cavalry => BuildingTypeEnum.Stable,
-                UnitCategoryEnum.Siege => BuildingTypeEnum.Workshop,
-                _ => BuildingTypeEnum.Barracks
+                UnitCategoryEnum.Infantry => ModifierTagEnum.InfantryRecruitmentSpeed,
+                UnitCategoryEnum.Cavalry => ModifierTagEnum.CavalryRecruitmentSpeed,
+                UnitCategoryEnum.Siege => ModifierTagEnum.SiegeRecruitmentSpeed,
+                _ => ModifierTagEnum.Placeholder
             };
-
-            // Hent modifikatorer fra bygningsniveau
-            Building buildingEntityInCity = city.Buildings.FirstOrDefault(b => b.Type == productionBuildingType);
-
-            if (buildingEntityInCity != null && buildingEntityInCity.Level > 0)
-            {
-                BuildingLevelData buildingLevelConfiguration = _dataReader
-                    .GetConfig<BuildingLevelData>(productionBuildingType, buildingEntityInCity.Level);
-
-                if (buildingLevelConfiguration != null)
-                {
-                    applicableModifiersGathered.AddRange(buildingLevelConfiguration.ModifiersInternal);
-                }
-            }
-
-            // Hent modifikatorer fra brugerens forskning
-            IEnumerable<Modifier> userResearchModifiers = await _userResearchModifierService
-                .GetUserResearchModifiersAsync(userId);
-
-            applicableModifiersGathered.AddRange(userResearchModifiers);
-
-            // Beregn den endelige multiplikator via StatCalculator (antaget stadig statisk utility)
-            double finalRecruitmentSpeedMultiplier = StatCalculator.ApplyModifiers(
-                1.0,
-                applicableModifierTags,
-                applicableModifiersGathered);
+            double finalRecruitmentSpeedMultiplier = _modifierService.CalculateCityValue(
+                city, 1.0, ModifierTagEnum.RecruitmentSpeed, categoryTag).FinalValue;
 
             // Sikr mod division med nul og beregn tid
             double calculatedFinalRecruitmentTimeSeconds = unit.RecruitmentTimeInSeconds / Math.Max(0.1, finalRecruitmentSpeedMultiplier);

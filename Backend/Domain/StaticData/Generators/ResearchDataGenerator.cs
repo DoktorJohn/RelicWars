@@ -1,4 +1,4 @@
-﻿using Domain.StaticData.Data;
+using Domain.StaticData.Data;
 using Domain.Entities;
 using Domain.Enums;
 using System.Text.Json;
@@ -52,11 +52,11 @@ namespace Domain.StaticData.Generators
 
             nodes.Add(new ResearchData
             {
-                Id = "MARKET_SILVER_1",
+                Id = "MARKET_COINS_1",
                 Name = "Art of the deal",
                 ParentId = "ECON_PROD_1",
                 ResearchType = ResearchTypeEnum.Economy,
-                Description = "+3% bonus to marketplaces silver generation",
+                Description = "+3% bonus to marketplaces coins generation",
                 ResearchPointCost = 25,
                 ResearchTimeInSeconds = 1200,
                 ModifiersInternal = { new Modifier { Tag = ModifierTagEnum.Market, Type = ModifierTypeEnum.Increased, Value = 0.03, Source = "Research: Art of the deal" } }
@@ -66,7 +66,7 @@ namespace Domain.StaticData.Generators
             {
                 Id = "MARKET_MERCHANT_1",
                 Name = "Phoenican Inspiration",
-                ParentId = "MARKET_SILVER_1",
+                ParentId = "MARKET_COINS_1",
                 ResearchType = ResearchTypeEnum.Economy,
                 Description = "+1 to available merchants",
                 ResearchPointCost = 30,
@@ -76,14 +76,14 @@ namespace Domain.StaticData.Generators
 
             nodes.Add(new ResearchData
             {
-                Id = "SILVER_PROD_1",
+                Id = "COINS_PROD_1",
                 Name = "Tax Solidarity",
                 ParentId = "MARKET_MERCHANT_1",
                 ResearchType = ResearchTypeEnum.Economy,
-                Description = "+3% increased global silver income",
+                Description = "+3% increased global coins income",
                 ResearchPointCost = 35,
                 ResearchTimeInSeconds = 900,
-                ModifiersInternal = { new Modifier { Tag = ModifierTagEnum.Silver, Type = ModifierTypeEnum.Increased, Value = 0.03, Source = "Research: Tax Solidarity" } }
+                ModifiersInternal = { new Modifier { Tag = ModifierTagEnum.Coins, Type = ModifierTypeEnum.Increased, Value = 0.03, Source = "Research: Tax Solidarity" } }
             });
 
             // ============================================================
@@ -200,21 +200,21 @@ namespace Domain.StaticData.Generators
 
             nodes.Add(new ResearchData
             {
-                Id = "UTIL_SILVER_1",
+                Id = "UTIL_COINS_1",
                 Name = "Bureaucratic Efficiency",
                 ParentId = "UTIL_SUBJ_2",
                 ResearchType = ResearchTypeEnum.Utility,
-                Description = "1% increased silver income",
+                Description = "1% increased coins income",
                 ResearchPointCost = 60,
                 ResearchTimeInSeconds = 3000,
-                ModifiersInternal = { new Modifier { Tag = ModifierTagEnum.Silver, Type = ModifierTypeEnum.Increased, Value = 0.01, Source = "Research: Bureaucratic Efficiency" } }
+                ModifiersInternal = { new Modifier { Tag = ModifierTagEnum.Coins, Type = ModifierTypeEnum.Increased, Value = 0.01, Source = "Research: Bureaucratic Efficiency" } }
             });
 
             nodes.Add(new ResearchData
             {
                 Id = "UTIL_POP_1",
                 Name = "Urban Expansion",
-                ParentId = "UTIL_SILVER_1",
+                ParentId = "UTIL_COINS_1",
                 ResearchType = ResearchTypeEnum.Utility,
                 Description = "+3% population in all cities",
                 ResearchPointCost = 75,

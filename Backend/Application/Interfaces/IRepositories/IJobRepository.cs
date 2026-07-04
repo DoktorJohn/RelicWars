@@ -11,7 +11,7 @@ namespace Application.Interfaces.IRepositories
     public interface IJobRepository
     {
         Task<BaseJob?> GetByIdAsync(Guid id);
-        Task<List<BaseJob>> GetDueJobsAsync(DateTime now);
+        Task<List<BaseJob>> GetDueJobsAsync(DateTime now, int batchSize);
         Task<List<BuildingJob>> GetBuildingJobsAsync(Guid cityId);
         Task AddAsync(BaseJob job);
         Task UpdateAsync(BaseJob job); // Til RecruitmentSpeed fremskridt

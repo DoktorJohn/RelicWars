@@ -7,6 +7,7 @@
         <ui:VisualElement name="World-Window-MainContainer" class="window-frame world-main-container">
             
             <ui:VisualElement name="World-Window-Header" class="window-header" style="justify-content: center;">
+                <ui:Button name="Button-Back-To-Login" text="BACK" class="world-back-button" />
                 <ui:Label text="SELECT WORLD" class="window-header-label" />
             </ui:VisualElement>
 
@@ -14,7 +15,7 @@
                 
                 <ui:VisualElement class="player-welcome-row">
                     <ui:Label text="Welcome back, " class="welcome-text-regular" />
-                    <ui:Label name="Label-Player-Name" text="Unknown Player" class="player-name-highlight" />
+                    <ui:Label name="Label-Player-Name" text="" class="player-name-highlight" />
                 </ui:VisualElement>
 
                 <ui:Label text="AVAILABLE WORLDS" class="section-title-hint" />

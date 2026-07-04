@@ -11,6 +11,7 @@ namespace Application.Interfaces.IRepositories
     public interface IWorldRepository
     {
         Task<List<World>> GetAllAsync();
+        Task<Dictionary<Guid, int>> GetPlayerCountsByWorldAsync();
         Task<World?> GetByIdAsync(Guid id);
         Task<int?> GetWorldSeedAsync(Guid worldId);
     }

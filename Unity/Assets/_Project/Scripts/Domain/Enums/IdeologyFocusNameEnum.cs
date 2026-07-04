@@ -16,7 +16,8 @@ namespace Assets._Project.Scripts.Domain.Enums
         RoyalDecree,
         RoyalMedics,
         CrownTax,
-        EnhancendWorkshop,
+        EnhancedWorkshop,
+        EnhancendWorkshop = EnhancedWorkshop,
         MarketSurge,
         CivicInitiative,
         PublicWorks,
@@ -27,7 +28,6 @@ namespace Assets._Project.Scripts.Domain.Enums
         FortifiedCity,
         NobleClemency,
         PrivateSecurity,
-        SpeculativeStockpiling,
         EconomicTransparency,
     }
 }

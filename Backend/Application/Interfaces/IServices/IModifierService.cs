@@ -3,6 +3,7 @@ using Domain.Abstraction;
 using Domain.Entities;
 using Domain.Enums;
 using Domain.User;
+using Domain.StaticData.Data;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -20,5 +21,6 @@ namespace Application.Interfaces.IServices
 
         ModifierCalculationResult CalculateCityValue(City city, double baseValue, params ModifierTagEnum[] targetTags);
         ModifierCalculationResult CalculatePlayerValue(WorldPlayer player, double baseValue, params ModifierTagEnum[] targetTags);
+        ModifierCalculationResult CalculateCityUnitValue(City city, UnitData unit, double baseValue, params ModifierTagEnum[] targetTags);
     }
 }

@@ -1,5 +1,6 @@
 ﻿using Application.Interfaces.IRepositories;
 using Application.Interfaces.IServices;
+using Application.Interfaces;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
@@ -11,40 +12,42 @@ namespace Application.Services.Workers
 {
     public class CityWorker
     {
+        private const int BatchSize = 100;
         private readonly IJobRepository _jobRepo;
         private readonly IJobService _jobService;
         private readonly ILogger<CityWorker> _logger;
+        private readonly ITransactionManager _transactionManager;
 
-        public CityWorker(IJobRepository jobRepo, IJobService jobService, ILogger<CityWorker> logger)
+        public CityWorker(IJobRepository jobRepo, IJobService jobService, ILogger<CityWorker> logger, ITransactionManager transactionManager)
         {
             _jobRepo = jobRepo;
             _jobService = jobService;
             _logger = logger;
+            _transactionManager = transactionManager;
         }
 
         public async Task ProcessCityJobsAsync()
         {
-            // Hent alle jobs der er forfaldne
-            var dueJobs = await _jobRepo.GetDueJobsAsync(DateTime.UtcNow);
+            var dueJobs = await _jobRepo.GetDueJobsAsync(DateTime.UtcNow, BatchSize);
 
             foreach (var job in dueJobs)
             {
                 try
                 {
-                    // Service opdaterer City og selve job-objektet i hukommelsen
-                    await _jobService.ProcessAsync(job);
+                    await _transactionManager.ExecuteAsync(async () =>
+                    {
+                        await _jobService.ProcessAsync(job);
 
-                    // Nu beslutter vi hvad der skal ske i databasen
-                    if (job.IsCompleted)
-                    {
-                        _logger.LogInformation("[CityWorker] Job {JobId} completed. Deleting from queue.", job.Id);
-                        await _jobRepo.DeleteAsync(job.Id);
-                    }
-                    else
-                    {
-                        // For RecruitmentJobs der kun er delvist færdige, gemmer vi fremskridtet
-                        await _jobRepo.UpdateAsync(job);
-                    }
+                        if (job.IsCompleted)
+                        {
+                            _logger.LogInformation("[CityWorker] Job {JobId} completed. Deleting from queue.", job.Id);
+                            await _jobRepo.DeleteAsync(job.Id);
+                        }
+                        else
+                        {
+                            await _jobRepo.UpdateAsync(job);
+                        }
+                    });
                 }
                 catch (Exception ex)
                 {

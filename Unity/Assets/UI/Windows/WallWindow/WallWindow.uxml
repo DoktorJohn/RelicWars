@@ -15,7 +15,7 @@
             
             <ui:VisualElement style="padding: 20px; flex-grow: 1;">
                 
-                <ui:Label name="Lbl-Level" class="text-subtitle" text="Level ..." />
+                <ui:Label name="Lbl-Level" class="text-subtitle" text="" />
                 
                 <ui:Label class="flavor-text text-flavor" text="A massive fortification that protects your troops. The Wall grants a significant defense bonus to all units defending the city." />
                 
@@ -27,7 +27,7 @@
                         <ui:Label text="DEFENSE BONUS" class="table-header-label" />
                     </ui:VisualElement>
 
-                    <ui:ScrollView name="Wall-Stats-List" />
+                    <ui:ScrollView name="Wall-Stats-List" class="wall-scroll-view" />
                 </ui:VisualElement>
 
             </ui:VisualElement>

@@ -4,19 +4,23 @@ using Application.Interfaces.IServices;
 using Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 using Application.DTOs;
+using Microsoft.AspNetCore.Authorization;
 
 namespace WebApi.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
+    [Authorize]
     public class CityController : ControllerBase
     {
         private readonly ICityService _cityService;
+        private readonly IExoticResourceService _exoticResourceService;
         private readonly ILogger<CityController> _logger;
 
-        public CityController(ICityService cityService, ILogger<CityController> logger)
+        public CityController(ICityService cityService, IExoticResourceService exoticResourceService, ILogger<CityController> logger)
         {
             _cityService = cityService;
+            _exoticResourceService = exoticResourceService;
             _logger = logger;
         }
 
@@ -86,6 +90,15 @@ namespace WebApi.Controllers
         {
             var cities = await _cityService.GetPlayerCitiesByCityId(cityIdentifier);
             return Ok(cities);
+        }
+
+        [HttpPost("{cityIdentifier}/exotic-resources/invest")]
+        public async Task<ActionResult<ExoticResourceInvestmentResponseDTO>> InvestInExoticResource(
+            Guid cityIdentifier,
+            [FromBody] ExoticResourceInvestmentRequestDTO request)
+        {
+            var result = await _exoticResourceService.InvestAsync(cityIdentifier, request);
+            return Ok(result);
         }
     }
 }

@@ -18,17 +18,20 @@ namespace Application.Services
         private readonly ResearchDataReader _researchDataReader;
         private readonly IdeologyDataReader _ideologyDataReader;
         private readonly IdeologyFocusDataReader _ideologyFocusDataReader;
+        private readonly TimeProvider _timeProvider;
 
         public ModifierCollectorService(
             BuildingDataReader buildingDataReader,
             ResearchDataReader researchDataReader,
             IdeologyDataReader ideologyDataReader,
-            IdeologyFocusDataReader ideologyFocusDataReader)
+            IdeologyFocusDataReader ideologyFocusDataReader,
+            TimeProvider timeProvider)
         {
             _buildingDataReader = buildingDataReader;
             _researchDataReader = researchDataReader;
             _ideologyDataReader = ideologyDataReader;
             _ideologyFocusDataReader = ideologyFocusDataReader;
+            _timeProvider = timeProvider;
         }
 
         public List<IModifierProvider> CollectAllProvidersForPlayer(WorldPlayer playerEntity)
@@ -77,7 +80,9 @@ namespace Application.Services
                 if (levelConfig != null) providers.Add(levelConfig);
             }
 
-            foreach (var ideologyFocus in cityEntity.ActiveFocuses.Where(f => f.IsActive))
+            var now = _timeProvider.GetUtcNow().UtcDateTime;
+            foreach (var ideologyFocus in cityEntity.ActiveFocuses.Where(f =>
+                f.TimeOfIdeologyStarted <= now && (!f.TimeOfIdeologyFinished.HasValue || f.TimeOfIdeologyFinished > now)))
             {
                 var focusData = _ideologyFocusDataReader.GetIdeology(ideologyFocus.Name);
                 if (focusData != null) providers.Add(focusData);

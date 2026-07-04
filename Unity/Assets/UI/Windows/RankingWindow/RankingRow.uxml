@@ -5,9 +5,9 @@
 
     <ui:VisualElement class="table-row">
         <ui:Label name="Row-Rank" class="row-label col-rank" />
-        <ui:Label name="Row-PlayerName" class="row-label col-name" />
+        <ui:Label name="Row-PlayerName" class="row-label col-name btn-entity-link" />
         <ui:Label name="Row-Ideology" class="row-label col-ideology" />
-        <ui:Label name="Row-Alliance" class="row-label col-alliance" />
+        <ui:Label name="Row-Alliance" class="row-label col-alliance btn-entity-link" />
         <ui:Label name="Row-Points" class="row-label col-score" />
     </ui:VisualElement>
 </ui:UXML>

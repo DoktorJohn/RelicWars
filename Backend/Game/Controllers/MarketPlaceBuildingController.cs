@@ -1,11 +1,13 @@
 ﻿using Application.Interfaces.IServices;
 using Application.Interfaces.IServices.IBuildings;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Game.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
+    [Authorize]
     public class MarketPlaceBuildingController : ControllerBase
     {
         private readonly IMarketPlaceService _marketPlaceService;

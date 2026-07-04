@@ -2,15 +2,60 @@
 <ui:UXML xmlns:ui="UnityEngine.UIElements" editor-extension-mode="False">
     <ui:Style src="project://database/Assets/UI/Windows/WindowTheme.uss" />
     <ui:Style src="project://database/Assets/UI/Windows/WorldUnitDeploymentWindow/WorldUnitDeploymentWindow.uss" />
-    
-    <ui:VisualElement name="Deployment-Window-MainContainer" class="window-frame deployment-mini-window">
+
+    <ui:VisualElement name="Deployment-Window-MainContainer" class="window-frame size-medium deployment-window">
+        <ui:VisualElement name="Deployment-Window-Header" class="window-header">
+            <ui:Label text="MARCH ORDERS" class="window-header-label" />
+            <ui:Button name="WorldUnitDeploymentWindow-Close-Button" text="×" class="window-close-btn" />
+        </ui:VisualElement>
+
         <ui:VisualElement class="deployment-body">
-            <ui:Label text="MARCH ORDERS" class="deployment-title" />
-            <ui:Label name="Destination-Label" text="Target: 0, 0" class="deployment-coords" />
-            
-            <ui:VisualElement class="deployment-row">
-                <ui:Button name="Btn-Confirm-Move" text="MOVE" class="btn-global-base btn-imperial-success deployment-btn" />
-                <ui:Button name="Btn-Cancel-Command" text="CANCEL" class="btn-global-base btn-imperial-danger deployment-btn" />
+            <ui:VisualElement class="deployment-summary deployment-route-summary">
+                <ui:Label text="ROUTE" class="deployment-section-title" />
+                <ui:VisualElement class="deployment-summary-row">
+                    <ui:Label text="SOURCE" class="deployment-summary-key" />
+                    <ui:Label name="Source-City-Label" text="" class="deployment-summary-value" />
+                </ui:VisualElement>
+                <ui:VisualElement class="deployment-summary-row">
+                    <ui:Label text="DESTINATION" class="deployment-summary-key" />
+                    <ui:Label name="Destination-Label" text="" class="deployment-summary-value" />
+                </ui:VisualElement>
+                <ui:VisualElement class="deployment-summary-row">
+                    <ui:Label text="COORDINATES" class="deployment-summary-key" />
+                    <ui:Label name="Deployment-Coordinates-Label" text="" class="deployment-summary-value" />
+                </ui:VisualElement>
+                <ui:VisualElement class="deployment-summary-row">
+                    <ui:Label text="TERRAIN" class="deployment-summary-key" />
+                    <ui:Label name="Deployment-Terrain-Label" text="" class="deployment-summary-value" />
+                </ui:VisualElement>
+            </ui:VisualElement>
+
+            <ui:VisualElement class="deployment-summary deployment-timing-summary">
+                <ui:Label text="TIMING" class="deployment-section-title" />
+                <ui:VisualElement class="deployment-summary-row">
+                    <ui:Label text="TRAVEL TIME" class="deployment-summary-key" />
+                    <ui:Label name="Deployment-Travel-Duration-Label" text="--:--:--" class="deployment-summary-value" />
+                </ui:VisualElement>
+                <ui:VisualElement class="deployment-summary-row">
+                    <ui:Label text="ARRIVAL" class="deployment-summary-key" />
+                    <ui:Label name="Deployment-Arrival-Time-Label" text="--" class="deployment-summary-value" />
+                </ui:VisualElement>
+            </ui:VisualElement>
+
+            <ui:VisualElement class="deployment-unit-header">
+                <ui:Label text="UNIT" class="deployment-unit-name" />
+                <ui:Label text="AVAILABLE" class="deployment-unit-available" />
+                <ui:Label text="SEND" class="deployment-unit-send" />
+            </ui:VisualElement>
+            <ui:ScrollView name="Deployment-Units-Scroll" mode="Vertical" class="deployment-unit-scroll">
+                <ui:VisualElement name="Deployment-Units-Container" class="deployment-units" />
+            </ui:ScrollView>
+
+            <ui:Label name="Deployment-Total-Label" text="TOTAL: 0" class="deployment-total" />
+            <ui:Label name="Deployment-Status-Label" text="" class="deployment-status text-body" />
+            <ui:VisualElement class="deployment-actions">
+                <ui:Button name="Btn-Confirm-Attack" text="ATTACK" class="btn-global-base btn-imperial-danger deployment-action" />
+                <ui:Button name="Btn-Confirm-Support" text="SUPPORT" class="btn-global-base btn-imperial-success deployment-action" />
             </ui:VisualElement>
         </ui:VisualElement>
     </ui:VisualElement>

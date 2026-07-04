@@ -15,6 +15,10 @@ namespace Domain.StaticData.Data
         public IdeologyTypeEnum RequiredIdeology { get; set; }
         public TimeSpan? TimeActive { get; set; }
         public bool SpecialFlag { get; set; }
+        public IdeologyFocusEffectKindEnum EffectKind { get; set; } = IdeologyFocusEffectKindEnum.Modifier;
+        public IdeologyFocusTargetScopeEnum TargetScope { get; set; } = IdeologyFocusTargetScopeEnum.City;
+        public bool CanRepeat { get; set; } = true;
+        public bool ConsumesOnTrigger { get; set; }
         public double IdeologyFocusPointCost { get; set; }
         public string Description { get; set; } = string.Empty;
         public List<Modifier> ModifiersInternal { get; set; } = new();

@@ -9,26 +9,23 @@ using System.Threading.Tasks;
 
 namespace Domain.Entities
 {
-    public class UnitDeployment : BaseEntity, IModifierProvider, IMapEntity
+    public class UnitDeployment : BaseEntity, IModifierProvider
     {
         public string Name { get; set; } = string.Empty;
-        public int CurrentX { get; set; }
-        public int CurrentY { get; set; }
-        public int NextX { get; set; }
-        public int NextY { get; set; }
-        public int FinalX { get; set; }
-        public int FinalY { get; set; }
-
         public double LootWood { get; set; }
         public double LootStone { get; set; }
         public double LootMetal { get; set; }
         public int Mobility { get; set; }
+        public UnitDeploymentTypeEnum Type { get; set; }
         public UnitDeploymentMovementStatusEnum UnitDeploymentMovementStatus { get; set; }
+        public UnitDeploymentPhaseEnum Phase { get; set; }
         public DateTime ArrivalTime { get; set; }  
         public DateTime DepartureTime { get; set; }
-        public DateTime LastStepTime { get; set; }
-        public DateTime NextStepTime { get; set; }
-        public string? RemainingPathJson { get; set; }
+        public int LegStartX { get; set; }
+        public int LegStartY { get; set; }
+        public int LegEndX { get; set; }
+        public int LegEndY { get; set; }
+        public DateTime? StationedAt { get; set; }
 
         //Navprop
         public List<Modifier> ModifiersInternal { get; set; } = new();
@@ -44,12 +41,6 @@ namespace Domain.Entities
         public Guid WorldPlayerId { get; set; }
         public World? World { get; set; }
         public Guid WorldId { get; set; }
-
-        Guid IMapEntity.Id => Id;
-        int IMapEntity.X => CurrentX;
-        int IMapEntity.Y => CurrentY;
-        Guid IMapEntity.WorldId => WorldId;
-        MapObjectTypeEnum IMapEntity.MapObjectType => MapObjectTypeEnum.UnitDeployment;
 
         public IEnumerable<Modifier> GetModifiers()
         {

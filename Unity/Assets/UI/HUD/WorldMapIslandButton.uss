@@ -1,0 +1,59 @@
+.island-map-button {
+    width: 112px;
+    min-width: 112px;
+    max-width: 112px;
+    height: 42px;
+    min-height: 42px;
+    max-height: 42px;
+    color: rgb(244, 226, 178);
+    background-color: rgba(27, 42, 34, 0.92);
+    border-color: rgb(181, 145, 70);
+    border-width: 1px;
+    border-radius: 21px;
+    -unity-font-definition: url("project://database/Assets/TextMesh Pro/Fonts/Cinzel.asset");
+    -unity-font-style: bold;
+    font-size: 14px;
+}
+
+.island-map-button:hover {
+    color: rgb(255, 246, 213);
+    background-color: rgba(56, 76, 59, 0.96);
+    scale: 1;
+}
+
+.island-map-button--resource {
+    width: 96px;
+    min-width: 96px;
+    max-width: 96px;
+    height: 96px;
+    min-height: 96px;
+    max-height: 96px;
+    padding: 0;
+    color: transparent;
+    font-size: 0;
+    background-color: rgba(27, 42, 34, 0.97);
+    border-width: 2px;
+    border-radius: 48px;
+    border-color: rgb(216, 174, 82);
+    background-position: center center;
+    background-repeat: no-repeat;
+    -unity-background-scale-mode: scale-to-fit;
+}
+
+.island-map-button--resource:hover {
+    background-color: rgba(72, 92, 67, 0.99);
+    border-color: rgb(255, 226, 145);
+    scale: 1;
+}
+
+.icon-cloth { background-image: url('project://database/Assets/UI/Icons/cloth.png'); }
+.icon-island { background-image: url('project://database/Assets/UI/Icons/Island.png'); }
+.icon-coal { background-image: url('project://database/Assets/UI/Icons/coal.png'); }
+.icon-copper { background-image: url('project://database/Assets/UI/Icons/copper.png'); }
+.icon-cotton { background-image: url('project://database/Assets/UI/Icons/cotton.png'); }
+.icon-diamond { background-image: url('project://database/Assets/UI/Icons/diamond.png'); }
+.icon-gold { background-image: url('project://database/Assets/UI/Icons/gold.png'); }
+.icon-ivory { background-image: url('project://database/Assets/UI/Icons/ivory.png'); }
+.icon-sand { background-image: url('project://database/Assets/UI/Icons/sand.png'); }
+.icon-silver { background-image: url('project://database/Assets/UI/Icons/Silver.png'); }
+.icon-sulphur { background-image: url('project://database/Assets/UI/Icons/sulphur.png'); }

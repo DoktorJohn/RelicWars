@@ -15,7 +15,7 @@
             
             <ui:VisualElement style="padding: 20px; flex-grow: 1;">
                 
-                <ui:Label name="Lbl-Level" class="text-subtitle" text="Level ..." />
+                <ui:Label name="Lbl-Level" class="text-subtitle" text="" />
                 
                 <ui:Label class="flavor-text text-flavor" text="The Warehouse protects your resources from looting and weather. Upgrade it to increase the maximum amount of resources you can store." />
                 
@@ -27,7 +27,7 @@
                         <ui:Label text="CAPACITY" class="table-header-label" />
                     </ui:VisualElement>
 
-                    <ui:ScrollView name="Warehouse-Stats-List" />
+                    <ui:ScrollView name="Warehouse-Stats-List" class="housing-scroll-view" />
                 </ui:VisualElement>
 
             </ui:VisualElement>

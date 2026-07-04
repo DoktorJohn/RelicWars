@@ -2,6 +2,7 @@
 using Application.Interfaces.IServices;
 using Application.Interfaces.IServices.IBuildings;
 using Domain.Enums;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
 
@@ -9,6 +10,7 @@ namespace Game.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
+    [Authorize]
     public class BuildingController : ControllerBase
     {
         private readonly IBuildingService _buildingService;
@@ -36,6 +38,13 @@ namespace Game.Controllers
         {
             var queue = await _buildingService.GetBuildingQueueAsync(cityId);
             return Ok(queue);
+        }
+
+        [HttpPost("{cityId}/repair/{type}")]
+        public async Task<IActionResult> Repair(Guid cityId, BuildingTypeEnum type)
+        {
+            var result = await _buildingService.RepairAsync(cityId, type);
+            return result.Success ? Ok(result.Message) : BadRequest(result.Message);
         }
 
 

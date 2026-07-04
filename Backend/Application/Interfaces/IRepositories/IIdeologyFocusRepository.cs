@@ -15,5 +15,6 @@ namespace Application.Interfaces.IRepositories
         public Task UpdateAsync(IdeologyFocus ideologyFocus);
         public Task AddAsync(IdeologyFocus ideologyFocus);
         public Task DeleteExpiredFocusesForCityAsync(Guid cityId);
+        public Task DeleteAsync(IdeologyFocus ideologyFocus);
     }
 }

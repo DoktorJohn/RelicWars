@@ -2,31 +2,34 @@
 {
     public enum WindowTypeEnum
     {
-        None,
-        TownHall,
-        Barracks,
-        Warehouse,
-        TimberCamp,
-        StoneQuarry,
-        MetalMine,
-        Housing,
-        Wall,
-        Stable,
-        Workshop,
-        University,
-        MarketPlace,
+        None = 0,
+        TownHall = 1,
+        Barracks = 2,
+        Warehouse = 3,
+        TimberCamp = 4,
+        StoneQuarry = 5,
+        MetalMine = 6,
+        Housing = 7,
+        Wall = 8,
+        Stable = 9,
+        Workshop = 10,
+        University = 11,
+        MarketPlace = 12,
 
-        Profile,
-        Alliance,
-        Rankings,
-        Overview,
-        Research,
+        Profile = 13,
+        Alliance = 14,
+        Rankings = 15,
+        Overview = 16,
+        Research = 17,
 
-        Message,
+        Message = 18,
+        IdeologyFocus = 19,
 
-        IdeologyFocus,
-
-        Hexagon,
-        UnitDeployment
+        Hexagon = 20,
+        UnitDeployment = 21,
+        Reports = 22,
+        Island = 23,
+        ExoticResource = 24,
+        BugReport = 25
     }
 }

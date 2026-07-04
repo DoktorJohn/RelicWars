@@ -7,6 +7,7 @@ using Domain.User;
 using Microsoft.Extensions.Logging;
 using System.Collections.Generic;
 using System.Linq;
+using Domain.StaticData.Data;
 
 namespace Application.Services
 {
@@ -31,6 +32,29 @@ namespace Application.Services
         {
             var providers = _collector.CollectAllProvidersForPlayer(player);
             return CalculateEntityValueWithModifiers(baseValue, targetTags, providers);
+        }
+
+        public ModifierCalculationResult CalculateCityUnitValue(City city, UnitData unit, double baseValue, params ModifierTagEnum[] targetTags)
+        {
+            var providers = _collector.CollectAllProvidersForCity(city)
+                .Select(provider => (IModifierProvider)new FilteredModifierProvider(provider, unit));
+            return CalculateEntityValueWithModifiers(baseValue, targetTags, providers);
+        }
+
+        private sealed class FilteredModifierProvider : IModifierProvider
+        {
+            private readonly IModifierProvider _provider;
+            private readonly UnitData _unit;
+
+            public FilteredModifierProvider(IModifierProvider provider, UnitData unit)
+            {
+                _provider = provider;
+                _unit = unit;
+            }
+
+            public IEnumerable<Modifier> GetModifiers() => _provider.GetModifiers().Where(modifier =>
+                (!modifier.AppliesToCategory.HasValue || modifier.AppliesToCategory == _unit.Category) &&
+                (!modifier.ExcludeElite || !_unit.IsElite));
         }
 
         public ModifierCalculationResult CalculateEntityValueWithModifiers(

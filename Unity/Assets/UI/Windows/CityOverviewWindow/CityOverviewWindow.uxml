@@ -13,28 +13,6 @@
 
             <ui:VisualElement class="window-content-container overview-content-body">
                 
-                <ui:VisualElement class="overview-global-wallet">
-                    <ui:VisualElement class="wallet-item">
-                        <ui:VisualElement class="side-bar-icon-base icon-silver" style="width: 24px; height: 24px; flex-shrink: 0;" />
-                        <ui:Label text="SILVER:" class="wallet-item-prefix" />
-                        <ui:Label name="Label-Global-Silver" text="0" class="wallet-label" />
-                    </ui:VisualElement>
-                    
-                    <ui:VisualElement class="wallet-item">
-                        <ui:VisualElement class="side-bar-icon-base icon-research" style="width: 24px; height: 24px; flex-shrink: 0;" />
-                        <ui:Label text="RESEARCH:" class="wallet-item-prefix" />
-                        <ui:Label name="Label-Global-Research" text="0" class="wallet-label" />
-                    </ui:VisualElement>
-                    
-                    <ui:VisualElement class="wallet-item">
-                        <ui:VisualElement class="side-bar-icon-base icon-ideology" style="width: 24px; height: 24px; flex-shrink: 0;" />
-                        <ui:Label text="IDEOLOGY:" class="wallet-item-prefix" />
-                        <ui:Label name="Label-Global-Ideology" text="0" class="wallet-label" />
-                    </ui:VisualElement>
-                </ui:VisualElement>
-
-                <ui:VisualElement class="divider" style="margin-bottom: 15px; opacity: 0.3;" />
-
                 <ui:VisualElement name="Economy-Grid-Container" class="economy-grid-container" />
 
                 <ui:VisualElement class="bottom-panels-container">
@@ -44,18 +22,19 @@
                         <ui:VisualElement class="pop-bar-bg">
                             <ui:VisualElement name="Population-Bar-Used" class="pop-bar-fill" />
                         </ui:VisualElement>
-                        <ui:Label name="Label-Pop-Details" text="U: 0 | Units: 0 | F: 0" class="pop-sub-label" />
+                        <ui:Label name="Label-Pop-Details" text="" class="text-body pop-sub-label" />
+                        <ui:Label name="Label-Resistance-Details" text="" class="text-body pop-sub-label" />
                     </ui:VisualElement>
 
                     <ui:VisualElement class="overview-panel activity-panel">
                         <ui:Label text="CITY ACTIVITY" class="panel-title" />
                         <ui:VisualElement class="status-row">
-                            <ui:Label text="Town Hall:" class="status-label" />
-                            <ui:Label name="Status-TownHall" text="Idle" class="status-value" />
+                            <ui:Label text="Town Hall:" class="text-body status-label" />
+                            <ui:Label name="Status-TownHall" text="" class="text-body status-value" />
                         </ui:VisualElement>
                         <ui:VisualElement class="status-row">
-                            <ui:Label text="Barracks:" class="status-label" />
-                            <ui:Label name="Status-Barracks" text="Idle" class="status-value" />
+                            <ui:Label text="Barracks:" class="text-body status-label" />
+                            <ui:Label name="Status-Barracks" text="" class="text-body status-value" />
                         </ui:VisualElement>
                     </ui:VisualElement>
 

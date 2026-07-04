@@ -20,6 +20,7 @@ namespace Infrastructure.Repositories
                 .AsSplitQuery()
                 .Include(city => city.Buildings)
                 .Include(city => city.UnitStacks)
+                .Include(city => city.ExoticResources)
                 .Include(city => city.ActiveFocuses)
                 .Include(city => city.WorldPlayer)
                     .ThenInclude(player => player.ModifiersInternal)
@@ -33,6 +34,9 @@ namespace Infrastructure.Repositories
                         .ThenInclude(c => c.UnitStacks)
                 .Include(city => city.WorldPlayer)
                     .ThenInclude(player => player.Cities)
+                        .ThenInclude(c => c.ActiveFocuses)
+                .Include(city => city.WorldPlayer)
+                    .ThenInclude(player => player.Cities)
                         .ThenInclude(c => c.OriginUnitDeployments)
                             .ThenInclude(d => d.UnitStacks)
                 .FirstOrDefaultAsync(city => city.Id == cityIdentifier);
@@ -44,6 +48,7 @@ namespace Infrastructure.Repositories
                  .AsSplitQuery()
                  .Include(city => city.Buildings)
                  .Include(city => city.ActiveFocuses)
+                 .Include(city => city.ExoticResources)
                  .Include(city => city.WorldPlayer)
                      .ThenInclude(worldPlayer => worldPlayer.PlayerProfile)
                  .Include(city => city.WorldPlayer)
@@ -60,6 +65,9 @@ namespace Infrastructure.Repositories
                          .ThenInclude(c => c.UnitStacks)
                  .Include(city => city.WorldPlayer)
                      .ThenInclude(player => player.Cities)
+                         .ThenInclude(c => c.ActiveFocuses)
+                 .Include(city => city.WorldPlayer)
+                     .ThenInclude(player => player.Cities)
                          .ThenInclude(c => c.OriginUnitDeployments)
                              .ThenInclude(d => d.UnitStacks)
                  .Include(city => city.UnitStacks)
@@ -68,10 +76,33 @@ namespace Infrastructure.Repositories
                  .FirstOrDefaultAsync(city => city.Id == cityIdentifier);
         }
 
+        public async Task<City?> GetTownHallCityByCityIdentifierAsync(Guid cityIdentifier)
+        {
+            return await _context.Cities
+                .AsSplitQuery()
+                .AsNoTracking()
+                .Include(city => city.Buildings)
+                .Include(city => city.ActiveFocuses)
+                .Include(city => city.ModifiersInternal)
+                .Include(city => city.WorldPlayer)
+                    .ThenInclude(worldPlayer => worldPlayer.ModifiersInternal)
+                .Include(city => city.WorldPlayer)
+                    .ThenInclude(worldPlayer => worldPlayer.CompletedResearches)
+                .Include(city => city.WorldPlayer)
+                    .ThenInclude(worldPlayer => worldPlayer.Alliance)
+                        .ThenInclude(alliance => alliance.ModifiersInternal)
+                .FirstOrDefaultAsync(city => city.Id == cityIdentifier);
+        }
+
         public async Task<List<City>> GetCitiesByListOfIdsAsync(List<Guid> ids)
         {
             return await _context.Cities
                 .Where(c => ids.Contains(c.Id))
+                .Include(city => city.ExoticResources)
+                .Include(city => city.WorldPlayer)
+                    .ThenInclude(worldPlayer => worldPlayer!.Alliance)
+                .Include(city => city.WorldPlayer)
+                    .ThenInclude(worldPlayer => worldPlayer!.PlayerProfile)
                 .ToListAsync();
         }
 
@@ -79,6 +110,7 @@ namespace Infrastructure.Repositories
         {
             return await _context.Cities
                 .Include(cityEntity => cityEntity.Buildings)
+                .Include(cityEntity => cityEntity.ExoticResources)
 
                 .Include(cityEntity => cityEntity.UnitStacks)
 
@@ -97,8 +129,16 @@ namespace Infrastructure.Repositories
         public async Task<City?> GetByCoordinatesAsync(int x, int y)
         {
             return await _context.Cities
+                .AsSplitQuery()
+                .Include(city => city.Buildings)
+                .Include(city => city.ActiveFocuses)
+                .Include(city => city.ExoticResources)
                 .Include(city => city.WorldPlayer)
                     .ThenInclude(player => player!.ModifiersInternal)
+                .Include(city => city.WorldPlayer)
+                    .ThenInclude(player => player!.CompletedResearches)
+                .Include(city => city.WorldPlayer)
+                    .ThenInclude(player => player!.Alliance)
                 .Include(city => city.UnitStacks)
                 .FirstOrDefaultAsync(city => city.X == x && city.Y == y);
         }

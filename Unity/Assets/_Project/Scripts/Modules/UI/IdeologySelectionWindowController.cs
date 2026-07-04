@@ -98,7 +98,7 @@ namespace Project.Modules.IdeologySelection
                 IdeologyTypeEnum.Oligarchy => "A form of government in which the elite rules the land." +
                 "\n \n 5% increased research rate, 10% increased population, 6% decreased tax rate",
                 IdeologyTypeEnum.Democracy => "A form of government in which the rulers are elected by the people." +
-                "\n \n 5% increased travel speed, 5% increased upkeep, 30% increased market silver, 2% increased tax rate",
+                "\n \n 5% increased travel speed, 5% increased upkeep, 30% increased market coins, 2% increased tax rate",
                 IdeologyTypeEnum.MilitaryJunta => "A form of government in which the land is ruled by the army and its leaders themselves." +
                 "\n \n 10% decreased tax rate, 8% decreased upkeep, 5% increased recruitment speed",
                 _ => "Choose your path to govern your new empire."

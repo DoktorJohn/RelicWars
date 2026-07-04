@@ -1,6 +1,7 @@
 ﻿using Application.DTOs;
 using Application.Interfaces.IServices;
 using Domain.StaticData.Generators;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System.Collections.Generic;
@@ -10,6 +11,7 @@ namespace Game.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
+    [Authorize]
     public class WorldController : ControllerBase
     {
         private readonly IWorldService _worldService;
@@ -24,6 +26,7 @@ namespace Game.Controllers
         /// <summary>
         /// Retrieves a list of all active game worlds available for players to join.
         /// </summary>
+        [AllowAnonymous]
         [HttpGet("available-worlds")]
         public async Task<ActionResult<List<WorldAvailableResponseDTO>>> RequestAvailableGameWorldList()
         {
@@ -40,6 +43,31 @@ namespace Game.Controllers
                 return NotFound("World not found");
 
             return Ok(result);
+        }
+
+        [HttpGet("cities/{cityId:guid}/inspection")]
+        public async Task<ActionResult<CityInspectionDTO>> GetCityInspection(Guid cityId)
+        {
+            try
+            {
+                var result = await _worldService.GetCityInspectionAsync(cityId);
+                return result == null ? NotFound() : Ok(result);
+            }
+            catch (UnauthorizedAccessException)
+            {
+                return Forbid();
+            }
+            catch (KeyNotFoundException)
+            {
+                return NotFound();
+            }
+        }
+
+        [HttpGet("islands/{islandId:guid}")]
+        public async Task<ActionResult<WorldIslandDetailsDTO>> GetIslandDetails(Guid islandId)
+        {
+            var result = await _worldService.GetIslandDetailsAsync(islandId);
+            return result == null ? NotFound() : Ok(result);
         }
     }
 }

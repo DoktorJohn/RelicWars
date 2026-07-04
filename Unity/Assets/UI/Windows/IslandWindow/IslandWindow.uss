@@ -1,0 +1,151 @@
+﻿.island-window-size {
+    width: 820px;
+    height: 620px;
+}
+
+.island-window-content {
+    flex-grow: 1;
+    padding: 18px 22px 22px 22px;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.island-status-message {
+    font-size: 12px;
+    -unity-font-style: bold;
+    margin-bottom: 10px;
+}
+
+.island-status-message--info {
+    color: var(--c-text-highlight);
+}
+
+.island-status-message--error {
+    color: #8a2a1f;
+}
+
+.island-section-title {
+    margin-top: 0;
+    margin-bottom: 8px;
+    -unity-font-definition: var(--font-header);
+    color: var(--c-text-highlight);
+    font-size: 13px;
+    -unity-font-style: bold;
+    letter-spacing: 1px;
+}
+
+.island-city-section {
+    flex-grow: 1;
+    flex-basis: 0;
+    min-height: 0;
+    overflow: hidden;
+}
+
+.island-city-section-title {
+    flex-shrink: 0;
+}
+
+.island-city-heading,
+.island-city-row {
+    width: 100%;
+    min-height: 42px;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    border-bottom-width: 1px;
+    border-bottom-color: rgba(181, 145, 70, 0.35);
+}
+
+.island-city-heading {
+    background-color: var(--c-btn-chill-bg);
+    color: white;
+    -unity-font-style: bold;
+    flex-shrink: 0;
+    padding-right: 14px;
+}
+
+.island-city-list {
+    flex-grow: 1;
+    flex-basis: 0;
+    min-height: 0;
+    border-width: 1px;
+    border-color: var(--c-border);
+    overflow: hidden;
+}
+
+.island-city-list .unity-scroll-view__content-container {
+    width: 100%;
+    overflow: hidden;
+}
+
+.island-city-list .unity-scroll-view__horizontal-scroller {
+    display: none;
+    opacity: 0;
+    height: 0;
+    width: 0;
+}
+
+.island-heading-player,
+.island-city-player,
+.island-heading-name,
+.island-city-name {
+    width: 0;
+    flex-grow: 7;
+    flex-shrink: 0;
+    min-width: 0;
+    -unity-text-align: middle-center;
+}
+
+.island-heading-alliance,
+.island-city-alliance {
+    width: 0;
+    flex-grow: 5;
+    flex-shrink: 0;
+    min-width: 0;
+    -unity-text-align: middle-center;
+}
+
+.island-heading-coordinates,
+.island-city-coordinates {
+    width: 0;
+    flex-grow: 5;
+    flex-shrink: 0;
+    min-width: 0;
+    -unity-text-align: middle-center;
+    justify-content: center;
+    align-items: center;
+}
+
+.island-heading-points,
+.island-city-points {
+    width: 0;
+    flex-grow: 3;
+    flex-shrink: 0;
+    min-width: 0;
+    -unity-text-align: middle-center;
+    justify-content: center;
+    align-items: center;
+}
+
+.island-city-player,
+.island-city-name,
+.island-city-alliance {
+    -unity-font-style: bold;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.island-city-coordinates,
+.island-city-points {
+    color: var(--c-text-body);
+    -unity-text-align: middle-center;
+}
+
+.btn-entity-link {
+    font-size: 14px;
+    -unity-text-align: middle-center;
+    justify-content: center;
+    align-items: center;
+}
+

@@ -1,4 +1,4 @@
-﻿using Newtonsoft.Json;
+﻿using Assets._Project.Scripts.Domain.Enums;
 using Project.Network.Helper;
 using Project.Network.Manager;
 using Project.Scripts.Domain.DTOs;
@@ -6,10 +6,6 @@ using Project.Scripts.Domain.Enums;
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using UnityEngine;
 using UnityEngine.Networking;
 
 namespace Project.Network
@@ -23,24 +19,6 @@ namespace Project.Network
             _baseUrl = $"{baseUrl}/WorldPlayer";
         }
 
-        public IEnumerator ApplyAlphaCheat(Guid worldPlayerId, Guid cityId, string jwtToken, Action<bool> callback)
-        {
-            string url = $"{_baseUrl}/{worldPlayerId}/cheat?cityId={cityId}";
-            using (var request = BackendRequestHelper.CreatePostRequest(url, null, jwtToken))
-            {
-                yield return request.SendWebRequest();
-                if (request.result == UnityWebRequest.Result.Success)
-                {
-                    callback?.Invoke(true);
-                }
-                else
-                {
-                    Debug.LogError($"[WorldPlayer] ApplyAlphaCheat Failed: {request.error} - {request.downloadHandler.text}");
-                    callback?.Invoke(false);
-                }
-            }
-        }
-
         public IEnumerator JoinWorld(string playerId, Guid worldId, string jwtToken, Action<WorldPlayerJoinResponse> callback)
         {
             var payload = new { PlayerProfileId = playerId, WorldId = worldId.ToString() };
@@ -48,25 +26,18 @@ namespace Project.Network
 
             using (var request = BackendRequestHelper.CreatePostRequest(url, payload, jwtToken))
             {
-                yield return request.SendWebRequest();
-
-                if (request.result == UnityWebRequest.Result.Success)
-                {
-                    var response = JsonConvert.DeserializeObject<WorldPlayerJoinResponse>(request.downloadHandler.text);
-                    callback?.Invoke(response);
-                }
-                else
-                {
-                    Debug.LogError($"[World] Join Failed: {request.downloadHandler.text}");
-                    callback?.Invoke(new WorldPlayerJoinResponse
+                yield return BackendRequestHelper.SendJson(
+                    request,
+                    callback,
+                    "WorldPlayer",
+                    errorRequest => new WorldPlayerJoinResponse
                     {
                         ConnectionSuccessful = false,
-                        Message = "Failed to join",
+                        Message = BackendRequestHelper.GetErrorMessage(errorRequest),
                         ActiveCityId = null,
                         WorldPlayerId = null,
                         SelectedIdeology = IdeologyTypeEnum.None
                     });
-                }
             }
         }
 
@@ -76,26 +47,7 @@ namespace Project.Network
 
             using (var request = BackendRequestHelper.CreateGetRequest(url, jwtToken))
             {
-                yield return request.SendWebRequest();
-
-                if (request.result == UnityWebRequest.Result.Success)
-                {
-                    try
-                    {
-                        var data = JsonConvert.DeserializeObject<WorldPlayerEconomyDTO>(request.downloadHandler.text);
-                        callback?.Invoke(data);
-                    }
-                    catch (Exception ex)
-                    {
-                        Debug.LogError($"[WorldPlayer] Deserialization Error (Economy): {ex.Message}");
-                        callback?.Invoke(null);
-                    }
-                }
-                else
-                {
-                    Debug.LogError($"[WorldPlayer] GetWorldPlayerEconomy Failed: {request.error}");
-                    callback?.Invoke(null);
-                }
+                yield return BackendRequestHelper.SendJson(request, callback, "WorldPlayer");
             }
         }
 
@@ -106,24 +58,15 @@ namespace Project.Network
 
             using (var request = BackendRequestHelper.CreatePostRequest(url, payload, jwtToken))
             {
-                yield return request.SendWebRequest();
-
-                if (request.result == UnityWebRequest.Result.Success)
-                {
-                    var response = JsonConvert.DeserializeObject<WorldPlayerSelectIdeologyResponse>(request.downloadHandler.text);
-                    callback?.Invoke(response);
-                }
-                else
-                {
-                    Debug.LogError($"[WorldPlayer] Select Ideology Failed: {request.downloadHandler.text}");
-
-                    // Her bruger vi Object Initializer mønstret i stedet for constructor
-                    callback?.Invoke(new WorldPlayerSelectIdeologyResponse
+                yield return BackendRequestHelper.SendJson(
+                    request,
+                    callback,
+                    "WorldPlayer",
+                    errorRequest => new WorldPlayerSelectIdeologyResponse
                     {
                         ConnectionSuccessful = false,
-                        Message = "Internal client error or server rejection."
+                        Message = BackendRequestHelper.GetErrorMessage(errorRequest)
                     });
-                }
             }
         }
 
@@ -133,26 +76,7 @@ namespace Project.Network
 
             using (var request = BackendRequestHelper.CreateGetRequest(url, jwtToken))
             {
-                yield return request.SendWebRequest();
-
-                if (request.result == UnityWebRequest.Result.Success)
-                {
-                    try
-                    {
-                        var results = JsonConvert.DeserializeObject<List<PlayerSearchResultDTO>>(request.downloadHandler.text);
-                        callback?.Invoke(results);
-                    }
-                    catch (Exception ex)
-                    {
-                        Debug.LogError($"[WorldPlayer] Search Deserialization Error: {ex.Message}");
-                        callback?.Invoke(null);
-                    }
-                }
-                else
-                {
-                    Debug.LogError($"[WorldPlayer] Search Failed: {request.error}");
-                    callback?.Invoke(null);
-                }
+                yield return BackendRequestHelper.SendJson(request, callback, "WorldPlayer", _ => new List<PlayerSearchResultDTO>());
             }
         }
 
@@ -162,26 +86,21 @@ namespace Project.Network
 
             using (var webRequest = BackendRequestHelper.CreateGetRequest(requestUrl, jwtToken))
             {
-                yield return webRequest.SendWebRequest();
+                yield return BackendRequestHelper.SendJson(webRequest, callback, "WorldPlayer");
+            }
+        }
 
-                if (webRequest.result == UnityWebRequest.Result.Success)
-                {
-                    try
-                    {
-                        var deserializedProfileData = JsonConvert.DeserializeObject<WorldPlayerProfileDTO>(webRequest.downloadHandler.text);
-                        callback?.Invoke(deserializedProfileData);
-                    }
-                    catch (Exception exception)
-                    {
-                        Debug.LogError($"[WorldPlayer] Deserialiseringsfejl: {exception.Message}");
-                        callback?.Invoke(null);
-                    }
-                }
-                else
-                {
-                    Debug.LogError($"[WorldPlayer] Kunne ikke hente profil: {webRequest.error}");
-                    callback?.Invoke(null);
-                }
+        public IEnumerator UpdatePlayerDescription(Guid worldPlayerId, string description, string jwtToken, Action<WorldPlayerProfileDTO> callback)
+        {
+            string requestUrl = $"{_baseUrl}/{worldPlayerId}/description";
+            var payload = new UpdateWorldPlayerDescriptionRequestDTO
+            {
+                Description = description
+            };
+
+            using (var webRequest = BackendRequestHelper.CreatePutRequest(requestUrl, payload, jwtToken))
+            {
+                yield return BackendRequestHelper.SendJson(webRequest, callback, "WorldPlayer");
             }
         }
     }

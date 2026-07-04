@@ -17,8 +17,8 @@ namespace Project.Scripts.Modules.Map
             _unitDeploymentData = data;
             _isInitialized = true;
 
-            Debug.Log($"<color=cyan>[VisualMovement]</color> Initialiseret for hær: {data.Id} på ({data.CurrentX}, {data.CurrentY})");
-            UpdateVisualPositionToCurrentCoordinates();
+            Debug.Log($"<color=cyan>[VisualMovement]</color> Initialiseret for hær: {data.Id} ved origin city {data.OriginCityId}");
+            UpdateVisualPositionToOriginCity();
         }
 
         private void Update()
@@ -28,14 +28,19 @@ namespace Project.Scripts.Modules.Map
                 return;
             }
 
-            UpdateVisualPositionToCurrentCoordinates();
+            UpdateVisualPositionToOriginCity();
         }
 
-        private void UpdateVisualPositionToCurrentCoordinates()
+        private void UpdateVisualPositionToOriginCity()
         {
+            if (_unitDeploymentData?.OriginCity == null)
+            {
+                return;
+            }
+
             Vector3 worldPosition = _worldTilemap.GetCellCenterWorld(new Vector3Int(
-                _unitDeploymentData.CurrentX,
-                _unitDeploymentData.CurrentY,
+                _unitDeploymentData.OriginCity.X,
+                _unitDeploymentData.OriginCity.Y,
                 0
             ));
 

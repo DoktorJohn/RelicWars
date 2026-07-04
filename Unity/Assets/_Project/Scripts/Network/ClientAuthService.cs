@@ -1,4 +1,4 @@
-using System;
+ï»¿using System;
 using System.Collections;
 using UnityEngine;
 using UnityEngine.Networking;
@@ -7,7 +7,6 @@ using Project.Network.Helper;
 
 namespace Project.Network
 {
-
     public class ClientAuthService
     {
         private readonly string _baseUrl;
@@ -24,18 +23,15 @@ namespace Project.Network
 
             using (var request = BackendRequestHelper.CreatePostRequest(url, payload))
             {
-                yield return request.SendWebRequest();
-
-                if (request.result == UnityWebRequest.Result.Success)
-                {
-                    var response = JsonConvert.DeserializeObject<AuthenticationResponse>(request.downloadHandler.text);
-                    callback?.Invoke(response);
-                }
-                else
-                {
-                    Debug.LogError($"[Auth] Login Failed: {request.error}");
-                    callback?.Invoke(new AuthenticationResponse { IsAuthenticated = false, FeedbackMessage = "Netværksfejl." });
-                }
+                yield return BackendRequestHelper.SendJson(
+                    request,
+                    callback,
+                    "Auth",
+                    _ => new AuthenticationResponse
+                    {
+                        IsAuthenticated = false,
+                        FeedbackMessage = BackendRequestHelper.GetErrorMessage(request)
+                    });
             }
         }
 
@@ -46,18 +42,15 @@ namespace Project.Network
 
             using (var request = BackendRequestHelper.CreatePostRequest(url, payload))
             {
-                yield return request.SendWebRequest();
-
-                if (request.result == UnityWebRequest.Result.Success)
-                {
-                    var response = JsonConvert.DeserializeObject<AuthenticationResponse>(request.downloadHandler.text);
-                    callback?.Invoke(response);
-                }
-                else
-                {
-                    Debug.LogError($"[Auth] Register Failed: {request.error}");
-                    callback?.Invoke(new AuthenticationResponse { IsAuthenticated = false, FeedbackMessage = request.error });
-                }
+                yield return BackendRequestHelper.SendJson(
+                    request,
+                    callback,
+                    "Auth",
+                    _ => new AuthenticationResponse
+                    {
+                        IsAuthenticated = false,
+                        FeedbackMessage = BackendRequestHelper.GetErrorMessage(request)
+                    });
             }
         }
     }
