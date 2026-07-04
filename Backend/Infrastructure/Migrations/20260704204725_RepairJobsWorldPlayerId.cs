@@ -5,17 +5,17 @@
 namespace Infrastructure.Migrations
 {
     /// <inheritdoc />
-    public partial class RenameSilverToCoins : Migration
+    public partial class RepairJobsWorldPlayerId : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.Sql(
                 """
-                IF COL_LENGTH(N'dbo.WorldPlayers', N'Silver') IS NOT NULL
-                   AND COL_LENGTH(N'dbo.WorldPlayers', N'Coins') IS NULL
+                IF COL_LENGTH(N'dbo.Jobs', N'UserId') IS NOT NULL
+                   AND COL_LENGTH(N'dbo.Jobs', N'WorldPlayerId') IS NULL
                 BEGIN
-                    EXEC sp_rename N'[dbo].[WorldPlayers].[Silver]', N'Coins', N'COLUMN';
+                    EXEC sp_rename N'[dbo].[Jobs].[UserId]', N'WorldPlayerId', N'COLUMN';
                 END
                 """);
         }
@@ -25,10 +25,10 @@ namespace Infrastructure.Migrations
         {
             migrationBuilder.Sql(
                 """
-                IF COL_LENGTH(N'dbo.WorldPlayers', N'Coins') IS NOT NULL
-                   AND COL_LENGTH(N'dbo.WorldPlayers', N'Silver') IS NULL
+                IF COL_LENGTH(N'dbo.Jobs', N'WorldPlayerId') IS NOT NULL
+                   AND COL_LENGTH(N'dbo.Jobs', N'UserId') IS NULL
                 BEGIN
-                    EXEC sp_rename N'[dbo].[WorldPlayers].[Coins]', N'Silver', N'COLUMN';
+                    EXEC sp_rename N'[dbo].[Jobs].[WorldPlayerId]', N'UserId', N'COLUMN';
                 END
                 """);
         }
