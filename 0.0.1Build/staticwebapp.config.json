@@ -4,22 +4,30 @@
   },
   "routes": [
     {
-      "route": "/Build/*.br",
+      "route": "/Build/*.wasm.br",
       "headers": {
-        "Content-Encoding": "br"
+        "Content-Encoding": "br",
+        "Content-Type": "application/wasm"
       }
     },
     {
-      "route": "/Build/*.unityweb",
+      "route": "/Build/*.js.br",
       "headers": {
-        "Content-Encoding": "br"
+        "Content-Encoding": "br",
+        "Content-Type": "application/javascript"
+      }
+    },
+    {
+      "route": "/Build/*.data.br",
+      "headers": {
+        "Content-Encoding": "br",
+        "Content-Type": "application/octet-stream"
       }
     }
   ],
   "mimeTypes": {
     ".wasm.br": "application/wasm",
     ".js.br": "application/javascript",
-    ".data.br": "application/octet-stream",
-    ".unityweb": "application/octet-stream"
+    ".data.br": "application/octet-stream"
   }
 }
