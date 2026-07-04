@@ -24,6 +24,8 @@ public class WorldMapObjectDTO
 public class WorldMapChunkResponseDTO
 {
     public int WorldSeed { get; set; }
+    public int WorldWidth { get; set; }
+    public int WorldHeight { get; set; }
     public int ChunkX { get; set; }
     public int ChunkY { get; set; }
     public int Width { get; set; }

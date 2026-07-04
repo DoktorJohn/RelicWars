@@ -25,6 +25,9 @@ namespace Project.Scripts.Modules.Map
         public BiomeVisuals VisualConfig;
 
         private Vector2Int _lastCenterChunkCoordinate = new Vector2Int(-999, -999);
+        private CameraEdgePan _cameraEdgePan;
+        private int _configuredWorldWidth;
+        private int _configuredWorldHeight;
 
         private void Start()
         {
@@ -34,6 +37,7 @@ namespace Project.Scripts.Modules.Map
         private IEnumerator InitializationSequence()
         {
             if (MainCamera == null) MainCamera = Camera.main;
+            if (MainCamera != null) _cameraEdgePan = MainCamera.GetComponent<CameraEdgePan>();
 
             // 1. VIGTIGT: Vent på at den NYE instans af InteractionHandler er vågen
             yield return new WaitUntil(() => WorldMapInteractionHandler.Instance != null);
@@ -115,6 +119,14 @@ namespace Project.Scripts.Modules.Map
         {
             // Sikkerhed mod async kald efter scene-skift
             if (this == null || TargetTilemap == null || data == null) return;
+
+            if (_cameraEdgePan != null
+                && (data.WorldWidth != _configuredWorldWidth || data.WorldHeight != _configuredWorldHeight))
+            {
+                _cameraEdgePan.ConfigureMapBounds(TargetTilemap, data.WorldWidth, data.WorldHeight);
+                _configuredWorldWidth = data.WorldWidth;
+                _configuredWorldHeight = data.WorldHeight;
+            }
 
             int totalTiles = data.Width * data.Height;
             Vector3Int[] positions = new Vector3Int[totalTiles];

@@ -37,9 +37,8 @@ namespace Application.Services
         public async Task<WorldMapChunkResponseDTO?> GetWorldMapChunk(GetWorldMapChunkDTO dto)
         {
             await _playerAccessService.RequireWorldMembershipAsync(dto.worldId);
-            // 1. Get Seed from Repository
-            var worldSeed = await _worldRepository.GetWorldSeedAsync(dto.worldId);
-            if (worldSeed == null) return null;
+            var world = await _worldRepository.GetByIdAsync(dto.worldId);
+            if (world == null) return null;
 
             // 3. Get Map Objects from Repository
             var mapObjectEntities = await _worldMapObject.GetObjectsInAreaAsync(
@@ -56,7 +55,9 @@ namespace Application.Services
 
             return new WorldMapChunkResponseDTO
             {
-                WorldSeed = worldSeed.Value,
+                WorldSeed = world.MapSeed,
+                WorldWidth = world.Width,
+                WorldHeight = world.Height,
                 ChunkX = dto.startX,
                 ChunkY = dto.startY,
                 Width = dto.width,

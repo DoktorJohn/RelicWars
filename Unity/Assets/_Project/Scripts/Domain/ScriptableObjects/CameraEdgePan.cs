@@ -1,6 +1,8 @@
 ﻿using Project.Scripts.Modules.Map;
 using UnityEngine;
 using UnityEngine.InputSystem;
+using UnityEngine.Tilemaps;
+
 public class CameraEdgePan : MonoBehaviour
 {
     [Header("Referencer")]
@@ -21,7 +23,7 @@ public class CameraEdgePan : MonoBehaviour
     [SerializeField] private float _minOrthographicSize = 5f;
     [SerializeField] private float _maxOrthographicSize = 40f;
 
-    [Header("Kort Grænser (1000x1000)")]
+    [Header("Kort Grænser (fallback indtil world-data er loadet)")]
     [SerializeField] private bool _useLimits = true;
     [SerializeField] private float _minX = 0f;
     [SerializeField] private float _maxX = 1000f;
@@ -29,11 +31,42 @@ public class CameraEdgePan : MonoBehaviour
     [SerializeField] private float _maxY = 1000f;
 
     private float _targetOrthographicSize;
+    private bool _hasDynamicMapBounds;
+    private float _mapMinX;
+    private float _mapMaxX;
+    private float _mapMinY;
+    private float _mapMaxY;
 
     private void Awake()
     {
         if (_associatedCamera == null) _associatedCamera = GetComponent<Camera>();
         if (_associatedCamera != null) _targetOrthographicSize = _associatedCamera.orthographicSize;
+    }
+
+    public void ConfigureMapBounds(Tilemap tilemap, int worldWidth, int worldHeight)
+    {
+        if (tilemap == null || worldWidth <= 0 || worldHeight <= 0) return;
+
+        int minimumCellX = -worldWidth / 2;
+        int maximumCellX = minimumCellX + worldWidth - 1;
+        int minimumCellY = -worldHeight / 2;
+        int maximumCellY = minimumCellY + worldHeight - 1;
+
+        Vector3[] corners =
+        {
+            tilemap.GetCellCenterWorld(new Vector3Int(minimumCellX, minimumCellY, 0)),
+            tilemap.GetCellCenterWorld(new Vector3Int(minimumCellX, maximumCellY, 0)),
+            tilemap.GetCellCenterWorld(new Vector3Int(maximumCellX, minimumCellY, 0)),
+            tilemap.GetCellCenterWorld(new Vector3Int(maximumCellX, maximumCellY, 0))
+        };
+
+        _mapMinX = Mathf.Min(corners[0].x, corners[1].x, corners[2].x, corners[3].x);
+        _mapMaxX = Mathf.Max(corners[0].x, corners[1].x, corners[2].x, corners[3].x);
+        _mapMinY = Mathf.Min(corners[0].y, corners[1].y, corners[2].y, corners[3].y);
+        _mapMaxY = Mathf.Max(corners[0].y, corners[1].y, corners[2].y, corners[3].y);
+        _hasDynamicMapBounds = true;
+
+        transform.position = ClampPositionToMap(transform.position);
     }
 
     private void Update()
@@ -70,8 +103,7 @@ public class CameraEdgePan : MonoBehaviour
 
         if (_useLimits)
         {
-            newPosition.x = Mathf.Clamp(newPosition.x, _minX, _maxX);
-            newPosition.y = Mathf.Clamp(newPosition.y, _minY, _maxY);
+            newPosition = ClampPositionToMap(newPosition);
         }
 
         transform.position = newPosition;
@@ -101,6 +133,42 @@ public class CameraEdgePan : MonoBehaviour
                 _targetOrthographicSize,
                 _zoomInterpolationSpeed * Time.deltaTime
             );
+
+            if (_useLimits) transform.position = ClampPositionToMap(transform.position);
         }
+    }
+
+    private Vector3 ClampPositionToMap(Vector3 position)
+    {
+        float minimumX = _hasDynamicMapBounds ? _mapMinX : _minX;
+        float maximumX = _hasDynamicMapBounds ? _mapMaxX : _maxX;
+        float minimumY = _hasDynamicMapBounds ? _mapMinY : _minY;
+        float maximumY = _hasDynamicMapBounds ? _mapMaxY : _maxY;
+
+        if (_hasDynamicMapBounds && _associatedCamera != null)
+        {
+            float halfHeight = _associatedCamera.orthographicSize;
+            float halfWidth = halfHeight * _associatedCamera.aspect;
+            ClampAxisToViewport(ref minimumX, ref maximumX, halfWidth);
+            ClampAxisToViewport(ref minimumY, ref maximumY, halfHeight);
+        }
+
+        position.x = Mathf.Clamp(position.x, minimumX, maximumX);
+        position.y = Mathf.Clamp(position.y, minimumY, maximumY);
+        return position;
+    }
+
+    private static void ClampAxisToViewport(ref float minimum, ref float maximum, float halfViewportSize)
+    {
+        if (maximum - minimum <= halfViewportSize * 2f)
+        {
+            float center = (minimum + maximum) * 0.5f;
+            minimum = center;
+            maximum = center;
+            return;
+        }
+
+        minimum += halfViewportSize;
+        maximum -= halfViewportSize;
     }
 }
