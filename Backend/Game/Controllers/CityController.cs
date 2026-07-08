@@ -2,6 +2,7 @@
 using Application.Interfaces.IRepositories;
 using Application.Interfaces.IServices;
 using Domain.Entities;
+using Game.Contracts;
 using Microsoft.EntityFrameworkCore;
 using Application.DTOs;
 using Microsoft.AspNetCore.Authorization;
@@ -32,7 +33,7 @@ namespace WebApi.Controllers
             if (detailedInfo == null)
             {
                 _logger.LogWarning("Detailed info request failed. City ID {OriginCityId} not found.", cityIdentifier);
-                return NotFound(new { Message = $"City with ID {cityIdentifier} was not found." });
+                return NotFound(new ApiError("resource.not_found", "Ressourcen blev ikke fundet."));
             }
 
             return Ok(detailedInfo);
@@ -45,7 +46,7 @@ namespace WebApi.Controllers
 
             if (resources == null)
             {
-                return NotFound(new { Message = $"City with ID {cityIdentifier} was not found." });
+                return NotFound(new ApiError("resource.not_found", "Ressourcen blev ikke fundet."));
             }
 
             return Ok(resources);
@@ -59,7 +60,7 @@ namespace WebApi.Controllers
             if (detailedInfo == null)
             {
                 _logger.LogWarning("Detailed info request failed. City ID {OriginCityId} not found.", cityIdentifier);
-                return NotFound(new { Message = $"City with ID {cityIdentifier} was not found." });
+                return NotFound(new ApiError("resource.not_found", "Ressourcen blev ikke fundet."));
             }
 
             return Ok(detailedInfo);
@@ -82,7 +83,7 @@ namespace WebApi.Controllers
                 return Ok(result);
             }
 
-            return NotFound();
+            return NotFound(new ApiError("resource.not_found", "Ressourcen blev ikke fundet."));
         }
 
         [HttpGet("{cityIdentifier}/my-cities")]

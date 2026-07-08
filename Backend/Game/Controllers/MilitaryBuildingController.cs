@@ -4,6 +4,7 @@ using Application.Interfaces.IServices.IBuildings;
 using Application.Services;
 using Application.Services.Buildings;
 using Domain.Enums;
+using Game.Contracts;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
@@ -70,7 +71,7 @@ namespace Game.Controllers
                     return Ok(result);
                 }
 
-                return BadRequest(result);
+                return BadRequest(new ApiError("recruitment.operation_failed", result.Message));
             }
             catch (KeyNotFoundException)
             {
@@ -83,7 +84,7 @@ namespace Game.Controllers
             catch (Exception exception)
             {
                 _logger.LogError(exception, "Fejl ved rekruttering af kavaleri i by {OriginCityId}", cityId);
-                return StatusCode(500, "Intern serverfejl under rekruttering.");
+                return StatusCode(500, new ApiError("server.error", "En intern serverfejl opstod."));
             }
         }
 
@@ -107,7 +108,7 @@ namespace Game.Controllers
             catch (Exception exception)
             {
                 _logger.LogError(exception, "Fejl ved hentning af stald-oversigt for by {OriginCityId}", cityId);
-                return BadRequest("Kunne ikke hente data for stalden.");
+                return StatusCode(500, new ApiError("server.error", "En intern serverfejl opstod."));
             }
         }
 
@@ -131,7 +132,7 @@ namespace Game.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Failed to get barracks overview for city {OriginCityId}", cityId);
-                return BadRequest("Could not fetch barracks data.");
+                return StatusCode(500, new ApiError("server.error", "En intern serverfejl opstod."));
             }
         }
 
@@ -167,7 +168,7 @@ namespace Game.Controllers
                     return Ok(result);
                 }
 
-                return BadRequest(result);
+                return BadRequest(new ApiError("recruitment.operation_failed", result.Message));
             }
             catch (UnauthorizedAccessException)
             {
@@ -176,7 +177,7 @@ namespace Game.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Failed to recruit units in city {OriginCityId}", cityId);
-                return StatusCode(500, "Internal server error.");
+                return StatusCode(500, new ApiError("server.error", "En intern serverfejl opstod."));
             }
         }
 
@@ -189,7 +190,7 @@ namespace Game.Controllers
                 var result = await _recruitmentService.QueueRecruitmentAsync(userId, cityId, request.UnitType, request.Amount);
 
                 if (result.Success) return Ok(result);
-                return BadRequest(result);
+                return BadRequest(new ApiError("recruitment.operation_failed", result.Message));
             }
             catch (UnauthorizedAccessException)
             {

@@ -429,21 +429,11 @@ namespace Infrastructure.Migrations
                     b.Property<DateTime>("LastMessageDate")
                         .HasColumnType("datetime2");
 
-                    b.Property<Guid>("Participant1Id")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<Guid>("Participant2Id")
-                        .HasColumnType("uniqueidentifier");
-
                     b.Property<string>("Subject")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.HasKey("Id");
-
-                    b.HasIndex("Participant1Id");
-
-                    b.HasIndex("Participant2Id");
 
                     b.ToTable("Conversations");
                 });
@@ -1360,25 +1350,6 @@ namespace Infrastructure.Migrations
                     b.Navigation("City");
                 });
 
-            modelBuilder.Entity("Domain.Entities.Conversation", b =>
-                {
-                    b.HasOne("Domain.User.WorldPlayer", "Participant1")
-                        .WithMany("ConversationsAsParticipant1")
-                        .HasForeignKey("Participant1Id")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.HasOne("Domain.User.WorldPlayer", "Participant2")
-                        .WithMany("ConversationsAsParticipant2")
-                        .HasForeignKey("Participant2Id")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.Navigation("Participant1");
-
-                    b.Navigation("Participant2");
-                });
-
             modelBuilder.Entity("Domain.Entities.ConversationParticipant", b =>
                 {
                     b.HasOne("Domain.Entities.Conversation", "Conversation")
@@ -1796,10 +1767,6 @@ namespace Infrastructure.Migrations
                     b.Navigation("CompletedResearches");
 
                     b.Navigation("ConversationParticipants");
-
-                    b.Navigation("ConversationsAsParticipant1");
-
-                    b.Navigation("ConversationsAsParticipant2");
 
                     b.Navigation("UnitDeployments");
 

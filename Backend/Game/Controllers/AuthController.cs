@@ -1,6 +1,7 @@
 ﻿using Application.DTOs;
 using Application.Interfaces.IServices;
 using Application.Services.Authentication;
+using Game.Contracts;
 using Microsoft.AspNetCore.Mvc;
 using System.Threading.Tasks;
 
@@ -30,7 +31,7 @@ namespace Game.Controllers
             if (!result.IsAuthenticated)
             {
                 _logger.LogWarning("Registration failed for email: {Email}. Reason: {Reason}", request.Email, result.FeedbackMessage);
-                return BadRequest(result);
+                return BadRequest(new ApiError("auth.registration_failed", result.FeedbackMessage));
             }
 
             _logger.LogInformation("User registered successfully: {Email}", request.Email);
@@ -48,7 +49,7 @@ namespace Game.Controllers
             if (!result.IsAuthenticated)
             {
                 _logger.LogWarning("Failed login attempt for email: {Email}", request.Email);
-                return Unauthorized(result);
+                return Unauthorized(new ApiError("auth.login_failed", result.FeedbackMessage));
             }
 
             return Ok(result);

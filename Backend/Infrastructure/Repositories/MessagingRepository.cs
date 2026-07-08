@@ -23,8 +23,6 @@ namespace Infrastructure.Repositories
         {
             return await _context.Conversations
                 .AsSplitQuery()
-                .Include(c => c.Participant1).ThenInclude(p => p.PlayerProfile)
-                .Include(c => c.Participant2).ThenInclude(p => p.PlayerProfile)
                 .Include(c => c.Participants).ThenInclude(p => p.WorldPlayer).ThenInclude(wp => wp.PlayerProfile)
                 .Include(c => c.Participants).ThenInclude(p => p.WorldPlayer).ThenInclude(wp => wp.Alliance)
                 .Include(c => c.Messages.OrderBy(m => m.SentAt))
@@ -38,8 +36,6 @@ namespace Infrastructure.Repositories
         {
             return await _context.Conversations
                 .AsSplitQuery()
-                .Include(c => c.Participant1).ThenInclude(p => p.PlayerProfile)
-                .Include(c => c.Participant2).ThenInclude(p => p.PlayerProfile)
                 .Include(c => c.Participants).ThenInclude(p => p.WorldPlayer).ThenInclude(wp => wp.PlayerProfile)
                 .FirstOrDefaultAsync(c => c.Id == conversationId);
         }

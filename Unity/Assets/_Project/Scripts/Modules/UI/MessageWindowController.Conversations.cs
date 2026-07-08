@@ -150,6 +150,7 @@ namespace Project.Modules.UI
             SetActiveConversationTitle(conversation);
             
             UpdateInputAreaState();
+            ResetMessagePaging();
             LoadMessages(conversation.Id, _requestVersion);
         }
 
@@ -162,18 +163,25 @@ namespace Project.Modules.UI
 
             StartCoroutine(NetworkManager.Instance.Messaging.GetMessages(worldPlayerId, conversationId, null, MessagePageSize, NetworkManager.Instance.JwtToken, (messages) =>
             {
-                if (!isActiveAndEnabled || version != _requestVersion)
+                if (!isActiveAndEnabled || version != _requestVersion || _state.SelectedConversation == null || _state.SelectedConversation.Id != conversationId)
                 {
                     return;
                 }
 
                 if (messages != null)
                 {
-                    _state.SetMessages(messages);
-                    RenderMessages(messages);
+                    var orderedMessages = OrderMessages(messages);
+                    _state.SetMessages(orderedMessages);
+                    UpdateMessagePagingState(orderedMessages, messages.Count);
+                    RenderMessages(orderedMessages, true);
 
                     StartCoroutine(NetworkManager.Instance.Messaging.MarkConversationAsRead(worldPlayerId, conversationId, NetworkManager.Instance.JwtToken, (success) =>
                     {
+                        if (!isActiveAndEnabled || version != _requestVersion)
+                        {
+                            return;
+                        }
+
                         if (success)
                         {
                             if (_state.SelectedConversation != null && _state.SelectedConversation.Id == conversationId)
@@ -187,12 +195,103 @@ namespace Project.Modules.UI
                 }
                 else
                 {
+                    ResetMessagePaging();
                     SetMessageState("Failed to load messages");
                 }
             }));
         }
 
-        private void RenderMessages(List<MessageDTO> messages)
+        private void LoadOlderMessages()
+        {
+            if (_isLoadingOlderMessages || !_hasOlderMessages || !_oldestLoadedMessageCursor.HasValue)
+            {
+                return;
+            }
+
+            if (_state.SelectedConversation == null || NetworkManager.Instance == null)
+            {
+                return;
+            }
+
+            var playerIds = NetworkManager.Instance.WorldPlayerId;
+            if (string.IsNullOrEmpty(playerIds) || !Guid.TryParse(playerIds, out Guid worldPlayerId))
+            {
+                return;
+            }
+
+            var conversationId = _state.SelectedConversation.Id;
+            var version = _requestVersion;
+            var before = _oldestLoadedMessageCursor.Value;
+            var previousScrollY = _messageList?.scrollOffset.y ?? 0f;
+            var previousContentHeight = _messageList?.contentContainer.layout.height ?? 0f;
+            _isLoadingOlderMessages = true;
+            RenderMessages(_state.Messages, false);
+
+            StartCoroutine(NetworkManager.Instance.Messaging.GetMessages(worldPlayerId, conversationId, before, MessagePageSize, NetworkManager.Instance.JwtToken, (messages) =>
+            {
+                if (!isActiveAndEnabled || version != _requestVersion || _state.SelectedConversation == null || _state.SelectedConversation.Id != conversationId)
+                {
+                    return;
+                }
+
+                _isLoadingOlderMessages = false;
+
+                if (messages == null)
+                {
+                    RenderMessages(_state.Messages, false);
+                    return;
+                }
+
+                if (messages.Count == 0)
+                {
+                    _hasOlderMessages = false;
+                    RenderMessages(_state.Messages, false);
+                    return;
+                }
+
+                var mergedMessages = OrderMessages(messages.Concat(_state.Messages)
+                    .GroupBy(message => message.Id)
+                    .Select(group => group.First()));
+
+                _state.SetMessages(mergedMessages);
+                UpdateMessagePagingState(mergedMessages, messages.Count);
+                RenderMessages(mergedMessages, false, previousScrollY, previousContentHeight);
+            }));
+        }
+
+        private void UpdateMessagePagingState(List<MessageDTO> messages, int loadedCount)
+        {
+            _hasOlderMessages = loadedCount >= MessagePageSize;
+            _oldestLoadedMessageCursor = messages.Count > 0
+                ? messages.Min(message => message.SentAt).ToUniversalTime()
+                : null;
+        }
+
+        private static List<MessageDTO> OrderMessages(IEnumerable<MessageDTO> messages)
+        {
+            return messages?
+                .OrderBy(message => message.SentAt)
+                .ThenBy(message => message.Id)
+                .ToList() ?? new List<MessageDTO>();
+        }
+
+        private void AddLoadOlderMessagesButton()
+        {
+            if (!_hasOlderMessages || _messageList == null)
+            {
+                return;
+            }
+
+            var button = new Button(LoadOlderMessages)
+            {
+                text = _isLoadingOlderMessages ? "LOADING" : "LOAD OLDER"
+            };
+            button.AddToClassList("message-load-older-button");
+            button.SetEnabled(!_isLoadingOlderMessages);
+            _messageList.Add(button);
+        }
+
+        private void RenderMessages(List<MessageDTO> messages, bool scrollToBottom, float? previousScrollY = null, float? previousContentHeight = null)
         {
             if (_messageList == null) return;
             _messageList.Clear();
@@ -205,6 +304,8 @@ namespace Project.Modules.UI
                 SetMessageState("No messages");
                 return;
             }
+
+            AddLoadOlderMessagesButton();
 
             DateTime? previousDay = null;
             foreach (var msg in messages)
@@ -258,8 +359,19 @@ namespace Project.Modules.UI
 
                 _messageList.Add(bubble);
             }
-            
-            _messageList.schedule.Execute(() => _messageList.scrollOffset = new Vector2(0, _messageList.contentContainer.layout.height)); 
+
+            if (scrollToBottom)
+            {
+                _messageList.schedule.Execute(() => _messageList.scrollOffset = new Vector2(0, _messageList.contentContainer.layout.height));
+            }
+            else if (previousScrollY.HasValue && previousContentHeight.HasValue)
+            {
+                _messageList.schedule.Execute(() =>
+                {
+                    var heightDelta = _messageList.contentContainer.layout.height - previousContentHeight.Value;
+                    _messageList.scrollOffset = new Vector2(0, Mathf.Max(0f, previousScrollY.Value + heightDelta));
+                });
+            }
         }
 
         private void SetActiveConversationTitle(ConversationDTO conversation)

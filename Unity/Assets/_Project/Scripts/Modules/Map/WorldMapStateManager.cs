@@ -166,6 +166,8 @@ namespace Project.Modules.City
         public void InvalidateAllCachedChunks()
         {
             Debug.Log("<color=red>[WorldMapStateManager]</color> INVALIDERER ALT CACHE.");
+            CurrentWorldId = null;
+            CurrentWorldSeed = null;
             _cachedWorldChunks.Clear();
             _activeNetworkRequests.Clear();
             _allVisibleCities.Clear();
@@ -175,7 +177,6 @@ namespace Project.Modules.City
         public void ResetForLogout()
         {
             StopAllCoroutines();
-            CurrentWorldId = null;
             InvalidateAllCachedChunks();
         }
     }

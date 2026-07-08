@@ -2,6 +2,7 @@
 using Application.Interfaces.IServices;
 using Application.Interfaces.IServices.IBuildings;
 using Domain.Enums;
+using Game.Contracts;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
@@ -30,7 +31,7 @@ namespace Game.Controllers
                 return Ok(result.Message);
             }
 
-            return BadRequest(result.Message);
+            return BadRequest(new ApiError("building.operation_failed", result.Message));
         }
 
         [HttpGet("{cityId}/buildingQueue")]
@@ -44,7 +45,9 @@ namespace Game.Controllers
         public async Task<IActionResult> Repair(Guid cityId, BuildingTypeEnum type)
         {
             var result = await _buildingService.RepairAsync(cityId, type);
-            return result.Success ? Ok(result.Message) : BadRequest(result.Message);
+            return result.Success
+                ? Ok(result.Message)
+                : BadRequest(new ApiError("building.operation_failed", result.Message));
         }
 
 

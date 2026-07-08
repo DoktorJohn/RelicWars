@@ -5,6 +5,7 @@ using Application.Services;
 using Azure.Core;
 using Domain.Entities;
 using Domain.Enums;
+using Game.Contracts;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -29,13 +30,17 @@ namespace Game.Controllers
         {
             var result = await _ideologyService.EnactIdeologyFocus(ideologyFocusDTO);
 
+            if (result == null)
+            {
+                return NotFound(new ApiError("resource.not_found", "Ressourcen blev ikke fundet."));
+            }
+
             if (result.Success)
             {
                 return Ok(result);
             }
 
-            // Gør det samme for BadRequest, så Unity altid kan parse det korrekt:
-            return BadRequest(result);
+            return BadRequest(new ApiError("ideology_focus.enact_failed", result.Message));
         }
 
         [HttpPost("getIdeologyOverview/{cityId}")]
@@ -48,7 +53,7 @@ namespace Game.Controllers
                 return Ok(result);
             }
 
-            return NotFound();
+            return NotFound(new ApiError("resource.not_found", "Ressourcen blev ikke fundet."));
         }
     }
 }

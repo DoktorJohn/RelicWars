@@ -1,6 +1,7 @@
 ﻿using Application.DTOs;
 using Application.Interfaces.IServices;
 using Domain.StaticData.Generators;
+using Game.Contracts;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -40,7 +41,7 @@ namespace Game.Controllers
             var result = await _worldService.GetWorldMapChunk(dto);
 
             if (result == null)
-                return NotFound("World not found");
+                return NotFound(new ApiError("resource.not_found", "Ressourcen blev ikke fundet."));
 
             return Ok(result);
         }
@@ -51,7 +52,9 @@ namespace Game.Controllers
             try
             {
                 var result = await _worldService.GetCityInspectionAsync(cityId);
-                return result == null ? NotFound() : Ok(result);
+                return result == null
+                    ? NotFound(new ApiError("resource.not_found", "Ressourcen blev ikke fundet."))
+                    : Ok(result);
             }
             catch (UnauthorizedAccessException)
             {
@@ -59,7 +62,7 @@ namespace Game.Controllers
             }
             catch (KeyNotFoundException)
             {
-                return NotFound();
+                return NotFound(new ApiError("resource.not_found", "Ressourcen blev ikke fundet."));
             }
         }
 
@@ -67,7 +70,9 @@ namespace Game.Controllers
         public async Task<ActionResult<WorldIslandDetailsDTO>> GetIslandDetails(Guid islandId)
         {
             var result = await _worldService.GetIslandDetailsAsync(islandId);
-            return result == null ? NotFound() : Ok(result);
+            return result == null
+                ? NotFound(new ApiError("resource.not_found", "Ressourcen blev ikke fundet."))
+                : Ok(result);
         }
     }
 }

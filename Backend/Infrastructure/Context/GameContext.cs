@@ -178,16 +178,6 @@ namespace Infrastructure.Context
                     .WithOne(p => p.Conversation)
                     .HasForeignKey(p => p.ConversationId)
                     .OnDelete(DeleteBehavior.Cascade);
-
-                entity.HasOne(c => c.Participant1)
-                    .WithMany(p => p.ConversationsAsParticipant1)
-                    .HasForeignKey(c => c.Participant1Id)
-                    .OnDelete(DeleteBehavior.Restrict);
-
-                entity.HasOne(c => c.Participant2)
-                    .WithMany(p => p.ConversationsAsParticipant2)
-                    .HasForeignKey(c => c.Participant2Id)
-                    .OnDelete(DeleteBehavior.Restrict);
             });
 
             modelBuilder.Entity<WorldIsland>(entity =>

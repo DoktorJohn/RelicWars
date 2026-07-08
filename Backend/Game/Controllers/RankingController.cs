@@ -1,5 +1,6 @@
 ﻿using Application.Interfaces.IServices;
 using Domain.Entities;
+using Game.Contracts;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -30,7 +31,7 @@ namespace Game.Controllers
             catch (Exception exception)
             {
                 _logger.LogError(exception, "Fejl ved hentning af rankings");
-                return BadRequest("Kunne ikke hente data for rankings.");
+                return StatusCode(500, new ApiError("server.error", "En intern serverfejl opstod."));
             }
         }
 
@@ -44,7 +45,7 @@ namespace Game.Controllers
             }
             catch (KeyNotFoundException)
             {
-                return NotFound();
+                return NotFound(new ApiError("resource.not_found", "Ressourcen blev ikke fundet."));
             }
             catch (UnauthorizedAccessException)
             {
@@ -53,7 +54,7 @@ namespace Game.Controllers
             catch (Exception exception)
             {
                 _logger.LogError(exception, "Fejl ved hentning af rankings for spiller {worldPlayerId}", worldPlayerId);
-                return BadRequest("Kunne ikke hente data for rankings.");
+                return StatusCode(500, new ApiError("server.error", "En intern serverfejl opstod."));
             }
         }
 

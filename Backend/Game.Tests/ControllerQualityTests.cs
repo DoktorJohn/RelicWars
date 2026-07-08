@@ -41,6 +41,49 @@ public class ControllerQualityTests
     }
 
     [Fact]
+    public async Task WorldMapChunk_NotFoundReturnsApiError()
+    {
+        var controller = new WorldController(new NullWorldService(), NullLogger<WorldController>.Instance);
+
+        var result = await controller.GetWorldMapChunkData(new GetWorldMapChunkDTO());
+
+        var notFound = Assert.IsType<NotFoundObjectResult>(result.Result);
+        var error = Assert.IsType<ApiError>(notFound.Value);
+        Assert.Equal("resource.not_found", error.Code);
+    }
+
+    [Fact]
+    public async Task WorldPlayerJoinFailureReturnsApiError()
+    {
+        var controller = new WorldPlayerController(
+            NullLogger<WorldPlayerController>.Instance,
+            new FailingJoinWorldPlayerService("world is full"));
+
+        var result = await controller.ProcessPlayerWorldJoinRequest(new WorldPlayerDTO(Guid.NewGuid(), Guid.NewGuid()));
+
+        var badRequest = Assert.IsType<BadRequestObjectResult>(result.Result);
+        var error = Assert.IsType<ApiError>(badRequest.Value);
+        Assert.Equal("world_player.join_failed", error.Code);
+        Assert.Equal("world is full", error.Message);
+    }
+
+    [Fact]
+    public async Task RankingUnexpectedErrorReturnsServerApiError()
+    {
+        var controller = new RankingController(
+            NullLogger<RankingController>.Instance,
+            new ThrowingRankingService(new InvalidDataException("ranking internals")));
+
+        var result = await controller.GetRankings();
+
+        var serverError = Assert.IsType<ObjectResult>(result);
+        Assert.Equal(StatusCodes.Status500InternalServerError, serverError.StatusCode);
+        var error = Assert.IsType<ApiError>(serverError.Value);
+        Assert.Equal("server.error", error.Code);
+        Assert.DoesNotContain("ranking internals", error.Message, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
     public async Task AttackCityDeployment_InvalidStateReturnsStableApiError()
     {
         var controller = CreateController(new InvalidOperationException("internal unit inventory details"));
@@ -285,6 +328,57 @@ public class ControllerQualityTests
 
         public Task<WorldIslandDetailsDTO?> GetIslandDetailsAsync(Guid islandId) =>
             Task.FromException<WorldIslandDetailsDTO?>(_exception);
+    }
+
+    private sealed class NullWorldService : IWorldService
+    {
+        public Task<List<WorldAvailableResponseDTO>> ObtainAllActiveGameWorldsAsync() =>
+            Task.FromResult(new List<WorldAvailableResponseDTO>());
+
+        public Task<WorldMapChunkResponseDTO?> GetWorldMapChunk(GetWorldMapChunkDTO dto) =>
+            Task.FromResult<WorldMapChunkResponseDTO?>(null);
+
+        public Task<CityInspectionDTO?> GetCityInspectionAsync(Guid cityId) =>
+            Task.FromResult<CityInspectionDTO?>(null);
+
+        public Task<WorldIslandDetailsDTO?> GetIslandDetailsAsync(Guid islandId) =>
+            Task.FromResult<WorldIslandDetailsDTO?>(null);
+    }
+
+    private sealed class FailingJoinWorldPlayerService(string message) : IWorldPlayerService
+    {
+        public Task<WorldPlayerJoinResponse> AssignPlayerToGameWorldAsync(Guid worldId) =>
+            Task.FromResult(new WorldPlayerJoinResponse(false, message, null, null, Domain.Enums.IdeologyTypeEnum.None));
+
+        public Task<WorldPlayerProfileDTO> GetWorldPlayerProfileAsync(Guid worldPlayerId) =>
+            Task.FromException<WorldPlayerProfileDTO>(new NotImplementedException());
+
+        public Task<WorldPlayerProfileDTO> UpdateWorldPlayerDescriptionAsync(Guid worldPlayerId, string description) =>
+            Task.FromException<WorldPlayerProfileDTO>(new NotImplementedException());
+
+        public Task<WorldPlayerEconomyDTO> GetWorldPlayerEconomyAsync(Guid worldPlayerId) =>
+            Task.FromException<WorldPlayerEconomyDTO>(new NotImplementedException());
+
+        public Task<List<PlayerSearchResultDTO>> SearchPlayersAsync(Guid worldId, string query) =>
+            Task.FromException<List<PlayerSearchResultDTO>>(new NotImplementedException());
+
+        public void SyncGlobalResources(WorldPlayer player, DateTime currentDateTime)
+        {
+        }
+
+        public Task<WorldPlayerSelectIdeologyResponse> SelectIdeology(SelectIdeologyRequest request) =>
+            Task.FromException<WorldPlayerSelectIdeologyResponse>(new NotImplementedException());
+    }
+
+    private sealed class ThrowingRankingService(Exception exception) : IRankingService
+    {
+        private readonly Exception _exception = exception;
+
+        public Task<List<Domain.StaticData.Data.RankingEntryData>> GetRankings() =>
+            Task.FromException<List<Domain.StaticData.Data.RankingEntryData>>(_exception);
+
+        public Task<Domain.StaticData.Data.RankingEntryData?> GetRankingById(Guid worldPlayerId) =>
+            Task.FromException<Domain.StaticData.Data.RankingEntryData?>(_exception);
     }
 
     private sealed class OwnedWorldPlayerRepository(Guid profileId, Guid worldPlayerId) : IWorldPlayerRepository

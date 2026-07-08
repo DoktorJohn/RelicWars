@@ -66,11 +66,7 @@ namespace Application.Services
             var conversation = new Conversation
             {
                 Id = conversationId,
-                Participant1Id = senderId,
-                Participant2Id = participants[0].Id,
                 LastMessageDate = sentAt,
-                Participant1 = sender,
-                Participant2 = participants[0],
                 Subject = sanitizedSubject,
                 Participants = allParticipants.Select(player => new ConversationParticipant
                 {
@@ -327,12 +323,6 @@ namespace Application.Services
             if (participant != null)
                 return participant.WorldPlayer?.PlayerProfile?.UserName ?? "Unknown";
 
-            if (conversation.Participant1Id == worldPlayerId)
-                return conversation.Participant1?.PlayerProfile?.UserName ?? "Unknown";
-
-            if (conversation.Participant2Id == worldPlayerId)
-                return conversation.Participant2?.PlayerProfile?.UserName ?? "Unknown";
-
             return "Unknown";
         }
 
@@ -342,12 +332,6 @@ namespace Application.Services
             if (participant != null)
                 return participant.WorldPlayer?.Alliance?.Name ?? string.Empty;
 
-            if (conversation.Participant1Id == worldPlayerId)
-                return conversation.Participant1?.Alliance?.Name ?? string.Empty;
-
-            if (conversation.Participant2Id == worldPlayerId)
-                return conversation.Participant2?.Alliance?.Name ?? string.Empty;
-
             return string.Empty;
         }
 
@@ -356,12 +340,6 @@ namespace Application.Services
             var participant = conversation.Participants.FirstOrDefault(p => p.WorldPlayerId == worldPlayerId);
             if (participant != null)
                 return participant.WorldPlayer?.Alliance?.Id;
-
-            if (conversation.Participant1Id == worldPlayerId)
-                return conversation.Participant1?.Alliance?.Id;
-
-            if (conversation.Participant2Id == worldPlayerId)
-                return conversation.Participant2?.Alliance?.Id;
 
             return null;
         }

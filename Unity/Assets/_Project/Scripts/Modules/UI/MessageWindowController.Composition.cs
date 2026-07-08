@@ -78,6 +78,7 @@ namespace Project.Modules.UI
                     }
 
                     _state.RemoveSelectedConversation();
+                    ResetMessagePaging();
                     ResetDeleteConfirmation();
                     _deleteConversationButton.style.display = DisplayStyle.None;
                     if (_conversationTitle != null) _conversationTitle.text = string.Empty;
@@ -220,6 +221,7 @@ namespace Project.Modules.UI
         private void StartNewMessageMode()
         {
             _state.StartComposing();
+            ResetMessagePaging();
             ResetDeleteConfirmation();
             if (_deleteConversationButton != null) _deleteConversationButton.style.display = DisplayStyle.None;
             if (_newMessageHeader != null) _newMessageHeader.style.display = DisplayStyle.Flex;

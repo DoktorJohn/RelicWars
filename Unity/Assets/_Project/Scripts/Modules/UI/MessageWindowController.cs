@@ -39,6 +39,9 @@ namespace Project.Modules.UI
         private Coroutine _recipientSearchCoroutine;
         private bool _deleteConfirmationPending;
         private int _requestVersion;
+        private bool _hasOlderMessages;
+        private bool _isLoadingOlderMessages;
+        private DateTime? _oldestLoadedMessageCursor;
 
         public override void OnOpen(object dataPayload)
         {
@@ -137,6 +140,7 @@ namespace Project.Modules.UI
 
             _deleteConfirmationPending = false;
             _state.SetSending(false);
+            ResetMessagePaging();
 
             if (_sendButton != null)
             {
@@ -221,6 +225,13 @@ namespace Project.Modules.UI
             var label = new Label(text);
             label.AddToClassList("message-window-state-label");
             _messageList.Add(label);
+        }
+
+        private void ResetMessagePaging()
+        {
+            _hasOlderMessages = false;
+            _isLoadingOlderMessages = false;
+            _oldestLoadedMessageCursor = null;
         }
 
         private Guid ResolveCurrentWorldPlayerId()

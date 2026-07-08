@@ -1,5 +1,6 @@
 ﻿using Application.DTOs;
 using Application.Interfaces.IServices;
+using Game.Contracts;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -30,7 +31,7 @@ namespace Game.Controllers
             var result = await _researchService.QueueResearchAsync(worldPlayerId, researchId);
 
             if (result.Success) return Ok(result);
-            return BadRequest(result.Message);
+            return BadRequest(new ApiError("research.operation_failed", result.Message));
         }
 
         [HttpPost("cancel/{worldPlayerId}/{jobId}")]
@@ -39,7 +40,7 @@ namespace Game.Controllers
             var result = await _researchService.CancelResearchAsync(worldPlayerId, jobId);
 
             if (result.Success) return Ok(result);
-            return BadRequest(result.Message);
+            return BadRequest(new ApiError("research.operation_failed", result.Message));
         }
     }
 }

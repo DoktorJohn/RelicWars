@@ -1,6 +1,7 @@
 ﻿using Application.DTOs;
 using Application.Interfaces.IServices;
 using Application.Services;
+using Game.Contracts;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -30,12 +31,12 @@ namespace Game.Controllers
             }
             catch (KeyNotFoundException)
             {
-                return NotFound();
+                return NotFound(new ApiError("resource.not_found", "Ressourcen blev ikke fundet."));
             }
             catch (Exception exception)
             {
                 _logger.LogError(exception, "Fejl ved oprettelse af alliance");
-                return BadRequest("Kunne ikke hente data for alliance.");
+                return StatusCode(500, new ApiError("server.error", "En intern serverfejl opstod."));
             }
         }
 
@@ -49,7 +50,7 @@ namespace Game.Controllers
             }
             catch (KeyNotFoundException)
             {
-                return NotFound();
+                return NotFound(new ApiError("resource.not_found", "Ressourcen blev ikke fundet."));
             }
             catch (UnauthorizedAccessException)
             {
@@ -58,7 +59,7 @@ namespace Game.Controllers
             catch (Exception exception)
             {
                 _logger.LogError(exception, "Fejl ved oprettelse af alliance");
-                return BadRequest("Kunne ikke hente data for alliance.");
+                return StatusCode(500, new ApiError("server.error", "En intern serverfejl opstod."));
             }
         }
 
@@ -72,7 +73,7 @@ namespace Game.Controllers
             }
             catch (KeyNotFoundException)
             {
-                return NotFound();
+                return NotFound(new ApiError("resource.not_found", "Ressourcen blev ikke fundet."));
             }
             catch (UnauthorizedAccessException)
             {
@@ -81,7 +82,7 @@ namespace Game.Controllers
             catch (Exception exception)
             {
                 _logger.LogError(exception, "Fejl ved oprettelse af alliance");
-                return BadRequest("Kunne ikke hente data for alliance.");
+                return StatusCode(500, new ApiError("server.error", "En intern serverfejl opstod."));
             }
         }
 
@@ -95,7 +96,7 @@ namespace Game.Controllers
             }
             catch (KeyNotFoundException)
             {
-                return NotFound();
+                return NotFound(new ApiError("resource.not_found", "Ressourcen blev ikke fundet."));
             }
             catch (UnauthorizedAccessException)
             {
@@ -104,7 +105,7 @@ namespace Game.Controllers
             catch (Exception exception)
             {
                 _logger.LogError(exception, "Fejl ved oprettelse af alliance");
-                return BadRequest("Kunne ikke hente data for alliance.");
+                return StatusCode(500, new ApiError("server.error", "En intern serverfejl opstod."));
             }
         }
 
@@ -118,7 +119,7 @@ namespace Game.Controllers
             }
             catch (KeyNotFoundException)
             {
-                return NotFound();
+                return NotFound(new ApiError("resource.not_found", "Ressourcen blev ikke fundet."));
             }
             catch (UnauthorizedAccessException)
             {
@@ -127,7 +128,7 @@ namespace Game.Controllers
             catch (Exception exception)
             {
                 _logger.LogError(exception, "Fejl ved oprettelse af alliance");
-                return BadRequest("Kunne ikke hente data for alliance.");
+                return StatusCode(500, new ApiError("server.error", "En intern serverfejl opstod."));
             }
         }
 

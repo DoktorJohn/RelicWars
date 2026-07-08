@@ -31,7 +31,7 @@ namespace Game.Controllers
             }
             catch (KeyNotFoundException)
             {
-                return NotFound();
+                return NotFound(new ApiError("resource.not_found", "Ressourcen blev ikke fundet."));
             }
             catch (UnauthorizedAccessException)
             {
@@ -40,7 +40,7 @@ namespace Game.Controllers
             catch (Exception exception)
             {
                 _logger.LogError(exception, "Fejl ved hentning af worldPlayerProfile");
-                return BadRequest("Kunne ikke hente data for worldPlayerProfile.");
+                return StatusCode(500, new ApiError("server.error", "En intern serverfejl opstod."));
             }
         }
 
@@ -58,7 +58,7 @@ namespace Game.Controllers
             }
             catch (KeyNotFoundException)
             {
-                return NotFound();
+                return NotFound(new ApiError("resource.not_found", "Ressourcen blev ikke fundet."));
             }
             catch (ArgumentException)
             {
@@ -90,7 +90,7 @@ namespace Game.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error searching players");
-                return BadRequest("Failed to search players");
+                return StatusCode(500, new ApiError("server.error", "En intern serverfejl opstod."));
             }
         }
 
@@ -111,12 +111,12 @@ namespace Game.Controllers
             catch (KeyNotFoundException)
             {
                 _logger.LogWarning("[WorldPlayerController] Player {PlayerId} not found.", worldPlayerId);
-                return NotFound();
+                return NotFound(new ApiError("resource.not_found", "Ressourcen blev ikke fundet."));
             }
             catch (Exception exception)
             {
                 _logger.LogError(exception, "Error retrieving economy data for player {PlayerId}", worldPlayerId);
-                return StatusCode(500, "Internal server error retrieving economy data.");
+                return StatusCode(500, new ApiError("server.error", "En intern serverfejl opstod."));
             }
         }
 
@@ -126,7 +126,10 @@ namespace Game.Controllers
             try
             {
                 var result = await _worldPlayerService.SelectIdeology(request);
-                if (!result.ConnectionSuccessful) return BadRequest(result.Message);
+                if (!result.ConnectionSuccessful)
+                {
+                    return BadRequest(new ApiError("world_player.ideology_selection_failed", result.Message));
+                }
 
                 return Ok(result);
             }
@@ -137,7 +140,7 @@ namespace Game.Controllers
             catch (Exception exception)
             {
                 _logger.LogError(exception, "Fejl ved valg af ideologi");
-                return StatusCode(500, "Intern serverfejl ved valg af ideologi.");
+                return StatusCode(500, new ApiError("server.error", "En intern serverfejl opstod."));
             }
         }
 
@@ -150,7 +153,7 @@ namespace Game.Controllers
             {
                 _logger.LogWarning("Join World failed for World {WorldId}. Reason: {Reason}",
                     request.WorldId, result.Message);
-                return BadRequest(result);
+                return BadRequest(new ApiError("world_player.join_failed", result.Message));
             }
 
             _logger.LogInformation("World access granted for World {WorldId}.", request.WorldId);

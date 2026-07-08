@@ -227,6 +227,55 @@
     text-shadow: 1px 2px 2px rgba(0, 0, 0, 0.72);
 }
 
+.window-info-button {
+    width: 30px;
+    height: 30px;
+    flex-shrink: 0;
+    margin-right: 10px;
+    padding: 0;
+    background-color: rgba(0, 0, 0, 0);
+    background-image: url("project://database/Assets/UI/Icons/Tooltip.png");
+    -unity-background-scale-mode: scale-to-fit;
+    -unity-background-image-tint-color: rgba(239, 220, 174, 0.82);
+    border-width: 0;
+}
+
+.window-info-button:hover {
+    -unity-background-image-tint-color: rgb(255, 239, 196);
+    scale: 1.05;
+}
+
+.window-info-button:active { scale: 0.95; }
+
+.window-info-tooltip {
+    position: absolute;
+    left: 10px;
+    top: 49px;
+    width: 340px;
+    padding: 12px 14px;
+    background-color: rgb(236, 226, 207);
+    border-width: 2px;
+    border-color: var(--c-border);
+    border-radius: 5px;
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.48);
+}
+
+.window-info-tooltip__title {
+    margin-bottom: 6px;
+    color: var(--c-text-header);
+    -unity-font-definition: var(--font-header);
+    -unity-font-style: bold;
+    font-size: 13px;
+    letter-spacing: 1px;
+}
+
+.window-info-tooltip__body {
+    color: var(--c-text-body);
+    -unity-font-definition: var(--font-body);
+    font-size: 14px;
+    white-space: normal;
+}
+
 /* --- THE CLOSE "X" BUTTON --- */
 .window-close-btn {
     width: 34px;
