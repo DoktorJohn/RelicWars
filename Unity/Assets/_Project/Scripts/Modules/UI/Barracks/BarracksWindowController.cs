@@ -24,8 +24,13 @@ namespace Project.Modules.UI.Windows.Implementations
         // UI Referencer - Detail View
         private Label _labelUnitName;
         private Label _labelOwnedCountBadge;
-        private Label _labelUnitFlavorText;
-        private Label _labelTotalCostString;
+        private Label _labelLockRequirements;
+        private Label _labelCostWoodValue;
+        private Label _labelCostStoneValue;
+        private Label _labelCostMetalValue;
+        private Label _labelCostPopulationValue;
+        private Label _labelTotalRecruitmentTimeValue;
+        private Label _labelRecruitmentEtaValue;
 
         // UI Referencer - Stats Grid
         private Label _labelStatPowerValue;
@@ -35,6 +40,7 @@ namespace Project.Modules.UI.Windows.Implementations
         private Label _labelStatReachValue;
         private Label _labelStatLootValue;
         private Label _labelStatPopulationValue;
+        private Label _labelStatUnitCapacityValue;
         private Label _labelStatRecruitmentTimeValue;
 
         // UI Referencer - Controls
@@ -76,7 +82,7 @@ namespace Project.Modules.UI.Windows.Implementations
 
                 HandleRecruitmentQueueUpdated(CityStateManager.Instance.CurrentBarracksQueue);
 
-                CityStateManager.Instance.InitiateResourceRefresh(_currentActiveCityId);
+                CityStateManager.Instance.RequestImmediateRefresh(_currentActiveCityId);
             }
 
             ExecuteRefreshBarracksBuildingData(version);
@@ -85,6 +91,7 @@ namespace Project.Modules.UI.Windows.Implementations
         private void OnDisable()
         {
             InvalidateDeferredOpen();
+            StopQueueCountdown();
             if (CityStateManager.Instance != null)
             {
                 CityStateManager.Instance.OnBarracksQueueChanged -= HandleRecruitmentQueueUpdated;
@@ -99,8 +106,13 @@ namespace Project.Modules.UI.Windows.Implementations
             _unitTabsScrollContainer = Root.Q<ScrollView>("Tabs-Scroll-Container");
             _labelUnitName = Root.Q<Label>("Lbl-UnitName");
             _labelOwnedCountBadge = Root.Q<Label>("Lbl-OwnedCount");
-            _labelUnitFlavorText = Root.Q<Label>("Lbl-Flavor");
-            _labelTotalCostString = Root.Q<Label>("Lbl-CostString");
+            _labelLockRequirements = Root.Q<Label>("Lbl-LockRequirements");
+            _labelCostWoodValue = Root.Q<Label>("Lbl-CostWood");
+            _labelCostStoneValue = Root.Q<Label>("Lbl-CostStone");
+            _labelCostMetalValue = Root.Q<Label>("Lbl-CostMetal");
+            _labelCostPopulationValue = Root.Q<Label>("Lbl-CostPopulation");
+            _labelTotalRecruitmentTimeValue = Root.Q<Label>("Lbl-TotalRecruitmentTime");
+            _labelRecruitmentEtaValue = Root.Q<Label>("Lbl-RecruitmentEta");
 
             _labelStatPowerValue = Root.Q<Label>("Stat-Power");
             _labelStatArmorValue = Root.Q<Label>("Stat-Armor");
@@ -109,6 +121,7 @@ namespace Project.Modules.UI.Windows.Implementations
             _labelStatReachValue = Root.Q<Label>("Stat-Reach");
             _labelStatLootValue = Root.Q<Label>("Stat-Loot");
             _labelStatPopulationValue = Root.Q<Label>("Stat-Pop");
+            _labelStatUnitCapacityValue = Root.Q<Label>("Stat-Capacity");
             _labelStatRecruitmentTimeValue = Root.Q<Label>("Stat-Time");
 
             _quantityAdjustmentSlider = Root.Q<SliderInt>("Slider-Quantity");

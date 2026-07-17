@@ -10,7 +10,7 @@ public class DeploymentPermissionServiceTests
     private readonly DeploymentPermissionService _service = new(new TestAllianceRepository());
 
     [Fact]
-    public void CanAttack_AllowsEnemyAndRejectsOwnAlliedOwnerlessNpcAndCrossWorldTargets()
+    public void CanAttack_AllowsEnemyAndOwnerlessNPCButRejectsOwnAlliedInvalidAndCrossWorldTargets()
     {
         var source = Player();
         var enemy = Player(source.WorldId);
@@ -22,8 +22,10 @@ public class DeploymentPermissionServiceTests
         Assert.False(_service.CanAttack(source, City(source)));
         Assert.False(_service.CanAttack(source, City(ally)));
         Assert.False(_service.CanAttack(source, OwnerlessCity(source.WorldId)));
+        Assert.True(_service.CanAttack(source, OwnerlessNPCCity(source.WorldId)));
         Assert.False(_service.CanAttack(source, City(enemy, isNpc: true)));
         Assert.False(_service.CanAttack(source, City(Player())));
+        Assert.False(_service.CanAttack(source, OwnerlessNPCCity(Guid.NewGuid())));
     }
 
     [Fact]
@@ -44,7 +46,7 @@ public class DeploymentPermissionServiceTests
     }
 
     [Fact]
-    public async Task CanSupportAsync_RejectsActiveWarOwnerlessNpcAndCrossWorldTargets()
+    public async Task CanSupportAsync_AllowsOwnerlessNPCAndRejectsWarInvalidOwnerlessAndCrossWorldTargets()
     {
         var source = Player();
         var enemy = Player(source.WorldId);
@@ -61,8 +63,10 @@ public class DeploymentPermissionServiceTests
 
         Assert.False(await service.CanSupportAsync(source, City(enemy)));
         Assert.False(await service.CanSupportAsync(source, OwnerlessCity(source.WorldId)));
+        Assert.True(await service.CanSupportAsync(source, OwnerlessNPCCity(source.WorldId)));
         Assert.False(await service.CanSupportAsync(source, City(enemy, isNpc: true)));
         Assert.False(await service.CanSupportAsync(source, City(Player())));
+        Assert.False(await service.CanSupportAsync(source, OwnerlessNPCCity(Guid.NewGuid())));
     }
 
     private static WorldPlayer Player(Guid? worldId = null) => new()
@@ -86,5 +90,12 @@ public class DeploymentPermissionServiceTests
     {
         Id = Guid.NewGuid(),
         WorldId = worldId
+    };
+
+    private static City OwnerlessNPCCity(Guid worldId) => new()
+    {
+        Id = Guid.NewGuid(),
+        WorldId = worldId,
+        IsNPC = true
     };
 }

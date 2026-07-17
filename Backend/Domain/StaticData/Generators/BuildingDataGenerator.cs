@@ -31,6 +31,7 @@ namespace Domain.StaticData.Generators
             buildingDataDictionary[BuildingTypeEnum.Barracks] = GenerateRecruitmentData<BarracksLevelData>(BuildingTypeEnum.Barracks);
             buildingDataDictionary[BuildingTypeEnum.Stable] = GenerateRecruitmentData<StableLevelData>(BuildingTypeEnum.Stable);
             buildingDataDictionary[BuildingTypeEnum.Workshop] = GenerateRecruitmentData<WorkshopLevelData>(BuildingTypeEnum.Workshop);
+            buildingDataDictionary[BuildingTypeEnum.Harbor] = GenerateRecruitmentData<HarborLevelData>(BuildingTypeEnum.Harbor);
 
             // Infrastruktur og specialbygninger
             buildingDataDictionary[BuildingTypeEnum.TownHall] = GenerateTownHallData();
@@ -350,6 +351,14 @@ namespace Domain.StaticData.Generators
                         ModifierTagEnum.SiegeCost,
                         ModifierTagEnum.SiegeUpkeep,
                         ModifierTagEnum.SiegeStats
+                    });
+                }
+                else if (recruitmentEntry is HarborLevelData)
+                {
+                    recruitmentEntry.ModifiersThatAffectsThis.AddRange(new[] {
+                        ModifierTagEnum.NavalCost,
+                        ModifierTagEnum.NavalUpkeep,
+                        ModifierTagEnum.NavalStats
                     });
                 }
 

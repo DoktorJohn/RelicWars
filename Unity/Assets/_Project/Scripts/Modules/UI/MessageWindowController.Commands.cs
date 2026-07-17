@@ -2,6 +2,7 @@ using Project.Modules.Messaging;
 using Project.Network.Manager;
 using Project.Scripts.Domain.DTOs;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 using UnityEngine.UIElements;
@@ -84,8 +85,8 @@ namespace Project.Modules.UI
 
         private void StartConversation(Guid senderId, string content)
         {
-            Guid receiverId = ResolveRecipientId();
-            if (receiverId == Guid.Empty)
+            var recipientIds = ResolveRecipientIds(senderId);
+            if (recipientIds.Count == 0)
             {
                 SetMessageState("No recipient selected");
                 return;
@@ -95,7 +96,7 @@ namespace Project.Modules.UI
             var version = _requestVersion;
             SetSendingState(true);
 
-            StartCoroutine(NetworkManager.Instance.Messaging.StartConversation(senderId, receiverId, subject, content, NetworkManager.Instance.JwtToken, (conversation) =>
+            StartCoroutine(NetworkManager.Instance.Messaging.StartConversation(senderId, recipientIds, subject, content, NetworkManager.Instance.JwtToken, (conversation) =>
             {
                 if (!isActiveAndEnabled || version != _requestVersion)
                 {
@@ -108,7 +109,8 @@ namespace Project.Modules.UI
                     _messageInput.value = "";
                     if (_recipientInput != null) _recipientInput.value = "";
                     if (_subjectInput != null) _subjectInput.value = "";
-                    _state.ClearRecipient();
+                    _state.ClearRecipients();
+                    RenderRecipientChips();
 
                     LoadConversations(_requestVersion, () =>
                     {
@@ -124,29 +126,33 @@ namespace Project.Modules.UI
             }));
         }
 
-        private Guid ResolveRecipientId()
+        private List<Guid> ResolveRecipientIds(Guid senderId)
         {
-            if (_recipientInput == null) return Guid.Empty;
+            var recipientIds = _state.SelectedRecipients
+                .Select(recipient => recipient.WorldPlayerId)
+                .Where(recipientId => recipientId != Guid.Empty && recipientId != senderId)
+                .Distinct()
+                .ToList();
 
-            if (_state.SelectedRecipientId != Guid.Empty)
+            var inputValue = _recipientInput?.value?.Trim();
+            if (string.IsNullOrWhiteSpace(inputValue))
             {
-                return _state.SelectedRecipientId;
+                return recipientIds;
             }
 
             var exactMatch = _state.Suggestions.FirstOrDefault(s =>
-                s.Username.Equals(_recipientInput.value, StringComparison.OrdinalIgnoreCase));
+                s != null && string.Equals(s.Username, inputValue, StringComparison.OrdinalIgnoreCase));
 
-            if (exactMatch != null)
+            if (exactMatch != null && exactMatch.WorldPlayerId != senderId)
             {
-                return exactMatch.WorldPlayerId;
+                recipientIds.Add(exactMatch.WorldPlayerId);
+            }
+            else if (Guid.TryParse(inputValue, out var parsedId) && parsedId != senderId)
+            {
+                recipientIds.Add(parsedId);
             }
 
-            if (Guid.TryParse(_recipientInput.value, out var parsedId))
-            {
-                return parsedId;
-            }
-
-            return Guid.Empty;
+            return recipientIds.Distinct().ToList();
         }
     }
 }

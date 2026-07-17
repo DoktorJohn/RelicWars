@@ -51,7 +51,7 @@ namespace Project.Network
                     request,
                     callback,
                     "ClientBuildingService",
-                    _ => new List<BuildingDTO>());
+                    _ => null);
             }
         }
 

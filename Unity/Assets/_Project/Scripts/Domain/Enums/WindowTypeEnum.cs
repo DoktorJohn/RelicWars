@@ -30,6 +30,10 @@
         Reports = 22,
         Island = 23,
         ExoticResource = 24,
-        BugReport = 25
+        BugReport = 25,
+        Harbor = 26,
+        CombatSimulator = 27,
+        Dailies = 28,
+        Administration = 29
     }
 }

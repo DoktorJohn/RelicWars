@@ -25,6 +25,10 @@ namespace Project.Scripts.Modules.Map
         public bool IsMouseOverUI { get; private set; }
 
         private Vector3Int _lastHoveredCellCoordinate = new Vector3Int(-9999, -9999, 0);
+        private const float TouchTapMovementThreshold = 18f;
+        private bool _touchPressStartedOverUi;
+        private bool _hasTouchPress;
+        private Vector2 _touchPressPosition;
 
         private void Awake()
         {
@@ -60,29 +64,64 @@ namespace Project.Scripts.Modules.Map
         {
             if (_terrainTilemap == null || _mainCamera == null) return;
 
-            // 1. Tjek om musen er over blokerende UI
+            if (!TryGetPrimaryPointer(out Vector2 pointerPosition, out bool isTouchPointer))
+            {
+                IsMouseOverUI = false;
+                return;
+            }
+
+            // 1. Tjek om den aktive pointer er over blokerende UI
             string blockingElementName;
-            bool isBlockingUIActive = VerifyIfPointerIsOverBlockingUserInterface(out blockingElementName);
+            bool isBlockingUIActive = VerifyIfPointerIsOverBlockingUserInterface(pointerPosition, out blockingElementName);
 
             // Opdater internt flag (bruges bl.a. af kamerastyring til at stoppe zoom over UI)
             IsMouseOverUI = isBlockingUIActive;
 
-            // 2. Map Hover (Kun hvis UI ikke spærrer)
-            if (!IsMouseOverUI)
+            // 2. Hover er kun en desktop-affordance. Touch bruger selve tap-positionen.
+            if (!IsMouseOverUI && !isTouchPointer)
             {
-                ExecuteMapHoverInteractionLogic();
+                ExecuteMapHoverInteractionLogic(pointerPosition);
             }
 
-            // 3. Klik Håndtering
+            // 3. Klik/tap håndtering. A tap is committed on release so map drags do not open a city.
+            if (isTouchPointer && Touchscreen.current != null)
+            {
+                if (Touchscreen.current.primaryTouch.press.wasPressedThisFrame)
+                {
+                    _touchPressPosition = pointerPosition;
+                    _touchPressStartedOverUi = IsMouseOverUI;
+                    _hasTouchPress = true;
+                    return;
+                }
+
+                if (Touchscreen.current.primaryTouch.press.wasReleasedThisFrame)
+                {
+                    bool isTap = _hasTouchPress
+                        && !_touchPressStartedOverUi
+                        && !IsMouseOverUI
+                        && Vector2.Distance(_touchPressPosition, pointerPosition) <= TouchTapMovementThreshold;
+                    _hasTouchPress = false;
+
+                    if (isTap)
+                    {
+                        ExecuteGlobalWorldMapClickHandling(pointerPosition);
+                    }
+                }
+
+                return;
+            }
+
             if (Mouse.current != null && Mouse.current.leftButton.wasPressedThisFrame)
             {
                 if (IsMouseOverUI)
                 {
-                    Debug.Log($"<color=orange>[InteractionHandler]</color> Klik blokeret af UI: {blockingElementName}");
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+                    Debug.Log($"<color=orange>[InteractionHandler]</color> Input blokeret af UI: {blockingElementName}");
+#endif
                     return;
                 }
 
-                ExecuteGlobalWorldMapClickHandling();
+                ExecuteGlobalWorldMapClickHandling(pointerPosition);
             }
         }
 
@@ -91,17 +130,26 @@ namespace Project.Scripts.Modules.Map
         /// </summary>
         public bool VerifyIfPointerIsOverBlockingUserInterface(out string nameOfBlockingElement)
         {
-            nameOfBlockingElement = "None";
-            if (EventSystem.current == null || Mouse.current == null) return false;
+            if (!TryGetPrimaryPointer(out Vector2 pointerPosition, out _))
+            {
+                nameOfBlockingElement = "None";
+                return false;
+            }
 
-            // Find hvad musen peger på i UI Toolkit
-            Vector2 mousePos = Mouse.current.position.ReadValue();
-            Vector2 adjustedPos = new Vector2(mousePos.x, Screen.height - mousePos.y);
+            return VerifyIfPointerIsOverBlockingUserInterface(pointerPosition, out nameOfBlockingElement);
+        }
+
+        private bool VerifyIfPointerIsOverBlockingUserInterface(Vector2 pointerPosition, out string nameOfBlockingElement)
+        {
+            nameOfBlockingElement = "None";
+
+            // UI Toolkit panel coordinates have their origin at the top-left.
+            Vector2 adjustedPos = new Vector2(pointerPosition.x, Screen.height - pointerPosition.y);
 
             UIDocument[] allDocs = FindObjectsByType<UIDocument>(FindObjectsSortMode.None);
             foreach (var doc in allDocs)
             {
-                if (doc.rootVisualElement == null) continue;
+                if (doc.rootVisualElement == null || doc.rootVisualElement.panel == null) continue;
 
                 VisualElement picked = doc.rootVisualElement.panel.Pick(adjustedPos);
                 if (picked != null && picked.pickingMode == PickingMode.Position)
@@ -125,7 +173,12 @@ namespace Project.Scripts.Modules.Map
 
             // Tjek for Legacy uGUI (hvis du har Canvases)
             // Men kun hvis vi ikke allerede har godkendt at vi ramte en label
-            PointerEventData eventData = new PointerEventData(EventSystem.current) { position = mousePos };
+            if (EventSystem.current == null)
+            {
+                return false;
+            }
+
+            PointerEventData eventData = new PointerEventData(EventSystem.current) { position = pointerPosition };
             List<RaycastResult> results = new List<RaycastResult>();
             EventSystem.current.RaycastAll(eventData, results);
 
@@ -142,11 +195,9 @@ namespace Project.Scripts.Modules.Map
             return false;
         }
 
-        private void ExecuteMapHoverInteractionLogic()
+        private void ExecuteMapHoverInteractionLogic(Vector2 pointerPosition)
         {
-            Vector2 mousePos = Mouse.current.position.ReadValue();
-            Vector3 worldPos = _mainCamera.ScreenToWorldPoint(new Vector3(mousePos.x, mousePos.y, 1f));
-            Vector3Int cell = _terrainTilemap.WorldToCell(new Vector3(worldPos.x, worldPos.y + 0.125f, 0));
+            Vector3Int cell = GetCellAtScreenPosition(pointerPosition);
 
             if (cell != _lastHoveredCellCoordinate)
             {
@@ -159,13 +210,40 @@ namespace Project.Scripts.Modules.Map
             }
         }
 
-        private void ExecuteGlobalWorldMapClickHandling()
+        private void ExecuteGlobalWorldMapClickHandling(Vector2 pointerPosition)
         {
             ExecuteHexagonClickInteraction(
-                new Vector2Int(_lastHoveredCellCoordinate.x, _lastHoveredCellCoordinate.y)
+                new Vector2Int(GetCellAtScreenPosition(pointerPosition).x, GetCellAtScreenPosition(pointerPosition).y)
             );
         }
 
+        private Vector3Int GetCellAtScreenPosition(Vector2 pointerPosition)
+        {
+            Vector3 worldPos = _mainCamera.ScreenToWorldPoint(new Vector3(pointerPosition.x, pointerPosition.y, 1f));
+            return _terrainTilemap.WorldToCell(new Vector3(worldPos.x, worldPos.y + 0.125f, 0));
+        }
+
+        private static bool TryGetPrimaryPointer(out Vector2 pointerPosition, out bool isTouchPointer)
+        {
+            if (Touchscreen.current != null && (Touchscreen.current.primaryTouch.press.isPressed
+                || Touchscreen.current.primaryTouch.press.wasReleasedThisFrame))
+            {
+                pointerPosition = Touchscreen.current.primaryTouch.position.ReadValue();
+                isTouchPointer = true;
+                return true;
+            }
+
+            if (Mouse.current != null)
+            {
+                pointerPosition = Mouse.current.position.ReadValue();
+                isTouchPointer = false;
+                return true;
+            }
+
+            pointerPosition = default;
+            isTouchPointer = false;
+            return false;
+        }
         private void ExecuteHexagonClickInteraction(Vector2Int coords)
         {
             if (WorldMapStateManager.Instance == null)

@@ -30,6 +30,7 @@ namespace Application.Services
         private readonly ExoticResourceDataReader _exoticResourceDataReader;
         private readonly ILogger<ExoticResourceService> _logger;
         private readonly ITransactionManager _transactionManager;
+        private readonly IDailyObjectiveService? _dailyObjectiveService;
 
         public ExoticResourceService(
             ICityRepository cityRepository,
@@ -41,7 +42,8 @@ namespace Application.Services
             IWorldPlayerService worldPlayerService,
             ExoticResourceDataReader exoticResourceDataReader,
             ILogger<ExoticResourceService> logger,
-            ITransactionManager transactionManager)
+            ITransactionManager transactionManager,
+            IDailyObjectiveService? dailyObjectiveService = null)
         {
             _cityRepository = cityRepository;
             _worldIslandRepository = worldIslandRepository;
@@ -53,6 +55,7 @@ namespace Application.Services
             _exoticResourceDataReader = exoticResourceDataReader;
             _logger = logger;
             _transactionManager = transactionManager;
+            _dailyObjectiveService = dailyObjectiveService;
         }
 
         public async Task<List<CityExoticResourceDTO>> SyncCityExoticResourcesAsync(City city, DateTime currentDateTime)
@@ -60,7 +63,15 @@ namespace Application.Services
             var island = await GetIslandForCityAsync(city);
             ValidateCityExoticResources(city);
 
+            DateTime intervalStart = city.LastExoticResourceUpdate;
+            double totalRate = island.ExoticResources.Sum(resource => CalculateProductionBreakdown(resource).FinalValuePerHour);
             SyncCityExoticResourcesInternal(city, island, currentDateTime);
+            if (_dailyObjectiveService != null && city.WorldPlayerId.HasValue)
+                await _dailyObjectiveService.ApplyProductionAsync(
+                    city.WorldPlayerId.Value,
+                    intervalStart,
+                    currentDateTime,
+                    exoticResourcesPerHour: totalRate);
 
             return MapCityExoticResources(city);
         }
@@ -116,7 +127,7 @@ namespace Application.Services
             if (city.WorldPlayer == null)
                 throw new InvalidOperationException("Byens ejer blev ikke fundet.");
 
-            _worldPlayerService.SyncGlobalResources(city.WorldPlayer, currentDateTime);
+            await _worldPlayerService.SyncGlobalResourcesAsync(city.WorldPlayer, currentDateTime);
             var island = await GetIslandForCityAsync(city);
             var islandCities = await GetCitiesOnIslandAsync(island);
 

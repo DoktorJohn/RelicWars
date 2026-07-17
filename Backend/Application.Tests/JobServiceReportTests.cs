@@ -40,6 +40,31 @@ public class JobServiceReportTests
     }
 
     [Fact]
+    public async Task ProcessAsync_NPCBuildingJobDoesNotCreatePlayerCompletionReport()
+    {
+        var setup = CreateSetup();
+        setup.City.IsNPC = true;
+        setup.City.WorldPlayerId = null;
+        setup.City.WorldPlayer = null;
+        var job = new BuildingJob
+        {
+            Id = Guid.NewGuid(),
+            CityId = setup.City.Id,
+            WorldPlayerId = Guid.Empty,
+            BuildingType = BuildingTypeEnum.TownHall,
+            TargetLevel = 1,
+            ExecutionTime = TestData.Now
+        };
+
+        await setup.Service.ProcessAsync(job);
+
+        Assert.True(job.IsCompleted);
+        Assert.Empty(setup.Reports.AddedReports);
+        Assert.Contains(setup.City.Buildings, building =>
+            building.Type == BuildingTypeEnum.TownHall && building.Level == 1);
+    }
+
+    [Fact]
     public async Task ProcessAsync_CompletedRecruitmentJobCreatesRecruitmentCompletionReport()
     {
         var setup = CreateSetup();
@@ -170,6 +195,8 @@ public class JobServiceReportTests
     {
         public CityResourceSnapshot CalculateCityResources(City cityEntity, DateTime currentDateTime) =>
             new CityResourceSnapshot(cityEntity.Wood, cityEntity.Stone, cityEntity.Metal, 0, 0, 0, currentDateTime);
+
+        public CityProductionSnapshot CalculateCityProduction(WorldPlayer playerEntity, City cityEntity) => new(0, 0, 0);
 
         public GlobalResourceSnapshot CalculateGlobalResources(WorldPlayer playerEntity, DateTime currentDateTime) =>
             new GlobalResourceSnapshot(0, 0, 0, 0, 0, 0, currentDateTime);

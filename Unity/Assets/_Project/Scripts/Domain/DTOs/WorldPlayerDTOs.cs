@@ -18,6 +18,10 @@ namespace Project.Scripts.Domain.DTOs
         public double CoinsProductionPerHour;
         public double ResearchPointsPerHour;
         public double IdeologyFocusPointsPerHour;
+        public double TotalWoodAmount;
+        public double TotalStoneAmount;
+        public double TotalMetalAmount;
+        public double TotalPopulationAmount;
         public List<CityDTO> PlayerCities;
         public DateTime LastUpdated;
     }

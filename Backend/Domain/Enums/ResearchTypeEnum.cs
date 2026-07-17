@@ -11,5 +11,6 @@ namespace Domain.Enums
         Economy,
         War,
         Utility,
+        Unlocks,
     }
 }

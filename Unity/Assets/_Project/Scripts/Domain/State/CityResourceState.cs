@@ -14,9 +14,16 @@ namespace Assets.Scripts.Domain.State
         public double MetalMaxCapacity;
         public double MetalProductionPerHour;
 
+        public double CoinsProductionPerHour;
+        public double ResearchPointsPerHour;
+        public double IdeologyFocusPointsPerHour;
+
         public int CurrentPopulationUsage;
         public int MaxPopulationCapacity;
-        public int FreePopulation => MaxPopulationCapacity - CurrentPopulationUsage;
+        public int HousingPopulationCapacity;
+        public double PopulationModifierBonus;
+        public int RemainingPopulation;
+        public int FreePopulation => RemainingPopulation;
 
         // Helper metoder til at beregne procenter til dine buer
         public float WoodFillPercentage => (float)(WoodAmount / WoodMaxCapacity);

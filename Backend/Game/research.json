@@ -271,7 +271,7 @@
   },
   {
     "Id": "UTIL_COINS_1",
-    "Name": "Bureaucratic Efficiency",
+    "Name": "Efficient Bureaucracy",
     "Description": "1% increased coins income",
     "ResearchType": "Utility",
     "ParentId": "UTIL_SUBJ_2",
@@ -282,7 +282,7 @@
         "Tag": "Coins",
         "Type": "Increased",
         "Value": 0.01,
-        "Source": "Research: Bureaucratic Efficiency"
+        "Source": "Research: Efficient Bureaucracy"
       }
     ],
     "ModifiersThatAffectsThis": []
@@ -397,7 +397,7 @@
   },
   {
     "Id": "UTIL_ALLIED_SPEED",
-    "Name": "Imperial Messenger Lines",
+    "Name": "Imperial Messengers",
     "Description": "Armies are 10% faster from and to allied cities",
     "ResearchType": "Utility",
     "ParentId": "UTIL_WATCH_RANGE",
@@ -408,9 +408,281 @@
         "Tag": "TravelSpeed",
         "Type": "Increased",
         "Value": 0.1,
-        "Source": "Research: Imperial Messenger Lines"
+        "Source": "Research: Imperial Messengers"
       }
     ],
+    "ModifiersThatAffectsThis": []
+  },
+  {
+    "Id": "UNLOCK_UNIT_BOWMEN",
+    "Name": "Bowmen",
+    "Description": "Unlocks Bowmen recruitment.",
+    "ResearchType": "Unlocks",
+    "ParentId": null,
+    "ResearchPointCost": 10,
+    "ResearchTimeInSeconds": 300,
+    "Effects": [
+      {
+        "Type": "UnitRecruitment",
+        "UnitType": "Bowmen"
+      }
+    ],
+    "ModifiersInternal": [],
+    "ModifiersThatAffectsThis": []
+  },
+  {
+    "Id": "UNLOCK_UNIT_SPEARMEN",
+    "Name": "Spearmen",
+    "Description": "Unlocks Spearmen recruitment.",
+    "ResearchType": "Unlocks",
+    "ParentId": "UNLOCK_UNIT_BOWMEN",
+    "ResearchPointCost": 10,
+    "ResearchTimeInSeconds": 300,
+    "Effects": [
+      {
+        "Type": "UnitRecruitment",
+        "UnitType": "Spearmen"
+      }
+    ],
+    "ModifiersInternal": [],
+    "ModifiersThatAffectsThis": []
+  },
+  {
+    "Id": "UNLOCK_UNIT_AXEMEN",
+    "Name": "Axemen",
+    "Description": "Unlocks Axemen recruitment.",
+    "ResearchType": "Unlocks",
+    "ParentId": "UNLOCK_UNIT_SPEARMEN",
+    "ResearchPointCost": 25,
+    "ResearchTimeInSeconds": 900,
+    "Effects": [
+      {
+        "Type": "UnitRecruitment",
+        "UnitType": "Axemen"
+      }
+    ],
+    "ModifiersInternal": [],
+    "ModifiersThatAffectsThis": []
+  },
+  {
+    "Id": "UNLOCK_UNIT_SWORDSMEN",
+    "Name": "Swordsmen",
+    "Description": "Unlocks Swordsmen recruitment.",
+    "ResearchType": "Unlocks",
+    "ParentId": "UNLOCK_UNIT_AXEMEN",
+    "ResearchPointCost": 25,
+    "ResearchTimeInSeconds": 900,
+    "Effects": [
+      {
+        "Type": "UnitRecruitment",
+        "UnitType": "Swordsmen"
+      }
+    ],
+    "ModifiersInternal": [],
+    "ModifiersThatAffectsThis": []
+  },
+  {
+    "Id": "UNLOCK_UNIT_CROSSBOWMEN",
+    "Name": "Crossbowmen",
+    "Description": "Unlocks Crossbowmen recruitment.",
+    "ResearchType": "Unlocks",
+    "ParentId": "UNLOCK_UNIT_SWORDSMEN",
+    "ResearchPointCost": 40,
+    "ResearchTimeInSeconds": 1800,
+    "Effects": [
+      {
+        "Type": "UnitRecruitment",
+        "UnitType": "Crossbowmen"
+      }
+    ],
+    "ModifiersInternal": [],
+    "ModifiersThatAffectsThis": []
+  },
+  {
+    "Id": "UNLOCK_UNIT_MEN_AT_ARMS",
+    "Name": "Men At Arms",
+    "Description": "Unlocks Men At Arms recruitment.",
+    "ResearchType": "Unlocks",
+    "ParentId": "UNLOCK_UNIT_CROSSBOWMEN",
+    "ResearchPointCost": 40,
+    "ResearchTimeInSeconds": 1800,
+    "Effects": [
+      {
+        "Type": "UnitRecruitment",
+        "UnitType": "MenAtArms"
+      }
+    ],
+    "ModifiersInternal": [],
+    "ModifiersThatAffectsThis": []
+  },
+  {
+    "Id": "UNLOCK_UNIT_KNIGHTS",
+    "Name": "Knights",
+    "Description": "Unlocks Knights recruitment.",
+    "ResearchType": "Unlocks",
+    "ParentId": null,
+    "ResearchPointCost": 40,
+    "ResearchTimeInSeconds": 1800,
+    "Effects": [
+      {
+        "Type": "UnitRecruitment",
+        "UnitType": "Knights"
+      }
+    ],
+    "ModifiersInternal": [],
+    "ModifiersThatAffectsThis": []
+  },
+  {
+    "Id": "UNLOCK_UNIT_CATAPHRACTS",
+    "Name": "Cataphracts",
+    "Description": "Unlocks Cataphracts recruitment.",
+    "ResearchType": "Unlocks",
+    "ParentId": "UNLOCK_UNIT_KNIGHTS",
+    "ResearchPointCost": 60,
+    "ResearchTimeInSeconds": 2700,
+    "Effects": [
+      {
+        "Type": "UnitRecruitment",
+        "UnitType": "Cataphracts"
+      }
+    ],
+    "ModifiersInternal": [],
+    "ModifiersThatAffectsThis": []
+  },
+  {
+    "Id": "UNLOCK_UNIT_CATAPULT",
+    "Name": "Catapult",
+    "Description": "Unlocks Catapult recruitment.",
+    "ResearchType": "Unlocks",
+    "ParentId": null,
+    "ResearchPointCost": 25,
+    "ResearchTimeInSeconds": 900,
+    "Effects": [
+      {
+        "Type": "UnitRecruitment",
+        "UnitType": "Catapult"
+      }
+    ],
+    "ModifiersInternal": [],
+    "ModifiersThatAffectsThis": []
+  },
+  {
+    "Id": "UNLOCK_UNIT_TREBUCHET",
+    "Name": "Trebuchet",
+    "Description": "Unlocks Trebuchet recruitment.",
+    "ResearchType": "Unlocks",
+    "ParentId": "UNLOCK_UNIT_CATAPULT",
+    "ResearchPointCost": 40,
+    "ResearchTimeInSeconds": 1800,
+    "Effects": [
+      {
+        "Type": "UnitRecruitment",
+        "UnitType": "Trebuchet"
+      }
+    ],
+    "ModifiersInternal": [],
+    "ModifiersThatAffectsThis": []
+  },
+  {
+    "Id": "UNLOCK_UNIT_ENGINEERS",
+    "Name": "Engineers",
+    "Description": "Unlocks Engineers recruitment.",
+    "ResearchType": "Unlocks",
+    "ParentId": "UNLOCK_UNIT_TREBUCHET",
+    "ResearchPointCost": 60,
+    "ResearchTimeInSeconds": 2700,
+    "Effects": [
+      {
+        "Type": "UnitRecruitment",
+        "UnitType": "Engineers"
+      }
+    ],
+    "ModifiersInternal": [],
+    "ModifiersThatAffectsThis": []
+  },
+  {
+    "Id": "UNLOCK_UNIT_CANNON",
+    "Name": "Cannon",
+    "Description": "Unlocks Cannon recruitment.",
+    "ResearchType": "Unlocks",
+    "ParentId": "UNLOCK_UNIT_ENGINEERS",
+    "ResearchPointCost": 80,
+    "ResearchTimeInSeconds": 3600,
+    "Effects": [
+      {
+        "Type": "UnitRecruitment",
+        "UnitType": "Cannon"
+      }
+    ],
+    "ModifiersInternal": [],
+    "ModifiersThatAffectsThis": []
+  },
+  {
+    "Id": "UNLOCK_UNIT_TRANSPORT",
+    "Name": "Transport",
+    "Description": "Unlocks Transport recruitment.",
+    "ResearchType": "Unlocks",
+    "ParentId": null,
+    "ResearchPointCost": 10,
+    "ResearchTimeInSeconds": 300,
+    "Effects": [
+      {
+        "Type": "UnitRecruitment",
+        "UnitType": "Transport"
+      }
+    ],
+    "ModifiersInternal": [],
+    "ModifiersThatAffectsThis": []
+  },
+  {
+    "Id": "UNLOCK_UNIT_WAR_GALLEY",
+    "Name": "War Galley",
+    "Description": "Unlocks War Galley recruitment.",
+    "ResearchType": "Unlocks",
+    "ParentId": "UNLOCK_UNIT_TRANSPORT",
+    "ResearchPointCost": 10,
+    "ResearchTimeInSeconds": 300,
+    "Effects": [
+      {
+        "Type": "UnitRecruitment",
+        "UnitType": "WarGalley"
+      }
+    ],
+    "ModifiersInternal": [],
+    "ModifiersThatAffectsThis": []
+  },
+  {
+    "Id": "UNLOCK_UNIT_GRAND_TRANSPORT",
+    "Name": "Grand Transport",
+    "Description": "Unlocks Grand Transport recruitment.",
+    "ResearchType": "Unlocks",
+    "ParentId": "UNLOCK_UNIT_WAR_GALLEY",
+    "ResearchPointCost": 40,
+    "ResearchTimeInSeconds": 1800,
+    "Effects": [
+      {
+        "Type": "UnitRecruitment",
+        "UnitType": "GrandTransport"
+      }
+    ],
+    "ModifiersInternal": [],
+    "ModifiersThatAffectsThis": []
+  },
+  {
+    "Id": "UNLOCK_SUBJUGATION",
+    "Name": "Right of Subjugation",
+    "Description": "Unlocks the authority required to subjugate conquered cities.",
+    "ResearchType": "Unlocks",
+    "ParentId": null,
+    "ResearchPointCost": 100,
+    "ResearchTimeInSeconds": 7200,
+    "Effects": [
+      {
+        "Type": "Subjugation",
+        "UnitType": null
+      }
+    ],
+    "ModifiersInternal": [],
     "ModifiersThatAffectsThis": []
   }
 ]

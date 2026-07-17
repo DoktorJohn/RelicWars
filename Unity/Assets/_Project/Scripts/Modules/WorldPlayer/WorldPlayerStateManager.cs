@@ -121,6 +121,10 @@ namespace Project.Modules.WorldPlayer
 
             _currentEconomyState.IdeologyFocusPointsAmount = dto.CurrentIdeologyFocusPoints;
             _currentEconomyState.IdeologyFocusPointsProductionPerHour = dto.IdeologyFocusPointsPerHour;
+            _currentEconomyState.TotalWoodAmount = dto.TotalWoodAmount;
+            _currentEconomyState.TotalStoneAmount = dto.TotalStoneAmount;
+            _currentEconomyState.TotalMetalAmount = dto.TotalMetalAmount;
+            _currentEconomyState.TotalPopulationAmount = dto.TotalPopulationAmount;
             _currentEconomyState.PlayerCities = dto.PlayerCities ?? new System.Collections.Generic.List<CityDTO>();
 
             OnEconomyStateChanged?.Invoke(_currentEconomyState);

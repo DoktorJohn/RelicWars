@@ -50,7 +50,7 @@ namespace Assets._Project.Scripts.Modules.UI
 
                     if (CityStateManager.Instance != null && _currentActiveCityId != Guid.Empty)
                     {
-                        CityStateManager.Instance.InitiateResourceRefresh(_currentActiveCityId);
+                        CityStateManager.Instance.RequestImmediateRefresh(_currentActiveCityId);
                     }
                 }
                 else

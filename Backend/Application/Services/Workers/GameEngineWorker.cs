@@ -1,7 +1,4 @@
-﻿using Application.Interfaces.IRepositories;
-using Application.Interfaces.IServices;
-using Domain.Entities;
-using Domain.Enums;
+using Application.Interfaces.IRepositories;
 using Domain.StaticData.Generators;
 using Domain.StaticData.Readers;
 using Infrastructure.Workers;
@@ -13,9 +10,12 @@ namespace Application.Services.Workers
 {
     public class GameEngineWorker : BackgroundService
     {
+        private static readonly TimeSpan IdleDelay = TimeSpan.FromSeconds(1);
+        private static readonly TimeSpan NPCReconciliationInterval = TimeSpan.FromSeconds(30);
+        private static readonly TimeSpan RankingInterval = TimeSpan.FromMinutes(10);
+
         private readonly IServiceProvider _services;
         private readonly ILogger<GameEngineWorker> _logger;
-        private DateTime _lastRankingGeneration = DateTime.UtcNow;
 
         public GameEngineWorker(IServiceProvider services, ILogger<GameEngineWorker> logger)
         {
@@ -23,40 +23,133 @@ namespace Application.Services.Workers
             _logger = logger;
         }
 
-        protected override async Task ExecuteAsync(CancellationToken stoppingToken)
+        protected override Task ExecuteAsync(CancellationToken stoppingToken)
         {
-            _logger.LogInformation("Game Engine Orchestrator started.");
+            _logger.LogInformation("Game Engine Orchestrator started with independent worker loops.");
 
-            while (!stoppingToken.IsCancellationRequested)
+            var cityWorker = _services.GetRequiredService<CityWorker>();
+            return Task.WhenAll(
+                RunJobLoopAsync("player jobs", cityWorker.ProcessPlayerJobsBatchAsync, stoppingToken),
+                RunJobLoopAsync("NPC building completions", cityWorker.ProcessNPCBuildingJobsBatchAsync, stoppingToken),
+                RunNPCReconciliationLoopAsync(stoppingToken),
+                RunDeploymentLoopAsync(stoppingToken),
+                RunRankingLoopAsync(stoppingToken));
+        }
+
+        private async Task RunJobLoopAsync(
+            string loopName,
+            Func<CancellationToken, Task<JobBatchResult>> processBatch,
+            CancellationToken cancellationToken)
+        {
+            while (!cancellationToken.IsCancellationRequested)
             {
-                using (IServiceScope serviceScope = _services.CreateScope())
+                try
                 {
-                    var scopedProvider = serviceScope.ServiceProvider;
-                    try
+                    var result = await processBatch(cancellationToken);
+                    if (result.FoundCount < CityWorker.BatchSize)
                     {
-                        // 1. Kør bygge/rekrutterings jobs
-                        var cityJobWorker = scopedProvider.GetRequiredService<CityWorker>();
-                        await cityJobWorker.ProcessCityJobsAsync();
-
-                        // 2. Kør hær-bevægelser (Ankomster/Retur)
-                        var unitDeploymentWorker = scopedProvider.GetRequiredService<UnitDeploymentWorker>();
-                        await unitDeploymentWorker.ProcessMilitaryMovementsAsync();
-
-                        if ((DateTime.UtcNow - _lastRankingGeneration).TotalMinutes >= 10)
-                        {
-                            await SynchronizeAllPlayerPointsAndRankings(scopedProvider);
-                            _lastRankingGeneration = DateTime.UtcNow;
-                        }
-                    }
-                    catch (Exception exception)
-                    {
-                        _logger.LogError(exception, "GameEngine Loop Error");
+                        await Task.Delay(IdleDelay, cancellationToken);
                     }
                 }
-                await Task.Delay(1000, stoppingToken);
+                catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+                {
+                    return;
+                }
+                catch (Exception exception)
+                {
+                    _logger.LogError(exception, "Game engine {LoopName} loop failed.", loopName);
+                    await DelayAfterFailureAsync(cancellationToken);
+                }
             }
         }
 
+        private async Task RunNPCReconciliationLoopAsync(CancellationToken cancellationToken)
+        {
+            while (!cancellationToken.IsCancellationRequested)
+            {
+                try
+                {
+                    await using var scope = _services.CreateAsyncScope();
+                    await scope.ServiceProvider
+                        .GetRequiredService<NPCBuildingWorker>()
+                        .ProcessBuildingQueuesAsync();
+                }
+                catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+                {
+                    return;
+                }
+                catch (Exception exception)
+                {
+                    _logger.LogError(exception, "Game engine NPC reconciliation loop failed.");
+                }
+
+                await DelayAsync(NPCReconciliationInterval, cancellationToken);
+            }
+        }
+
+        private async Task RunDeploymentLoopAsync(CancellationToken cancellationToken)
+        {
+            while (!cancellationToken.IsCancellationRequested)
+            {
+                try
+                {
+                    await using var scope = _services.CreateAsyncScope();
+                    await scope.ServiceProvider
+                        .GetRequiredService<UnitDeploymentWorker>()
+                        .ProcessMilitaryMovementsAsync();
+                }
+                catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+                {
+                    return;
+                }
+                catch (Exception exception)
+                {
+                    _logger.LogError(exception, "Game engine deployment loop failed.");
+                }
+
+                await DelayAsync(IdleDelay, cancellationToken);
+            }
+        }
+
+        private async Task RunRankingLoopAsync(CancellationToken cancellationToken)
+        {
+            await DelayAsync(RankingInterval, cancellationToken);
+
+            while (!cancellationToken.IsCancellationRequested)
+            {
+                try
+                {
+                    await using var scope = _services.CreateAsyncScope();
+                    await SynchronizeAllPlayerPointsAndRankings(scope.ServiceProvider);
+                }
+                catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+                {
+                    return;
+                }
+                catch (Exception exception)
+                {
+                    _logger.LogError(exception, "Game engine ranking loop failed.");
+                }
+
+                await DelayAsync(RankingInterval, cancellationToken);
+            }
+        }
+
+        private static async Task DelayAsync(TimeSpan delay, CancellationToken cancellationToken)
+        {
+            try
+            {
+                await Task.Delay(delay, cancellationToken);
+            }
+            catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+            {
+            }
+        }
+
+        private Task DelayAfterFailureAsync(CancellationToken cancellationToken)
+        {
+            return DelayAsync(IdleDelay, cancellationToken);
+        }
 
         private async Task SynchronizeAllPlayerPointsAndRankings(IServiceProvider scopedProvider)
         {
@@ -64,12 +157,9 @@ namespace Application.Services.Workers
 
             var cityDataRepository = scopedProvider.GetRequiredService<ICityRepository>();
             var buildingDataReader = scopedProvider.GetRequiredService<BuildingDataReader>();
-
             var allCities = await cityDataRepository.GetAllAsync();
-            string rankingPath = "rankings.json";
 
-            RankingGenerator.GenerateRankingSnapshot(rankingPath, allCities, buildingDataReader);
-
+            RankingGenerator.GenerateRankingSnapshot("rankings.json", allCities, buildingDataReader);
             _logger.LogInformation("[Ranking] Rankings snapshot er blevet gemt succesfuldt.");
         }
     }

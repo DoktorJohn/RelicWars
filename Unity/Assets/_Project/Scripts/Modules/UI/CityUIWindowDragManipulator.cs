@@ -36,7 +36,7 @@ namespace Project.Modules.UI
 
         private void OnPointerDown(PointerDownEvent pointerEvent)
         {
-            if (_targetWindowToMove == null) return;
+            if (_targetWindowToMove == null || ResponsiveUiStateManager.IsPhoneLayout) return;
 
             // OBJEKTIV FIX: Vi bruger 'position' (Panel-space) i stedet for 'localPosition'.
             // Dette sikrer at musens startpunkt er fastlåst til skærmen, ikke til headeren.

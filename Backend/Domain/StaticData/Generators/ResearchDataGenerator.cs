@@ -201,13 +201,13 @@ namespace Domain.StaticData.Generators
             nodes.Add(new ResearchData
             {
                 Id = "UTIL_COINS_1",
-                Name = "Bureaucratic Efficiency",
+                Name = "Efficient Bureaucracy",
                 ParentId = "UTIL_SUBJ_2",
                 ResearchType = ResearchTypeEnum.Utility,
                 Description = "1% increased coins income",
                 ResearchPointCost = 60,
                 ResearchTimeInSeconds = 3000,
-                ModifiersInternal = { new Modifier { Tag = ModifierTagEnum.Coins, Type = ModifierTypeEnum.Increased, Value = 0.01, Source = "Research: Bureaucratic Efficiency" } }
+                ModifiersInternal = { new Modifier { Tag = ModifierTagEnum.Coins, Type = ModifierTypeEnum.Increased, Value = 0.01, Source = "Research: Efficient Bureaucracy" } }
             });
 
             nodes.Add(new ResearchData
@@ -284,17 +284,89 @@ namespace Domain.StaticData.Generators
             nodes.Add(new ResearchData
             {
                 Id = "UTIL_ALLIED_SPEED",
-                Name = "Imperial Messenger Lines",
+                Name = "Imperial Messengers",
                 ParentId = "UTIL_WATCH_RANGE",
                 ResearchType = ResearchTypeEnum.Utility,
                 Description = "Armies are 10% faster from and to allied cities",
                 ResearchPointCost = 80,
                 ResearchTimeInSeconds = 3600,
-                ModifiersInternal = { new Modifier { Tag = ModifierTagEnum.TravelSpeed, Type = ModifierTypeEnum.Increased, Value = 0.10, Source = "Research: Imperial Messenger Lines" } }
+                ModifiersInternal = { new Modifier { Tag = ModifierTagEnum.TravelSpeed, Type = ModifierTypeEnum.Increased, Value = 0.10, Source = "Research: Imperial Messengers" } }
+            });
+
+            AddUnlockBranch(nodes, new[]
+            {
+                (UnitTypeEnum.Bowmen, "UNLOCK_UNIT_BOWMEN", "Bowmen", BuildingTypeEnum.Barracks, 2),
+                (UnitTypeEnum.Spearmen, "UNLOCK_UNIT_SPEARMEN", "Spearmen", BuildingTypeEnum.Barracks, 5),
+                (UnitTypeEnum.Axemen, "UNLOCK_UNIT_AXEMEN", "Axemen", BuildingTypeEnum.Barracks, 8),
+                (UnitTypeEnum.Swordsmen, "UNLOCK_UNIT_SWORDSMEN", "Swordsmen", BuildingTypeEnum.Barracks, 10),
+                (UnitTypeEnum.Crossbowmen, "UNLOCK_UNIT_CROSSBOWMEN", "Crossbowmen", BuildingTypeEnum.Barracks, 12),
+                (UnitTypeEnum.MenAtArms, "UNLOCK_UNIT_MEN_AT_ARMS", "Men At Arms", BuildingTypeEnum.Barracks, 15)
+            });
+            AddUnlockBranch(nodes, new[]
+            {
+                (UnitTypeEnum.Knights, "UNLOCK_UNIT_KNIGHTS", "Knights", BuildingTypeEnum.Stable, 15),
+                (UnitTypeEnum.Cataphracts, "UNLOCK_UNIT_CATAPHRACTS", "Cataphracts", BuildingTypeEnum.Stable, 20)
+            });
+            AddUnlockBranch(nodes, new[]
+            {
+                (UnitTypeEnum.Catapult, "UNLOCK_UNIT_CATAPULT", "Catapult", BuildingTypeEnum.Workshop, 10),
+                (UnitTypeEnum.Trebuchet, "UNLOCK_UNIT_TREBUCHET", "Trebuchet", BuildingTypeEnum.Workshop, 15),
+                (UnitTypeEnum.Engineers, "UNLOCK_UNIT_ENGINEERS", "Engineers", BuildingTypeEnum.Workshop, 20),
+                (UnitTypeEnum.Cannon, "UNLOCK_UNIT_CANNON", "Cannon", BuildingTypeEnum.Workshop, 25)
+            });
+            AddUnlockBranch(nodes, new[]
+            {
+                (UnitTypeEnum.Transport, "UNLOCK_UNIT_TRANSPORT", "Transport", BuildingTypeEnum.Harbor, 3),
+                (UnitTypeEnum.WarGalley, "UNLOCK_UNIT_WAR_GALLEY", "War Galley", BuildingTypeEnum.Harbor, 5),
+                (UnitTypeEnum.GrandTransport, "UNLOCK_UNIT_GRAND_TRANSPORT", "Grand Transport", BuildingTypeEnum.Harbor, 12)
+            });
+
+            nodes.Add(new ResearchData
+            {
+                Id = "UNLOCK_SUBJUGATION",
+                Name = "Right of Subjugation",
+                Description = "Unlocks the authority required to subjugate conquered cities.",
+                ResearchType = ResearchTypeEnum.Unlocks,
+                ResearchPointCost = 100,
+                ResearchTimeInSeconds = 7200,
+                Effects = { new ResearchEffectData { Type = ResearchEffectType.Subjugation } }
             });
 
             var options = new JsonSerializerOptions { WriteIndented = true, Converters = { new JsonStringEnumConverter() } };
             File.WriteAllText(path, JsonSerializer.Serialize(nodes, options));
         }
+
+        private static void AddUnlockBranch(
+            ICollection<ResearchData> nodes,
+            IReadOnlyList<(UnitTypeEnum UnitType, string Id, string Name, BuildingTypeEnum BuildingType, int BuildingLevel)> branch)
+        {
+            string? parentId = null;
+            foreach (var unlock in branch)
+            {
+                var (cost, seconds) = GetUnlockBalance(unlock.BuildingLevel);
+                nodes.Add(new ResearchData
+                {
+                    Id = unlock.Id,
+                    Name = unlock.Name,
+                    Description = $"Unlocks {unlock.Name} recruitment.",
+                    ResearchType = ResearchTypeEnum.Unlocks,
+                    ParentId = parentId,
+                    ResearchPointCost = cost,
+                    ResearchTimeInSeconds = seconds,
+                    Effects = { new ResearchEffectData { Type = ResearchEffectType.UnitRecruitment, UnitType = unlock.UnitType } }
+                });
+                parentId = unlock.Id;
+            }
+        }
+
+        private static (double Cost, int Seconds) GetUnlockBalance(int requiredLevel) => requiredLevel switch
+        {
+            <= 5 => (10, 300),
+            <= 10 => (25, 900),
+            <= 15 => (40, 1800),
+            <= 20 => (60, 2700),
+            <= 25 => (80, 3600),
+            _ => throw new ArgumentOutOfRangeException(nameof(requiredLevel))
+        };
     }
 }

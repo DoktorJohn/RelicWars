@@ -1,42 +1,48 @@
 <?xml version="1.0" encoding="utf-8"?>
 <ui:UXML xmlns:ui="UnityEngine.UIElements" editor-extension-mode="False">
     <ui:Style src="project://database/Assets/UI/Windows/WindowTheme.uss" />
-    <ui:Style src="RegisterWindow.uss" />
+    <ui:Style src="project://database/Assets/UI/Windows/AuthWindow.uss" />
 
-    <ui:VisualElement name="Register-Overlay" class="auth-screen-overlay">
-        <ui:VisualElement name="Register-Window-MainContainer" class="window-frame auth-main-container">
-            
-            <ui:VisualElement name="Register-Window-Header" class="window-header" style="justify-content: center;">
-                <ui:Label text="Create New Profile" class="window-header-label" />
-            </ui:VisualElement>
-
-            <ui:VisualElement class="window-content-container auth-content">
-                
-                <ui:VisualElement>
-                    <ui:VisualElement class="input-group">
-                        <ui:Label text="USERNAME" class="input-label" />
-                        <ui:TextField name="Input-Username" class="auth-text-field" />
+    <ui:VisualElement name="Auth-Background" class="auth-screen-overlay">
+        <ui:VisualElement name="Auth-Vignette" class="auth-background-vignette" />
+        <ui:VisualElement name="Auth-SafeArea" class="auth-safe-area">
+            <ui:ScrollView name="Auth-ScrollView" class="auth-scroll-view" mode="Vertical" horizontal-scroller-visibility="Hidden" vertical-scroller-visibility="Auto">
+                <ui:VisualElement name="Register-Window-MainContainer" class="window-frame auth-shell auth-register-shell">
+                    <ui:VisualElement class="window-header auth-scene-header">
+                        <ui:Label text="REGISTER" class="window-header-label" />
                     </ui:VisualElement>
+                    <ui:VisualElement name="Auth-FormPanel" class="window-content-container auth-form-panel">
+                        <ui:VisualElement class="auth-form-content">
+                            <ui:Label text="Create Account" class="auth-form-title" />
 
-                    <ui:VisualElement class="input-group">
-                        <ui:Label text="EMAIL ADDRESS" class="input-label" />
-                        <ui:TextField name="Input-Email" class="auth-text-field" />
-                    </ui:VisualElement>
+                            <ui:VisualElement class="auth-field-group">
+                                <ui:Label text="USERNAME" class="auth-input-label" />
+                                <ui:TextField name="Input-Username" class="game-input auth-text-field" />
+                                <ui:Label name="Error-Username" text="" class="auth-field-error" />
+                            </ui:VisualElement>
 
-                    <ui:VisualElement class="input-group">
-                        <ui:Label text="PASSWORD" class="input-label" />
-                        <ui:TextField name="Input-Password" password="true" class="auth-text-field" />
+                            <ui:VisualElement class="auth-field-group">
+                                <ui:Label text="EMAIL ADDRESS" class="auth-input-label" />
+                                <ui:TextField name="Input-Email" class="game-input auth-text-field" />
+                                <ui:Label name="Error-Email" text="" class="auth-field-error" />
+                            </ui:VisualElement>
+
+                            <ui:VisualElement class="auth-field-group">
+                                <ui:Label text="PASSWORD" class="auth-input-label" />
+                                <ui:TextField name="Input-Password" password="true" class="game-input auth-text-field" />
+                                <ui:Label name="Error-Password" text="" class="auth-field-error" />
+                            </ui:VisualElement>
+
+                            <ui:Label name="Label-Status-Feedback" text="" class="auth-status-message" />
+
+                            <ui:VisualElement class="auth-actions">
+                                <ui:Button name="Button-Execute-Register" text="CREATE ACCOUNT" class="btn-global-base btn-imperial-primary auth-primary-button" />
+                                <ui:Button name="Button-Navigate-Login" text="Already enlisted? Return to login" class="btn-text-link auth-navigation-link" />
+                            </ui:VisualElement>
+                        </ui:VisualElement>
                     </ui:VisualElement>
-                    
-                    <ui:Label name="Label-Status-Feedback" class="status-feedback-label" text="Join the struggle for Relics today." />
                 </ui:VisualElement>
-
-                <ui:VisualElement>
-                    <ui:Button name="Button-Execute-Register" text="CREATE ACCOUNT" class="button-primary" />
-                    <ui:Button name="Button-Navigate-Login" text="Already have an account? Login here" class="button-flat" />
-                </ui:VisualElement>
-
-            </ui:VisualElement>
+            </ui:ScrollView>
         </ui:VisualElement>
     </ui:VisualElement>
 </ui:UXML>

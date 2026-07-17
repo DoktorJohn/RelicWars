@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ui:UXML xmlns:ui="UnityEngine.UIElements">
+    <ui:Style src="project://database/Assets/UI/Windows/WindowTheme.uss" />
+    <ui:Style src="DailiesWindow.uss" />
+
+    <ui:VisualElement class="screen-overlay" picking-mode="Ignore">
+        <ui:VisualElement name="Dailies-Window-MainContainer" class="window-frame dailies-window-size">
+            <ui:VisualElement name="Dailies-Window-Header" class="window-header">
+                <ui:Label class="window-header-label" text="DAILIES" />
+                <ui:Button name="DailiesWindow-Close-Button" class="window-close-btn" text="×" />
+            </ui:VisualElement>
+
+            <ui:VisualElement class="dailies-content">
+                <ui:VisualElement name="Dailies-Load-State" class="window-async-state" />
+                <ui:VisualElement name="Dailies-Data">
+                <ui:VisualElement class="dailies-reset-panel">
+                    <ui:VisualElement>
+                        <ui:Label text="NEXT RESET" class="dailies-reset-title" />
+                        <ui:Label text="UTC MIDNIGHT" class="dailies-reset-subtitle" />
+                    </ui:VisualElement>
+                    <ui:Label name="Dailies-Reset-Countdown" class="dailies-reset-countdown" />
+                </ui:VisualElement>
+
+                <ui:ScrollView name="Dailies-Table-Scroll"
+                               class="dailies-table-scroll"
+                               mode="Vertical"
+                               vertical-scroller-visibility="Auto"
+                               horizontal-scroller-visibility="Hidden">
+                    <ui:VisualElement class="dailies-table">
+                        <ui:VisualElement class="dailies-table-header">
+                            <ui:Label text="LEVEL" class="dailies-header-label dailies-col-level" />
+                            <ui:Label text="OBJECTIVE" class="dailies-header-label dailies-col-objective" />
+                            <ui:Label text="COMPLETION" class="dailies-header-label dailies-col-completion" />
+                            <ui:Label text="REWARD" class="dailies-header-label dailies-col-reward" />
+                            <ui:Label text="STATUS" class="dailies-header-label dailies-col-claim" />
+                        </ui:VisualElement>
+                        <ui:VisualElement name="Dailies-Rows" class="dailies-rows" />
+                    </ui:VisualElement>
+                </ui:ScrollView>
+                </ui:VisualElement>
+            </ui:VisualElement>
+        </ui:VisualElement>
+    </ui:VisualElement>
+</ui:UXML>

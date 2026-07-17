@@ -70,7 +70,8 @@ namespace Application.Services
                     isCompleted,
                     isResearching,
                     !parentIsCompleted, // IsLocked
-                    user.ResearchPoints >= staticNode.ResearchPointCost // CanAfford
+                    user.ResearchPoints >= staticNode.ResearchPointCost, // CanAfford
+                    staticNode.Effects.Select(effect => new ResearchEffectDTO(effect.Type, effect.UnitType)).ToList()
                 );
             }).ToList();
 

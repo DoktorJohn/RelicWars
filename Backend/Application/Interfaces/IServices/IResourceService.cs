@@ -12,6 +12,7 @@ namespace Application.Interfaces.IServices
     public interface IResourceService
     {
         CityResourceSnapshot CalculateCityResources(City cityEntity, DateTime currentDateTime);
+        CityProductionSnapshot CalculateCityProduction(WorldPlayer playerEntity, City cityEntity);
         GlobalResourceSnapshot CalculateGlobalResources(WorldPlayer playerEntity, DateTime currentDateTime);
     }
 }

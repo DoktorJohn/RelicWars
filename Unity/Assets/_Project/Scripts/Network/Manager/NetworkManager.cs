@@ -34,15 +34,18 @@ namespace Project.Network.Manager
         public ClientBarracksService Barracks { get; private set; }
         public ClientStableService Stable { get; private set; }
         public ClientWorkshopService Workshop { get; private set; }
+        public ClientHarborService Harbor { get; private set; }
         public ClientRankingService Ranking { get; private set; }
         public ClientAllianceService Alliance { get; private set; }
         public ClientMarketPlaceService MarketPlace { get; private set; }
         public ClientResearchService Research { get; private set; }
         public ClientBattleReportService BattleReports { get; private set; }
         public ClientUnitDeploymentService UnitDeployment { get; private set; }
+        public ClientCombatSimulatorService CombatSimulator { get; private set; }
         public ClientIdeologyFocusService IdeologyFocus { get; private set; }
         public ClientMessagingService Messaging { get; private set; }
         public ClientBugReportService BugReports { get; private set; }
+        public ClientDailyObjectivesService DailyObjectives { get; private set; }
 
         private void Awake()
         {
@@ -74,6 +77,7 @@ namespace Project.Network.Manager
             Barracks = new ClientBarracksService(_activeBackendUrl);
             Stable = new ClientStableService(_activeBackendUrl);
             Workshop = new ClientWorkshopService(_activeBackendUrl);
+            Harbor = new ClientHarborService(_activeBackendUrl);
             Ranking = new ClientRankingService(_activeBackendUrl);
             WorldPlayer = new ClientWorldPlayerService(_activeBackendUrl);
             Alliance = new ClientAllianceService(_activeBackendUrl);
@@ -81,42 +85,38 @@ namespace Project.Network.Manager
             Research = new ClientResearchService(_activeBackendUrl);
             BattleReports = new ClientBattleReportService(_activeBackendUrl);
             UnitDeployment = new ClientUnitDeploymentService(_activeBackendUrl);
+            CombatSimulator = new ClientCombatSimulatorService(_activeBackendUrl);
             IdeologyFocus = new ClientIdeologyFocusService(_activeBackendUrl);
             Messaging = new ClientMessagingService(_activeBackendUrl);
             BugReports = new ClientBugReportService(_activeBackendUrl);
+            DailyObjectives = new ClientDailyObjectivesService(_activeBackendUrl);
         }
 
         // --- Public Methods til UI ---
 
-        public void AuthenticateUser(string email, string password, Action<bool> onComplete)
+        public void AuthenticateUser(string email, string password, Action<AuthenticationResponse> onComplete)
         {
             StartCoroutine(Auth.Login(email, password, (response) =>
             {
                 if (response != null && response.IsAuthenticated)
                 {
                     SetSessionData(response);
-                    onComplete?.Invoke(true);
                 }
-                else
-                {
-                    onComplete?.Invoke(false);
-                }
+
+                onComplete?.Invoke(response);
             }));
         }
 
-        public void RegisterUser(string email, string user, string pass, Action<bool> onComplete)
+        public void RegisterUser(string email, string user, string pass, Action<AuthenticationResponse> onComplete)
         {
             StartCoroutine(Auth.Register(email, user, pass, (response) =>
             {
                 if (response != null && response.IsAuthenticated)
                 {
                     SetSessionData(response);
-                    onComplete?.Invoke(true);
                 }
-                else
-                {
-                    onComplete?.Invoke(false);
-                }
+
+                onComplete?.Invoke(response);
             }));
         }
 

@@ -1,5 +1,6 @@
 ﻿using Domain.Entities;
 using Domain.StaticData.Data;
+using Domain.Enums;
 using Domain.StaticData.Readers;
 using System;
 using System.Collections.Generic;
@@ -48,6 +49,18 @@ namespace Application.Utility
             }
 
             return accumulatedPoints;
+        }
+
+        public int CalculateMaximumPointsForCity()
+        {
+            return Enum.GetValues<BuildingTypeEnum>()
+                .Sum(buildingType =>
+                {
+                    int maximumLevel = _buildingDataReader.GetMaximumLevel(buildingType);
+                    return _buildingDataReader
+                        .GetConfig<BuildingLevelData>(buildingType, maximumLevel)
+                        .Points;
+                });
         }
     }
 }

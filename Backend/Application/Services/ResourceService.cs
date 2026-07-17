@@ -22,6 +22,11 @@ namespace Application.Services
         double MetalProductionPerHour,
         DateTime Timestamp);
 
+    public record CityProductionSnapshot(
+        double CoinsProductionPerHour,
+        double ResearchPointsPerHour,
+        double IdeologyFocusPointsPerHour);
+
     public record GlobalResourceSnapshot(
         double CoinsAmount,
         double ResearchPoints,
@@ -29,7 +34,10 @@ namespace Application.Services
         double CoinsProductionPerHour,
         double ResearchPointsPerHour,
         double IdeologyFocusPointsPerHour,
-        DateTime Timestamp);
+        DateTime Timestamp)
+    {
+        public double TotalAvailablePopulation { get; init; }
+    }
 
     public class ResourceService : IResourceService
     {
@@ -88,27 +96,23 @@ namespace Application.Services
 
             double totalCoinsRate = 0;
             double totalResearchRate = 0;
+            int totalAvailablePopulation = 0;
 
-            foreach (var city in playerEntity.Cities)
+            double totalIdeologyRate = CalculateTotalIdeologyProduction(playerEntity);
+            for (int cityIndex = 0; cityIndex < playerEntity.Cities.Count; cityIndex++)
             {
-                var coinsResult = GetCoinsProductionResult(city);
-                var researchResult = GetProductionResult(city, BuildingTypeEnum.University, new[] { ModifierTagEnum.Research });
+                var city = playerEntity.Cities[cityIndex];
+                var production = CalculateCityProduction(playerEntity, city, totalIdeologyRate, cityIndex);
 
-                totalCoinsRate += coinsResult;
-                totalResearchRate += researchResult.FinalValue;
+                totalCoinsRate += production.CoinsProductionPerHour;
+                totalResearchRate += production.ResearchPointsPerHour;
+                totalAvailablePopulation += Math.Max(0, _statService.GetAvailablePopulation(city, Array.Empty<Domain.Workers.Abstraction.BaseJob>()));
             }
-
-            double baseIdeologyRate = playerEntity.Cities.Count * 1.0;
-            var ideologyCalculation = _modifierService.CalculateEntityValueWithModifiers(
-                baseIdeologyRate,
-                new[] { ModifierTagEnum.Ideology },
-                new List<IModifierProvider> { playerEntity }
-            );
 
             // Globale ressourcer
             double newCoinsAmount = playerEntity.Coins + (totalCoinsRate * hoursPassed);
             double newResearchAmount = playerEntity.ResearchPoints + (totalResearchRate * hoursPassed);
-            double newIdeologyAmount = playerEntity.IdeologyFocusPoints + (ideologyCalculation.FinalValue * hoursPassed);
+            double newIdeologyAmount = playerEntity.IdeologyFocusPoints + (totalIdeologyRate * hoursPassed);
 
             _logger.LogInformation("[ResourceService] Global Calc Result: Total Coins Rate: {TotalCoinsRate}, Old Coins: {OldCoins}, New Coins: {NewCoins}", 
                 totalCoinsRate, playerEntity.Coins, newCoinsAmount);
@@ -119,9 +123,54 @@ namespace Application.Services
                 newIdeologyAmount,
                 totalCoinsRate,
                 totalResearchRate,
-                ideologyCalculation.FinalValue,
+                totalIdeologyRate,
                 currentDateTime
-            );
+            )
+            {
+                TotalAvailablePopulation = totalAvailablePopulation
+            };
+        }
+
+        public CityProductionSnapshot CalculateCityProduction(WorldPlayer playerEntity, City cityEntity)
+        {
+            int cityIndex = playerEntity.Cities.FindIndex(city => city.Id == cityEntity.Id);
+            if (cityIndex < 0)
+            {
+                throw new ArgumentException("City must belong to the supplied world player.", nameof(cityEntity));
+            }
+
+            return CalculateCityProduction(playerEntity, cityEntity, CalculateTotalIdeologyProduction(playerEntity), cityIndex);
+        }
+
+        private CityProductionSnapshot CalculateCityProduction(
+            WorldPlayer playerEntity,
+            City cityEntity,
+            double totalIdeologyRate,
+            int cityIndex)
+        {
+            double ideologyContribution = 0d;
+            int cityCount = playerEntity.Cities.Count;
+            if (cityCount > 0)
+            {
+                double equalShare = totalIdeologyRate / cityCount;
+                ideologyContribution = cityIndex == cityCount - 1
+                    ? totalIdeologyRate - (equalShare * (cityCount - 1))
+                    : equalShare;
+            }
+
+            return new CityProductionSnapshot(
+                GetCoinsProductionResult(cityEntity),
+                GetProductionResult(cityEntity, BuildingTypeEnum.University, new[] { ModifierTagEnum.Research }).FinalValue,
+                ideologyContribution);
+        }
+
+        private double CalculateTotalIdeologyProduction(WorldPlayer playerEntity)
+        {
+            var result = _modifierService.CalculateEntityValueWithModifiers(
+                playerEntity.Cities.Count,
+                new[] { ModifierTagEnum.Ideology },
+                new List<IModifierProvider> { playerEntity });
+            return result.FinalValue;
         }
 
         private double CalculateHoursPassed(DateTime lastUpdate, DateTime currentDateTime)

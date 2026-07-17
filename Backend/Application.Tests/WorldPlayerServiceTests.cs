@@ -18,6 +18,41 @@ namespace Application.Tests;
 public class WorldPlayerServiceTests
 {
     [Fact]
+    public async Task GetWorldPlayerEconomyAsync_ReturnsResourceTotalsAcrossOwnedCities()
+    {
+        var player = new WorldPlayer
+        {
+            Id = Guid.NewGuid(),
+            PlayerProfileId = Guid.NewGuid(),
+            WorldId = Guid.NewGuid()
+        };
+        var firstCity = new City { Id = Guid.NewGuid(), WorldPlayerId = player.Id, Wood = 125, Stone = 80, Metal = 30 };
+        var secondCity = new City { Id = Guid.NewGuid(), WorldPlayerId = player.Id, Wood = 75, Stone = 20, Metal = 45 };
+        player.Cities = [firstCity, secondCity];
+        var world = new World { Id = player.WorldId };
+        var worldRepository = new FixedWorldRepository(world);
+        var service = new WorldPlayerService(
+            new MemoryWorldPlayerRepository(player),
+            new NoOpPlayerProfileRepository(),
+            new FixedCitiesRepository(firstCity, secondCity),
+            worldRepository,
+            new StoredCityResourceService(),
+            worldRepository,
+            new NoOpWorldMapObjectRepository(),
+            new CapturingWorldMapObjectService(),
+            new TestPlayerAccessService([player]),
+            NullLogger<WorldPlayerService>.Instance,
+            new CityPointCalculator(TestData.BuildingReader()));
+
+        var result = await service.GetWorldPlayerEconomyAsync(player.Id);
+
+        Assert.Equal(200, result.TotalWoodAmount);
+        Assert.Equal(100, result.TotalStoneAmount);
+        Assert.Equal(75, result.TotalMetalAmount);
+        Assert.Equal(240, result.TotalPopulationAmount);
+    }
+
+    [Fact]
     public async Task AssignPlayerToGameWorldAsync_PlacesCapitalOnCoast()
     {
         var world = new World
@@ -173,6 +208,78 @@ public class WorldPlayerServiceTests
                     Math.Abs(firstCubeZ - secondCubeZ)));
             Assert.True(distance >= 3, $"Cities were only {distance} tiles apart.");
         }
+    }
+
+    [Fact]
+    public async Task AssignPlayerToGameWorldAsync_DoesNotPrioritizeAnIslandContainingOnlyNPCs()
+    {
+        var world = new World
+        {
+            Id = Guid.NewGuid(),
+            Width = 200,
+            Height = 200,
+            MapSeed = 42069
+        };
+        var islandCandidates = (
+            from cellX in Enumerable.Range(-4, 9)
+            from cellY in Enumerable.Range(-4, 9)
+            where WorldGenerationService.IsIslandCellActive(cellX, cellY, world.MapSeed)
+            let island = WorldGenerationService.GetIslandDefinition(cellX, cellY, world.MapSeed)
+            let sites = PlayerCitySiteGenerator.GenerateCanonicalSites(island, world.MapSeed, -100, 99, -100, 99)
+            where sites.Count > 1
+            orderby Math.Abs(cellX - 1) + Math.Abs(cellY - 1) descending
+            select (Island: island, Sites: sites)).ToList();
+        var npcIsland = islandCandidates.First();
+        var npcCity = new City
+        {
+            Id = Guid.NewGuid(),
+            Name = "NPC village",
+            WorldId = world.Id,
+            IsNPC = true,
+            X = npcIsland.Sites[0].X,
+            Y = npcIsland.Sites[0].Y
+        };
+        var mapObjects = new TrackingWorldMapObjectRepository();
+        mapObjects.Objects.Add(new WorldMapObject
+        {
+            Id = Guid.NewGuid(),
+            WorldId = world.Id,
+            X = (short)npcCity.X,
+            Y = (short)npcCity.Y,
+            Type = MapObjectTypeEnum.City,
+            ReferenceEntityId = npcCity.Id
+        });
+        var profileId = Guid.NewGuid();
+        var authenticatedPlayer = new WorldPlayer
+        {
+            Id = Guid.NewGuid(),
+            PlayerProfileId = profileId,
+            WorldId = world.Id
+        };
+        var service = new WorldPlayerService(
+            new MemoryWorldPlayerRepository(),
+            new FixedPlayerProfileRepository(profileId, "Player"),
+            new FixedCitiesRepository(npcCity),
+            new FixedWorldRepository(world),
+            new NoOpResourceService(),
+            new FixedWorldRepository(world),
+            mapObjects,
+            new TrackingWorldMapObjectService(mapObjects),
+            new TestPlayerAccessService([authenticatedPlayer]),
+            NullLogger<WorldPlayerService>.Instance,
+            new CityPointCalculator(TestData.BuildingReader()));
+
+        var response = await service.AssignPlayerToGameWorldAsync(world.Id);
+
+        Assert.True(response.ConnectionSuccessful);
+        var spawnedMapObject = mapObjects.Objects.Single(mapObject => mapObject.ReferenceEntityId == response.ActiveCityId);
+        Assert.True(WorldGenerationService.TryGetIslandCoordinates(
+            spawnedMapObject.X,
+            spawnedMapObject.Y,
+            world.MapSeed,
+            out int spawnedIslandX,
+            out int spawnedIslandY));
+        Assert.NotEqual((npcIsland.Island.CellX, npcIsland.Island.CellY), (spawnedIslandX, spawnedIslandY));
     }
 
     [Fact]
@@ -490,6 +597,7 @@ public class WorldPlayerServiceTests
         public Task<List<City>> GetAllAsync() => Task.FromResult(new List<City>());
         public Task UpdateRangeAsync(List<City> cities) => Task.CompletedTask;
         public Task AddAsync(City city) => Task.CompletedTask;
+        public Task AddNPCVillagesWithMapObjectsAsync(IReadOnlyCollection<City> cities) => Task.CompletedTask;
         public Task<City?> GetCityWithBuildingsByCityIdentifierAsync(Guid cityId) => Task.FromResult<City?>(null);
         public Task<City?> GetTownHallCityByCityIdentifierAsync(Guid cityId) => Task.FromResult<City?>(null);
         public Task<City?> GetByCoordinatesAsync(int x, int y) => Task.FromResult<City?>(null);
@@ -497,13 +605,51 @@ public class WorldPlayerServiceTests
         public Task<List<City>> GetCitiesByWorldPlayerIdAsync(Guid worldPlayerId) => Task.FromResult(new List<City>());
     }
 
+    private sealed class FixedCitiesRepository(params City[] cities) : ICityRepository
+    {
+        private readonly List<City> _cities = cities.ToList();
+
+        public Task<List<City>> GetCitiesByListOfIdsAsync(List<Guid> ids) =>
+            Task.FromResult(_cities.Where(city => ids.Contains(city.Id)).ToList());
+        public Task<City?> GetByIdAsync(Guid cityId) => Task.FromResult(_cities.SingleOrDefault(city => city.Id == cityId));
+        public Task UpdateAsync(City city) => Task.CompletedTask;
+        public Task<List<City>> GetAllAsync() => Task.FromResult(_cities.ToList());
+        public Task UpdateRangeAsync(List<City> updatedCities) => Task.CompletedTask;
+        public Task AddAsync(City city) { _cities.Add(city); return Task.CompletedTask; }
+        public Task AddNPCVillagesWithMapObjectsAsync(IReadOnlyCollection<City> cities) => Task.CompletedTask;
+        public Task<City?> GetCityWithBuildingsByCityIdentifierAsync(Guid cityId) => GetByIdAsync(cityId);
+        public Task<City?> GetTownHallCityByCityIdentifierAsync(Guid cityId) => GetByIdAsync(cityId);
+        public Task<City?> GetByCoordinatesAsync(int x, int y) =>
+            Task.FromResult(_cities.SingleOrDefault(city => city.X == x && city.Y == y));
+        public Task<Guid?> GetWorldPlayerIdByCityIdAsync(Guid cityId) =>
+            Task.FromResult(_cities.SingleOrDefault(city => city.Id == cityId)?.WorldPlayerId);
+        public Task<List<City>> GetCitiesByWorldPlayerIdAsync(Guid worldPlayerId) =>
+            Task.FromResult(_cities.Where(city => city.WorldPlayerId == worldPlayerId).ToList());
+    }
+
     private sealed class NoOpResourceService : IResourceService
     {
         public CityResourceSnapshot CalculateCityResources(City cityEntity, DateTime currentDateTime) =>
             new(0, 0, 0, 0, 0, 0, currentDateTime);
 
+        public CityProductionSnapshot CalculateCityProduction(WorldPlayer playerEntity, City cityEntity) => new(0, 0, 0);
+
         public GlobalResourceSnapshot CalculateGlobalResources(WorldPlayer playerEntity, DateTime currentDateTime) =>
             new(0, 0, 0, 0, 0, 0, currentDateTime);
+    }
+
+    private sealed class StoredCityResourceService : IResourceService
+    {
+        public CityResourceSnapshot CalculateCityResources(City cityEntity, DateTime currentDateTime) =>
+            new(cityEntity.Wood, cityEntity.Stone, cityEntity.Metal, 0, 0, 0, currentDateTime);
+
+        public CityProductionSnapshot CalculateCityProduction(WorldPlayer playerEntity, City cityEntity) => new(0, 0, 0);
+
+        public GlobalResourceSnapshot CalculateGlobalResources(WorldPlayer playerEntity, DateTime currentDateTime) =>
+            new(playerEntity.Coins, playerEntity.ResearchPoints, playerEntity.IdeologyFocusPoints, 0, 0, 0, currentDateTime)
+            {
+                TotalAvailablePopulation = 240
+            };
     }
 
     private sealed class NoOpWorldRepository : IWorldRepository

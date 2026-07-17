@@ -2,10 +2,12 @@ using Application.DTOs;
 using Application.Interfaces.IRepositories;
 using Application.Interfaces.IServices;
 using Application.Services;
+using Application.Utility;
 using Domain.Abstraction;
 using Domain.Entities;
 using Domain.Enums;
 using Domain.StaticData.Data;
+using Domain.StaticData.Generators;
 using Domain.StaticData.Readers;
 using Domain.User;
 using Microsoft.Extensions.Logging.Abstractions;
@@ -34,14 +36,97 @@ public class UnitDeploymentServiceTests
     }
 
     [Fact]
-    public async Task GetActiveDeploymentsAsync_ReturnsOnlyOwnedMovingDeployments()
+    public async Task AttackCityDeploymentAsync_AllowsOwnerlessNPCVillage()
+    {
+        var setup = CreateSetup();
+        setup.TargetCity.IsNPC = true;
+        setup.TargetCity.WorldPlayerId = null;
+        setup.TargetCity.WorldPlayer = null;
+
+        var result = await setup.Service.AttackCityDeploymentAsync(new AttackCityDeploymentRequestDTO(
+            setup.City.Id,
+            setup.TargetCity.Id,
+            [new UnitSelectionDTO(UnitTypeEnum.Militia, 3)]));
+
+        Assert.Equal(setup.TargetCity.Id, result.TargetCityId);
+        Assert.True(result.TargetCity!.IsNPC);
+    }
+
+    [Fact]
+    public async Task SupportCityDeploymentAsync_AllowsOwnerlessNPCVillage()
+    {
+        var setup = CreateSetup();
+        setup.TargetCity.IsNPC = true;
+        setup.TargetCity.WorldPlayerId = null;
+        setup.TargetCity.WorldPlayer = null;
+
+        var result = await setup.Service.SupportCityDeploymentAsync(new SupportCityDeploymentRequestDTO(
+            setup.City.Id,
+            setup.TargetCity.Id,
+            [new UnitSelectionDTO(UnitTypeEnum.Militia, 3)]));
+
+        Assert.Equal(UnitDeploymentTypeEnum.Support, result.Type);
+        Assert.Equal(setup.TargetCity.Id, result.TargetCityId);
+    }
+
+    [Fact]
+    public async Task AttackCityDeploymentAsync_RejectsInterIslandDeploymentWithoutTransportCapacity()
+    {
+        var setup = CreateSetup(interIsland: true);
+        var request = new AttackCityDeploymentRequestDTO(
+            setup.City.Id,
+            setup.TargetCity.Id,
+            [new UnitSelectionDTO(UnitTypeEnum.Militia, 3)]);
+
+        var exception = await Assert.ThrowsAsync<InvalidOperationException>(() => setup.Service.AttackCityDeploymentAsync(request));
+
+        Assert.Contains("transport capacity", exception.Message, StringComparison.OrdinalIgnoreCase);
+        Assert.Equal(10, setup.City.UnitStacks.Single(stack => stack.Type == UnitTypeEnum.Militia).Quantity);
+    }
+
+    [Fact]
+    public async Task AttackCityDeploymentAsync_AllowsInterIslandNavalOnlyDeployment()
+    {
+        var setup = CreateSetup(interIsland: true);
+        var request = new AttackCityDeploymentRequestDTO(
+            setup.City.Id,
+            setup.TargetCity.Id,
+            [new UnitSelectionDTO(UnitTypeEnum.Transport, 2)]);
+
+        var result = await setup.Service.AttackCityDeploymentAsync(request);
+
+        Assert.Equal(0, setup.City.UnitStacks.Single(stack => stack.Type == UnitTypeEnum.Transport).Quantity);
+        Assert.Equal(2, result.UnitStacks.Single(stack => stack.Type == UnitTypeEnum.Transport).Quantity);
+    }
+
+    [Fact]
+    public async Task EstimateTravelAsync_ReturnsTransportAssessment()
+    {
+        var setup = CreateSetup(interIsland: true);
+        var estimate = await setup.Service.EstimateTravelAsync(new DeploymentTravelEstimateRequestDTO(
+            setup.City.Id,
+            setup.TargetCity.Id,
+            [
+                new UnitSelectionDTO(UnitTypeEnum.Militia, 2),
+                new UnitSelectionDTO(UnitTypeEnum.Transport, 1)
+            ]));
+
+        Assert.True(estimate.RequiresTransport);
+        Assert.Equal(6, estimate.RequiredTransportCapacity);
+        Assert.Equal(150, estimate.AvailableTransportCapacity);
+        Assert.Equal(144, estimate.TransportCapacityMargin);
+        Assert.True(estimate.HasSufficientTransportCapacity);
+    }
+
+    [Fact]
+    public async Task GetActiveDeploymentsAsync_ReturnsOwnedMovingAndStationedDeploymentsInDisplayOrder()
     {
         var setup = CreateSetup();
         var activeDeployment = setup.DeploymentRepository.Deployments[0];
         activeDeployment.ArrivalTime = DateTime.UtcNow.AddMinutes(10);
         activeDeployment.UnitDeploymentMovementStatus = UnitDeploymentMovementStatusEnum.Moving;
 
-        setup.DeploymentRepository.Deployments.Add(new UnitDeployment
+        var stationedDeployment = new UnitDeployment
         {
             Id = Guid.NewGuid(),
             Name = "Stationed",
@@ -51,16 +136,83 @@ public class UnitDeploymentServiceTests
             OriginCityId = setup.City.Id,
             OwnerWorldPlayer = setup.Player,
             UnitDeploymentMovementStatus = UnitDeploymentMovementStatusEnum.Stationed,
+            Phase = UnitDeploymentPhaseEnum.Stationed,
+            StationedAt = DateTime.UtcNow.AddMinutes(-2),
             ArrivalTime = DateTime.UtcNow.AddMinutes(5),
             DepartureTime = DateTime.UtcNow.AddMinutes(-5),
             Mobility = 2,
             UnitStacks = [new UnitStack { Id = Guid.NewGuid(), Type = UnitTypeEnum.Militia, Quantity = 1, WorldPlayerId = setup.Player.Id }]
-        });
+        };
+        setup.DeploymentRepository.Deployments.Add(stationedDeployment);
 
         var deployments = await setup.Service.GetActiveDeploymentsAsync(setup.Player.Id);
 
-        Assert.Single(deployments);
+        Assert.Equal(2, deployments.Count);
         Assert.Equal(activeDeployment.Id, deployments[0].Id);
+        Assert.Equal(stationedDeployment.Id, deployments[1].Id);
+    }
+
+    [Fact]
+    public async Task GetActiveDeploymentsAsync_MapsPlayerAllianceAndNpcLocations()
+    {
+        var setup = CreateSetup();
+        var originAlliance = new Alliance
+        {
+            Id = Guid.NewGuid(),
+            Name = "Origin Alliance",
+            Tag = "ORA",
+            WorldId = setup.Player.WorldId
+        };
+        setup.Player.AllianceId = originAlliance.Id;
+        setup.Player.Alliance = originAlliance;
+
+        var targetAlliance = new Alliance
+        {
+            Id = Guid.NewGuid(),
+            Name = "Target Alliance",
+            Tag = "TAR",
+            WorldId = setup.Player.WorldId
+        };
+        setup.TargetCity.WorldPlayer!.AllianceId = targetAlliance.Id;
+        setup.TargetCity.WorldPlayer.Alliance = targetAlliance;
+
+        var playerDeployment = Assert.Single(await setup.Service.GetActiveDeploymentsAsync(setup.Player.Id));
+
+        Assert.Equal(setup.City.Id, playerDeployment.OriginLocation.CityId);
+        Assert.Equal("Capital", playerDeployment.OriginLocation.CityName);
+        Assert.Equal(setup.Player.Id, playerDeployment.OriginLocation.WorldPlayerId);
+        Assert.Equal("Player", playerDeployment.OriginLocation.WorldPlayerName);
+        Assert.Equal(originAlliance.Id, playerDeployment.OriginLocation.AllianceId);
+        Assert.Equal("Origin Alliance", playerDeployment.OriginLocation.AllianceName);
+        Assert.Equal("ORA", playerDeployment.OriginLocation.AllianceTag);
+        Assert.NotNull(playerDeployment.TargetLocation);
+        Assert.Equal("Target", playerDeployment.TargetLocation!.CityName);
+        Assert.Equal("Target", playerDeployment.TargetLocation.WorldPlayerName);
+        Assert.Equal(targetAlliance.Id, playerDeployment.TargetLocation.AllianceId);
+        Assert.Equal("Target Alliance", playerDeployment.TargetLocation.AllianceName);
+        Assert.Equal("TAR", playerDeployment.TargetLocation.AllianceTag);
+
+        setup.TargetCity.IsNPC = true;
+        setup.TargetCity.WorldPlayerId = null;
+        setup.TargetCity.WorldPlayer = null;
+
+        var npcDeployment = Assert.Single(await setup.Service.GetActiveDeploymentsAsync(setup.Player.Id));
+
+        Assert.NotNull(npcDeployment.TargetLocation);
+        Assert.True(npcDeployment.TargetLocation!.IsNPC);
+        Assert.Null(npcDeployment.TargetLocation.WorldPlayerId);
+        Assert.Null(npcDeployment.TargetLocation.WorldPlayerName);
+        Assert.Null(npcDeployment.TargetLocation.AllianceId);
+        Assert.Null(npcDeployment.TargetLocation.AllianceName);
+        Assert.Null(npcDeployment.TargetLocation.AllianceTag);
+    }
+
+    [Fact]
+    public async Task GetActiveDeploymentsAsync_RejectsDifferentWorldPlayer()
+    {
+        var setup = CreateSetup();
+
+        await Assert.ThrowsAsync<KeyNotFoundException>(() => setup.Service.GetActiveDeploymentsAsync(Guid.NewGuid()));
     }
 
     [Fact]
@@ -73,7 +225,37 @@ public class UnitDeploymentServiceTests
             [new UnitSelectionDTO(UnitTypeEnum.Militia, 1)]);
 
         await Assert.ThrowsAsync<InvalidOperationException>(() => setup.Service.AttackCityDeploymentAsync(request));
-        Assert.Equal(10, setup.City.UnitStacks.Single().Quantity);
+        Assert.Equal(10, setup.City.UnitStacks.Single(stack => stack.Type == UnitTypeEnum.Militia).Quantity);
+    }
+
+    [Fact]
+    public async Task AttackCityDeploymentAsync_RejectsUnownedOriginBeforeMutation()
+    {
+        var setup = CreateSetup();
+        var request = new AttackCityDeploymentRequestDTO(
+            setup.TargetCity.Id,
+            setup.City.Id,
+            [new UnitSelectionDTO(UnitTypeEnum.Militia, 1)]);
+
+        await Assert.ThrowsAsync<UnauthorizedAccessException>(() => setup.Service.AttackCityDeploymentAsync(request));
+
+        Assert.Equal(10, setup.City.UnitStacks.Single(stack => stack.Type == UnitTypeEnum.Militia).Quantity);
+        Assert.Single(setup.DeploymentRepository.Deployments);
+    }
+
+    [Fact]
+    public async Task SupportCityDeploymentAsync_RejectsUnownedOriginBeforeMutation()
+    {
+        var setup = CreateSetup();
+        var request = new SupportCityDeploymentRequestDTO(
+            setup.TargetCity.Id,
+            setup.City.Id,
+            [new UnitSelectionDTO(UnitTypeEnum.Militia, 1)]);
+
+        await Assert.ThrowsAsync<UnauthorizedAccessException>(() => setup.Service.SupportCityDeploymentAsync(request));
+
+        Assert.Equal(10, setup.City.UnitStacks.Single(stack => stack.Type == UnitTypeEnum.Militia).Quantity);
+        Assert.Single(setup.DeploymentRepository.Deployments);
     }
 
     [Fact]
@@ -86,10 +268,10 @@ public class UnitDeploymentServiceTests
             [
                 new UnitSelectionDTO(UnitTypeEnum.Militia, 2),
                 new UnitSelectionDTO(UnitTypeEnum.Militia, 2)
-            ]);
+        ]);
 
         await Assert.ThrowsAsync<InvalidOperationException>(() => setup.Service.AttackCityDeploymentAsync(request));
-        Assert.Equal(10, setup.City.UnitStacks.Single().Quantity);
+        Assert.Equal(10, setup.City.UnitStacks.Single(stack => stack.Type == UnitTypeEnum.Militia).Quantity);
     }
 
     [Theory]
@@ -105,7 +287,7 @@ public class UnitDeploymentServiceTests
             [new UnitSelectionDTO(UnitTypeEnum.Militia, quantity)]);
 
         await Assert.ThrowsAsync<InvalidOperationException>(() => setup.Service.AttackCityDeploymentAsync(request));
-        Assert.Equal(10, setup.City.UnitStacks.Single().Quantity);
+        Assert.Equal(10, setup.City.UnitStacks.Single(stack => stack.Type == UnitTypeEnum.Militia).Quantity);
     }
 
     [Fact]
@@ -115,7 +297,7 @@ public class UnitDeploymentServiceTests
         var request = new AttackCityDeploymentRequestDTO(setup.City.Id, setup.TargetCity.Id, []);
 
         await Assert.ThrowsAsync<InvalidOperationException>(() => setup.Service.AttackCityDeploymentAsync(request));
-        Assert.Equal(10, setup.City.UnitStacks.Single().Quantity);
+        Assert.Equal(10, setup.City.UnitStacks.Single(stack => stack.Type == UnitTypeEnum.Militia).Quantity);
     }
 
     [Fact]
@@ -128,10 +310,10 @@ public class UnitDeploymentServiceTests
             [
                 new UnitSelectionDTO(UnitTypeEnum.Militia, 2),
                 new UnitSelectionDTO(UnitTypeEnum.Bowmen, 1)
-            ]);
+        ]);
 
         await Assert.ThrowsAsync<InvalidOperationException>(() => setup.Service.AttackCityDeploymentAsync(request));
-        Assert.Equal(10, setup.City.UnitStacks.Single().Quantity);
+        Assert.Equal(10, setup.City.UnitStacks.Single(stack => stack.Type == UnitTypeEnum.Militia).Quantity);
     }
 
     [Fact]
@@ -148,8 +330,9 @@ public class UnitDeploymentServiceTests
         Assert.Equal(setup.Player.Id, report.WorldPlayerId);
     }
 
-    private static Setup CreateSetup()
+    private static Setup CreateSetup(bool interIsland = false)
     {
+        const int worldSeed = 12345;
         var player = new WorldPlayer
         {
             Id = Guid.NewGuid(),
@@ -157,6 +340,10 @@ public class UnitDeploymentServiceTests
             PlayerProfile = new PlayerProfile { Id = Guid.NewGuid(), UserName = "Player" }
         };
         player.PlayerProfileId = player.PlayerProfile.Id;
+        var origin = FindLandCoordinate(worldSeed);
+        var target = interIsland
+            ? FindDifferentIslandCoordinate(worldSeed, origin)
+            : FindSameIslandCoordinate(worldSeed, origin);
         var city = new City
         {
             Id = Guid.NewGuid(),
@@ -164,11 +351,12 @@ public class UnitDeploymentServiceTests
             WorldId = player.WorldId,
             WorldPlayerId = player.Id,
             WorldPlayer = player,
-            X = 0,
-            Y = 0,
+            X = origin.X,
+            Y = origin.Y,
             UnitStacks =
             [
-                new() { Id = Guid.NewGuid(), Type = UnitTypeEnum.Militia, Quantity = 10, WorldPlayerId = player.Id, CityId = Guid.NewGuid() }
+                new() { Id = Guid.NewGuid(), Type = UnitTypeEnum.Militia, Quantity = 10, WorldPlayerId = player.Id, CityId = Guid.NewGuid() },
+                new() { Id = Guid.NewGuid(), Type = UnitTypeEnum.Transport, Quantity = 2, WorldPlayerId = player.Id, CityId = Guid.NewGuid() }
             ]
         };
         var targetPlayer = new WorldPlayer
@@ -185,9 +373,15 @@ public class UnitDeploymentServiceTests
             WorldId = player.WorldId,
             WorldPlayerId = targetPlayer.Id,
             WorldPlayer = targetPlayer,
-            X = 2,
-            Y = 0,
+            X = target.X,
+            Y = target.Y,
             UnitStacks = []
+        };
+        var world = new World
+        {
+            Id = player.WorldId,
+            Name = "Test World",
+            MapSeed = worldSeed
         };
         var deployment = new UnitDeployment
         {
@@ -211,9 +405,11 @@ public class UnitDeploymentServiceTests
             TargetCityId = targetCity.Id
         };
 
-        var access = new TrackingPlayerAccessService(player, city, deployment);
+        var access = new TrackingPlayerAccessService(player, city, targetCity, deployment);
         var deploymentRepository = new TrackingUnitDeploymentRepository(deployment);
         var reportRepository = new TrackingBattleReportRepository();
+        var worldRepository = new MemoryWorldRepository(world);
+        var transportCapacityService = new DeploymentTransportCapacityService(worldRepository, TestData.UnitReader());
         var service = new UnitDeploymentService(
             NullLogger<UnitDeploymentService>.Instance,
             deploymentRepository,
@@ -222,6 +418,7 @@ public class UnitDeploymentServiceTests
             TestData.UnitReader(),
             new DeploymentModifierSnapshotService(new NoOpModifierService()),
             new UnitMovementCalculator(new NoOpModifierService()),
+            transportCapacityService,
             new ImmediateTransactionManager(),
             new DeploymentPermissionService(new TestAllianceRepository()),
             reportRepository);
@@ -250,7 +447,7 @@ public class UnitDeploymentServiceTests
         public Task DeleteAsync(Guid reportId) => Task.CompletedTask;
     }
 
-    private sealed class TrackingPlayerAccessService(WorldPlayer player, City city, UnitDeployment deployment) : IPlayerAccessService
+    private sealed class TrackingPlayerAccessService(WorldPlayer player, City city, City unownedCity, UnitDeployment deployment) : IPlayerAccessService
     {
         public Guid GetAuthenticatedProfileId() => player.PlayerProfileId;
         public Task<WorldPlayer> RequireOwnedWorldPlayerAsync(Guid worldPlayerId) =>
@@ -258,7 +455,11 @@ public class UnitDeploymentServiceTests
         public Task<WorldPlayer> RequireWorldMembershipAsync(Guid worldId) =>
             Task.FromResult(worldId == player.WorldId ? player : throw new UnauthorizedAccessException());
         public Task<City> RequireOwnedCityAsync(Guid cityId) =>
-            Task.FromResult(cityId == city.Id ? city : throw new KeyNotFoundException());
+            Task.FromResult(cityId == city.Id
+                ? city
+                : cityId == unownedCity.Id
+                    ? throw new UnauthorizedAccessException()
+                    : throw new KeyNotFoundException());
         public Task<City> RequireOwnedCityForTownHallAsync(Guid cityId) =>
             Task.FromResult(cityId == city.Id ? city : throw new KeyNotFoundException());
         public Task<UnitDeployment> RequireOwnedUnitDeploymentAsync(Guid unitDeploymentId) =>
@@ -273,7 +474,7 @@ public class UnitDeploymentServiceTests
             Task.FromResult(Deployments.Where(d => ids.Contains(d.Id)).ToList());
 
         public Task<List<UnitDeployment>> GetActiveDeploymentsByWorldPlayerIdAsync(Guid worldPlayerId) =>
-            Task.FromResult(Deployments.Where(d => d.WorldPlayerId == worldPlayerId && d.UnitDeploymentMovementStatus == UnitDeploymentMovementStatusEnum.Moving).ToList());
+            Task.FromResult(Deployments.Where(d => d.WorldPlayerId == worldPlayerId).ToList());
 
         public Task AddAsync(UnitDeployment deployment)
         {
@@ -307,11 +508,22 @@ public class UnitDeploymentServiceTests
         public Task<List<City>> GetAllAsync() => Task.FromResult(_cities.ToList());
         public Task UpdateRangeAsync(List<City> cities) => Task.CompletedTask;
         public Task AddAsync(City city) => Task.CompletedTask;
+        public Task AddNPCVillagesWithMapObjectsAsync(IReadOnlyCollection<City> cities) => Task.CompletedTask;
         public Task<City?> GetCityWithBuildingsByCityIdentifierAsync(Guid cityId) => GetByIdAsync(cityId);
         public Task<City?> GetTownHallCityByCityIdentifierAsync(Guid cityId) => GetByIdAsync(cityId);
         public Task<City?> GetByCoordinatesAsync(int x, int y) => Task.FromResult<City?>(_cities.SingleOrDefault(city => city.X == x && city.Y == y));
         public Task<Guid?> GetWorldPlayerIdByCityIdAsync(Guid cityId) => Task.FromResult<Guid?>(_cities.SingleOrDefault(city => city.Id == cityId)?.WorldPlayerId);
         public Task<List<City>> GetCitiesByWorldPlayerIdAsync(Guid worldPlayerId) => Task.FromResult(_cities.Where(city => city.WorldPlayerId == worldPlayerId).ToList());
+    }
+
+    private sealed class MemoryWorldRepository(params World[] worlds) : IWorldRepository
+    {
+        private readonly List<World> _worlds = worlds.ToList();
+
+        public Task<List<World>> GetAllAsync() => Task.FromResult(_worlds.ToList());
+        public Task<Dictionary<Guid, int>> GetPlayerCountsByWorldAsync() => Task.FromResult(_worlds.ToDictionary(world => world.Id, _ => 0));
+        public Task<World?> GetByIdAsync(Guid id) => Task.FromResult(_worlds.SingleOrDefault(world => world.Id == id));
+        public Task<int?> GetWorldSeedAsync(Guid worldId) => Task.FromResult(_worlds.SingleOrDefault(world => world.Id == worldId)?.MapSeed);
     }
 
     private sealed class NoOpModifierService : IModifierService
@@ -327,5 +539,73 @@ public class UnitDeploymentServiceTests
 
         public ModifierCalculationResult CalculateCityUnitValue(City city, UnitData unit, double baseValue, params ModifierTagEnum[] targetTags) =>
             new() { BaseValue = baseValue, FinalValue = baseValue };
+    }
+
+    private static (int X, int Y) FindLandCoordinate(int worldSeed)
+    {
+        for (int x = -120; x <= 120; x++)
+        {
+            for (int y = -120; y <= 120; y++)
+            {
+                if (WorldGenerationService.TryGetIslandCoordinates(x, y, worldSeed, out _, out _))
+                {
+                    return (x, y);
+                }
+            }
+        }
+
+        throw new InvalidOperationException("Could not find land coordinates for the test world seed.");
+    }
+
+    private static (int X, int Y) FindSameIslandCoordinate(int worldSeed, (int X, int Y) origin)
+    {
+        if (!WorldGenerationService.TryGetIslandCoordinates(origin.X, origin.Y, worldSeed, out int originIslandX, out int originIslandY))
+        {
+            throw new InvalidOperationException("Origin coordinate was not land.");
+        }
+
+        for (int x = -120; x <= 120; x++)
+        {
+            for (int y = -120; y <= 120; y++)
+            {
+                if (!WorldGenerationService.TryGetIslandCoordinates(x, y, worldSeed, out int islandX, out int islandY))
+                {
+                    continue;
+                }
+
+                if (islandX == originIslandX && islandY == originIslandY && (x != origin.X || y != origin.Y))
+                {
+                    return (x, y);
+                }
+            }
+        }
+
+        throw new InvalidOperationException("Could not find same-island coordinates for the test world seed.");
+    }
+
+    private static (int X, int Y) FindDifferentIslandCoordinate(int worldSeed, (int X, int Y) origin)
+    {
+        if (!WorldGenerationService.TryGetIslandCoordinates(origin.X, origin.Y, worldSeed, out int originIslandX, out int originIslandY))
+        {
+            throw new InvalidOperationException("Origin coordinate was not land.");
+        }
+
+        for (int x = -120; x <= 120; x++)
+        {
+            for (int y = -120; y <= 120; y++)
+            {
+                if (!WorldGenerationService.TryGetIslandCoordinates(x, y, worldSeed, out int islandX, out int islandY))
+                {
+                    continue;
+                }
+
+                if (islandX != originIslandX || islandY != originIslandY)
+                {
+                    return (x, y);
+                }
+            }
+        }
+
+        throw new InvalidOperationException("Could not find different-island coordinates for the test world seed.");
     }
 }

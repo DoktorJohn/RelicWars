@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ui:UXML xmlns:ui="UnityEngine.UIElements">
+    <ui:VisualElement name="Administration-Deployment-Row" class="administration-table-row">
+        <ui:Label name="Administration-Row-Action" class="administration-row-label administration-col-action administration-action" />
+        <ui:Label name="Administration-Row-Phase" class="administration-row-label administration-col-phase" />
+        <ui:VisualElement name="Administration-Row-From" class="administration-location-cell administration-col-from" />
+        <ui:VisualElement name="Administration-Row-To" class="administration-location-cell administration-col-to" />
+        <ui:Label name="Administration-Row-Troops" class="administration-row-label administration-col-troops" />
+        <ui:Label name="Administration-Row-Timing" class="administration-row-label administration-col-timing administration-timing" />
+    </ui:VisualElement>
+</ui:UXML>

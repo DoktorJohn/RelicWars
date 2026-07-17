@@ -27,6 +27,7 @@ namespace Domain.User
         public List<ModifierTagEnum> ModifiersThatAffectsThis { get; set; } = new();
         
         public List<ConversationParticipant> ConversationParticipants { get; set; } = new();
+        public DailyObjectiveSet? DailyObjectiveSet { get; set; }
 
         //Foreign keys
         public Guid? AllianceId { get; set; }

@@ -13,6 +13,7 @@ namespace Project.Modules.UI
         private VisualElement _rootVisualElement;
         private VisualElement _enactFocusesButton;
         private ScrollView _unitCardsScrollContainer;
+        private Label _currentCityLabel;
 
         private void OnEnable()
         {
@@ -24,10 +25,13 @@ namespace Project.Modules.UI
             {
                 SynchronizeTroopDisplay(CityStateManager.Instance.CurrentStationedUnits);
             }
+
+            UpdateCurrentCityLabel(CityStateManager.Instance?.CurrentCityName);
         }
 
         private void OnDisable()
         {
+            ResponsiveUiStateManager.UnregisterRoot(_rootVisualElement);
             UnregisterButtonCallbacks();
             UnsubscribeFromCityStateEvents();
         }
@@ -38,9 +42,11 @@ namespace Project.Modules.UI
             if (uiDocument != null)
             {
                 _rootVisualElement = uiDocument.rootVisualElement;
+                ResponsiveUiStateManager.RegisterRoot(_rootVisualElement);
 
                 _enactFocusesButton = _rootVisualElement.Q<VisualElement>("Button-Enact-Focuses");
                 _unitCardsScrollContainer = _rootVisualElement.Q<ScrollView>("Container-Unit-Cards");
+                _currentCityLabel = _rootVisualElement.Q<Label>("City-Command-CurrentCity-Label");
 
                 ValidateInterfaceReferences();
             }
@@ -50,6 +56,7 @@ namespace Project.Modules.UI
         {
             if (_enactFocusesButton == null) Debug.LogError("[HUD-Bottom] Enact Focuses Button reference missing.");
             if (_unitCardsScrollContainer == null) Debug.LogError("[HUD-Bottom] Unit Cards ScrollContainer reference missing.");
+            if (_currentCityLabel == null) Debug.LogError("[HUD-Bottom] Current City Label reference missing.");
         }
 
         private void SubscribeToCityStateEvents()
@@ -57,6 +64,7 @@ namespace Project.Modules.UI
             if (CityStateManager.Instance != null)
             {
                 CityStateManager.Instance.OnTroopsStateReceived += SynchronizeTroopDisplay;
+                CityStateManager.Instance.OnCityNameChanged += UpdateCurrentCityLabel;
             }
         }
 
@@ -65,6 +73,15 @@ namespace Project.Modules.UI
             if (CityStateManager.Instance != null)
             {
                 CityStateManager.Instance.OnTroopsStateReceived -= SynchronizeTroopDisplay;
+                CityStateManager.Instance.OnCityNameChanged -= UpdateCurrentCityLabel;
+            }
+        }
+
+        private void UpdateCurrentCityLabel(string cityName)
+        {
+            if (_currentCityLabel != null)
+            {
+                _currentCityLabel.text = cityName ?? string.Empty;
             }
         }
 
@@ -86,57 +103,46 @@ namespace Project.Modules.UI
             }
         }
 
-        /// <summary>
-        /// Transformerer troppe-data til individuelle visuelle kort i bunden af skærmen.
-        /// </summary>
         public void SynchronizeTroopDisplay(List<UnitStackDTO> troops)
         {
             if (_unitCardsScrollContainer == null) return;
 
             _unitCardsScrollContainer.Clear();
 
-            if (troops == null || troops.Count == 0) return;
+            if (troops == null || troops.TrueForAll(unitStack => unitStack.Quantity <= 0))
+            {
+                var emptyLabel = new Label("No units stationed");
+                emptyLabel.AddToClassList("city-unit-list-empty");
+                _unitCardsScrollContainer.Add(emptyLabel);
+                return;
+            }
 
             foreach (var unitStack in troops)
             {
                 if (unitStack.Quantity <= 0) continue;
 
-                VisualElement unitCard = CreateUnitDisplayCard(unitStack);
-                _unitCardsScrollContainer.Add(unitCard);
+                _unitCardsScrollContainer.Add(CreateUnitDisplayRow(unitStack));
             }
         }
 
-        /// <summary>
-        /// Konstruerer et visuelt enheds-kort med ikon, navn og antal.
-        /// </summary>
-        private VisualElement CreateUnitDisplayCard(UnitStackDTO unitData)
+        private VisualElement CreateUnitDisplayRow(UnitStackDTO unitData)
         {
-            // Hovedkort
-            VisualElement card = new VisualElement();
-            card.AddToClassList("hud-card");
+            var row = new VisualElement();
+            row.AddToClassList("city-unit-row");
 
-            // Ikon
-            VisualElement icon = new VisualElement();
-            icon.AddToClassList("hud-card-icon");
-            icon.AddToClassList("icon-unit-default"); // Her kan du mappe til specifikke ikoner senere
+            var marker = new VisualElement();
+            marker.AddToClassList("city-unit-row-marker");
 
-            // Enhedsnavn
-            Label nameLabel = new Label(unitData.Type.ToString());
-            nameLabel.AddToClassList("hud-card-label");
+            var nameLabel = new Label(unitData.Type.ToString());
+            nameLabel.AddToClassList("city-unit-row-name");
 
-            // Quantity Badge (Flydende oppe i hjørnet)
-            VisualElement badge = new VisualElement();
-            badge.AddToClassList("hud-card-quantity-badge");
+            var countLabel = new Label(unitData.Quantity.ToString("N0"));
+            countLabel.AddToClassList("city-unit-row-quantity");
 
-            Label countLabel = new Label(unitData.Quantity.ToString("N0"));
-            countLabel.AddToClassList("hud-card-quantity-text");
-
-            badge.Add(countLabel);
-            card.Add(badge);
-            card.Add(icon);
-            card.Add(nameLabel);
-
-            return card;
+            row.Add(marker);
+            row.Add(nameLabel);
+            row.Add(countLabel);
+            return row;
         }
     }
 }

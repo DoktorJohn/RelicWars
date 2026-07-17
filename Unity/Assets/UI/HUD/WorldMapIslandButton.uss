@@ -46,8 +46,28 @@
     scale: 1;
 }
 
+.island-map-button--future-city-site {
+    width: 28px;
+    min-width: 28px;
+    max-width: 28px;
+    height: 28px;
+    min-height: 28px;
+    max-height: 28px;
+    padding: 1px;
+    color: transparent;
+    font-size: 0;
+    background-color: rgba(27, 42, 34, 0.88);
+    border-width: 1px;
+    border-radius: 14px;
+    border-color: rgb(216, 174, 82);
+    background-position: center center;
+    background-repeat: no-repeat;
+    -unity-background-scale-mode: scale-to-fit;
+}
+
 .icon-cloth { background-image: url('project://database/Assets/UI/Icons/cloth.png'); }
 .icon-island { background-image: url('project://database/Assets/UI/Icons/Island.png'); }
+.icon-castle { background-image: url('project://database/Assets/UI/Icons/castle.png'); }
 .icon-coal { background-image: url('project://database/Assets/UI/Icons/coal.png'); }
 .icon-copper { background-image: url('project://database/Assets/UI/Icons/copper.png'); }
 .icon-cotton { background-image: url('project://database/Assets/UI/Icons/cotton.png'); }

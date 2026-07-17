@@ -20,6 +20,7 @@ namespace Application.Utility
                 UnitCategoryEnum.Infantry => ModifierTagEnum.InfantryCost,
                 UnitCategoryEnum.Cavalry => ModifierTagEnum.CavalryCost,
                 UnitCategoryEnum.Siege => ModifierTagEnum.SiegeCost,
+                UnitCategoryEnum.Naval => ModifierTagEnum.NavalCost,
                 _ => ModifierTagEnum.Placeholder
             };
 
@@ -39,6 +40,7 @@ namespace Application.Utility
                 UnitCategoryEnum.Infantry => ModifierTagEnum.InfantryStats,
                 UnitCategoryEnum.Cavalry => ModifierTagEnum.CavalryStats,
                 UnitCategoryEnum.Siege => ModifierTagEnum.SiegeStats,
+                UnitCategoryEnum.Naval => ModifierTagEnum.NavalStats,
                 _ => ModifierTagEnum.Placeholder
             };
 
@@ -70,6 +72,7 @@ namespace Application.Utility
                 UnitCategoryEnum.Infantry => ModifierTagEnum.InfantryRecruitmentSpeed,
                 UnitCategoryEnum.Cavalry => ModifierTagEnum.CavalryRecruitmentSpeed,
                 UnitCategoryEnum.Siege => ModifierTagEnum.SiegeRecruitmentSpeed,
+                UnitCategoryEnum.Naval => ModifierTagEnum.NavalRecruitmentSpeed,
                 _ => ModifierTagEnum.Placeholder
             };
 

@@ -56,13 +56,46 @@ namespace Infrastructure.Repositories
                 .ToListAsync();
         }
 
-        public async Task<List<BaseJob>> GetDueJobsAsync(DateTime now, int batchSize)
+        public Task<List<BaseJob>> GetDuePlayerJobsAsync(
+            DateTime now,
+            int batchSize,
+            IReadOnlyCollection<Guid> excludedJobIds)
         {
-            return await ActiveJobs
-                .Where(j => j.ExecutionTime <= now)
-                .OrderBy(j => j.ExecutionTime)
+            return GetDueJobsQuery(now, excludedJobIds)
+                .Where(job => job.WorldPlayerId != Guid.Empty)
+                .OrderBy(job => job.ExecutionTime)
+                .ThenBy(job => job.Id)
                 .Take(batchSize)
                 .ToListAsync();
+        }
+
+        public Task<List<BaseJob>> GetDueNPCBuildingJobsAsync(
+            DateTime now,
+            int batchSize,
+            IReadOnlyCollection<Guid> excludedJobIds)
+        {
+            return GetDueJobsQuery(now, excludedJobIds)
+                .OfType<BuildingJob>()
+                .Where(job => job.WorldPlayerId == Guid.Empty)
+                .OrderBy(job => job.ExecutionTime)
+                .ThenBy(job => job.Id)
+                .Take(batchSize)
+                .Cast<BaseJob>()
+                .ToListAsync();
+        }
+
+        private IQueryable<BaseJob> GetDueJobsQuery(DateTime now, IReadOnlyCollection<Guid> excludedJobIds)
+        {
+            var query = ActiveJobs
+                .AsNoTracking()
+                .Where(job => job.ExecutionTime <= now);
+
+            if (excludedJobIds.Count > 0)
+            {
+                query = query.Where(job => !excludedJobIds.Contains(job.Id));
+            }
+
+            return query;
         }
 
         public async Task<List<BuildingJob>> GetBuildingJobsAsync(Guid cityId)
@@ -92,6 +125,11 @@ namespace Infrastructure.Repositories
             await _context.Jobs
                 .Where(j => j.Id == jobId)
                 .ExecuteDeleteAsync();
+        }
+
+        public void DeletePending(BaseJob job)
+        {
+            _context.Jobs.Remove(job);
         }
     }
 }

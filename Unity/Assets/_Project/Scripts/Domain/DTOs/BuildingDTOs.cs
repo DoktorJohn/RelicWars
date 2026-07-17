@@ -86,6 +86,7 @@ namespace Project.Scripts.Domain.DTOs
         public string BuildingName;
         public int? CurrentLevel;
         public bool IsConstructed;
+        public int MaximumLevel;
 
         // Ressourcekrav for næste niveau
         public double WoodCost;

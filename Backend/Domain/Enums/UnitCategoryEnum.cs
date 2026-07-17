@@ -12,6 +12,7 @@ namespace Domain.Enums
         Ranged,
         Cavalry,
         Siege,
-        Support
+        Support,
+        Naval
     }
 }

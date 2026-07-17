@@ -34,6 +34,30 @@ namespace Project.Modules.UI
         private VisualElement _exoticResourcesTooltip;
         private VisualElement _exoticResourcesTooltipGrid;
         private Label _exoticResourcesTooltipTitle;
+        private VisualElement _woodResourceTrigger;
+        private VisualElement _stoneResourceTrigger;
+        private VisualElement _metalResourceTrigger;
+        private VisualElement _populationResourceTrigger;
+        private VisualElement _coinsResourceTrigger;
+        private VisualElement _researchResourceTrigger;
+        private VisualElement _ideologyResourceTrigger;
+        private VisualElement _standardResourceTooltip;
+        private VisualElement _standardResourceTooltipIcon;
+        private Label _standardResourceTooltipTitle;
+        private Label _standardResourceCityAmountLabel;
+        private Label _standardResourceProductionLabel;
+        private Label _standardResourceTimeToCapacityLabel;
+        private Label _standardResourcePlayerTotalLabel;
+        private Label _standardResourceCityKeyLabel;
+        private Label _standardResourceProductionKeyLabel;
+        private VisualElement _standardResourceCityRow;
+        private VisualElement _standardResourceCapacityRow;
+        private VisualElement _populationTooltip;
+        private Label _populationHousingLabel;
+        private Label _populationModifierLabel;
+        private Label _populationTotalLabel;
+        private Label _populationInUseLabel;
+        private Label _populationRemainingLabel;
 
         // Server Time Label
         private Label _serverTimeLabel;
@@ -49,6 +73,7 @@ namespace Project.Modules.UI
         private Button _nextCityButton;
 
         private Button _navigationButton;
+        private Button _administrationButton;
         private Button _logoutButton;
 
         private WarehouseCapacityProgressPainter _woodWarehousePainter;
@@ -69,13 +94,16 @@ namespace Project.Modules.UI
             if (uiDocumentComponent == null) return;
 
             _rootVisualElement = uiDocumentComponent.rootVisualElement;
+            ResponsiveUiStateManager.RegisterRoot(_rootVisualElement);
 
             InitializeUserInterfaceResourceLabels();
             InitializeCitySelector();
             InitializeNavigationButtons();
+            InitializeAdministrationButton();
             InitializeLogoutButton();
             InitializeWarehouseCapacityPainters();
             InitializeExoticResourcesSection();
+            InitializeStandardResourceTooltips();
             
             if (CityStateManager.Instance != null)
             {
@@ -113,6 +141,8 @@ namespace Project.Modules.UI
 
         private void OnDisable()
         {
+            ResponsiveUiStateManager.UnregisterRoot(_rootVisualElement);
+
             if (CityStateManager.Instance != null)
             {
                 CityStateManager.Instance.OnResourceStateChanged -= HandleCityResourceStateChanged;
@@ -126,10 +156,17 @@ namespace Project.Modules.UI
 
             HideExoticResourceTooltip();
             CleanupExoticResourcesSection();
+            HideStandardResourceTooltip();
+            CleanupStandardResourceTooltips();
 
             if (_logoutButton != null)
             {
                 _logoutButton.clicked -= HandleLogoutRequested;
+            }
+
+            if (_administrationButton != null)
+            {
+                _administrationButton.clicked -= HandleAdministrationRequested;
             }
 
             if (_timeUpdateCoroutine != null) StopCoroutine(_timeUpdateCoroutine);
@@ -145,6 +182,19 @@ namespace Project.Modules.UI
 
             _logoutButton.clicked -= HandleLogoutRequested;
             _logoutButton.clicked += HandleLogoutRequested;
+        }
+
+        private void InitializeAdministrationButton()
+        {
+            _administrationButton = _rootVisualElement.Q<Button>("City-TopBar-AdministrationButton");
+            if (_administrationButton == null) return;
+            _administrationButton.clicked -= HandleAdministrationRequested;
+            _administrationButton.clicked += HandleAdministrationRequested;
+        }
+
+        private void HandleAdministrationRequested()
+        {
+            GlobalWindowManager.Instance?.OpenWindow(Assets.Scripts.Domain.Enums.WindowTypeEnum.Administration);
         }
 
         private void HandleLogoutRequested()
@@ -184,6 +234,7 @@ namespace Project.Modules.UI
             UpdateCityUserInterfaceLabels(currentResourceState);
             UpdateWarehouseVisuals(currentResourceState);
             RefreshExoticResourcesSection();
+            RefreshVisibleStandardResourceTooltip();
         }
 
         private void HandleCityNameChanged(string newCityName)
@@ -194,6 +245,7 @@ namespace Project.Modules.UI
         private void HandleWorldPlayerEconomyStateChanged(WorldPlayerState economyState)
         {
             UpdateWorldPlayerUserInterfaceLabels(economyState);
+            RefreshVisibleStandardResourceTooltip();
 
             if (economyState.PlayerCities != null && !ReferenceEquals(_playerCities, economyState.PlayerCities))
             {
@@ -216,9 +268,8 @@ namespace Project.Modules.UI
 
             if (_populationAmountLabel != null)
             {
-                int freePopulation = state.MaxPopulationCapacity - state.CurrentPopulationUsage;
-                _populationAmountLabel.text = Math.Max(0, freePopulation).ToString("N0");
-                _populationAmountLabel.style.color = (freePopulation <= 0) ? Color.red : new Color(0.92f, 0.9f, 0.86f);
+                _populationAmountLabel.text = state.RemainingPopulation.ToString("N0");
+                _populationAmountLabel.EnableInClassList("city-resource-label-amount--negative", state.RemainingPopulation <= 0);
             }
         }
 

@@ -101,6 +101,39 @@ public class UnitDeploymentWorkerTests
         Assert.Single(setup.DeploymentRepository.Deployments);
     }
 
+    [Fact]
+    public async Task ProcessMilitaryMovementsAsync_ConsumesNPCDefendersWithoutCreatingOwnerReport()
+    {
+        var setup = CreateSetup(targetStackQuantity: 10);
+        setup.TargetCity!.IsNPC = true;
+        setup.TargetCity.WorldPlayerId = null;
+        setup.TargetCity.WorldPlayer = null;
+        int defendersBefore = setup.TargetCity.UnitStacks.Single().Quantity;
+        setup.AttackerDeployment.ArrivalTime = DateTime.UtcNow.AddSeconds(-1);
+
+        await setup.Worker.ProcessMilitaryMovementsAsync();
+
+        Assert.True(setup.TargetCity.UnitStacks.Single().Quantity < defendersBefore);
+        Assert.Contains(setup.BattleReports.AddedReports, report => report.ReportType == ReportTypeEnum.Attack);
+        Assert.DoesNotContain(setup.BattleReports.AddedReports, report => report.ReportType == ReportTypeEnum.CityAttacked);
+    }
+
+    [Fact]
+    public async Task ProcessMilitaryMovementsAsync_StationsSameWorldSupportAtNPCVillage()
+    {
+        var setup = CreateSetup();
+        setup.TargetCity!.IsNPC = true;
+        setup.TargetCity.WorldPlayerId = null;
+        setup.TargetCity.WorldPlayer = null;
+        setup.AttackerDeployment.Type = UnitDeploymentTypeEnum.Support;
+        setup.AttackerDeployment.ArrivalTime = DateTime.UtcNow.AddSeconds(-1);
+
+        await setup.Worker.ProcessMilitaryMovementsAsync();
+
+        Assert.Equal(UnitDeploymentPhaseEnum.Stationed, setup.AttackerDeployment.Phase);
+        Assert.Equal(UnitDeploymentMovementStatusEnum.Stationed, setup.AttackerDeployment.UnitDeploymentMovementStatus);
+    }
+
     private static Setup CreateSetup(int targetStackQuantity = 0, bool includeTargetCity = true)
     {
         var attackerPlayer = Player("Attacker");
@@ -233,6 +266,7 @@ public class UnitDeploymentWorkerTests
         public Task<List<City>> GetAllAsync() => Task.FromResult(_cities.ToList());
         public Task UpdateRangeAsync(List<City> cities) => Task.CompletedTask;
         public Task AddAsync(City city) => Task.CompletedTask;
+        public Task AddNPCVillagesWithMapObjectsAsync(IReadOnlyCollection<City> cities) => Task.CompletedTask;
         public Task<City?> GetCityWithBuildingsByCityIdentifierAsync(Guid cityId) => GetByIdAsync(cityId);
         public Task<City?> GetTownHallCityByCityIdentifierAsync(Guid cityId) => GetByIdAsync(cityId);
         public Task<City?> GetByCoordinatesAsync(int x, int y) => Task.FromResult<City?>(_cities.SingleOrDefault(city => city.X == x && city.Y == y));

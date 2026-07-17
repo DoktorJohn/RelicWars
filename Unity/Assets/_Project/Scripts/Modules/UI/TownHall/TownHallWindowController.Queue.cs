@@ -11,10 +11,13 @@ namespace Project.Scripts.Modules.UI
     public partial class TownHallWindowController
     {
         private readonly List<QueueTimerBinding> _queueTimerBindings = new List<QueueTimerBinding>();
+        private readonly HashSet<Guid> _buildingJobsWithRequestedResolution = new HashSet<Guid>();
 
         private void PopulateConstructionQueue(List<BuildingDTO> constructionJobs)
         {
             constructionJobs ??= new List<BuildingDTO>();
+            var activeJobIds = new HashSet<Guid>(constructionJobs.ConvertAll(job => job.Id));
+            _buildingJobsWithRequestedResolution.RemoveWhere(jobId => !activeJobIds.Contains(jobId));
             _constructionQueueContainer.Clear();
             _currentQueueCount = constructionJobs.Count;
 
@@ -75,7 +78,11 @@ namespace Project.Scripts.Modules.UI
                 _constructionQueueContainer.Add(queueItemElement);
 
                 if (job.UpgradeFinished.HasValue)
-                    _queueTimerBindings.Add(new QueueTimerBinding(timerDisplayLabel, job.UpgradeFinished.Value));
+                    _queueTimerBindings.Add(new QueueTimerBinding(
+                        job.Id,
+                        timerDisplayLabel,
+                        job.UpgradeFinished.Value,
+                        _buildingJobsWithRequestedResolution.Contains(job.Id)));
             }
 
             if (_queueTimerBindings.Count > 0)
@@ -93,8 +100,14 @@ namespace Project.Scripts.Modules.UI
                     TimeSpan remaining = binding.FinishTimestamp - DateTime.UtcNow;
                     if (remaining.TotalSeconds <= 0)
                     {
-                        binding.Label.text = "FINISHED";
-                        hasFinishedJob = true;
+                        binding.Label.text = "COMPLETING...";
+                        if (!binding.HasRequestedResolution)
+                        {
+                            binding.HasRequestedResolution = true;
+                            _buildingJobsWithRequestedResolution.Add(binding.JobId);
+                            hasFinishedJob = true;
+                            CityStateManager.Instance?.RequestBuildingQueueResolution(_activeCityId, binding.JobId);
+                        }
                     }
                     else
                     {
@@ -104,9 +117,7 @@ namespace Project.Scripts.Modules.UI
 
                 if (hasFinishedJob)
                 {
-                    _queueTimerCoroutine = null;
-                    CityStateManager.Instance?.InitiateResourceRefresh(_activeCityId);
-                    yield break;
+                    CityStateManager.Instance?.RequestImmediateRefresh(_activeCityId);
                 }
 
                 yield return waitInstruction;
@@ -117,14 +128,22 @@ namespace Project.Scripts.Modules.UI
 
         private sealed class QueueTimerBinding
         {
-            public QueueTimerBinding(Label label, DateTime finishTimestamp)
+            public QueueTimerBinding(
+                Guid jobId,
+                Label label,
+                DateTime finishTimestamp,
+                bool hasRequestedResolution)
             {
+                JobId = jobId;
                 Label = label;
                 FinishTimestamp = finishTimestamp;
+                HasRequestedResolution = hasRequestedResolution;
             }
 
+            public Guid JobId { get; }
             public Label Label { get; }
             public DateTime FinishTimestamp { get; }
+            public bool HasRequestedResolution { get; set; }
         }
     }
 }

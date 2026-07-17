@@ -1,0 +1,177 @@
+.administration-window-size {
+    width: 1120px;
+    height: 680px;
+    background-color: var(--c-window-bg);
+}
+
+.administration-body {
+    flex-grow: 1;
+    min-height: 0;
+    padding: 14px 18px 18px;
+}
+
+.administration-tabs {
+    flex-shrink: 0;
+    flex-direction: row;
+    align-items: center;
+    margin-bottom: 12px;
+}
+
+.administration-tab {
+    min-width: 190px;
+    min-height: 44px;
+}
+
+.administration-state {
+    flex-grow: 1;
+    justify-content: center;
+}
+
+.administration-content,
+.administration-tab-panel {
+    flex-grow: 1;
+    min-height: 0;
+}
+
+.administration-table-scroll {
+    flex-grow: 1;
+    min-height: 0;
+    border-width: 1px;
+    border-color: rgba(165, 125, 50, 0.55);
+    background-color: rgba(0, 0, 0, 0.025);
+}
+
+.administration-table-scroll .unity-scroller {
+    display: none;
+    width: 0;
+    height: 0;
+}
+
+.administration-table-scroll #unity-content-container {
+    min-width: 100%;
+    padding: 0;
+    margin: 0;
+}
+
+.administration-table {
+    width: 100%;
+    min-width: 0;
+}
+
+.administration-table-header,
+.administration-table-row {
+    width: 100%;
+    flex-direction: row;
+    align-items: stretch;
+}
+
+.administration-table-header {
+    height: 38px;
+    flex-shrink: 0;
+    align-items: center;
+    background-color: var(--c-btn-chill-bg);
+    border-bottom-width: 1px;
+    border-bottom-color: var(--c-border);
+}
+
+.administration-table-row {
+    min-height: 76px;
+    background-color: rgba(255, 255, 255, 0.05);
+    border-bottom-width: 2px;
+    border-bottom-color: rgba(130, 91, 35, 0.42);
+}
+
+.administration-table-row-alternate {
+    background-color: rgba(92, 62, 25, 0.08);
+}
+
+.administration-table-row:hover {
+    background-color: rgba(132, 96, 42, 0.15);
+}
+
+.administration-header-label,
+.administration-row-label,
+.administration-location-cell {
+    min-width: 0;
+    flex-basis: 0;
+    flex-shrink: 0;
+    padding: 6px 8px;
+    -unity-text-align: middle-center;
+}
+
+.administration-header-label {
+    color: white;
+    -unity-font-definition: var(--font-header);
+    -unity-font-style: bold;
+    font-size: 11px;
+    letter-spacing: 0.5px;
+}
+
+.administration-row-label {
+    color: var(--c-text-body);
+    -unity-font-definition: var(--font-body);
+    font-size: 12px;
+    white-space: normal;
+}
+
+.administration-location-cell {
+    justify-content: center;
+    align-items: center;
+    padding-top: 5px;
+    padding-bottom: 5px;
+}
+
+.administration-entity-line {
+    width: 100%;
+    height: 21px;
+    min-height: 21px;
+    margin: 0;
+    padding: 1px 4px;
+    font-size: 11px;
+    -unity-text-align: middle-center;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.administration-entity-plain {
+    color: var(--c-text-muted);
+}
+
+.administration-col-action { flex-grow: 10; }
+.administration-col-phase { flex-grow: 10; }
+.administration-col-from { flex-grow: 18; }
+.administration-col-to { flex-grow: 18; }
+.administration-col-troops { flex-grow: 28; }
+.administration-col-timing { flex-grow: 16; }
+
+.administration-stationed-header .administration-col-action,
+.administration-stationed-row .administration-col-action { flex-grow: 11; }
+.administration-stationed-header .administration-col-from,
+.administration-stationed-row .administration-col-from { flex-grow: 20; }
+.administration-stationed-header .administration-col-to,
+.administration-stationed-row .administration-col-to { flex-grow: 20; }
+.administration-stationed-header .administration-col-troops,
+.administration-stationed-row .administration-col-troops { flex-grow: 31; }
+.administration-stationed-header .administration-col-timing,
+.administration-stationed-row .administration-col-timing { flex-grow: 18; }
+
+.administration-action,
+.administration-timing {
+    -unity-font-definition: var(--font-header);
+    -unity-font-style: bold;
+}
+
+.administration-action-attack { color: var(--c-value-negative); }
+.administration-action-support { color: var(--c-value-positive); }
+
+.administration-timing {
+    color: var(--c-value-total);
+    font-size: 11px;
+}
+
+.administration-timing-resolving {
+    color: var(--c-value-warning);
+}
+
+.hidden { display: none; }

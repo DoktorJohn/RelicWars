@@ -9,6 +9,21 @@ using System.Threading.Tasks;
 
 namespace Project.Scripts.Domain.DTOs
 {
+    public enum ResearchEffectType
+    {
+        UnitRecruitment,
+        Subjugation
+    }
+
+    [Serializable]
+    public class ResearchEffectDTO
+    {
+        [JsonConverter(typeof(StringEnumConverter))]
+        public ResearchEffectType Type;
+        [JsonConverter(typeof(StringEnumConverter))]
+        public Assets.Scripts.Domain.Enums.UnitTypeEnum? UnitType;
+    }
+
     [Serializable]
     public class ResearchTreeDTO
     {
@@ -32,6 +47,7 @@ namespace Project.Scripts.Domain.DTOs
         public bool IsResearching;
         public bool IsLocked;
         public bool CanAfford;
+        public List<ResearchEffectDTO> Effects;
     }
 
     [Serializable]

@@ -1,7 +1,6 @@
 [
   {
     "Type": "Militia",
-    "IsElite": false,
     "Category": "Infantry",
     "Power": 2,
     "Armor": 1,
@@ -9,10 +8,13 @@
     "Discipline": 2,
     "Mobility": 2,
     "LootCapacity": 10,
+    "IsElite": false,
+    "IsDefaultUnlocked": true,
     "WoodCost": 5,
     "StoneCost": 5,
     "MetalCost": 0,
     "PopulationCost": 3,
+    "UnitCapacity": 0,
     "RecruitmentTimeInSeconds": 20,
     "Prerequisites": [
       {
@@ -31,7 +33,6 @@
   },
   {
     "Type": "MenAtArms",
-    "IsElite": false,
     "Category": "Infantry",
     "Power": 5,
     "Armor": 3,
@@ -39,10 +40,12 @@
     "Discipline": 5,
     "Mobility": 2,
     "LootCapacity": 25,
+    "IsElite": false,
     "WoodCost": 10,
     "StoneCost": 0,
     "MetalCost": 5,
     "PopulationCost": 5,
+    "UnitCapacity": 0,
     "RecruitmentTimeInSeconds": 110,
     "Prerequisites": [
       {
@@ -61,7 +64,6 @@
   },
   {
     "Type": "Spearmen",
-    "IsElite": false,
     "Category": "Infantry",
     "Power": 4,
     "Armor": 3,
@@ -69,10 +71,12 @@
     "Discipline": 7,
     "Mobility": 1,
     "LootCapacity": 15,
+    "IsElite": false,
     "WoodCost": 8,
     "StoneCost": 0,
     "MetalCost": 6,
     "PopulationCost": 6,
+    "UnitCapacity": 0,
     "RecruitmentTimeInSeconds": 45,
     "Prerequisites": [
       {
@@ -91,7 +95,6 @@
   },
   {
     "Type": "Axemen",
-    "IsElite": false,
     "Category": "Infantry",
     "Power": 6,
     "Armor": 2,
@@ -99,10 +102,12 @@
     "Discipline": 4,
     "Mobility": 2,
     "LootCapacity": 20,
+    "IsElite": false,
     "WoodCost": 0,
     "StoneCost": 10,
     "MetalCost": 5,
     "PopulationCost": 7,
+    "UnitCapacity": 0,
     "RecruitmentTimeInSeconds": 55,
     "Prerequisites": [
       {
@@ -121,7 +126,6 @@
   },
   {
     "Type": "Swordsmen",
-    "IsElite": false,
     "Category": "Infantry",
     "Power": 7,
     "Armor": 5,
@@ -129,10 +133,12 @@
     "Discipline": 6,
     "Mobility": 2,
     "LootCapacity": 20,
+    "IsElite": false,
     "WoodCost": 15,
     "StoneCost": 5,
     "MetalCost": 20,
     "PopulationCost": 9,
+    "UnitCapacity": 0,
     "RecruitmentTimeInSeconds": 70,
     "Prerequisites": [
       {
@@ -151,7 +157,6 @@
   },
   {
     "Type": "Bowmen",
-    "IsElite": false,
     "Category": "Ranged",
     "Power": 4,
     "Armor": 1,
@@ -159,10 +164,12 @@
     "Discipline": 3,
     "Mobility": 3,
     "LootCapacity": 10,
+    "IsElite": false,
     "WoodCost": 12,
     "StoneCost": 0,
     "MetalCost": 0,
     "PopulationCost": 5,
+    "UnitCapacity": 0,
     "RecruitmentTimeInSeconds": 35,
     "Prerequisites": [
       {
@@ -181,7 +188,6 @@
   },
   {
     "Type": "Crossbowmen",
-    "IsElite": false,
     "Category": "Ranged",
     "Power": 7,
     "Armor": 2,
@@ -189,10 +195,12 @@
     "Discipline": 4,
     "Mobility": 2,
     "LootCapacity": 15,
+    "IsElite": false,
     "WoodCost": 15,
     "StoneCost": 0,
     "MetalCost": 15,
     "PopulationCost": 8,
+    "UnitCapacity": 0,
     "RecruitmentTimeInSeconds": 90,
     "Prerequisites": [
       {
@@ -211,7 +219,6 @@
   },
   {
     "Type": "LightCavalry",
-    "IsElite": false,
     "Category": "Cavalry",
     "Power": 6,
     "Armor": 3,
@@ -219,10 +226,13 @@
     "Discipline": 4,
     "Mobility": 6,
     "LootCapacity": 50,
+    "IsElite": false,
+    "IsDefaultUnlocked": true,
     "WoodCost": 10,
     "StoneCost": 2,
     "MetalCost": 6,
     "PopulationCost": 8,
+    "UnitCapacity": 0,
     "RecruitmentTimeInSeconds": 80,
     "Prerequisites": [
       {
@@ -241,7 +251,6 @@
   },
   {
     "Type": "Knights",
-    "IsElite": true,
     "Category": "Cavalry",
     "Power": 9,
     "Armor": 6,
@@ -249,10 +258,12 @@
     "Discipline": 7,
     "Mobility": 5,
     "LootCapacity": 40,
+    "IsElite": true,
     "WoodCost": 5,
     "StoneCost": 15,
     "MetalCost": 20,
     "PopulationCost": 12,
+    "UnitCapacity": 0,
     "RecruitmentTimeInSeconds": 180,
     "Prerequisites": [
       {
@@ -271,7 +282,6 @@
   },
   {
     "Type": "Cataphracts",
-    "IsElite": true,
     "Category": "Cavalry",
     "Power": 10,
     "Armor": 8,
@@ -279,10 +289,12 @@
     "Discipline": 9,
     "Mobility": 3,
     "LootCapacity": 30,
+    "IsElite": true,
     "WoodCost": 15,
     "StoneCost": 20,
     "MetalCost": 30,
     "PopulationCost": 18,
+    "UnitCapacity": 0,
     "RecruitmentTimeInSeconds": 240,
     "Prerequisites": [
       {
@@ -301,7 +313,6 @@
   },
   {
     "Type": "Ballista",
-    "IsElite": false,
     "Category": "Siege",
     "Power": 5,
     "Armor": 1,
@@ -309,10 +320,13 @@
     "Discipline": 2,
     "Mobility": 1,
     "LootCapacity": 0,
+    "IsElite": false,
+    "IsDefaultUnlocked": true,
     "WoodCost": 35,
     "StoneCost": 30,
     "MetalCost": 10,
     "PopulationCost": 4,
+    "UnitCapacity": 0,
     "RecruitmentTimeInSeconds": 300,
     "Prerequisites": [
       {
@@ -331,7 +345,6 @@
   },
   {
     "Type": "Catapult",
-    "IsElite": false,
     "Category": "Siege",
     "Power": 6,
     "Armor": 2,
@@ -339,10 +352,12 @@
     "Discipline": 3,
     "Mobility": 1,
     "LootCapacity": 0,
+    "IsElite": false,
     "WoodCost": 40,
     "StoneCost": 20,
     "MetalCost": 5,
     "PopulationCost": 5,
+    "UnitCapacity": 0,
     "RecruitmentTimeInSeconds": 450,
     "Prerequisites": [
       {
@@ -361,7 +376,6 @@
   },
   {
     "Type": "Trebuchet",
-    "IsElite": false,
     "Category": "Siege",
     "Power": 8,
     "Armor": 3,
@@ -369,10 +383,12 @@
     "Discipline": 4,
     "Mobility": 1,
     "LootCapacity": 0,
+    "IsElite": false,
     "WoodCost": 60,
     "StoneCost": 10,
     "MetalCost": 0,
     "PopulationCost": 7,
+    "UnitCapacity": 0,
     "RecruitmentTimeInSeconds": 600,
     "Prerequisites": [
       {
@@ -391,7 +407,6 @@
   },
   {
     "Type": "Cannon",
-    "IsElite": true,
     "Category": "Siege",
     "Power": 10,
     "Armor": 4,
@@ -399,10 +414,12 @@
     "Discipline": 5,
     "Mobility": 1,
     "LootCapacity": 0,
+    "IsElite": true,
     "WoodCost": 10,
     "StoneCost": 10,
     "MetalCost": 60,
     "PopulationCost": 9,
+    "UnitCapacity": 0,
     "RecruitmentTimeInSeconds": 900,
     "Prerequisites": [
       {
@@ -421,7 +438,6 @@
   },
   {
     "Type": "Engineers",
-    "IsElite": false,
     "Category": "Siege",
     "Power": 2,
     "Armor": 1,
@@ -429,10 +445,12 @@
     "Discipline": 3,
     "Mobility": 2,
     "LootCapacity": 10,
+    "IsElite": false,
     "WoodCost": 12,
     "StoneCost": 12,
     "MetalCost": 70,
     "PopulationCost": 10,
+    "UnitCapacity": 0,
     "RecruitmentTimeInSeconds": 150,
     "Prerequisites": [
       {
@@ -446,6 +464,131 @@
       "SiegeUpkeep",
       "Upkeep",
       "SiegeRecruitmentSpeed",
+      "RecruitmentSpeed"
+    ]
+  },
+  {
+    "Type": "Longship",
+    "Category": "Naval",
+    "Power": 5,
+    "Armor": 3,
+    "Reach": 3,
+    "Discipline": 4,
+    "Mobility": 7,
+    "LootCapacity": 15,
+    "IsElite": false,
+    "IsDefaultUnlocked": true,
+    "WoodCost": 18,
+    "StoneCost": 4,
+    "MetalCost": 8,
+    "PopulationCost": 6,
+    "UnitCapacity": 0,
+    "RecruitmentTimeInSeconds": 90,
+    "Prerequisites": [
+      {
+        "Type": "Harbor",
+        "RequiredLevel": 1
+      }
+    ],
+    "ModifiersThatAffectsThis": [
+      "NavalCost",
+      "NavalStats",
+      "NavalUpkeep",
+      "Upkeep",
+      "NavalRecruitmentSpeed",
+      "RecruitmentSpeed"
+    ]
+  },
+  {
+    "Type": "WarGalley",
+    "Category": "Naval",
+    "Power": 9,
+    "Armor": 5,
+    "Reach": 4,
+    "Discipline": 6,
+    "Mobility": 6,
+    "LootCapacity": 25,
+    "IsElite": false,
+    "WoodCost": 30,
+    "StoneCost": 10,
+    "MetalCost": 20,
+    "PopulationCost": 10,
+    "UnitCapacity": 0,
+    "RecruitmentTimeInSeconds": 180,
+    "Prerequisites": [
+      {
+        "Type": "Harbor",
+        "RequiredLevel": 5
+      }
+    ],
+    "ModifiersThatAffectsThis": [
+      "NavalCost",
+      "NavalStats",
+      "NavalUpkeep",
+      "Upkeep",
+      "NavalRecruitmentSpeed",
+      "RecruitmentSpeed"
+    ]
+  },
+  {
+    "Type": "Transport",
+    "Category": "Naval",
+    "Power": 1,
+    "Armor": 4,
+    "Reach": 2,
+    "Discipline": 2,
+    "Mobility": 8,
+    "LootCapacity": 0,
+    "IsElite": false,
+    "WoodCost": 22,
+    "StoneCost": 8,
+    "MetalCost": 12,
+    "PopulationCost": 8,
+    "UnitCapacity": 150,
+    "RecruitmentTimeInSeconds": 150,
+    "Prerequisites": [
+      {
+        "Type": "Harbor",
+        "RequiredLevel": 3
+      }
+    ],
+    "ModifiersThatAffectsThis": [
+      "NavalCost",
+      "NavalStats",
+      "NavalUpkeep",
+      "Upkeep",
+      "NavalRecruitmentSpeed",
+      "RecruitmentSpeed"
+    ]
+  },
+  {
+    "Type": "GrandTransport",
+    "Category": "Naval",
+    "Power": 2,
+    "Armor": 7,
+    "Reach": 2,
+    "Discipline": 3,
+    "Mobility": 6,
+    "LootCapacity": 0,
+    "IsElite": false,
+    "WoodCost": 40,
+    "StoneCost": 18,
+    "MetalCost": 24,
+    "PopulationCost": 14,
+    "UnitCapacity": 500,
+    "RecruitmentTimeInSeconds": 300,
+    "Prerequisites": [
+      {
+        "Type": "Harbor",
+        "RequiredLevel": 12
+      }
+    ],
+    "ModifiersThatAffectsThis": [
+      "NavalCost",
+      "NavalStats",
+      "NavalUpkeep",
+      "Upkeep",
+      "NavalRecruitmentSpeed",
       "RecruitmentSpeed"
     ]
   }

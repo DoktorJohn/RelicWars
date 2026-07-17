@@ -1,6 +1,7 @@
 ﻿using Project.Scripts.Modules.Map;
 using UnityEngine;
 using UnityEngine.InputSystem;
+using UnityEngine.InputSystem.Controls;
 using UnityEngine.Tilemaps;
 
 public class CameraEdgePan : MonoBehaviour
@@ -36,6 +37,9 @@ public class CameraEdgePan : MonoBehaviour
     private float _mapMaxX;
     private float _mapMinY;
     private float _mapMaxY;
+    private bool _hasPreviousTouchPosition;
+    private Vector2 _previousTouchPosition;
+    private float _previousPinchDistance;
 
     private void Awake()
     {
@@ -79,6 +83,15 @@ public class CameraEdgePan : MonoBehaviour
 
     private void ExecuteCameraPanLogic()
     {
+        if (Touchscreen.current != null && Touchscreen.current.primaryTouch.press.isPressed)
+        {
+            ExecuteTouchPanAndPinch();
+            return;
+        }
+
+        _hasPreviousTouchPosition = false;
+        _previousPinchDistance = 0f;
+
         if (Mouse.current == null) return;
 
         // FIX: Vi fjerner checken for IsMouseOverUI her. 
@@ -111,6 +124,11 @@ public class CameraEdgePan : MonoBehaviour
 
     private void ExecuteCameraZoomLogic()
     {
+        if (Touchscreen.current != null && Touchscreen.current.primaryTouch.press.isPressed)
+        {
+            return;
+        }
+
         if (Mouse.current == null) return;
 
         // VIGTIGT: Vi BEHOLDER checken for Zoom.
@@ -170,5 +188,90 @@ public class CameraEdgePan : MonoBehaviour
 
         minimum += halfViewportSize;
         maximum -= halfViewportSize;
+    }
+
+    private void ExecuteTouchPanAndPinch()
+    {
+        if (WorldMapInteractionHandler.Instance != null && WorldMapInteractionHandler.Instance.IsMouseOverUI)
+        {
+            _hasPreviousTouchPosition = false;
+            _previousPinchDistance = 0f;
+            return;
+        }
+
+        int activeTouches = GetActiveTouchPositions(out Vector2 firstTouch, out Vector2 secondTouch);
+        if (activeTouches == 0)
+        {
+            _hasPreviousTouchPosition = false;
+            _previousPinchDistance = 0f;
+            return;
+        }
+
+        Vector2 currentPanPosition = activeTouches > 1
+            ? (firstTouch + secondTouch) * 0.5f
+            : firstTouch;
+
+        if (_hasPreviousTouchPosition)
+        {
+            Vector2 screenDelta = _previousTouchPosition - currentPanPosition;
+            float worldUnitsPerScreenPixel = (_associatedCamera.orthographicSize * 2f) / Mathf.Max(Screen.height, 1);
+            Vector3 nextPosition = transform.position + new Vector3(
+                screenDelta.x * worldUnitsPerScreenPixel,
+                screenDelta.y * worldUnitsPerScreenPixel,
+                0f);
+
+            transform.position = _useLimits ? ClampPositionToMap(nextPosition) : nextPosition;
+        }
+
+        _previousTouchPosition = currentPanPosition;
+        _hasPreviousTouchPosition = true;
+
+        if (activeTouches < 2)
+        {
+            _previousPinchDistance = 0f;
+            return;
+        }
+
+        float currentPinchDistance = Vector2.Distance(firstTouch, secondTouch);
+        if (_previousPinchDistance > 0f)
+        {
+            float pinchDelta = currentPinchDistance - _previousPinchDistance;
+            _targetOrthographicSize -= pinchDelta / Mathf.Max(Screen.height, 1) * _zoomSensitivity;
+            _targetOrthographicSize = Mathf.Clamp(_targetOrthographicSize, _minOrthographicSize, _maxOrthographicSize);
+        }
+
+        _previousPinchDistance = currentPinchDistance;
+    }
+
+    private static int GetActiveTouchPositions(out Vector2 firstTouch, out Vector2 secondTouch)
+    {
+        firstTouch = default;
+        secondTouch = default;
+        int activeTouchCount = 0;
+
+        foreach (TouchControl touch in Touchscreen.current.touches)
+        {
+            if (!touch.press.isPressed)
+            {
+                continue;
+            }
+
+            if (activeTouchCount == 0)
+            {
+                firstTouch = touch.position.ReadValue();
+            }
+            else if (activeTouchCount == 1)
+            {
+                secondTouch = touch.position.ReadValue();
+            }
+
+            activeTouchCount++;
+            if (activeTouchCount == 2)
+            {
+                break;
+            }
+        }
+
+        return activeTouchCount;
     }
 }

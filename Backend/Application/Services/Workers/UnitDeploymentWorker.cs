@@ -23,6 +23,7 @@ namespace Infrastructure.Workers
         private readonly IIdeologyFocusRepository _ideologyFocusRepository;
         private readonly ITransactionManager _transactionManager;
         private readonly IDeploymentPermissionService _permissionService;
+        private readonly IDailyObjectiveService? _dailyObjectiveService;
 
         public UnitDeploymentWorker(
             IUnitDeploymentRepository unitDeploymentRepo,
@@ -34,7 +35,8 @@ namespace Infrastructure.Workers
             ILogger<UnitDeploymentWorker> logger,
             IIdeologyFocusRepository ideologyFocusRepository,
             ITransactionManager transactionManager,
-            IDeploymentPermissionService permissionService)
+            IDeploymentPermissionService permissionService,
+            IDailyObjectiveService? dailyObjectiveService = null)
         {
             _unitDeploymentRepo = unitDeploymentRepo;
             _cityRepo = cityRepo;
@@ -46,6 +48,7 @@ namespace Infrastructure.Workers
             _ideologyFocusRepository = ideologyFocusRepository;
             _transactionManager = transactionManager;
             _permissionService = permissionService;
+            _dailyObjectiveService = dailyObjectiveService;
         }
 
         public async Task ProcessMilitaryMovementsAsync()
@@ -206,6 +209,13 @@ namespace Infrastructure.Workers
                 }
             }
             var occurredAt = DateTime.UtcNow;
+            await RecordCombatProgressAsync(
+                attacker,
+                targetCity,
+                participatingSupportOwnerIds,
+                result,
+                defenderStacks.Any(stack => stack.Quantity > 0),
+                occurredAt);
             var attackerLossesJson = JsonSerializer.Serialize(result.AttackerLosses.Select(x => new { x.Type, x.Quantity }));
             var defenderLossesJson = JsonSerializer.Serialize(result.DefenderLosses.Select(x => new { x.Type, x.Quantity }));
             var revivedUnitsJson = JsonSerializer.Serialize(result.RevivedDefenders.Select(x => new { x.Type, x.Quantity }));
@@ -262,6 +272,13 @@ namespace Infrastructure.Workers
         private async Task CreateUnopposedAttackReportsAsync(UnitDeployment attacker, City targetCity)
         {
             var occurredAt = DateTime.UtcNow;
+            if (_dailyObjectiveService != null)
+            {
+                await _dailyObjectiveService.ApplyProgressAsync(attacker.WorldPlayerId,
+                    new(DailyObjectiveProgressTypeEnum.BattleWon, 1, occurredAt));
+                await _dailyObjectiveService.ApplyProgressAsync(attacker.WorldPlayerId,
+                    new(DailyObjectiveProgressTypeEnum.SuccessfulAttacks, 1, occurredAt));
+            }
             await _reportRepo.AddAsync(new BattleReport
             {
                 Id = Guid.NewGuid(), WorldPlayerId = attacker.WorldPlayerId, ReportType = ReportTypeEnum.Attack,
@@ -345,6 +362,56 @@ namespace Infrastructure.Workers
         private async Task CleanupUnitDeploymentAsync(UnitDeployment deployment)
         {
             await _unitDeploymentRepo.DeleteAsync(deployment);
+        }
+
+        private async Task RecordCombatProgressAsync(
+            UnitDeployment attacker,
+            City targetCity,
+            IReadOnlyCollection<Guid> supportOwnerIds,
+            CombatResult result,
+            bool hasSurvivingDefender,
+            DateTime occurredAt)
+        {
+            if (_dailyObjectiveService == null) return;
+
+            foreach (var loss in result.DefenderLosses.Where(loss => loss.Quantity > 0))
+                await _dailyObjectiveService.ApplyProgressAsync(attacker.WorldPlayerId,
+                    new(DailyObjectiveProgressTypeEnum.EnemyUnitsKilled, loss.Quantity, occurredAt, loss.Type));
+
+            bool attackerSurvived = attacker.UnitStacks.Any(stack => stack.Quantity > 0);
+            if (attackerSurvived)
+            {
+                await _dailyObjectiveService.ApplyProgressAsync(attacker.WorldPlayerId,
+                    new(DailyObjectiveProgressTypeEnum.BattleWon, 1, occurredAt));
+                await _dailyObjectiveService.ApplyProgressAsync(attacker.WorldPlayerId,
+                    new(DailyObjectiveProgressTypeEnum.SuccessfulAttacks, 1, occurredAt));
+            }
+
+            foreach (Guid supportOwnerId in supportOwnerIds)
+            {
+                foreach (var loss in result.AttackerLosses.Where(loss => loss.Quantity > 0))
+                    await _dailyObjectiveService.ApplyProgressAsync(supportOwnerId,
+                        new(DailyObjectiveProgressTypeEnum.EnemyUnitsKilled, loss.Quantity, occurredAt, loss.Type));
+                int attackerKills = result.AttackerLosses.Sum(loss => loss.Quantity);
+                if (attackerKills > 0)
+                    await _dailyObjectiveService.ApplyProgressAsync(supportOwnerId,
+                        new(DailyObjectiveProgressTypeEnum.SupportKills, attackerKills, occurredAt));
+            }
+
+            if (targetCity.WorldPlayerId.HasValue)
+            {
+                foreach (var loss in result.AttackerLosses.Where(loss => loss.Quantity > 0))
+                    await _dailyObjectiveService.ApplyProgressAsync(targetCity.WorldPlayerId.Value,
+                        new(DailyObjectiveProgressTypeEnum.EnemyUnitsKilled, loss.Quantity, occurredAt, loss.Type));
+
+                if (!attackerSurvived && hasSurvivingDefender)
+                {
+                    await _dailyObjectiveService.ApplyProgressAsync(targetCity.WorldPlayerId.Value,
+                        new(DailyObjectiveProgressTypeEnum.BattleWon, 1, occurredAt));
+                    await _dailyObjectiveService.ApplyProgressAsync(targetCity.WorldPlayerId.Value,
+                        new(DailyObjectiveProgressTypeEnum.DefenseWon, 1, occurredAt));
+                }
+            }
         }
 
         private static void RedistributeRevival(

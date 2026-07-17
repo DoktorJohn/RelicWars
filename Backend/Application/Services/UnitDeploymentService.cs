@@ -2,6 +2,7 @@ using Application.DTOs;
 using Application.Interfaces;
 using Application.Interfaces.IRepositories;
 using Application.Interfaces.IServices;
+using Application.Utility;
 using Domain.Entities;
 using Domain.Enums;
 using Domain.StaticData.Data;
@@ -19,6 +20,7 @@ namespace Application.Services
         private readonly UnitDataReader _unitDataReader;
         private readonly DeploymentModifierSnapshotService _snapshotService;
         private readonly UnitMovementCalculator _movementCalculator;
+        private readonly DeploymentTransportCapacityService _transportCapacityService;
         private readonly ITransactionManager _transactionManager;
         private readonly IDeploymentPermissionService _permissionService;
         private readonly IBattleReportRepository? _battleReportRepository;
@@ -31,6 +33,7 @@ namespace Application.Services
             UnitDataReader unitDataReader,
             DeploymentModifierSnapshotService snapshotService,
             UnitMovementCalculator movementCalculator,
+            DeploymentTransportCapacityService transportCapacityService,
             ITransactionManager transactionManager,
             IDeploymentPermissionService permissionService,
             IBattleReportRepository? battleReportRepository = null)
@@ -42,6 +45,7 @@ namespace Application.Services
             _unitDataReader = unitDataReader;
             _snapshotService = snapshotService;
             _movementCalculator = movementCalculator;
+            _transportCapacityService = transportCapacityService;
             _transactionManager = transactionManager;
             _permissionService = permissionService;
             _battleReportRepository = battleReportRepository;
@@ -81,10 +85,19 @@ namespace Application.Services
                 mobility = Math.Min(mobility, _unitDataReader.GetUnit(selection.Type).Mobility);
             }
 
+            var transportAssessment = await _transportCapacityService.EvaluateAsync(sourceCity, targetCity, selections);
+
             mobility = _movementCalculator.CalculateMobilitySnapshot(sourceCity, Math.Max(1, mobility));
             double seconds = _movementCalculator.CalculateTravelSeconds(sourceCity.X, sourceCity.Y, targetCity.X, targetCity.Y, mobility);
             long durationSeconds = Math.Max(0, (long)Math.Ceiling(seconds));
-            return new DeploymentTravelEstimateDTO(durationSeconds, DateTime.UtcNow.AddSeconds(durationSeconds));
+            return new DeploymentTravelEstimateDTO(
+                durationSeconds,
+                DateTime.UtcNow.AddSeconds(durationSeconds),
+                transportAssessment.RequiresTransport,
+                transportAssessment.RequiredTransportCapacity,
+                transportAssessment.AvailableTransportCapacity,
+                transportAssessment.TransportCapacityMargin,
+                transportAssessment.HasSufficientTransportCapacity);
         }
 
         private async Task<OwnedUnitDeploymentDTO> CreateDeploymentAsync(
@@ -120,7 +133,6 @@ namespace Application.Services
             var now = DateTime.UtcNow;
             var worldPlayerId = sourceCity.WorldPlayerId ?? throw new InvalidOperationException("Kilden tilhører ikke en world player.");
 
-            int slowestMobility = int.MaxValue;
             var unitsToMove = new List<UnitStack>();
             var validatedSelections = new List<(UnitSelectionDTO Selection, UnitStack CityStack)>();
             var selections = requestedSelections ?? new List<UnitSelectionDTO>();
@@ -135,6 +147,7 @@ namespace Application.Services
                 throw new InvalidOperationException("Each unit type can only be selected once.");
             }
 
+            int slowestMobility = int.MaxValue;
             foreach (var selection in selections)
             {
                 if (selection.Quantity <= 0)
@@ -155,6 +168,13 @@ namespace Application.Services
                 }
 
                 validatedSelections.Add((selection, cityStack));
+            }
+
+            var transportAssessment = await _transportCapacityService.EvaluateAsync(sourceCity, targetCity, selections);
+            if (!transportAssessment.HasSufficientTransportCapacity)
+            {
+                throw new InvalidOperationException(
+                    $"Insufficient transport capacity. Required {transportAssessment.RequiredTransportCapacity}, available {transportAssessment.AvailableTransportCapacity}.");
             }
 
             foreach (var (selection, cityStack) in validatedSelections)
@@ -271,8 +291,12 @@ namespace Application.Services
             var deployments = await _unitDeploymentRepo.GetActiveDeploymentsByWorldPlayerIdAsync(worldPlayer.Id);
 
             return deployments
-                .OrderBy(deployment => deployment.ArrivalTime)
-                .ThenBy(deployment => deployment.Name)
+                .OrderBy(deployment => deployment.Phase == UnitDeploymentPhaseEnum.Stationed ? 1 : 0)
+                .ThenBy(deployment => deployment.Phase == UnitDeploymentPhaseEnum.Stationed ? DateTime.MaxValue : deployment.ArrivalTime)
+                .ThenByDescending(deployment => deployment.Phase == UnitDeploymentPhaseEnum.Stationed ? deployment.StationedAt : null)
+                .ThenBy(deployment => deployment.DepartureTime)
+                .ThenBy(deployment => deployment.DateCreated)
+                .ThenBy(deployment => deployment.Id)
                 .Select(MapToDto)
                 .ToList();
         }
@@ -310,7 +334,8 @@ namespace Application.Services
                 deployment.OriginCity.Name,
                 deployment.OriginCity.X,
                 deployment.OriginCity.Y,
-                deployment.OriginCity.Points);
+                deployment.OriginCity.Points,
+                deployment.OriginCity.IsNPC);
 
             CityDTO? targetCity = deployment.TargetCity == null
                 ? null
@@ -319,7 +344,8 @@ namespace Application.Services
                     deployment.TargetCity.Name,
                     deployment.TargetCity.X,
                     deployment.TargetCity.Y,
-                    deployment.TargetCity.Points);
+                    deployment.TargetCity.Points,
+                    deployment.TargetCity.IsNPC);
 
             return new OwnedUnitDeploymentDTO(
                 deployment.Id,
@@ -341,7 +367,25 @@ namespace Application.Services
                 deployment.Mobility,
                 deployment.Type,
                 deployment.UnitStacks.Select(stack => new UnitStackDTO(stack.Type, stack.Quantity)).ToList(),
-                deployment.OwnerWorldPlayer?.PlayerProfile?.UserName ?? "Ukendt Spiller");
+                deployment.OwnerWorldPlayer?.PlayerProfile?.UserName ?? "Ukendt Spiller",
+                MapLocation(deployment.OriginCity),
+                deployment.TargetCity == null ? null : MapLocation(deployment.TargetCity));
+        }
+
+        private static DeploymentLocationDTO MapLocation(City city)
+        {
+            var owner = city.WorldPlayer;
+            return new DeploymentLocationDTO(
+                city.Id,
+                city.Name,
+                city.X,
+                city.Y,
+                city.IsNPC,
+                owner?.Id,
+                owner?.PlayerProfile?.UserName,
+                owner?.AllianceId,
+                owner?.Alliance?.Name,
+                owner?.Alliance?.Tag);
         }
     }
 }

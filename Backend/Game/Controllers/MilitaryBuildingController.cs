@@ -23,19 +23,22 @@ namespace Game.Controllers
         private readonly IWorkshopService _workshopService;
         private readonly IBarracksService _barracksService;
         private readonly IStableService _stableService;
+        private readonly IHarborService _harborService;
         private readonly ILogger<MilitaryBuildingController> _logger;
 
         public MilitaryBuildingController(IRecruitmentService recruitmentService, 
             ILogger<MilitaryBuildingController> logger, 
             IStableService stableService, 
             IWorkshopService workshopService, 
-            IBarracksService barracksService)
+            IBarracksService barracksService,
+            IHarborService harborService)
         {
             _recruitmentService = recruitmentService;
             _logger = logger;
             _stableService = stableService;
             _workshopService = workshopService;
             _barracksService = barracksService;
+            _harborService = harborService;
         }
 
         [HttpPost("recruitmentQueue")]
@@ -155,6 +158,25 @@ namespace Game.Controllers
             }
         }
 
+        [HttpGet("{cityId}/harborOverview")]
+        public async Task<IActionResult> GetHarborOverview(Guid cityId)
+        {
+            try
+            {
+                var userId = GetUserIdFromClaims();
+                var result = await _harborService.GetHarborOverviewAsync(userId, cityId);
+                return Ok(result);
+            }
+            catch (KeyNotFoundException)
+            {
+                return NotFound();
+            }
+            catch (UnauthorizedAccessException)
+            {
+                return Forbid();
+            }
+        }
+
         [HttpPost("{cityId}/barracksRecruit")]
         public async Task<IActionResult> BarracksRecruit(Guid cityId, [FromBody] RecruitUnitRequestDTO request)
         {
@@ -183,6 +205,23 @@ namespace Game.Controllers
 
         [HttpPost("{cityId}/workshopRecruit")]
         public async Task<IActionResult> WorkshopRecruit(Guid cityId, [FromBody] RecruitUnitRequestDTO request)
+        {
+            try
+            {
+                var userId = GetUserIdFromClaims();
+                var result = await _recruitmentService.QueueRecruitmentAsync(userId, cityId, request.UnitType, request.Amount);
+
+                if (result.Success) return Ok(result);
+                return BadRequest(new ApiError("recruitment.operation_failed", result.Message));
+            }
+            catch (UnauthorizedAccessException)
+            {
+                return Forbid();
+            }
+        }
+
+        [HttpPost("{cityId}/harborRecruit")]
+        public async Task<IActionResult> HarborRecruit(Guid cityId, [FromBody] RecruitUnitRequestDTO request)
         {
             try
             {

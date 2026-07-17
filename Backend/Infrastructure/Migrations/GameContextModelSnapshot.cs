@@ -478,6 +478,91 @@ namespace Infrastructure.Migrations
                     b.ToTable("ConversationParticipants");
                 });
 
+            modelBuilder.Entity("Domain.Entities.DailyObjectiveAssignment", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("DailyObjectiveSetId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("DateCreated")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime>("DateLastModified")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("DefinitionId")
+                        .HasColumnType("int");
+
+                    b.Property<bool>("IsComplete")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<double>("Progress")
+                        .HasColumnType("float");
+
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .IsRequired()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("rowversion");
+
+                    b.Property<int>("Slot")
+                        .HasColumnType("int");
+
+                    b.Property<double>("Target")
+                        .HasColumnType("float");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("DailyObjectiveSetId", "DefinitionId")
+                        .IsUnique();
+
+                    b.HasIndex("DailyObjectiveSetId", "Slot")
+                        .IsUnique();
+
+                    b.ToTable("DailyObjectiveAssignments");
+                });
+
+            modelBuilder.Entity("Domain.Entities.DailyObjectiveSet", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("DateCreated")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime>("DateLastModified")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime>("DayStartUtc")
+                        .HasColumnType("date");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .IsRequired()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("rowversion");
+
+                    b.Property<Guid>("WorldPlayerId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("WorldPlayerId")
+                        .IsUnique();
+
+                    b.ToTable("DailyObjectiveSets");
+                });
+
             modelBuilder.Entity("Domain.Entities.IdeologyFocus", b =>
                 {
                     b.Property<Guid>("Id")
@@ -1369,6 +1454,28 @@ namespace Infrastructure.Migrations
                     b.Navigation("WorldPlayer");
                 });
 
+            modelBuilder.Entity("Domain.Entities.DailyObjectiveAssignment", b =>
+                {
+                    b.HasOne("Domain.Entities.DailyObjectiveSet", "DailyObjectiveSet")
+                        .WithMany("Assignments")
+                        .HasForeignKey("DailyObjectiveSetId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("DailyObjectiveSet");
+                });
+
+            modelBuilder.Entity("Domain.Entities.DailyObjectiveSet", b =>
+                {
+                    b.HasOne("Domain.User.WorldPlayer", "WorldPlayer")
+                        .WithOne("DailyObjectiveSet")
+                        .HasForeignKey("Domain.Entities.DailyObjectiveSet", "WorldPlayerId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("WorldPlayer");
+                });
+
             modelBuilder.Entity("Domain.Entities.IdeologyFocus", b =>
                 {
                     b.HasOne("Domain.Entities.City", "City")
@@ -1738,6 +1845,11 @@ namespace Infrastructure.Migrations
                     b.Navigation("Participants");
                 });
 
+            modelBuilder.Entity("Domain.Entities.DailyObjectiveSet", b =>
+                {
+                    b.Navigation("Assignments");
+                });
+
             modelBuilder.Entity("Domain.Entities.UnitDeployment", b =>
                 {
                     b.Navigation("UnitStacks");
@@ -1767,6 +1879,8 @@ namespace Infrastructure.Migrations
                     b.Navigation("CompletedResearches");
 
                     b.Navigation("ConversationParticipants");
+
+                    b.Navigation("DailyObjectiveSet");
 
                     b.Navigation("UnitDeployments");
 

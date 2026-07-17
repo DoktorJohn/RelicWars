@@ -21,6 +21,11 @@ namespace Infrastructure.Repositories
             await _context.SaveChangesAsync();
         }
 
+        public Task AddPendingAsync(BattleReport report)
+        {
+            return _context.BattleReports.AddAsync(report).AsTask();
+        }
+
         public async Task<BattleReport?> GetByIdAsync(Guid reportId)
         {
             return await _context.BattleReports

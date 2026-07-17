@@ -19,6 +19,10 @@ namespace Assets.Scripts.Domain.Enums
         Catapult,
         Trebuchet,
         Cannon,
-        Engineers
+        Engineers,
+        Longship,
+        WarGalley,
+        Transport,
+        GrandTransport
     }
 }

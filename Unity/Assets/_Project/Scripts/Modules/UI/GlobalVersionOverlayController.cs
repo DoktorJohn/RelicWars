@@ -31,6 +31,7 @@ namespace Project.Scripts.Modules.UI
         {
             _overlayDocument = GetComponent<UIDocument>();
             VisualElement root = _overlayDocument.rootVisualElement;
+            Project.Modules.UI.ResponsiveUiStateManager.RegisterRoot(root);
 
             // Find labelen i vores UXML
             _versionLabel = root.Q<Label>("GlobalOverlay-VersionLabel");
@@ -44,6 +45,19 @@ namespace Project.Scripts.Modules.UI
             else
             {
                 Debug.LogWarning("[GlobalVersionOverlayController] Kunne ikke finde 'GlobalOverlay-VersionLabel' i UXML dokumentet.");
+            }
+        }
+
+        private void OnDestroy()
+        {
+            if (_overlayDocument != null)
+            {
+                Project.Modules.UI.ResponsiveUiStateManager.UnregisterRoot(_overlayDocument.rootVisualElement);
+            }
+
+            if (_internalInstance == this)
+            {
+                _internalInstance = null;
             }
         }
     }

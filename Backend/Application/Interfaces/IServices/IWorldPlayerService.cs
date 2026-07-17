@@ -16,6 +16,11 @@ namespace Application.Interfaces.IServices
         Task<WorldPlayerEconomyDTO> GetWorldPlayerEconomyAsync(Guid worldPlayerId);
         Task<List<PlayerSearchResultDTO>> SearchPlayersAsync(Guid worldId, string query);
         void SyncGlobalResources(WorldPlayer player, DateTime currentDateTime);
+        Task SyncGlobalResourcesAsync(WorldPlayer player, DateTime currentDateTime)
+        {
+            SyncGlobalResources(player, currentDateTime);
+            return Task.CompletedTask;
+        }
         Task<WorldPlayerSelectIdeologyResponse> SelectIdeology(SelectIdeologyRequest request);
     }
 }

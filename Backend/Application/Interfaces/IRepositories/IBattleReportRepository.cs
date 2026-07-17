@@ -10,6 +10,7 @@ namespace Application.Interfaces.IRepositories
     public interface IBattleReportRepository
     {
         Task AddAsync(BattleReport report);
+        Task AddPendingAsync(BattleReport report) => AddAsync(report);
         Task<BattleReport?> GetByIdAsync(Guid reportId);
         Task<List<BattleReport>> GetByUserIdAsync(Guid userId);
         Task<int> GetUnreadCountAsync(Guid userId);

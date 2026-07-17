@@ -16,13 +16,23 @@ namespace Application.Services
 
         public bool CanAttack(WorldPlayer sourcePlayer, City targetCity)
         {
+            if (sourcePlayer.WorldId != targetCity.WorldId)
+            {
+                return false;
+            }
+
+            if (targetCity.IsNPC && targetCity.WorldPlayerId == null)
+            {
+                return true;
+            }
+
             var targetPlayer = targetCity.WorldPlayer;
             if (targetPlayer == null || targetCity.WorldPlayerId == null || targetCity.IsNPC)
             {
                 return false;
             }
 
-            if (sourcePlayer.WorldId != targetCity.WorldId || sourcePlayer.Id == targetPlayer.Id)
+            if (sourcePlayer.Id == targetPlayer.Id)
             {
                 return false;
             }
@@ -32,13 +42,18 @@ namespace Application.Services
 
         public async Task<bool> CanSupportAsync(WorldPlayer sourcePlayer, City targetCity)
         {
-            var targetPlayer = targetCity.WorldPlayer;
-            if (targetPlayer == null || targetCity.WorldPlayerId == null || targetCity.IsNPC)
+            if (sourcePlayer.WorldId != targetCity.WorldId)
             {
                 return false;
             }
 
-            if (sourcePlayer.WorldId != targetCity.WorldId)
+            if (targetCity.IsNPC && targetCity.WorldPlayerId == null)
+            {
+                return true;
+            }
+
+            var targetPlayer = targetCity.WorldPlayer;
+            if (targetPlayer == null || targetCity.WorldPlayerId == null || targetCity.IsNPC)
             {
                 return false;
             }

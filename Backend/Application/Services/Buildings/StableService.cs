@@ -21,17 +21,20 @@ namespace Application.Services.Buildings
         private readonly UnitDataReader _unitDataReader;
         private readonly IModifierService _modifierService;
         private readonly IPlayerAccessService _playerAccessService;
+        private readonly UnitAvailabilityEvaluator _unitAvailabilityEvaluator;
 
         public StableService(
             ICityRepository cityRepo,
             UnitDataReader unitDataReader,
             IModifierService modifierService,
-            IPlayerAccessService playerAccessService)
+            IPlayerAccessService playerAccessService,
+            UnitAvailabilityEvaluator unitAvailabilityEvaluator)
         {
             _cityRepo = cityRepo;
             _unitDataReader = unitDataReader;
             _modifierService = modifierService;
             _playerAccessService = playerAccessService;
+            _unitAvailabilityEvaluator = unitAvailabilityEvaluator;
         }
 
         public async Task<StableFullViewDTO> GetStableOverviewAsync(Guid userId, Guid cityId)
@@ -58,7 +61,7 @@ namespace Application.Services.Buildings
                 int calculatedRecruitmentTime = MilitaryUnitModifierHelper.GetModifiedRecruitmentTime(_modifierService, cityEntity, unitStaticData);
 
                 int alreadyOwnedCount = cityEntity.UnitStacks.FirstOrDefault(stack => stack.Type == unitTypeCandidate)?.Quantity ?? 0;
-                bool isUnitTypeUnlocked = currentBuildingLevel > 0;
+                var availability = _unitAvailabilityEvaluator.Evaluate(cityEntity, unitStaticData);
 
                 stableResponse.AvailableUnits.Add(new StableUnitInfoDTO
                 {
@@ -79,7 +82,8 @@ namespace Application.Services.Buildings
 
                     PopulationCost = unitStaticData.PopulationCost,
                     RecruitmentTimeInSeconds = calculatedRecruitmentTime,
-                    IsUnlocked = isUnitTypeUnlocked
+                    IsUnlocked = availability.IsUnlocked,
+                    UnmetRequirements = availability.UnmetRequirements
                 });
             }
 

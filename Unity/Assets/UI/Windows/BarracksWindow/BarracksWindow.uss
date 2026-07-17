@@ -351,3 +351,448 @@
     -unity-font-style: bold;
     margin-bottom: 4px;
 }
+
+/* ============================================================
+   SHARED RECRUITMENT SCROLL AND VIEWPORT BEHAVIOR
+   ============================================================ */
+.recruitment-window .recruitment-body-scroll .unity-scroller,
+.recruitment-window .tabs-scroll-view .unity-scroller,
+.recruitment-window .queue-scroll-view .unity-scroller {
+    display: none;
+    width: 0;
+    height: 0;
+}
+
+.recruitment-window .tabs-scroll-view > .unity-scroll-view__content-viewport > .unity-scroll-view__content-container,
+.recruitment-window .queue-scroll-view > .unity-scroll-view__content-viewport > .unity-scroll-view__content-container {
+    min-width: 100%;
+    width: 100%;
+}
+
+.recruitment-legacy-window .tab-button {
+    width: 0;
+    min-width: 0;
+    flex-grow: 1;
+    margin-right: 4px;
+}
+
+.recruitment-legacy-window .recruitment-item-card {
+    width: 0;
+    min-width: 0;
+    max-width: 160px;
+    flex-grow: 1;
+    margin-right: 6px;
+}
+
+/* ============================================================
+   RECRUITMENT COMMAND WINDOW
+   Scoped so Harbor retains its legacy content presentation.
+   ============================================================ */
+.recruitment-command-window .recruitment-body-scroll {
+    padding: 8px 12px;
+    flex-grow: 1;
+    min-height: 0;
+}
+
+.recruitment-command-window .recruitment-body-scroll > .unity-scroll-view__content-viewport {
+    flex-grow: 1;
+    min-height: 0;
+}
+
+.recruitment-command-window .recruitment-body-scroll > .unity-scroll-view__content-viewport > .unity-scroll-view__content-container {
+    flex-direction: column;
+    flex-grow: 1;
+    min-height: 100%;
+}
+
+.recruitment-command-window .recruitment-panel {
+    margin-bottom: 8px;
+    padding: 10px 12px;
+    background-color: rgba(255, 255, 255, 0.2);
+    border-width: 1px;
+    border-color: rgba(165, 125, 50, 0.55);
+    border-radius: 4px;
+}
+
+.recruitment-command-window .tabs-wrapper {
+    height: 46px;
+    margin-bottom: 10px;
+    padding: 0;
+    background-color: rgba(45, 35, 27, 0.12);
+    border-bottom-width: 1px;
+    border-bottom-color: var(--c-border);
+    border-radius: 0;
+}
+
+.recruitment-command-window .tabs-scroll-view {
+    height: 46px;
+}
+
+.recruitment-command-window .tabs-scroll-view > .unity-scroll-view__content-viewport > .unity-scroll-view__content-container {
+    flex-direction: row;
+    flex-wrap: nowrap;
+}
+
+.recruitment-command-window .tabs-scroll-view .unity-scroller {
+    display: none;
+}
+
+.recruitment-command-window .window-tab {
+    width: 0;
+    min-width: 0;
+    height: 42px;
+    flex-grow: 1;
+    margin: 0 4px 0 0;
+    padding: 0 6px;
+    font-size: 11px;
+    white-space: nowrap;
+}
+
+.recruitment-command-window .detail-container {
+    flex-grow: 0;
+    overflow: visible;
+}
+
+.recruitment-command-window .detail-split {
+    height: 122px;
+    min-height: 122px;
+    flex-shrink: 1;
+}
+
+.recruitment-command-window .detail-left {
+    flex-basis: 32%;
+    flex-shrink: 0;
+    padding-right: 14px;
+    overflow: hidden;
+}
+
+.recruitment-command-window .detail-right {
+    flex-basis: 68%;
+    flex-grow: 1;
+    min-width: 0;
+    justify-content: center;
+}
+
+.recruitment-command-window .unit-title-row {
+    flex-direction: column;
+    align-items: flex-start;
+    margin-bottom: 8px;
+}
+
+.recruitment-command-window .unit-name-large {
+    max-width: 100%;
+    font-size: 19px;
+    white-space: normal;
+}
+
+.recruitment-command-window .unit-owned-badge {
+    margin: 4px 0 0 0;
+    flex-shrink: 0;
+}
+
+.recruitment-command-window .flavor-text {
+    max-width: 225px;
+    white-space: normal;
+    font-size: 11px;
+    line-height: 15px;
+}
+
+.recruitment-command-window .stats-grid {
+    height: 96px;
+    padding: 5px 6px;
+    background-color: rgba(35, 28, 22, 0.08);
+    border-radius: 3px;
+}
+
+.recruitment-command-window .stat-column {
+    width: 33.333%;
+    flex-grow: 1;
+    padding: 0 7px;
+    border-right-width: 1px;
+    border-right-color: rgba(165, 125, 50, 0.22);
+}
+
+.recruitment-command-window .stat-column-final {
+    border-right-width: 0;
+}
+
+.recruitment-command-window .stat-row {
+    height: 28px;
+}
+
+.recruitment-command-window .stat-label {
+    width: auto;
+    flex-grow: 1;
+    min-width: 0;
+    margin-right: 4px;
+    font-size: 9px;
+    white-space: nowrap;
+}
+
+.recruitment-command-window .stat-value {
+    width: 42px;
+    flex-shrink: 0;
+    font-size: 11px;
+    color: var(--c-value-total);
+}
+
+.recruitment-command-window .stat-value-time {
+    width: 58px;
+    font-size: 10px;
+}
+
+.recruitment-command-window .cost-row {
+    height: 38px;
+    flex-direction: row;
+    align-items: center;
+    margin-bottom: 8px;
+    padding: 0 8px;
+    background-color: rgba(25, 22, 19, 0.14);
+    border-bottom-width: 1px;
+    border-bottom-color: rgba(126, 94, 43, 0.55);
+}
+
+.recruitment-command-window .section-label-small {
+    width: 150px;
+    flex-shrink: 0;
+    margin: 0 12px 0 0;
+    text-align: left;
+    -unity-text-align: middle-left;
+    color: var(--c-text-header);
+}
+
+.recruitment-command-window .cost-resource {
+    flex-direction: row;
+    align-items: center;
+    justify-content: flex-end;
+    flex-grow: 1;
+    min-width: 0;
+    margin-left: 6px;
+}
+
+.recruitment-command-window .cost-resource-icon {
+    width: 24px;
+    height: 24px;
+    margin-right: 7px;
+    flex-shrink: 0;
+    -unity-background-scale-mode: scale-to-fit;
+}
+
+.recruitment-command-window .cost-icon-wood { background-image: url('project://database/Assets/UI/Icons/wood.png'); }
+.recruitment-command-window .cost-icon-stone { background-image: url('project://database/Assets/UI/Icons/stone.png'); }
+.recruitment-command-window .cost-icon-metal { background-image: url('project://database/Assets/UI/Icons/metal.png'); }
+.recruitment-command-window .cost-icon-population { background-image: url('project://database/Assets/UI/Icons/Population.png'); }
+
+.recruitment-command-window .cost-value {
+    width: 52px;
+    color: var(--c-value-total);
+    -unity-font-definition: var(--font-body);
+    -unity-font-style: bold;
+    -unity-text-align: middle-right;
+    font-size: 13px;
+    white-space: nowrap;
+}
+
+.recruitment-command-window .recruitment-timing-row {
+    height: 36px;
+    flex-direction: row;
+    align-items: stretch;
+    margin-bottom: 8px;
+    background-color: rgba(25, 22, 19, 0.1);
+    border-bottom-width: 1px;
+    border-bottom-color: rgba(126, 94, 43, 0.42);
+}
+
+.recruitment-command-window .recruitment-timing-field {
+    width: 50%;
+    flex-direction: row;
+    align-items: center;
+    padding: 0 10px;
+    border-right-width: 1px;
+    border-right-color: rgba(165, 125, 50, 0.28);
+}
+
+.recruitment-command-window .recruitment-timing-field-final {
+    border-right-width: 0;
+}
+
+.recruitment-command-window .recruitment-timing-label {
+    flex-grow: 1;
+    min-width: 0;
+    color: var(--c-text-muted);
+    -unity-font-style: bold;
+    font-size: 9px;
+}
+
+.recruitment-command-window .recruitment-timing-value {
+    flex-shrink: 0;
+    margin-left: 8px;
+    color: var(--c-value-total);
+    -unity-font-style: bold;
+    -unity-text-align: middle-right;
+    font-size: 11px;
+    white-space: nowrap;
+}
+
+.recruitment-command-window .recruitment-eta-value {
+    font-size: 10px;
+}
+
+.recruitment-command-window .recruitment-controls {
+    min-height: 44px;
+}
+
+.recruitment-command-window .quantity-label {
+    width: 76px;
+    flex-shrink: 0;
+    color: var(--c-text-muted);
+    -unity-font-style: bold;
+    font-size: 10px;
+}
+
+.recruitment-command-window .slider-container {
+    min-width: 0;
+    margin-right: 12px;
+}
+
+.recruitment-command-window .game-slider {
+    height: 30px;
+    margin-right: 12px;
+}
+
+.recruitment-command-window .game-slider .unity-slider__track {
+    height: 10px;
+    background-color: rgba(24, 20, 17, 0.7);
+    border-width: 1px;
+    border-color: rgba(74, 56, 35, 0.9);
+    border-radius: 2px;
+}
+
+.recruitment-command-window .game-slider .unity-slider__dragger,
+.recruitment-command-window .game-slider .unity-slider__dragger:hover {
+    width: 18px;
+    height: 24px;
+    background-color: rgb(176, 126, 52);
+    border-width: 2px;
+    border-color: rgb(96, 66, 30);
+    border-radius: 3px;
+}
+
+.recruitment-command-window .game-input-number {
+    width: 68px;
+    min-width: 68px;
+    height: 40px;
+    padding-left: 0;
+}
+
+.recruitment-command-window .game-input-number > .unity-base-text-field__input {
+    height: 100%;
+    padding: 4px 6px;
+    background-color: rgba(20, 17, 15, 0.14);
+    -unity-text-align: middle-center;
+}
+
+.recruitment-command-window .recruit-execute-btn {
+    width: 224px;
+    min-width: 224px;
+    max-width: 224px;
+    height: 42px;
+    margin-top: 0;
+    font-size: 11px;
+}
+
+.recruitment-command-window .queue-section {
+    height: auto;
+    min-height: 136px;
+    flex-grow: 1;
+    margin-bottom: 0;
+}
+
+.recruitment-command-window .queue-header-label {
+    color: var(--c-text-header);
+    letter-spacing: 0.4px;
+}
+
+.recruitment-command-window .queue-scroll-view {
+    height: auto;
+    min-height: 102px;
+    flex-grow: 1;
+}
+
+.recruitment-command-window .queue-scroll-view > .unity-scroll-view__content-viewport > .unity-scroll-view__content-container {
+    flex-direction: row;
+    align-items: flex-start;
+    min-width: 100%;
+}
+
+.recruitment-command-window .queue-scroll-view .unity-scroller {
+    display: none;
+}
+
+.recruitment-command-window .recruitment-queue-slot {
+    width: 0;
+    min-width: 0;
+    max-width: 160px;
+    flex-grow: 1;
+    height: 88px;
+    min-height: 88px;
+    align-self: flex-start;
+    margin-right: 7px;
+    padding: 8px;
+    justify-content: space-between;
+    background-color: rgba(45, 36, 28, 0.12);
+    border-width: 1px;
+    border-color: rgba(126, 94, 43, 0.62);
+    border-radius: 3px;
+}
+
+.recruitment-command-window .queue-slot-title {
+    height: 24px;
+    color: var(--c-text-header);
+    -unity-font-style: bold;
+    -unity-text-align: middle-left;
+    font-size: 10px;
+    white-space: normal;
+}
+
+.recruitment-command-window .queue-slot-meta {
+    flex-direction: row;
+    justify-content: space-between;
+}
+
+.recruitment-command-window .queue-slot-amount,
+.recruitment-command-window .queue-item-timer {
+    padding: 0;
+    border-width: 0;
+    color: var(--c-text-muted);
+    font-size: 9px;
+    -unity-font-style: bold;
+}
+
+.recruitment-command-window .queue-item-timer {
+    color: var(--c-value-total);
+}
+
+.recruitment-command-window .queue-progress-track {
+    height: 7px;
+    background-color: rgba(20, 17, 14, 0.6);
+    border-width: 1px;
+    border-color: rgba(80, 60, 35, 0.75);
+    border-radius: 2px;
+    overflow: hidden;
+}
+
+.recruitment-command-window .queue-progress-fill {
+    width: 0;
+    height: 100%;
+    background-color: rgb(173, 124, 50);
+}
+
+.unit-tab-locked {
+    opacity: 0.55;
+}
+
+.locked-unit-copy {
+    color: var(--c-value-negative);
+    -unity-font-style: bold;
+}

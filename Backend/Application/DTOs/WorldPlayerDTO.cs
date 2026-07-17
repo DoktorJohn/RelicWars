@@ -32,6 +32,10 @@ namespace Application.DTOs
         public double CoinsProductionPerHour { get; set; }
         public double ResearchPointsPerHour { get; set; }
         public double IdeologyFocusPointsPerHour { get; set; }
+        public double TotalWoodAmount { get; set; }
+        public double TotalStoneAmount { get; set; }
+        public double TotalMetalAmount { get; set; }
+        public double TotalPopulationAmount { get; set; }
         public List<CityDTO> PlayerCities { get; set; } = new();
         public DateTime LastUpdated { get; set; }
     }

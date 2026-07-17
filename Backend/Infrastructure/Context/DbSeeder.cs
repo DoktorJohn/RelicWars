@@ -34,6 +34,7 @@ namespace Infrastructure.Context
             }
 
             await EnsureWorldIslandsAsync(context);
+            await spawner.EnsureNPCVillagesAsync();
         }
 
         private static async Task EnsureWorldIslandsAsync(GameContext context)

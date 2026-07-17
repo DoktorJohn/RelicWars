@@ -31,6 +31,7 @@ namespace Project.Modules.WorldSelection
             if (uiDocumentComponent == null) return;
 
             _rootVisualElement = uiDocumentComponent.rootVisualElement;
+            Project.Modules.UI.ResponsiveUiStateManager.RegisterRoot(_rootVisualElement);
 
             InitializeUserInterfaceElements();
             SynchronizePlayerIdentityDisplay();
@@ -39,6 +40,7 @@ namespace Project.Modules.WorldSelection
 
         private void OnDisable()
         {
+            Project.Modules.UI.ResponsiveUiStateManager.UnregisterRoot(_rootVisualElement);
             StopAllCoroutines();
 
             if (_backToLoginButton != null)

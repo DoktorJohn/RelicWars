@@ -112,7 +112,13 @@ namespace Project.Modules.UI
                 var row = new VisualElement();
                 row.AddToClassList("island-city-row");
 
-                if (city.WorldPlayerId.HasValue)
+                if (city.IsNPC)
+                {
+                    var player = new Label("NPC Village");
+                    player.AddToClassList("island-city-player");
+                    row.Add(player);
+                }
+                else if (city.WorldPlayerId.HasValue)
                 {
                     Guid worldPlayerId = city.WorldPlayerId.Value;
                     var playerLink = new Label(city.WorldPlayerName);

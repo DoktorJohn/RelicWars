@@ -26,9 +26,15 @@ namespace Project.Modules.IdeologySelection
             if (uiDocumentComponent == null) return;
 
             _rootVisualElement = uiDocumentComponent.rootVisualElement;
+            Project.Modules.UI.ResponsiveUiStateManager.RegisterRoot(_rootVisualElement);
 
             InitializeUserInterfaceElements();
             StartIdeologySelectionListPopulation();
+        }
+
+        private void OnDisable()
+        {
+            Project.Modules.UI.ResponsiveUiStateManager.UnregisterRoot(_rootVisualElement);
         }
 
         private void InitializeUserInterfaceElements()

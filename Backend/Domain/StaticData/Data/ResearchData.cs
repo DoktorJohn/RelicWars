@@ -9,6 +9,18 @@ using System.Threading.Tasks;
 
 namespace Domain.StaticData.Data
 {
+    public enum ResearchEffectType
+    {
+        UnitRecruitment,
+        Subjugation
+    }
+
+    public class ResearchEffectData
+    {
+        public ResearchEffectType Type { get; set; }
+        public UnitTypeEnum? UnitType { get; set; }
+    }
+
     public class ResearchData : IModifierProvider
     {
         public string Id { get; set; } = string.Empty;
@@ -23,6 +35,8 @@ namespace Domain.StaticData.Data
         public double ResearchPointCost { get; set; }
 
         public int ResearchTimeInSeconds { get; set; }
+
+        public List<ResearchEffectData> Effects { get; set; } = new();
 
         // Bonussen (Dette skal din motor læse når den beregner produktion/kamp)
         public List<Modifier> ModifiersInternal { get; set; } = new();

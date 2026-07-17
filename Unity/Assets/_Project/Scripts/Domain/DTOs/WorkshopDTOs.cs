@@ -30,7 +30,9 @@ namespace Project.Scripts.Domain.DTOs
         public int Reach;
         public int LootCapacity;
         public int PopulationCost;
+        public int UnitCapacity;
         public int RecruitmentTimeInSeconds;
         public bool IsUnlocked;
+        public List<string> UnmetRequirements;
     }
 }

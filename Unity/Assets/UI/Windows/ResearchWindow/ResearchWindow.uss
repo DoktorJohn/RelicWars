@@ -80,7 +80,7 @@
     justify-content: space-between;
 }
 
-.node-title { color: #2B1B10; -unity-font-style: bold; font-size: 13px; -unity-text-align: middle-center; border-bottom-width: 1px; border-bottom-color: rgba(0,0,0,0.1); padding-bottom: 2px; }
+.node-title { height: 34px; flex-shrink: 0; color: #2B1B10; -unity-font-style: bold; font-size: 13px; -unity-text-align: middle-center; border-bottom-width: 1px; border-bottom-color: rgba(0,0,0,0.1); padding-bottom: 2px; white-space: normal; overflow: hidden; }
 .node-description { color: #443322; font-size: 10px; white-space: normal; -unity-text-align: middle-center; margin-top: 2px; }
 
 .node-cost-row { flex-direction: row; justify-content: space-between; align-items: center; }
@@ -136,7 +136,6 @@
     width: 280px;
     padding: 0;
     background-color: var(--c-window-bg);
-    border-color: var(--c-border);
     flex-direction: column;
     display: none;
     z-index: 999;

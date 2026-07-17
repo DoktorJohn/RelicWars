@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ui:UXML xmlns:ui="UnityEngine.UIElements">
+    <ui:Style src="project://database/Assets/UI/Windows/WindowTheme.uss" />
+    <ui:Style src="AdministrationWindow.uss" />
+
+    <ui:VisualElement class="screen-overlay" picking-mode="Ignore">
+        <ui:VisualElement name="Administration-Window-MainContainer" class="window-frame administration-window-size">
+            <ui:VisualElement name="Administration-Window-Header" class="window-header">
+                <ui:Label class="window-header-label" text="ADMINISTRATION" />
+                <ui:Button name="AdministrationWindow-Close-Button" class="window-close-btn" text="×" />
+            </ui:VisualElement>
+
+            <ui:VisualElement class="administration-body">
+                <ui:VisualElement class="window-tabs administration-tabs">
+                    <ui:Button name="Administration-Movements-Tab" text="TROOP MOVEMENTS" class="window-tab window-tab-active administration-tab" />
+                    <ui:Button name="Administration-Deployments-Tab" text="DEPLOYMENTS" class="window-tab administration-tab" />
+                </ui:VisualElement>
+
+                <ui:VisualElement name="Administration-Load-State" class="administration-state" />
+                <ui:VisualElement name="Administration-Content" class="administration-content hidden">
+                    <ui:VisualElement name="Administration-Movements-Panel" class="administration-tab-panel">
+                        <ui:VisualElement name="Administration-Movement-Empty" class="administration-state hidden" />
+                        <ui:ScrollView name="Administration-Movement-Scroll" class="administration-table-scroll" mode="VerticalAndHorizontal" vertical-scroller-visibility="Auto" horizontal-scroller-visibility="Auto">
+                            <ui:VisualElement class="administration-table">
+                                <ui:VisualElement class="administration-table-header">
+                                    <ui:Label text="ACTION" class="administration-header-label administration-col-action" />
+                                    <ui:Label text="PHASE" class="administration-header-label administration-col-phase" />
+                                    <ui:Label text="FROM" class="administration-header-label administration-col-from" />
+                                    <ui:Label text="TO" class="administration-header-label administration-col-to" />
+                                    <ui:Label text="TROOPS" class="administration-header-label administration-col-troops" />
+                                    <ui:Label text="ARRIVAL" class="administration-header-label administration-col-timing" />
+                                </ui:VisualElement>
+                                <ui:VisualElement name="Administration-Movement-Rows" />
+                            </ui:VisualElement>
+                        </ui:ScrollView>
+                    </ui:VisualElement>
+
+                    <ui:VisualElement name="Administration-Deployments-Panel" class="administration-tab-panel hidden">
+                        <ui:VisualElement name="Administration-Deployment-Empty" class="administration-state hidden" />
+                        <ui:ScrollView name="Administration-Deployment-Scroll" class="administration-table-scroll" mode="VerticalAndHorizontal" vertical-scroller-visibility="Auto" horizontal-scroller-visibility="Auto">
+                            <ui:VisualElement class="administration-table administration-stationed-table">
+                                <ui:VisualElement class="administration-table-header administration-stationed-header">
+                                    <ui:Label text="ACTION" class="administration-header-label administration-col-action" />
+                                    <ui:Label text="FROM" class="administration-header-label administration-col-from" />
+                                    <ui:Label text="TO" class="administration-header-label administration-col-to" />
+                                    <ui:Label text="TROOPS" class="administration-header-label administration-col-troops" />
+                                    <ui:Label text="STATIONED SINCE" class="administration-header-label administration-col-timing" />
+                                </ui:VisualElement>
+                                <ui:VisualElement name="Administration-Stationed-Rows" />
+                            </ui:VisualElement>
+                        </ui:ScrollView>
+                    </ui:VisualElement>
+                </ui:VisualElement>
+            </ui:VisualElement>
+        </ui:VisualElement>
+    </ui:VisualElement>
+</ui:UXML>

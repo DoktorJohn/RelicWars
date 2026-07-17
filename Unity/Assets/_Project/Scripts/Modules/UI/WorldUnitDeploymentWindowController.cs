@@ -150,6 +150,16 @@ namespace Project.Modules.UI.Windows.Implementations
             if (_attackButton != null) _attackButton.style.display = _payload.CanAttack ? DisplayStyle.Flex : DisplayStyle.None;
             if (_supportButton != null) _supportButton.style.display = _payload.CanSupport ? DisplayStyle.Flex : DisplayStyle.None;
 
+            if (!TryGetActiveOriginCityId(out _))
+            {
+                var invalidOriginLabel = new Label("ACTIVE ORIGIN CITY COULD NOT BE VERIFIED") { name = "Deployment-Origin-Invalid" };
+                invalidOriginLabel.AddToClassList("deployment-empty");
+                _unitSummaryContainer.Add(invalidOriginLabel);
+                _attackButton?.SetEnabled(false);
+                _supportButton?.SetEnabled(false);
+                return;
+            }
+
             var stationedUnits = (CityStateManager.Instance?.CurrentStationedUnits ?? new List<UnitStackDTO>())
                 .Where(stack => stack.Quantity > 0)
                 .ToList();
@@ -196,7 +206,7 @@ namespace Project.Modules.UI.Windows.Implementations
 
         private string ResolveOriginCityName()
         {
-            if (CityStateManager.Instance == null || CityStateManager.Instance.CityId == Guid.Empty)
+            if (!TryGetActiveOriginCityId(out _))
             {
                 return "ACTIVE CITY";
             }
@@ -229,9 +239,9 @@ namespace Project.Modules.UI.Windows.Implementations
                 return;
             }
 
-            if (CityStateManager.Instance == null || CityStateManager.Instance.CityId == Guid.Empty)
+            if (!TryGetActiveOriginCityId(out Guid originCityId))
             {
-                SetStatus("No active origin city selected.");
+                SetStatus("The active origin city could not be verified.");
                 return;
             }
 
@@ -248,7 +258,7 @@ namespace Project.Modules.UI.Windows.Implementations
 
             var attackRequest = new AttackCityDeploymentRequestDTO
             {
-                OriginCityId = CityStateManager.Instance.CityId,
+                OriginCityId = originCityId,
                 TargetCityId = _payload.TargetCityId,
                 UnitsToDeploy = stationedUnits
             };
@@ -279,7 +289,7 @@ namespace Project.Modules.UI.Windows.Implementations
                     return;
                 }
 
-                CityStateManager.Instance.InitiateResourceRefresh(CityStateManager.Instance.CityId);
+                CityStateManager.Instance.RequestImmediateRefresh(originCityId);
                 Close();
             }
 
@@ -302,16 +312,17 @@ namespace Project.Modules.UI.Windows.Implementations
                 .Where(input => input.Value.value > 0)
                 .Select(input => new UnitSelectionDTO { Type = input.Key, Quantity = input.Value.value })
                 .ToList();
-            if (selections.Count == 0 || CityStateManager.Instance == null || NetworkManager.Instance == null)
+            if (selections.Count == 0 || !TryGetActiveOriginCityId(out Guid originCityId))
             {
                 _travelDurationLabel.text = "--:--:--";
                 _arrivalTimeLabel.text = "--";
+                SetTransportAvailabilityState(false, "Select units to calculate transport capacity.");
                 return;
             }
 
             StartCoroutine(NetworkManager.Instance.UnitDeployment.EstimateTravel(new DeploymentTravelEstimateRequestDTO
             {
-                OriginCityId = CityStateManager.Instance.CityId,
+                OriginCityId = originCityId,
                 TargetCityId = _payload.TargetCityId,
                 UnitsToDeploy = selections
             }, NetworkManager.Instance.JwtToken, estimate =>
@@ -322,7 +333,33 @@ namespace Project.Modules.UI.Windows.Implementations
                 long seconds = estimate.DurationSeconds % 60;
                 _travelDurationLabel.text = $"{hours:00}:{minutes:00}:{seconds:00}";
                 _arrivalTimeLabel.text = estimate.ArrivalTime.ToLocalTime().ToString("dd:MM:yyyy HH:mm:ss");
+                SetTransportAvailabilityState(
+                    estimate.HasSufficientTransportCapacity,
+                    estimate.RequiresTransport
+                        ? (estimate.HasSufficientTransportCapacity
+                            ? $"Transport capacity {estimate.RequiredTransportCapacity}/{estimate.AvailableTransportCapacity} (margin {estimate.TransportCapacityMargin})"
+                            : $"Insufficient transport capacity: need {estimate.RequiredTransportCapacity}, have {estimate.AvailableTransportCapacity}.")
+                        : "No sea transport required.");
             }));
+        }
+
+        private void SetTransportAvailabilityState(bool canSubmit, string message)
+        {
+            if (_statusLabel != null)
+            {
+                _statusLabel.text = message ?? string.Empty;
+            }
+
+            _attackButton?.SetEnabled(canSubmit && !_requestInFlight);
+            _supportButton?.SetEnabled(canSubmit && !_requestInFlight);
+        }
+
+        private static bool TryGetActiveOriginCityId(out Guid originCityId)
+        {
+            originCityId = NetworkManager.Instance?.ActiveCityId ?? Guid.Empty;
+            return originCityId != Guid.Empty
+                && CityStateManager.Instance != null
+                && CityStateManager.Instance.CityId == originCityId;
         }
 
         private void SetRequestControlsEnabled(bool enabled)

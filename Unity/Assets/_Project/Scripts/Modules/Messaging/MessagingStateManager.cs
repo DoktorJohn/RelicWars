@@ -10,8 +10,8 @@ namespace Project.Modules.Messaging
         public List<ConversationDTO> Conversations { get; private set; } = new();
         public List<MessageDTO> Messages { get; private set; } = new();
         public List<PlayerSearchResultDTO> Suggestions { get; private set; } = new();
+        public List<PlayerSearchResultDTO> SelectedRecipients { get; private set; } = new();
         public ConversationDTO SelectedConversation { get; private set; }
-        public Guid SelectedRecipientId { get; private set; }
         public int SelectedSuggestionIndex { get; private set; } = -1;
         public bool IsComposing { get; private set; }
         public bool IsSending { get; private set; }
@@ -23,14 +23,14 @@ namespace Project.Modules.Messaging
         public void SelectConversation(ConversationDTO conversation)
         {
             SelectedConversation = conversation;
-            SelectedRecipientId = Guid.Empty;
+            ClearRecipients();
             IsComposing = false;
         }
 
-        public void StartComposing(Guid recipientId = default)
+        public void StartComposing()
         {
             SelectedConversation = null;
-            SelectedRecipientId = recipientId;
+            ClearRecipients();
             Messages.Clear();
             IsComposing = true;
         }
@@ -45,8 +45,38 @@ namespace Project.Modules.Messaging
         }
 
         public void SetSearchQuery(string query) => LatestSearchQuery = query ?? string.Empty;
-        public void ClearRecipient() => SelectedRecipientId = Guid.Empty;
-        public void SelectRecipient(PlayerSearchResultDTO recipient) => SelectedRecipientId = recipient?.WorldPlayerId ?? Guid.Empty;
+
+        public bool AddRecipient(PlayerSearchResultDTO recipient)
+        {
+            if (recipient == null || recipient.WorldPlayerId == Guid.Empty || HasRecipient(recipient.WorldPlayerId))
+            {
+                return false;
+            }
+
+            SelectedRecipients.Add(recipient);
+            return true;
+        }
+
+        public bool AddRecipient(Guid worldPlayerId, string username) => AddRecipient(new PlayerSearchResultDTO
+        {
+            WorldPlayerId = worldPlayerId,
+            Username = string.IsNullOrWhiteSpace(username) ? worldPlayerId.ToString() : username
+        });
+
+        public bool HasRecipient(Guid worldPlayerId) =>
+            SelectedRecipients.Any(recipient => recipient.WorldPlayerId == worldPlayerId);
+
+        public void RemoveRecipient(Guid worldPlayerId) =>
+            SelectedRecipients.RemoveAll(recipient => recipient.WorldPlayerId == worldPlayerId);
+
+        public void ClearRecipients()
+        {
+            SelectedRecipients.Clear();
+            Suggestions.Clear();
+            SelectedSuggestionIndex = -1;
+            LatestSearchQuery = string.Empty;
+        }
+
         public void MoveSuggestion(int delta) => SelectedSuggestionIndex = Suggestions.Count == 0 ? -1 : Math.Max(0, Math.Min(SelectedSuggestionIndex + delta, Suggestions.Count - 1));
         public void SetSending(bool sending) => IsSending = sending;
 
@@ -61,6 +91,7 @@ namespace Project.Modules.Messaging
                 Conversations.RemoveAll(c => c.Id == SelectedConversation.Id);
             SelectedConversation = null;
             Messages.Clear();
+            ClearRecipients();
             IsComposing = false;
         }
     }

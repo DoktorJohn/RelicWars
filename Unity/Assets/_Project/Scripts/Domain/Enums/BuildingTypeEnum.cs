@@ -16,5 +16,6 @@ namespace Assets.Scripts.Domain.Enums
         Warehouse = 9,
         Workshop = 10,
         MarketPlace = 11,
+        Harbor = 12,
     }
 }

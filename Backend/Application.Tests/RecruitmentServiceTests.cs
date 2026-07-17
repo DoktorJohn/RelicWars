@@ -70,6 +70,30 @@ public class RecruitmentServiceTests
     }
 
     [Fact]
+    public async Task QueueRecruitmentAsync_RejectsLockedUnitBeforeMutation_ThenSucceedsWithBothPrerequisites()
+    {
+        var setup = CreateSetup(availablePopulation: 100, wood: 500, stone: 500, metal: 500);
+        var initialWood = setup.City.Wood;
+
+        var lockedResult = await setup.Service.QueueRecruitmentAsync(setup.Player.Id, setup.City.Id, UnitTypeEnum.Bowmen, 1);
+
+        Assert.False(lockedResult.Success);
+        Assert.Contains("Barracks level 2", lockedResult.Message);
+        Assert.Contains("Requires Bowmen research.", lockedResult.Message);
+        Assert.Equal(initialWood, setup.City.Wood);
+        Assert.Empty(setup.JobRepository.AddedJobs);
+
+        setup.City.Buildings.Single(building => building.Type == BuildingTypeEnum.Barracks).Level = 2;
+        setup.Player.CompletedResearches.Add(new Research { ResearchId = "UNLOCK_UNIT_BOWMEN" });
+
+        var unlockedResult = await setup.Service.QueueRecruitmentAsync(setup.Player.Id, setup.City.Id, UnitTypeEnum.Bowmen, 1);
+
+        Assert.True(unlockedResult.Success);
+        Assert.Single(setup.JobRepository.AddedJobs);
+        Assert.True(setup.City.Wood < initialWood);
+    }
+
+    [Fact]
     public async Task GetRecruitmentQueueAsync_FiltersByCategoryAndReturnsRemainingTime()
     {
         var setup = CreateSetup(availablePopulation: 100, wood: 500, stone: 500, metal: 500);
@@ -135,6 +159,10 @@ public class RecruitmentServiceTests
             Stone = stone,
             Metal = metal,
             LastResourceUpdate = DateTime.UtcNow.AddHours(-1),
+            Buildings = new List<Building>
+            {
+                new() { Type = BuildingTypeEnum.Barracks, Level = 1 }
+            },
             UnitStacks = new List<UnitStack>()
         };
         player.Cities.Add(city);
@@ -153,7 +181,8 @@ public class RecruitmentServiceTests
             TestData.BuildingReader(),
             cityStatService,
             new RecruitmentTimeCalculationService(new NoOpModifierService()),
-            new ImmediateTransactionManager());
+            new ImmediateTransactionManager(),
+            new UnitAvailabilityEvaluator(new UnitUnlockCatalog(unitReader, TestData.ResearchReader())));
 
         return new Setup(player, city, unitReader, jobRepository, cityStatService, service);
     }
@@ -204,6 +233,8 @@ public class RecruitmentServiceTests
     {
         public CityResourceSnapshot CalculateCityResources(City cityEntity, DateTime currentDateTime) =>
             new(cityEntity.Wood, cityEntity.Stone, cityEntity.Metal, 0, 0, 0, currentDateTime);
+
+        public CityProductionSnapshot CalculateCityProduction(WorldPlayer playerEntity, City cityEntity) => new(0, 0, 0);
 
         public GlobalResourceSnapshot CalculateGlobalResources(WorldPlayer playerEntity, DateTime currentDateTime) =>
             new(playerEntity.Coins, playerEntity.ResearchPoints, playerEntity.IdeologyFocusPoints, 0, 0, 0, currentDateTime);

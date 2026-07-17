@@ -30,13 +30,29 @@ namespace Infrastructure.Repositories
         public async Task<List<UnitDeployment>> GetActiveDeploymentsByWorldPlayerIdAsync(Guid worldPlayerId)
         {
             return await _context.UnitDeployments
+                .AsNoTracking()
                 .Include(ud => ud.OriginCity)
+                    .ThenInclude(city => city.WorldPlayer)
+                        .ThenInclude(player => player!.PlayerProfile)
+                .Include(ud => ud.OriginCity)
+                    .ThenInclude(city => city.WorldPlayer)
+                        .ThenInclude(player => player!.Alliance)
                 .Include(ud => ud.TargetCity)
+                    .ThenInclude(city => city!.WorldPlayer)
+                        .ThenInclude(player => player!.PlayerProfile)
+                .Include(ud => ud.TargetCity)
+                    .ThenInclude(city => city!.WorldPlayer)
+                        .ThenInclude(player => player!.Alliance)
                 .Include(ud => ud.UnitStacks)
                 .Include(ud => ud.OwnerWorldPlayer)
                     .ThenInclude(ud => ud!.PlayerProfile)
                 .Where(ud => ud.WorldPlayerId == worldPlayerId)
-                .OrderBy(ud => ud.ArrivalTime)
+                .OrderBy(ud => ud.Phase == UnitDeploymentPhaseEnum.Stationed ? 1 : 0)
+                .ThenBy(ud => ud.Phase == UnitDeploymentPhaseEnum.Stationed ? DateTime.MaxValue : ud.ArrivalTime)
+                .ThenByDescending(ud => ud.Phase == UnitDeploymentPhaseEnum.Stationed ? ud.StationedAt : null)
+                .ThenBy(ud => ud.DepartureTime)
+                .ThenBy(ud => ud.DateCreated)
+                .ThenBy(ud => ud.Id)
                 .ToListAsync();
         }
 

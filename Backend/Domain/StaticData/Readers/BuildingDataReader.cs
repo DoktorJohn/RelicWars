@@ -1,5 +1,6 @@
 ﻿using Domain.Enums;
 using Domain.StaticData.Data;
+using Domain.StaticData.Generators;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -21,6 +22,14 @@ namespace Domain.StaticData.Readers
             var tempMap = JsonSerializer.Deserialize<Dictionary<BuildingTypeEnum, List<JsonElement>>>(json);
 
             if (tempMap == null) return;
+
+            if (!tempMap.ContainsKey(BuildingTypeEnum.Harbor))
+            {
+                BuildingDataGenerator.GenerateDefaultJson(path);
+                json = File.ReadAllText(path);
+                tempMap = JsonSerializer.Deserialize<Dictionary<BuildingTypeEnum, List<JsonElement>>>(json);
+                if (tempMap == null) return;
+            }
 
             // 2. Vi transformerer listerne til de Dictionaries, som vi gerne vil bruge internt
             _rawData = new Dictionary<BuildingTypeEnum, Dictionary<int, JsonElement>>();
@@ -50,6 +59,16 @@ namespace Domain.StaticData.Readers
                 return JsonSerializer.Deserialize<T>(element.GetRawText())!;
             }
             throw new Exception($"Bygning {type} Level {level} findes ikke i data!");
+        }
+
+        public int GetMaximumLevel(BuildingTypeEnum type)
+        {
+            if (_rawData.TryGetValue(type, out var levels) && levels.Count > 0)
+            {
+                return levels.Keys.Max();
+            }
+
+            throw new Exception($"Bygning {type} har ingen level-data!");
         }
     }
 }

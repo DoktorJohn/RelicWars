@@ -50,10 +50,13 @@ namespace Project.Modules.UI.Windows.Implementations
         private VisualElement _cityInfoPanel;
         private VisualElement _marchOrdersPanel;
         private VisualElement _marchUnitsContainer;
-        private Button _marchSourceLink;
-        private Button _marchDestinationLink;
+        private Label _marchSourceLink;
+        private Label _marchDestinationLink;
+        private Label _marchMissionBadge;
+        private Label _marchDetailTarget;
         private Label _marchTravelTimeLabel;
         private Label _marchArrivalLabel;
+        private Label _marchTransportLabel;
         private Label _marchTotalLabel;
         private Label _marchStatusLabel;
         private Button _marchSubmitButton;
@@ -63,6 +66,8 @@ namespace Project.Modules.UI.Windows.Implementations
         private VisualElement _incomingAttacksContainer;
         private VisualElement _incomingAttacksList;
         private Button _moveHereButton;
+        private Button _simulateBattleButton;
+        private VisualElement _simulateBattleRow;
 
         private CityInspectionPayload _currentPayload;
         private CityInspectionDTO _currentInspectionData;
@@ -143,10 +148,13 @@ namespace Project.Modules.UI.Windows.Implementations
             _cityInfoPanel = Root.Q<VisualElement>("City-Info-Panel");
             _marchOrdersPanel = Root.Q<VisualElement>("March-Orders-Panel");
             _marchUnitsContainer = Root.Q<VisualElement>("March-Units-Container");
-            _marchSourceLink = Root.Q<Button>("March-Source-Link");
-            _marchDestinationLink = Root.Q<Button>("March-Destination-Link");
+            _marchSourceLink = Root.Q<Label>("March-Source-Link");
+            _marchDestinationLink = Root.Q<Label>("March-Destination-Link");
+            _marchMissionBadge = Root.Q<Label>("March-Mission-Badge");
+            _marchDetailTarget = Root.Q<Label>("March-Detail-Target");
             _marchTravelTimeLabel = Root.Q<Label>("March-Travel-Time-Label");
             _marchArrivalLabel = Root.Q<Label>("March-Arrival-Label");
+            _marchTransportLabel = Root.Q<Label>("March-Transport-Label");
             _marchTotalLabel = Root.Q<Label>("March-Total-Label");
             _marchStatusLabel = Root.Q<Label>("March-Status-Label");
             _marchSubmitButton = Root.Q<Button>("March-Submit-Button");
@@ -164,16 +172,6 @@ namespace Project.Modules.UI.Windows.Implementations
             {
                 _marchSubmitButton.clicked -= ExecuteDeployment;
                 _marchSubmitButton.clicked += ExecuteDeployment;
-            }
-            if (_marchSourceLink != null)
-            {
-                _marchSourceLink.clicked -= OpenSourceCity;
-                _marchSourceLink.clicked += OpenSourceCity;
-            }
-            if (_marchDestinationLink != null)
-            {
-                _marchDestinationLink.clicked -= OpenDestinationCity;
-                _marchDestinationLink.clicked += OpenDestinationCity;
             }
             BindTab(_cityInfoTab, ShowCityInfoTab);
             BindTab(_attackCityTab, ShowAttackTab);
@@ -209,8 +207,6 @@ namespace Project.Modules.UI.Windows.Implementations
             }
 
             if (_marchSubmitButton != null) _marchSubmitButton.clicked -= ExecuteDeployment;
-            if (_marchSourceLink != null) _marchSourceLink.clicked -= OpenSourceCity;
-            if (_marchDestinationLink != null) _marchDestinationLink.clicked -= OpenDestinationCity;
             if (_cityInfoTab != null) _cityInfoTab.clicked -= ShowCityInfoTab;
             if (_attackCityTab != null) _attackCityTab.clicked -= ShowAttackTab;
             if (_supportCityTab != null) _supportCityTab.clicked -= ShowSupportTab;
@@ -428,11 +424,50 @@ namespace Project.Modules.UI.Windows.Implementations
                 _pointsValueLabel.text = data.Points.ToString("N0");
             }
 
-            SetLinkLabel(_playerNameLabel, data.WorldPlayerId, data.WorldPlayerName);
+            if (data.IsNPC)
+            {
+                SetNPCOwnerLabel(_playerNameLabel);
+            }
+            else
+            {
+                SetLinkLabel(_playerNameLabel, data.WorldPlayerId, data.WorldPlayerName);
+            }
             SetLinkLabel(_allianceNameLabel, data.AllianceId, data.AllianceName);
             UpdateAttackButtonState(data);
+            EnsureCombatSimulatorButton();
             ShowCityInfoTab();
             LoadIncomingAttacks(data);
+        }
+
+        private void EnsureCombatSimulatorButton()
+        {
+            if (_cityInfoPanel == null)
+            {
+                return;
+            }
+
+            if (_simulateBattleButton != null)
+            {
+                _simulateBattleButton.SetEnabled(TryGetActiveOriginCityId(out _));
+                return;
+            }
+
+            _simulateBattleRow = new VisualElement();
+            _simulateBattleRow.AddToClassList("info-row");
+
+            var label = new Label("SIMULATOR");
+            label.AddToClassList("info-label");
+
+            _simulateBattleButton = new Button { text = "SIMULATE BATTLE" };
+            _simulateBattleButton.AddToClassList("btn-global-base");
+            _simulateBattleButton.AddToClassList("btn-imperial-primary");
+            _simulateBattleButton.AddToClassList("inspection-action-button");
+            _simulateBattleButton.clicked += HandleCombatSimulatorClicked;
+            _simulateBattleButton.SetEnabled(TryGetActiveOriginCityId(out _));
+
+            _simulateBattleRow.Add(label);
+            _simulateBattleRow.Add(_simulateBattleButton);
+            _cityInfoPanel.Add(_simulateBattleRow);
         }
 
         private static void SetLinkLabel(Label label, Guid? targetId, string text)
@@ -446,6 +481,18 @@ namespace Project.Modules.UI.Windows.Implementations
             label.text = hasTarget && !string.IsNullOrWhiteSpace(text) ? text : "-";
             label.SetEnabled(hasTarget);
             label.pickingMode = hasTarget ? PickingMode.Position : PickingMode.Ignore;
+        }
+
+        private static void SetNPCOwnerLabel(Label label)
+        {
+            if (label == null)
+            {
+                return;
+            }
+
+            label.text = "NPC Village";
+            label.SetEnabled(false);
+            label.pickingMode = PickingMode.Ignore;
         }
 
         private void HandlePlayerNameClickEvent(ClickEvent _)
@@ -521,17 +568,32 @@ namespace Project.Modules.UI.Windows.Implementations
             _marchDestinationLink.text = string.IsNullOrWhiteSpace(_currentInspectionData.CityName)
                 ? _currentInspectionData.CityId.ToString()
                 : _currentInspectionData.CityName;
+            if (_marchDetailTarget != null) _marchDetailTarget.text = _marchDestinationLink.text;
             _marchTravelTimeLabel.text = "--:--:--";
             _marchArrivalLabel.text = "--";
-            _marchTotalLabel.text = "TOTAL: 0";
+            _marchTransportLabel.text = "--";
+            _marchTransportLabel.RemoveFromClassList("march-metric-positive");
+            _marchTransportLabel.RemoveFromClassList("march-metric-negative");
+            _marchTotalLabel.text = "TOTAL TROOPS  0";
             _marchStatusLabel.text = string.Empty;
+            _marchMissionBadge.text = _selectedMissionType == UnitDeploymentTypeEnum.Attack ? "ATTACK" : "SUPPORT";
+            _marchMissionBadge.EnableInClassList("march-mission-attack", _selectedMissionType == UnitDeploymentTypeEnum.Attack);
+            _marchMissionBadge.EnableInClassList("march-mission-support", _selectedMissionType == UnitDeploymentTypeEnum.Support);
             _marchSubmitButton.text = _selectedMissionType == UnitDeploymentTypeEnum.Attack ? "ATTACK" : "SUPPORT";
             _marchSubmitButton.EnableInClassList("btn-imperial-danger", _selectedMissionType == UnitDeploymentTypeEnum.Attack);
             _marchSubmitButton.EnableInClassList("btn-imperial-success", _selectedMissionType == UnitDeploymentTypeEnum.Support);
+            _marchSubmitButton.SetEnabled(false);
 
             _marchUnitsContainer.Clear();
             _marchQuantityInputs.Clear();
             _marchMaxButtons.Clear();
+            if (!TryGetActiveOriginCityId(out _))
+            {
+                _marchStatusLabel.text = "The active origin city could not be verified.";
+                _marchSubmitButton.SetEnabled(false);
+                return;
+            }
+
             var stationedUnits = (CityStateManager.Instance?.CurrentStationedUnits ?? new List<UnitStackDTO>())
                 .Where(stack => stack.Quantity > 0)
                 .ToList();
@@ -578,23 +640,28 @@ namespace Project.Modules.UI.Windows.Implementations
 
         private void UpdateMarchTotal()
         {
-            _marchTotalLabel.text = $"TOTAL: {_marchQuantityInputs.Values.Sum(input => input.value)}";
+            _marchTotalLabel.text = $"TOTAL TROOPS  {_marchQuantityInputs.Values.Sum(input => input.value)}";
         }
 
         private void RefreshTravelEstimate()
         {
             int version = ++_estimateVersion;
             var selections = GetSelectedUnits();
-            if (selections.Count == 0 || CityStateManager.Instance == null || NetworkManager.Instance == null)
+            if (selections.Count == 0 || !TryGetActiveOriginCityId(out Guid originCityId))
             {
                 _marchTravelTimeLabel.text = "--:--:--";
                 _marchArrivalLabel.text = "--";
+                _marchTransportLabel.text = "--";
+                _marchTransportLabel.RemoveFromClassList("march-metric-positive");
+                _marchTransportLabel.RemoveFromClassList("march-metric-negative");
+                _marchStatusLabel.text = "Select units to calculate transport capacity.";
+                _marchSubmitButton?.SetEnabled(false);
                 return;
             }
 
             StartCoroutine(NetworkManager.Instance.UnitDeployment.EstimateTravel(new DeploymentTravelEstimateRequestDTO
             {
-                OriginCityId = CityStateManager.Instance.CityId,
+                OriginCityId = originCityId,
                 TargetCityId = _currentInspectionData.CityId,
                 UnitsToDeploy = selections
             }, NetworkManager.Instance.JwtToken, estimate =>
@@ -606,6 +673,17 @@ namespace Project.Modules.UI.Windows.Implementations
                 _marchTravelTimeLabel.text = $"{hours:00}:{minutes:00}:{seconds:00}";
                 _estimatedDurationSeconds = estimate.DurationSeconds;
                 UpdateArrivalDisplay();
+                _marchTransportLabel.text = estimate.RequiresTransport
+                    ? $"{estimate.RequiredTransportCapacity} / {estimate.AvailableTransportCapacity}"
+                    : "NOT REQUIRED";
+                _marchTransportLabel.EnableInClassList("march-metric-positive", estimate.HasSufficientTransportCapacity);
+                _marchTransportLabel.EnableInClassList("march-metric-negative", !estimate.HasSufficientTransportCapacity);
+                _marchStatusLabel.text = estimate.RequiresTransport
+                    ? (estimate.HasSufficientTransportCapacity
+                        ? $"Transport capacity {estimate.RequiredTransportCapacity}/{estimate.AvailableTransportCapacity} (margin {estimate.TransportCapacityMargin})"
+                        : $"Insufficient transport capacity: need {estimate.RequiredTransportCapacity}, have {estimate.AvailableTransportCapacity}.")
+                    : "No sea transport required.";
+                _marchSubmitButton?.SetEnabled(estimate.HasSufficientTransportCapacity);
             }));
         }
 
@@ -630,24 +708,6 @@ namespace Project.Modules.UI.Windows.Implementations
             _marchArrivalLabel.text = now.AddSeconds(_estimatedDurationSeconds.Value).ToString("dd.MM.yyyy HH:mm:ss");
         }
 
-        private void OpenSourceCity()
-        {
-            if (CityStateManager.Instance == null || CityStateManager.Instance.CityId == Guid.Empty) return;
-            WindowNavigationHelper.OpenCityInspection(
-                CityStateManager.Instance.CityId,
-                CityStateManager.Instance.HomeCityX,
-                CityStateManager.Instance.HomeCityY);
-        }
-
-        private void OpenDestinationCity()
-        {
-            if (_currentInspectionData == null) return;
-            WindowNavigationHelper.OpenCityInspection(
-                _currentInspectionData.CityId,
-                _currentInspectionData.X,
-                _currentInspectionData.Y);
-        }
-
         private List<UnitSelectionDTO> GetSelectedUnits()
         {
             return _marchQuantityInputs
@@ -659,9 +719,9 @@ namespace Project.Modules.UI.Windows.Implementations
         private void ExecuteDeployment()
         {
             if (_deploymentRequestInFlight || _currentInspectionData == null) return;
-            if (NetworkManager.Instance == null || CityStateManager.Instance == null || CityStateManager.Instance.CityId == Guid.Empty)
+            if (!TryGetActiveOriginCityId(out Guid originCityId))
             {
-                _marchStatusLabel.text = "No active origin city or network connection.";
+                _marchStatusLabel.text = "The active origin city could not be verified.";
                 return;
             }
 
@@ -681,7 +741,7 @@ namespace Project.Modules.UI.Windows.Implementations
 
             var attackRequest = new AttackCityDeploymentRequestDTO
             {
-                OriginCityId = CityStateManager.Instance.CityId,
+                OriginCityId = originCityId,
                 TargetCityId = _currentInspectionData.CityId,
                 UnitsToDeploy = selections
             };
@@ -708,7 +768,7 @@ namespace Project.Modules.UI.Windows.Implementations
                     return;
                 }
 
-                CityStateManager.Instance.InitiateResourceRefresh(CityStateManager.Instance.CityId);
+                CityStateManager.Instance.RequestImmediateRefresh(originCityId);
                 Close();
             }
 
@@ -725,8 +785,6 @@ namespace Project.Modules.UI.Windows.Implementations
             WindowAsyncStateHelper.SetButtonsEnabled(new[]
             {
                 _marchSubmitButton,
-                _marchSourceLink,
-                _marchDestinationLink,
                 _cityInfoTab,
                 _attackCityTab,
                 _supportCityTab,
@@ -739,6 +797,38 @@ namespace Project.Modules.UI.Windows.Implementations
             if (_currentInspectionData == null) return;
             var renderer = FindFirstObjectByType<WorldMapRenderer>();
             renderer?.CenterCameraOnCoordinates(_currentInspectionData.X, _currentInspectionData.Y);
+        }
+
+        private void HandleCombatSimulatorClicked()
+        {
+            if (_currentInspectionData == null)
+            {
+                return;
+            }
+
+            if (!TryGetActiveOriginCityId(out Guid originCityId))
+            {
+                return;
+            }
+
+            WindowNavigationHelper.OpenCombatSimulator(new CombatSimulatorPayload
+            {
+                OriginCityId = originCityId,
+                OriginCityName = CityStateManager.Instance.CurrentCityName,
+                OriginCoordinates = new Vector2Int(CityStateManager.Instance.HomeCityX, CityStateManager.Instance.HomeCityY),
+                TargetCityId = _currentInspectionData.CityId,
+                TargetCityName = _currentInspectionData.CityName,
+                TargetCoordinates = new Vector2Int(_currentInspectionData.X, _currentInspectionData.Y),
+                TerrainName = _currentPayload?.TerrainName
+            });
+        }
+
+        private static bool TryGetActiveOriginCityId(out Guid originCityId)
+        {
+            originCityId = NetworkManager.Instance?.ActiveCityId ?? Guid.Empty;
+            return originCityId != Guid.Empty
+                && CityStateManager.Instance != null
+                && CityStateManager.Instance.CityId == originCityId;
         }
 
         private void LoadIncomingAttacks(CityInspectionDTO city)

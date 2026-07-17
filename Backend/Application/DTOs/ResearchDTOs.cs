@@ -1,4 +1,5 @@
 ﻿using Domain.Enums;
+using Domain.StaticData.Data;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -24,8 +25,11 @@ namespace Application.DTOs
         bool IsCompleted,
         bool IsResearching,
         bool IsLocked,
-        bool CanAfford
+        bool CanAfford,
+        List<ResearchEffectDTO> Effects
     );
+
+    public record ResearchEffectDTO(ResearchEffectType Type, UnitTypeEnum? UnitType);
 
     public record ActiveResearchJobDTO(
         Guid JobId,

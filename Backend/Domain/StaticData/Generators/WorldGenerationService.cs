@@ -81,6 +81,22 @@ namespace Domain.StaticData.Generators
             return false;
         }
 
+        // Island placement guarantees an ocean gap, so checking the known island boundary is
+        // equivalent to a global coast lookup without recursively resolving nearby island cells.
+        public static bool IsCoastalOnIsland(int x, int y, int mapSeed, IslandDefinition island)
+        {
+            if (!IsInsideIsland(x, y, mapSeed, island))
+                return false;
+
+            foreach (var offset in GetNeighborOffsets(y))
+            {
+                if (!IsInsideIsland(x + offset[0], y + offset[1], mapSeed, island))
+                    return true;
+            }
+
+            return false;
+        }
+
         public static bool TryGetIslandCoordinates(int x, int y, int mapSeed, out int islandX, out int islandY)
         {
             int baseCellX = FloorDivide(x, IslandCellSize);

@@ -321,7 +321,7 @@ namespace Project.Modules.UI
             WorldPlayerStateManager.Instance?.DeductResourcesLocally(coins, 0, 0);
             if (NetworkManager.Instance.ActiveCityId.HasValue)
             {
-                CityStateManager.Instance?.InitiateResourceRefresh(NetworkManager.Instance.ActiveCityId.Value);
+                CityStateManager.Instance?.RequestImmediateRefresh(NetworkManager.Instance.ActiveCityId.Value);
             }
             if (Guid.TryParse(NetworkManager.Instance.WorldPlayerId, out Guid worldPlayerId))
             {

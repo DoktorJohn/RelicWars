@@ -15,6 +15,11 @@ namespace Assets.Scripts.Domain.State
         public double IdeologyFocusPointsAmount;
         public double IdeologyFocusPointsProductionPerHour;
 
+        public double TotalWoodAmount;
+        public double TotalStoneAmount;
+        public double TotalMetalAmount;
+        public double TotalPopulationAmount;
+
         public List<CityDTO> PlayerCities = new List<CityDTO>();
     }
 }

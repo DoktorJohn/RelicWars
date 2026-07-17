@@ -26,6 +26,7 @@ namespace Project.Modules.UI
     {
         private VisualElement _rootVisualElement;
 
+        private VisualElement _dailiesButton;
         private VisualElement _overviewButton;
         private VisualElement _researchButton;
         private VisualElement _playerProfileButton;
@@ -85,6 +86,7 @@ namespace Project.Modules.UI
 
         private void OnDisable()
         {
+            ResponsiveUiStateManager.UnregisterRoot(_rootVisualElement);
             UnregisterNavigationButtonCallbacks();
             MessagingStateEvents.UnreadStateChanged -= CheckUnreadMessages;
             BattleReportStateEvents.UnreadStateChanged -= CheckUnreadBattleReports;
@@ -98,7 +100,9 @@ namespace Project.Modules.UI
             if (uiDocumentComponent != null)
             {
                 _rootVisualElement = uiDocumentComponent.rootVisualElement;
+                ResponsiveUiStateManager.RegisterRoot(_rootVisualElement);
 
+                _dailiesButton = _rootVisualElement.Q<VisualElement>("SideBar-Button-Dailies");
                 _overviewButton = _rootVisualElement.Q<VisualElement>("SideBar-Button-Overview");
                 _playerProfileButton = _rootVisualElement.Q<VisualElement>("SideBar-Button-Profile");
                 _alliancePanelButton = _rootVisualElement.Q<VisualElement>("SideBar-Button-Alliance");
@@ -124,6 +128,7 @@ namespace Project.Modules.UI
 
         private void ValidateButtonReferences()
         {
+            if (_dailiesButton == null) Debug.LogError("[LeftSideBarViewController] Dailies Button reference missing.");
             if (_overviewButton == null) Debug.LogError("[LeftSideBarViewController] Overview Button reference missing.");
             if (_playerProfileButton == null) Debug.LogError("[LeftSideBarViewController] Profile Button reference missing.");
             if (_alliancePanelButton == null) Debug.LogError("[LeftSideBarViewController] Alliance Button reference missing.");
@@ -136,6 +141,7 @@ namespace Project.Modules.UI
 
         private void RegisterNavigationButtonCallbacks()
         {
+            _dailiesButton?.RegisterCallback<ClickEvent>(OnDailiesButtonClicked);
             _overviewButton?.RegisterCallback<ClickEvent>(OnOverviewButtonClicked);
             _playerProfileButton?.RegisterCallback<ClickEvent>(OnProfileButtonClicked);
             _alliancePanelButton?.RegisterCallback<ClickEvent>(OnAllianceButtonClicked);
@@ -152,6 +158,7 @@ namespace Project.Modules.UI
 
         private void UnregisterNavigationButtonCallbacks()
         {
+            _dailiesButton?.UnregisterCallback<ClickEvent>(OnDailiesButtonClicked);
             _overviewButton?.UnregisterCallback<ClickEvent>(OnOverviewButtonClicked);
             _playerProfileButton?.UnregisterCallback<ClickEvent>(OnProfileButtonClicked);
             _alliancePanelButton?.UnregisterCallback<ClickEvent>(OnAllianceButtonClicked);
@@ -163,6 +170,11 @@ namespace Project.Modules.UI
             {
                 _bugReportButton.clicked -= OnBugReportButtonClicked;
             }
+        }
+
+        private void OnDailiesButtonClicked(ClickEvent clickEvent)
+        {
+            ExecuteOpenWindowRequest(WindowTypeEnum.Dailies);
         }
 
         private void OnOverviewButtonClicked(ClickEvent clickEvent)
