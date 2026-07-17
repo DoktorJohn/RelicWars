@@ -1,6 +1,4 @@
-# =================================================================
-# GLOBALE REGLER (Gælder for hele repo'et)
-# =================================================================
+
 .vs/
 .vscode/
 *.user
@@ -13,16 +11,6 @@ Thumbs.db
 .DS_Store
 /0.0.1Build/.env
 
-# Lokale AI-agentinstruktioner
-/AGENTS.md
-/.agents/
-/AI/
-
-# =================================================================
-# UNITY SPECIFIKKE REGLER (Mappen: Unity/)
-# =================================================================
-
-# Ignorer midlertidige Unity-filer og logs
 Unity/[Ll]ibrary/
 Unity/[Tt]emp/
 Unity/[Oo]bj/
@@ -33,7 +21,6 @@ Unity/[Mm]emoryCaptures/
 Unity/[Rr]ecordings/
 Unity/[Uu]ser[Ss]ettings/
 
-# Ignorer autogenererede projektfiler (Unity genskaber disse selv)
 Unity/*.csproj
 Unity/*.unityproj
 Unity/*.sln
@@ -43,34 +30,26 @@ Unity/*.pdb
 Unity/*.mdb
 Unity/*.opendb
 Unity/*.IDB
-
-# Asset Store og IDE plugins
+/AGENTS.md
+/.agents/
+/AI/
 Unity/[Aa]ssets/AssetStoreTools*
 Unity/[Aa]ssets/Plugins/Editor/JetBrains*
 
-# =================================================================
-# BACKEND SPECIFIKKE REGLER (Mappen: Backend/)
-# =================================================================
 
-# Ignorer kompileret output og midlertidige build-filer
 Backend/*/bin/
 Backend/*/obj/
 Backend/*/publish/
 Backend/bin/
 Backend/obj/
 
-# Ignorer lokale databasefiler (hvis du bruger SQLite lokalt)
 Backend/*.db
 Backend/*.db-shm
 Backend/*.db-wal
 
-# VIGTIGT: Ignorer personlige indstillinger og secrets
 Backend/*/appsettings.Development.json
 Backend/*/.env
 
-# =================================================================
-# BUILD ARTEFAKTER (Slutresultater)
-# =================================================================
 *.apk
 *.aab
 *.unitypackage
