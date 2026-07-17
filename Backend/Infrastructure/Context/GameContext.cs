@@ -144,6 +144,10 @@ namespace Infrastructure.Context
                 entity.HasIndex(e => new { e.WorldId, e.X, e.Y })
                       .HasDatabaseName("IX_WorldMapObject_Coordinates");
 
+                entity.HasIndex(e => new { e.WorldId, e.X, e.Y, e.Type })
+                      .IsUnique()
+                      .HasDatabaseName("UX_WorldMapObjects_Type_Coordinates");
+
                 entity.HasOne(d => d.World)
                       .WithMany(p => p.MapObjects)
                       .HasForeignKey(d => d.WorldId)
@@ -152,9 +156,10 @@ namespace Infrastructure.Context
                 entity.Property(e => e.Type).HasConversion<byte>();
             });
 
-        modelBuilder.Entity<City>()
-                .HasIndex(c => new { c.X, c.Y })
-                .HasDatabaseName("IX_City_Coordinates");
+            modelBuilder.Entity<City>()
+                .HasIndex(c => new { c.WorldId, c.X, c.Y })
+                .IsUnique()
+                .HasDatabaseName("UX_Cities_World_Coordinates");
 
             modelBuilder.Entity<CityExoticResource>(entity =>
             {
@@ -170,9 +175,15 @@ namespace Infrastructure.Context
                 entity.Property(resource => resource.ResourceType).HasConversion<int>();
             });
 
-            modelBuilder.Entity<WorldPlayer>()
-                .HasIndex(player => player.WorldId)
-                .HasDatabaseName("IX_WorldPlayers_WorldId");
+            modelBuilder.Entity<WorldPlayer>(entity =>
+            {
+                entity.HasIndex(player => player.WorldId)
+                    .HasDatabaseName("IX_WorldPlayers_WorldId");
+
+                entity.HasIndex(player => new { player.PlayerProfileId, player.WorldId })
+                    .IsUnique()
+                    .HasDatabaseName("UX_WorldPlayers_Profile_World");
+            });
 
             modelBuilder.Entity<DailyObjectiveSet>(entity =>
             {

@@ -1,4 +1,5 @@
 using Application.DTOs;
+using Application.Interfaces;
 using Application.Interfaces.IRepositories;
 using Application.Interfaces.IServices;
 using Application.Utility;
@@ -7,6 +8,7 @@ using Domain.Enums;
 using Domain.StaticData.Generators;
 using Domain.StaticData.Readers;
 using Domain.User;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
@@ -29,6 +31,7 @@ namespace Application.Services
         private readonly CityPointCalculator _cityPointCalculator;
         private readonly ILogger<WorldPlayerService> _logger;
         private readonly IDailyObjectiveService? _dailyObjectiveService;
+        private readonly ITransactionManager? _transactionManager;
 
         public WorldPlayerService(
             IWorldPlayerRepository worldPlayerRepository,
@@ -42,7 +45,8 @@ namespace Application.Services
             IPlayerAccessService playerAccessService,
             ILogger<WorldPlayerService> logger,
             CityPointCalculator cityPointCalculator,
-            IDailyObjectiveService? dailyObjectiveService = null)
+            IDailyObjectiveService? dailyObjectiveService = null,
+            ITransactionManager? transactionManager = null)
         {
             _worldPlayerRepository = worldPlayerRepository;
             _profileRepository = profileRepository;
@@ -56,6 +60,7 @@ namespace Application.Services
             _playerAccessService = playerAccessService;
             _cityPointCalculator = cityPointCalculator;
             _dailyObjectiveService = dailyObjectiveService;
+            _transactionManager = transactionManager;
         }
 
         public void SyncGlobalResources(WorldPlayer player, DateTime currentDateTime)
@@ -193,19 +198,47 @@ namespace Application.Services
         public async Task<WorldPlayerJoinResponse> AssignPlayerToGameWorldAsync(Guid targetWorldId)
         {
             var playerProfileId = _playerAccessService.GetAuthenticatedProfileId();
+
+            try
+            {
+                return _transactionManager == null
+                    ? await AssignPlayerToGameWorldWithinTransactionAsync(playerProfileId, targetWorldId)
+                    : await _transactionManager.ExecuteAsync(() =>
+                        AssignPlayerToGameWorldWithinTransactionAsync(playerProfileId, targetWorldId));
+            }
+            catch (DbUpdateException exception)
+            {
+                var existingParticipation = await _worldPlayerRepository
+                    .GetByProfileAndWorldAsync(playerProfileId, targetWorldId);
+                if (existingParticipation != null)
+                {
+                    _logger.LogWarning(
+                        exception,
+                        "Concurrent world join reused participation {WorldPlayerId} for profile {ProfileId} in world {WorldId}.",
+                        existingParticipation.Id,
+                        playerProfileId,
+                        targetWorldId);
+                    return CreateExistingParticipationResponse(existingParticipation);
+                }
+
+                _logger.LogWarning(
+                    exception,
+                    "World join persistence failed for profile {ProfileId} in world {WorldId} without an existing participation.",
+                    playerProfileId,
+                    targetWorldId);
+                throw;
+            }
+        }
+
+        private async Task<WorldPlayerJoinResponse> AssignPlayerToGameWorldWithinTransactionAsync(
+            Guid playerProfileId,
+            Guid targetWorldId)
+        {
             var existingGameWorldParticipation = await _worldPlayerRepository.GetByProfileAndWorldAsync(playerProfileId, targetWorldId);
 
             if (existingGameWorldParticipation != null)
             {
-                var primaryCityId = existingGameWorldParticipation.Cities.FirstOrDefault()?.Id;
-
-                return new WorldPlayerJoinResponse(
-                    ConnectionSuccessful: true,
-                    Message: "Welcome back.",
-                    ActiveCityId: primaryCityId,
-                    WorldPlayerId: existingGameWorldParticipation.Id,
-                    SelectedIdeology: existingGameWorldParticipation.Ideology
-                );
+                return CreateExistingParticipationResponse(existingGameWorldParticipation);
             }
 
             var targetGameWorld = await _worldRepo.GetByIdAsync(targetWorldId);
@@ -269,6 +302,16 @@ namespace Application.Services
                 WorldPlayerId: newlyCreatedWorldParticipation.Id,
                 SelectedIdeology: newlyCreatedWorldParticipation.Ideology
             );
+        }
+
+        private static WorldPlayerJoinResponse CreateExistingParticipationResponse(WorldPlayer participation)
+        {
+            return new WorldPlayerJoinResponse(
+                ConnectionSuccessful: true,
+                Message: "Welcome back.",
+                ActiveCityId: participation.Cities.FirstOrDefault()?.Id,
+                WorldPlayerId: participation.Id,
+                SelectedIdeology: participation.Ideology);
         }
 
 

@@ -1,3 +1,4 @@
+using Application.Interfaces;
 using Application.Interfaces.IRepositories;
 using Application.Interfaces.IServices;
 using Application.Services;
@@ -10,6 +11,7 @@ using Domain.StaticData.Readers;
 using Domain.User;
 using Domain.Workers;
 using Microsoft.Extensions.Logging.Abstractions;
+using Microsoft.EntityFrameworkCore;
 using System.IO;
 using System.Text.Json;
 
@@ -140,6 +142,53 @@ public class WorldPlayerServiceTests
             city.Buildings.Select(building => building.Type));
         Assert.All(city.Buildings, building => Assert.Equal(1, building.Level));
         Assert.Equal(6, city.Buildings.Count);
+    }
+
+    [Fact]
+    public async Task AssignPlayerToGameWorldAsync_RecoversExistingParticipationAfterConcurrentUniqueConflict()
+    {
+        var world = new World
+        {
+            Id = Guid.NewGuid(),
+            Width = 200,
+            Height = 200,
+            MapSeed = 42069
+        };
+        var profileId = Guid.NewGuid();
+        var existingCity = new City { Id = Guid.NewGuid(), WorldId = world.Id };
+        var existingParticipation = new WorldPlayer
+        {
+            Id = Guid.NewGuid(),
+            PlayerProfileId = profileId,
+            WorldId = world.Id,
+            Cities = [existingCity]
+        };
+        var repository = new ConcurrentJoinWorldPlayerRepository(existingParticipation);
+        var transactionManager = new TrackingTransactionManager();
+        var mapService = new CapturingWorldMapObjectService();
+        var service = new WorldPlayerService(
+            repository,
+            new FixedPlayerProfileRepository(profileId, "ConcurrentPlayer"),
+            new NoOpCityRepository(),
+            new FixedWorldRepository(world),
+            new NoOpResourceService(),
+            new FixedWorldRepository(world),
+            new NoOpWorldMapObjectRepository(),
+            mapService,
+            new TestPlayerAccessService([
+                new WorldPlayer { Id = Guid.NewGuid(), PlayerProfileId = profileId, WorldId = world.Id }
+            ]),
+            NullLogger<WorldPlayerService>.Instance,
+            new CityPointCalculator(TestData.BuildingReader()),
+            transactionManager: transactionManager);
+
+        var response = await service.AssignPlayerToGameWorldAsync(world.Id);
+
+        Assert.True(response.ConnectionSuccessful);
+        Assert.Equal(existingParticipation.Id, response.WorldPlayerId);
+        Assert.Equal(existingCity.Id, response.ActiveCityId);
+        Assert.Equal(1, transactionManager.ExecutionCount);
+        Assert.Null(mapService.AddedEntity);
     }
 
     [Fact]
@@ -537,6 +586,47 @@ public class WorldPlayerServiceTests
             Task.FromResult(_players.Where(player => player.AllianceId == allianceId).ToList());
         public Task<List<WorldPlayer>> SearchPlayersByUsernameAsync(Guid worldId, string usernameQuery) =>
             Task.FromResult(new List<WorldPlayer>());
+    }
+
+    private sealed class ConcurrentJoinWorldPlayerRepository(WorldPlayer existingParticipation) : IWorldPlayerRepository
+    {
+        private int _participationReads;
+
+        public Task<WorldPlayer?> GetByIdAsync(Guid id) =>
+            Task.FromResult<WorldPlayer?>(id == existingParticipation.Id ? existingParticipation : null);
+        public Task<WorldPlayer?> GetByIdWithResearchAsync(Guid id) => GetByIdAsync(id);
+        public Task AddAsync(WorldPlayer user) =>
+            throw new DbUpdateException("Simulated unique constraint conflict.");
+        public Task UpdateAsync(WorldPlayer user) => Task.CompletedTask;
+        public Task DeleteAsync(Guid id) => Task.CompletedTask;
+        public Task<List<WorldPlayer>>? GetAllAsync() =>
+            Task.FromResult(new List<WorldPlayer> { existingParticipation });
+        public Task<WorldPlayer?> GetByProfileAndWorldAsync(Guid profileId, Guid worldId)
+        {
+            _participationReads++;
+            return Task.FromResult<WorldPlayer?>(_participationReads == 1 ? null : existingParticipation);
+        }
+        public Task<List<WorldPlayer>> GetAllByAllianceIdAsync(Guid allianceId) =>
+            Task.FromResult(new List<WorldPlayer>());
+        public Task<List<WorldPlayer>> SearchPlayersByUsernameAsync(Guid worldId, string usernameQuery) =>
+            Task.FromResult(new List<WorldPlayer>());
+    }
+
+    private sealed class TrackingTransactionManager : ITransactionManager
+    {
+        public int ExecutionCount { get; private set; }
+
+        public async Task ExecuteAsync(Func<Task> operation)
+        {
+            ExecutionCount++;
+            await operation();
+        }
+
+        public async Task<T> ExecuteAsync<T>(Func<Task<T>> operation)
+        {
+            ExecutionCount++;
+            return await operation();
+        }
     }
 
     private sealed class NoOpPlayerProfileRepository : IPlayerProfileRepository

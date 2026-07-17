@@ -16,6 +16,7 @@ namespace Project.Modules.WorldSelection
         private ScrollView _worldListScrollView;
         private Label _playerNameLabel;
         private Button _backToLoginButton;
+        private bool _worldJoinInProgress;
 
         [Header("Data Skabelon")]
         [SerializeField] private VisualTreeAsset _worldEntryTemplate;
@@ -27,6 +28,7 @@ namespace Project.Modules.WorldSelection
 
         private void OnEnable()
         {
+            _worldJoinInProgress = false;
             var uiDocumentComponent = GetComponent<UIDocument>();
             if (uiDocumentComponent == null) return;
 
@@ -141,10 +143,13 @@ namespace Project.Modules.WorldSelection
             Debug.Log($"[WorldSelection] Attempting to join realm: {worldIdentifier}");
 #endif
 
-            if (NetworkManager.Instance == null)
+            if (_worldJoinInProgress || NetworkManager.Instance == null)
             {
                 return;
             }
+
+            _worldJoinInProgress = true;
+            SetWorldEntryButtonsEnabled(false);
 
             // Vi modtager nu både succes-status OG den valgte ideologi
             NetworkManager.Instance.JoinWorld(worldIdentifier, (isJoinSuccessful, selectedIdeology) =>
@@ -179,8 +184,23 @@ namespace Project.Modules.WorldSelection
                 else
                 {
                     Debug.LogError("[WorldSelection] Failed to join realm.");
+                    _worldJoinInProgress = false;
+                    SetWorldEntryButtonsEnabled(true);
                 }
             });
+        }
+
+        private void SetWorldEntryButtonsEnabled(bool isEnabled)
+        {
+            if (_worldListScrollView == null)
+            {
+                return;
+            }
+
+            foreach (var enterButton in _worldListScrollView.Query<Button>("Button-Enter").ToList())
+            {
+                enterButton.SetEnabled(isEnabled);
+            }
         }
     }
 }

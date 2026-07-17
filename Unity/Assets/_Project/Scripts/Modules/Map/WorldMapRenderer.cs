@@ -131,8 +131,20 @@ namespace Project.Scripts.Modules.Map
             int totalTiles = data.Width * data.Height;
             Vector3Int[] positions = new Vector3Int[totalTiles];
             TileBase[] tiles = new TileBase[totalTiles];
-            Dictionary<Vector2Int, CityDTO> citiesByPosition = data.Cities
-                .ToDictionary(city => new Vector2Int(city.X, city.Y));
+            var cityGroupsByPosition = data.Cities
+                .GroupBy(city => new Vector2Int(city.X, city.Y))
+                .ToList();
+            foreach (var duplicateGroup in cityGroupsByPosition.Where(group => group.Count() > 1))
+            {
+                Debug.LogError(
+                    $"[WorldMapRenderer] Chunk ({data.ChunkX},{data.ChunkY}) contains " +
+                    $"{duplicateGroup.Count()} cities at {duplicateGroup.Key}. Rendering the lowest city id.");
+            }
+
+            Dictionary<Vector2Int, CityDTO> citiesByPosition = cityGroupsByPosition
+                .ToDictionary(
+                    group => group.Key,
+                    group => group.OrderBy(city => city.Id).First());
             HashSet<Vector2Int> futureCitySites = new HashSet<Vector2Int>(
                 data.FutureCitySites.Select(site => new Vector2Int(site.X, site.Y)));
 
