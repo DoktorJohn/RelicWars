@@ -43,6 +43,8 @@ namespace Infrastructure.Context
         public DbSet<ConversationParticipant> ConversationParticipants { get; set; }
         public DbSet<Message> Messages { get; set; }
         public DbSet<BugReport> BugReports { get; set; }
+        public DbSet<DailyObjectiveSet> DailyObjectiveSets { get; set; }
+        public DbSet<DailyObjectiveAssignment> DailyObjectiveAssignments { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -171,6 +173,28 @@ namespace Infrastructure.Context
             modelBuilder.Entity<WorldPlayer>()
                 .HasIndex(player => player.WorldId)
                 .HasDatabaseName("IX_WorldPlayers_WorldId");
+
+            modelBuilder.Entity<DailyObjectiveSet>(entity =>
+            {
+                entity.Property(set => set.DayStartUtc).HasColumnType("date");
+                entity.Property(set => set.RowVersion).IsRowVersion();
+                entity.HasIndex(set => set.WorldPlayerId).IsUnique();
+                entity.HasOne(set => set.WorldPlayer)
+                    .WithOne(player => player.DailyObjectiveSet)
+                    .HasForeignKey<DailyObjectiveSet>(set => set.WorldPlayerId)
+                    .OnDelete(DeleteBehavior.Cascade);
+            });
+
+            modelBuilder.Entity<DailyObjectiveAssignment>(entity =>
+            {
+                entity.Property(assignment => assignment.RowVersion).IsRowVersion();
+                entity.HasIndex(assignment => new { assignment.DailyObjectiveSetId, assignment.Slot }).IsUnique();
+                entity.HasIndex(assignment => new { assignment.DailyObjectiveSetId, assignment.DefinitionId }).IsUnique();
+                entity.HasOne(assignment => assignment.DailyObjectiveSet)
+                    .WithMany(set => set.Assignments)
+                    .HasForeignKey(assignment => assignment.DailyObjectiveSetId)
+                    .OnDelete(DeleteBehavior.Cascade);
+            });
 
             modelBuilder.Entity<Conversation>(entity =>
             {

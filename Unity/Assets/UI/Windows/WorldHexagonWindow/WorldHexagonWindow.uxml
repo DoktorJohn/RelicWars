@@ -5,7 +5,6 @@
     <ui:Style src="project://database/Assets/UI/Windows/WorldHexagonWindow/WorldHexagonWindowCityInspection.uss" />
     
     <ui:VisualElement name="Hexagon-Window-MainContainer" class="window-frame strategy-window">
-        
         <ui:VisualElement name="Hexagon-Window-Header" class="window-header strategy-header">
             <ui:Label text="CITY INSPECTION" name="Header-Title" class="window-header-label" />
             <ui:Button name="WorldHexagonWindow-Close-Button" text="x" class="window-close-btn" />
@@ -54,39 +53,67 @@
                         <ui:VisualElement name="Incoming-Attacks-List" />
                     </ui:VisualElement>
                 </ui:VisualElement>
-                <ui:VisualElement name="March-Orders-Panel" class="march-orders-panel hidden">
-                    <ui:VisualElement class="march-summary">
-                        <ui:VisualElement class="march-summary-row">
-                            <ui:Label text="SOURCE" class="march-summary-key" />
-                            <ui:Button name="March-Source-Link" text="" class="btn-entity-link march-city-link" />
+                <ui:VisualElement name="March-Orders-Panel" class="march-orders-panel march-command-window hidden">
+                    <ui:VisualElement class="march-detail-panel march-command-panel">
+                        <ui:VisualElement class="march-detail-copy">
+                            <ui:Label text="COMMAND" class="march-detail-eyebrow" />
+                            <ui:Label name="March-Mission-Badge" text="" class="march-mission-badge" />
+                            <ui:Label text="TARGET" class="march-detail-key" />
+                            <ui:Label name="March-Detail-Target" text="" class="march-detail-target" />
                         </ui:VisualElement>
-                        <ui:VisualElement class="march-summary-row">
-                            <ui:Label text="DESTINATION" class="march-summary-key" />
-                            <ui:Button name="March-Destination-Link" text="" class="btn-entity-link march-city-link" />
-                        </ui:VisualElement>
-                        <ui:VisualElement class="march-summary-row">
-                            <ui:Label text="TRAVEL TIME" class="march-summary-key" />
-                            <ui:Label name="March-Travel-Time-Label" text="--:--:--" class="march-summary-value" />
-                        </ui:VisualElement>
-                        <ui:VisualElement class="march-summary-row">
-                            <ui:Label text="ARRIVAL" class="march-summary-key" />
-                            <ui:Label name="March-Arrival-Label" text="--" class="march-summary-value" />
+                        <ui:VisualElement class="march-detail-data">
+                            <ui:VisualElement class="march-route">
+                                <ui:VisualElement class="march-route-city">
+                                    <ui:Label text="SOURCE" class="march-route-key" />
+                                    <ui:Label name="March-Source-Link" text="" class="march-route-value" />
+                                </ui:VisualElement>
+                                <ui:VisualElement class="march-route-line">
+                                    <ui:VisualElement class="march-route-node" />
+                                    <ui:VisualElement class="march-route-track" />
+                                    <ui:Label text="▶" class="march-route-arrow" />
+                                </ui:VisualElement>
+                                <ui:VisualElement class="march-route-city march-route-city-destination">
+                                    <ui:Label text="DESTINATION" class="march-route-key" />
+                                    <ui:Label name="March-Destination-Link" text="" class="march-route-value" />
+                                </ui:VisualElement>
+                            </ui:VisualElement>
+                            <ui:VisualElement class="march-metrics">
+                                <ui:VisualElement class="march-metric-card">
+                                    <ui:Label text="TRAVEL" class="march-metric-key" />
+                                    <ui:Label name="March-Travel-Time-Label" text="--:--:--" class="march-metric-value" />
+                                </ui:VisualElement>
+                                <ui:VisualElement class="march-metric-card">
+                                    <ui:Label text="LOCAL ARRIVAL" class="march-metric-key" />
+                                    <ui:Label name="March-Arrival-Label" text="--" class="march-metric-value march-metric-value-small" />
+                                </ui:VisualElement>
+                                <ui:VisualElement class="march-metric-card">
+                                    <ui:Label text="TRANSPORT" class="march-metric-key" />
+                                    <ui:Label name="March-Transport-Label" text="--" class="march-metric-value march-metric-value-small" />
+                                </ui:VisualElement>
+                            </ui:VisualElement>
                         </ui:VisualElement>
                     </ui:VisualElement>
-                    <ui:VisualElement class="march-unit-header">
-                        <ui:Label text="UNIT" class="march-unit-name" />
-                        <ui:Label text="AVAILABLE" class="march-unit-available" />
-                        <ui:Label text="SEND" class="march-unit-send" />
+                    <ui:VisualElement class="march-manifest march-command-panel">
+                        <ui:Label text="TROOP MANIFEST" class="march-manifest-title" />
+                        <ui:VisualElement class="march-unit-header">
+                            <ui:Label text="UNIT" class="march-unit-name" />
+                            <ui:Label text="AVAILABLE" class="march-unit-available" />
+                            <ui:Label text="SEND" class="march-unit-send" />
+                            <ui:Label text="MAX" class="march-unit-max" />
+                        </ui:VisualElement>
+                        <ui:ScrollView mode="Vertical" class="march-unit-scroll">
+                            <ui:VisualElement name="March-Units-Container" />
+                        </ui:ScrollView>
                     </ui:VisualElement>
-                    <ui:ScrollView mode="Vertical" class="march-unit-scroll">
-                        <ui:VisualElement name="March-Units-Container" />
-                    </ui:ScrollView>
-                    <ui:Label name="March-Total-Label" text="TOTAL: 0" class="march-total" />
-                    <ui:Label name="March-Status-Label" text="" class="march-status text-body" />
-                    <ui:Button name="March-Submit-Button" text="" class="btn-global-base march-submit" />
+                    <ui:VisualElement class="march-command-footer march-command-panel">
+                        <ui:VisualElement class="march-footer-summary">
+                            <ui:Label name="March-Status-Label" text="" class="march-status text-body" />
+                            <ui:Label name="March-Total-Label" text="TOTAL TROOPS  0" class="march-total" />
+                        </ui:VisualElement>
+                        <ui:Button name="March-Submit-Button" text="" class="btn-global-base march-submit" />
+                    </ui:VisualElement>
                 </ui:VisualElement>
             </ui:VisualElement>
         </ui:VisualElement>
-
     </ui:VisualElement>
 </ui:UXML>

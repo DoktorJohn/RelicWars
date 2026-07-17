@@ -23,7 +23,7 @@
             </ui:VisualElement>
         </ui:VisualElement>
 
-        <ui:VisualElement name="Resource-Tooltip" class="resource-tooltip" picking-mode="Ignore">
+        <ui:VisualElement name="Resource-Tooltip" class="window-frame floating-window-frame resource-tooltip" picking-mode="Ignore">
             <ui:Label text="CONSTRUCTION COST" class="tooltip-title" />
             <ui:VisualElement class="tooltip-row">
                 <ui:Label text="Wood:" class="tooltip-label" style="color:#C89664;" />

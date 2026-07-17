@@ -28,6 +28,7 @@ namespace Application.Services
         private readonly IWorldRepository _worldRepo;
         private readonly CityPointCalculator _cityPointCalculator;
         private readonly ILogger<WorldPlayerService> _logger;
+        private readonly IDailyObjectiveService? _dailyObjectiveService;
 
         public WorldPlayerService(
             IWorldPlayerRepository worldPlayerRepository,
@@ -40,7 +41,8 @@ namespace Application.Services
             IWorldMapObjectService worldMapObjectService,
             IPlayerAccessService playerAccessService,
             ILogger<WorldPlayerService> logger,
-            CityPointCalculator cityPointCalculator)
+            CityPointCalculator cityPointCalculator,
+            IDailyObjectiveService? dailyObjectiveService = null)
         {
             _worldPlayerRepository = worldPlayerRepository;
             _profileRepository = profileRepository;
@@ -53,6 +55,7 @@ namespace Application.Services
             _worldMapObjectService = worldMapObjectService;
             _playerAccessService = playerAccessService;
             _cityPointCalculator = cityPointCalculator;
+            _dailyObjectiveService = dailyObjectiveService;
         }
 
         public void SyncGlobalResources(WorldPlayer player, DateTime currentDateTime)
@@ -68,13 +71,26 @@ namespace Application.Services
             _logger.LogInformation("[WorldPlayerService] Global economy state synchronized for Player: {PlayerId}. New Coins: {Coins}, Rate: {Rate}", player.Id, player.Coins, globalSnapshot.CoinsProductionPerHour);
         }
 
+        public async Task SyncGlobalResourcesAsync(WorldPlayer player, DateTime currentDateTime)
+        {
+            DateTime intervalStart = player.LastResourceUpdate;
+            var snapshot = _resourceService.CalculateGlobalResources(player, currentDateTime);
+            if (_dailyObjectiveService != null)
+                await _dailyObjectiveService.ApplyProductionAsync(
+                    player.Id,
+                    intervalStart,
+                    currentDateTime,
+                    Math.Max(0, snapshot.CoinsProductionPerHour));
+            SyncGlobalResources(player, currentDateTime);
+        }
+
         public async Task<WorldPlayerEconomyDTO> GetWorldPlayerEconomyAsync(Guid worldPlayerId)
         {
             _logger.LogInformation("[WorldPlayerService] GetWorldPlayerEconomyAsync called for Player {PlayerId}", worldPlayerId);
             var player = await _playerAccessService.RequireOwnedWorldPlayerAsync(worldPlayerId);
 
             var currentDateTime = DateTime.UtcNow;
-            SyncGlobalResources(player, currentDateTime);
+            await SyncGlobalResourcesAsync(player, currentDateTime);
             await _worldPlayerRepository.UpdateAsync(player); // Persist the updated resources
 
             var globalSnapshot = _resourceService.CalculateGlobalResources(player, currentDateTime);
@@ -83,7 +99,10 @@ namespace Application.Services
 
             // Fetch cities efficiently for the dropdown
             var cities = await _cityRepository.GetCitiesByWorldPlayerIdAsync(player.Id);
-            var cityDtos = cities.Select(c => new CityDTO(c.Id, c.Name, c.X, c.Y, 0)).OrderBy(c => c.CityName).ToList();
+            var cityDtos = cities.Select(c => new CityDTO(c.Id, c.Name, c.X, c.Y, 0, c.IsNPC)).OrderBy(c => c.CityName).ToList();
+            var cityResourceSnapshots = player.Cities
+                .Select(city => _resourceService.CalculateCityResources(city, currentDateTime))
+                .ToList();
 
             return new WorldPlayerEconomyDTO
             {
@@ -94,6 +113,10 @@ namespace Application.Services
                 CoinsProductionPerHour = globalSnapshot.CoinsProductionPerHour,
                 ResearchPointsPerHour = globalSnapshot.ResearchPointsPerHour,
                 IdeologyFocusPointsPerHour = globalSnapshot.IdeologyFocusPointsPerHour,
+                TotalWoodAmount = cityResourceSnapshots.Sum(snapshot => snapshot.Wood),
+                TotalStoneAmount = cityResourceSnapshots.Sum(snapshot => snapshot.Stone),
+                TotalMetalAmount = cityResourceSnapshots.Sum(snapshot => snapshot.Metal),
+                TotalPopulationAmount = globalSnapshot.TotalAvailablePopulation,
                 PlayerCities = cityDtos,
                 LastUpdated = currentDateTime
             };
@@ -132,7 +155,7 @@ namespace Application.Services
                 (worldPlayer.Cities ?? new List<City>())
                     .OrderByDescending(city => city.Points)
                     .ThenBy(city => city.Name)
-                    .Select(city => new CityDTO(city.Id, city.Name, city.X, city.Y, city.Points))
+                    .Select(city => new CityDTO(city.Id, city.Name, city.X, city.Y, city.Points, city.IsNPC))
                     .ToList()
             );
         }
@@ -267,19 +290,35 @@ namespace Application.Services
 
         private async Task<(int X, int Y)> CalculateNextCoastalSpawnCoordinatesAsync(World world)
         {
-            const int minimumCityDistance = 3;
             const int islandCellSize = WorldGenerationService.IslandCellSize;
-            const int islandSearchRadius = WorldGenerationService.MaximumIslandRadius + 2;
 
-            var existingCities = await _worldMapObjectRepository.GetObjectsByTypeAsync(world.Id, MapObjectTypeEnum.City);
-            var occupied = existingCities.Select(city => ((int)city.X, (int)city.Y)).ToHashSet();
-            var citiesByIsland = existingCities
+            var existingCityMapObjects = await _worldMapObjectRepository.GetObjectsByTypeAsync(world.Id, MapObjectTypeEnum.City);
+            var occupiedSitesByIsland = existingCityMapObjects
                 .Select(city => WorldGenerationService.TryGetIslandCoordinates(city.X, city.Y, world.MapSeed, out int islandX, out int islandY)
                     ? new { City = city, Island = (islandX, islandY) }
                     : null)
                 .Where(entry => entry != null)
                 .GroupBy(entry => entry!.Island)
                 .ToDictionary(group => group.Key, group => group.Select(entry => entry!.City).ToList());
+            var existingCityIds = existingCityMapObjects
+                .Where(mapObject => mapObject.ReferenceEntityId.HasValue)
+                .Select(mapObject => mapObject.ReferenceEntityId!.Value)
+                .ToList();
+            var playerCities = (await _cityRepository.GetCitiesByListOfIdsAsync(existingCityIds))
+                .Where(city => !city.IsNPC && city.WorldPlayerId.HasValue)
+                .ToList();
+            var playerCityCountsByIsland = playerCities
+                .Select(city => WorldGenerationService.TryGetIslandCoordinates(
+                    city.X,
+                    city.Y,
+                    world.MapSeed,
+                    out int islandX,
+                    out int islandY)
+                        ? new { Island = (islandX, islandY) }
+                        : null)
+                .Where(entry => entry != null)
+                .GroupBy(entry => entry!.Island)
+                .ToDictionary(group => group.Key, group => group.Count());
 
             int minimumX = -world.Width / 2;
             int maximumX = minimumX + world.Width - 1;
@@ -290,8 +329,8 @@ namespace Application.Services
             int minimumCellY = minimumY / WorldGenerationService.IslandRowHeight - 1;
             int maximumCellY = maximumY / WorldGenerationService.IslandRowHeight + 1;
 
-            var islandCandidates = citiesByIsland
-                .OrderByDescending(pair => pair.Value.Count)
+            var islandCandidates = playerCityCountsByIsland
+                .OrderByDescending(pair => pair.Value)
                 .ThenBy(pair => Math.Abs(pair.Key.Item1 - 1) + Math.Abs(pair.Key.Item2 - 1))
                 .ThenBy(pair => pair.Key.Item1)
                 .ThenBy(pair => pair.Key.Item2)
@@ -300,31 +339,25 @@ namespace Application.Services
                     from islandX in Enumerable.Range(minimumCellX, maximumCellX - minimumCellX + 1)
                     from islandY in Enumerable.Range(minimumCellY, maximumCellY - minimumCellY + 1)
                     let island = (islandX, islandY)
-                    where !citiesByIsland.ContainsKey(island)
+                    where !playerCityCountsByIsland.ContainsKey(island)
                     where WorldGenerationService.IsIslandCellActive(islandX, islandY, world.MapSeed)
                     orderby Math.Abs(islandX - 1) + Math.Abs(islandY - 1), islandX, islandY
                     select island);
 
             foreach (var island in islandCandidates)
             {
-                citiesByIsland.TryGetValue(island, out var islandCities);
+                occupiedSitesByIsland.TryGetValue(island, out var islandCities);
                 islandCities ??= new List<WorldMapObject>();
                 var islandDefinition = WorldGenerationService.GetIslandDefinition(island.Item1, island.Item2, world.MapSeed);
 
-                var bestCandidate = (
-                    from x in Enumerable.Range(islandDefinition.CenterX - islandSearchRadius, islandSearchRadius * 2 + 1)
-                    from y in Enumerable.Range(islandDefinition.CenterY - islandSearchRadius, islandSearchRadius * 2 + 1)
-                    where x >= minimumX && x <= maximumX && y >= minimumY && y <= maximumY
-                    where !occupied.Contains((x, y))
-                    where WorldGenerationService.IsCoastal(x, y, world.MapSeed)
-                    where WorldGenerationService.TryGetIslandCoordinates(x, y, world.MapSeed, out int candidateIslandX, out int candidateIslandY)
-                        && candidateIslandX == island.Item1 && candidateIslandY == island.Item2
-                    let spacing = islandCities.Count == 0
-                        ? int.MaxValue
-                        : islandCities.Min(city => HexDistance(x, y, city.X, city.Y))
-                    where spacing >= minimumCityDistance
-                    orderby spacing descending, x, y
-                    select ((int X, int Y)?)(x, y)).FirstOrDefault();
+                var bestCandidate = PlayerCitySiteGenerator.FindNextSite(
+                    islandDefinition,
+                    world.MapSeed,
+                    minimumX,
+                    maximumX,
+                    minimumY,
+                    maximumY,
+                    islandCities.Select(city => ((int)city.X, (int)city.Y)).ToList());
 
                 if (bestCandidate.HasValue)
                     return bestCandidate.Value;
@@ -342,20 +375,6 @@ namespace Application.Services
             }
 
             return sanitizedDescription;
-        }
-
-        private static int HexDistance(int firstX, int firstY, int secondX, int secondY)
-        {
-            int firstCubeX = firstX - (firstY - (firstY & 1)) / 2;
-            int firstCubeZ = firstY;
-            int firstCubeY = -firstCubeX - firstCubeZ;
-            int secondCubeX = secondX - (secondY - (secondY & 1)) / 2;
-            int secondCubeZ = secondY;
-            int secondCubeY = -secondCubeX - secondCubeZ;
-
-            return Math.Max(
-                Math.Abs(firstCubeX - secondCubeX),
-                Math.Max(Math.Abs(firstCubeY - secondCubeY), Math.Abs(firstCubeZ - secondCubeZ)));
         }
 
         private static List<CityExoticResource> CreateInitialExoticResources()

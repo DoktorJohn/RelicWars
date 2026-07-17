@@ -86,6 +86,7 @@ namespace Application.DTOs
         public string BuildingName { get; set; } = string.Empty;
         public int? CurrentLevel { get; set; }
         public bool IsConstructed { get; set; }
+        public int MaximumLevel { get; set; }
 
         // Krav for næste niveau (Level + 1)
         public double WoodCost { get; set; }

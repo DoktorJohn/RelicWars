@@ -13,6 +13,20 @@ namespace Project.Modules.UI.Windows.Implementations
 {
     public partial class BarracksWindowController
     {
+        private readonly List<QueueCountdownDisplay> _queueCountdownDisplays = new();
+        private Coroutine _queueCountdownCoroutine;
+        private int _queueCountdownVersion;
+        private long _previewRecruitmentDurationSeconds = -1;
+        private float _nextRecruitmentEtaUpdateAt;
+
+        private sealed class QueueCountdownDisplay
+        {
+            public Label Label;
+            public VisualElement ProgressFill;
+            public float RemainingSeconds;
+            public float TotalDurationSeconds;
+        }
+
         private void SynchronizeAvailableUnitsTabs(List<BarracksUnitInfoDTO> availableUnits)
         {
             _unitTabsScrollContainer.Clear();
@@ -24,7 +38,8 @@ namespace Project.Modules.UI.Windows.Implementations
             foreach (var unit in availableUnits)
             {
                 Button tabButton = new Button { text = unit.UnitName.ToUpper() };
-                tabButton.AddToClassList("tab-button");
+                tabButton.AddToClassList("window-tab");
+                tabButton.EnableInClassList("unit-tab-locked", !unit.IsUnlocked);
                 tabButton.clicked += () => ApplyUnitSelection(unit);
                 _unitTabsScrollContainer.Add(tabButton);
                 _activeTabButtons.Add(tabButton);
@@ -42,14 +57,14 @@ namespace Project.Modules.UI.Windows.Implementations
 
             foreach (var btn in _activeTabButtons)
             {
-                if (btn.text == unitData.UnitName.ToUpper()) btn.AddToClassList("tab-button-active");
-                else btn.RemoveFromClassList("tab-button-active");
+                if (btn.text == unitData.UnitName.ToUpper()) btn.AddToClassList("window-tab-active");
+                else btn.RemoveFromClassList("window-tab-active");
             }
 
             _labelUnitName.text = unitData.UnitName.ToUpper();
             _labelOwnedCountBadge.text = $"OWNED: {unitData.AlreadyOwnedCount}";
-            _labelUnitFlavorText.text = GetUnitHistoricalFlavorText(unitData.UnitType);
-
+            _labelLockRequirements.text = string.Join("\n", unitData.UnmetRequirements ?? new List<string> { "Recruitment is locked." });
+            _labelLockRequirements.style.display = unitData.IsUnlocked ? DisplayStyle.None : DisplayStyle.Flex;
             _labelStatPowerValue.text = unitData.Power.ToString();
             _labelStatArmorValue.text = unitData.Armor.ToString();
             _labelStatDisciplineValue.text = unitData.Discipline.ToString();
@@ -57,6 +72,7 @@ namespace Project.Modules.UI.Windows.Implementations
             _labelStatReachValue.text = unitData.Reach.ToString();
             _labelStatLootValue.text = unitData.LootCapacity.ToString();
             _labelStatPopulationValue.text = unitData.PopulationCost.ToString();
+            _labelStatUnitCapacityValue.text = unitData.UnitCapacity.ToString();
             _labelStatRecruitmentTimeValue.text = TimeSpan.FromSeconds(unitData.RecruitmentTimeInSeconds).ToString(@"hh\:mm\:ss");
 
             int maxPossible = CalculateMaximumAffordableUnitQuantity(unitData);
@@ -75,54 +91,127 @@ namespace Project.Modules.UI.Windows.Implementations
 
             UpdateCalculatedCostDisplay(startValue);
             UpdateExecuteButtonDynamicText(startValue);
+            if (!unitData.IsUnlocked) _executeRecruitButton.text = "LOCKED";
         }
 
         private void PopulateActiveRecruitmentQueue(List<RecruitmentQueueItemDTO> queueItems)
         {
+            StopQueueCountdown();
             _recruitmentQueueListContainer.Clear();
             int currentQueueCount = queueItems?.Count ?? 0;
             _queueHeaderSummaryLabel.text = $"RECRUITMENT QUEUE ({currentQueueCount}/5)";
 
-            if (currentQueueCount == 0)
+            int activeSlotCount = Mathf.Min(currentQueueCount, 5);
+            for (int index = 0; index < activeSlotCount; index++)
             {
-                Label emptyLabel = new Label("BARRACKS ARE CURRENTLY IDLE");
-                emptyLabel.AddToClassList("queue-empty-label");
-                _recruitmentQueueListContainer.Add(emptyLabel);
-                return;
-            }
+                RecruitmentQueueItemDTO item = queueItems[index];
+                VisualElement queueCard = CreateQueueSlot();
 
-            foreach (var item in queueItems)
-            {
-                VisualElement queueCard = new VisualElement();
-                queueCard.AddToClassList("recruitment-item-card");
-
-                queueCard.Add(new Label(item.UnitType.ToString().ToUpper()) { name = "q-title" });
-                queueCard.Add(new Label($"QTY: {item.Amount}") { name = "q-amount" });
+                Label titleLabel = new Label(item.UnitType.ToString().ToUpper());
+                titleLabel.AddToClassList("queue-slot-title");
+                queueCard.Add(titleLabel);
 
                 Label timerLabel = new Label("--:--:--");
                 timerLabel.AddToClassList("queue-item-timer");
-                queueCard.Add(timerLabel);
+                Label amountLabel = new Label($"AMOUNT {item.Amount}");
+                amountLabel.AddToClassList("queue-slot-amount");
+                VisualElement metaRow = new VisualElement();
+                metaRow.AddToClassList("queue-slot-meta");
+                metaRow.Add(amountLabel);
+                metaRow.Add(timerLabel);
+                queueCard.Add(metaRow);
+
+                VisualElement progressTrack = new VisualElement();
+                progressTrack.AddToClassList("queue-progress-track");
+                VisualElement progressFill = new VisualElement();
+                progressFill.AddToClassList("queue-progress-fill");
+                progressTrack.Add(progressFill);
+                queueCard.Add(progressTrack);
 
                 _recruitmentQueueListContainer.Add(queueCard);
-                StartCoroutine(ExecuteUpdateQueueTimerCountdown(timerLabel, item.TimeRemainingSeconds));
+                _queueCountdownDisplays.Add(new QueueCountdownDisplay
+                {
+                    Label = timerLabel,
+                    ProgressFill = progressFill,
+                    RemainingSeconds = Mathf.Max(0f, (float)item.TimeRemainingSeconds),
+                    TotalDurationSeconds = Mathf.Max(0f, item.TotalDurationSeconds)
+                });
+            }
+
+            if (_queueCountdownDisplays.Count > 0)
+            {
+                int countdownVersion = _queueCountdownVersion;
+                _queueCountdownCoroutine = StartCoroutine(ExecuteQueueCountdown(countdownVersion));
             }
         }
 
-        private IEnumerator ExecuteUpdateQueueTimerCountdown(Label displayLabel, double remainingSeconds)
+        private static VisualElement CreateQueueSlot()
         {
-            float countdownValue = (float)remainingSeconds;
-            while (countdownValue > 0 && displayLabel != null)
+            VisualElement slot = new VisualElement();
+            slot.AddToClassList("recruitment-queue-slot");
+            return slot;
+        }
+
+        private void Update()
+        {
+            if (_previewRecruitmentDurationSeconds < 0 ||
+                _labelRecruitmentEtaValue == null ||
+                Time.unscaledTime < _nextRecruitmentEtaUpdateAt)
             {
-                displayLabel.text = TimeSpan.FromSeconds(countdownValue).ToString(@"hh\:mm\:ss");
-                yield return new WaitForSeconds(1);
-                countdownValue--;
+                return;
             }
 
-            if (displayLabel != null)
+            _nextRecruitmentEtaUpdateAt = Time.unscaledTime + 1f;
+            UpdateRecruitmentEtaDisplay();
+        }
+
+        private IEnumerator ExecuteQueueCountdown(int countdownVersion)
+        {
+            while (isActiveAndEnabled && countdownVersion == _queueCountdownVersion)
             {
-                displayLabel.text = "READY";
-                CityStateManager.Instance?.InitiateResourceRefresh(_currentActiveCityId);
+                bool queueItemIsReady = false;
+                foreach (QueueCountdownDisplay countdown in _queueCountdownDisplays)
+                {
+                    countdown.RemainingSeconds = Mathf.Max(0f, countdown.RemainingSeconds - Time.unscaledDeltaTime);
+                    countdown.Label.text = countdown.RemainingSeconds > 0f
+                        ? TimeSpan.FromSeconds(Math.Ceiling(countdown.RemainingSeconds)).ToString(@"hh\:mm\:ss")
+                        : "READY";
+                    float progress = countdown.RemainingSeconds <= 0f
+                        ? 1f
+                        : countdown.TotalDurationSeconds > 0f
+                            ? Mathf.Clamp01(1f - countdown.RemainingSeconds / countdown.TotalDurationSeconds)
+                            : 0f;
+                    countdown.ProgressFill.style.width = Length.Percent(progress * 100f);
+                    queueItemIsReady |= countdown.RemainingSeconds <= 0f;
+                }
+
+                if (queueItemIsReady)
+                {
+                    _queueCountdownCoroutine = null;
+                    if (CityStateManager.Instance != null && CityStateManager.Instance.IsPollingCity(_currentActiveCityId))
+                    {
+                        CityStateManager.Instance.RequestImmediateRefresh(_currentActiveCityId);
+                    }
+
+                    yield break;
+                }
+
+                yield return null;
             }
+
+            _queueCountdownCoroutine = null;
+        }
+
+        private void StopQueueCountdown()
+        {
+            _queueCountdownVersion++;
+            if (_queueCountdownCoroutine != null)
+            {
+                StopCoroutine(_queueCountdownCoroutine);
+                _queueCountdownCoroutine = null;
+            }
+
+            _queueCountdownDisplays.Clear();
         }
 
         private int CalculateMaximumAffordableUnitQuantity(BarracksUnitInfoDTO unit)
@@ -141,7 +230,34 @@ namespace Project.Modules.UI.Windows.Implementations
         private void UpdateCalculatedCostDisplay(int requestedQuantity)
         {
             if (_currentlySelectedUnitData == null) return;
-            _labelTotalCostString.text = $"Wood: {_currentlySelectedUnitData.CostWood * requestedQuantity} | Stone: {_currentlySelectedUnitData.CostStone * requestedQuantity} | Metal: {_currentlySelectedUnitData.CostMetal * requestedQuantity}";
+            _labelCostWoodValue.text = ((long)_currentlySelectedUnitData.CostWood * requestedQuantity).ToString();
+            _labelCostStoneValue.text = ((long)_currentlySelectedUnitData.CostStone * requestedQuantity).ToString();
+            _labelCostMetalValue.text = ((long)_currentlySelectedUnitData.CostMetal * requestedQuantity).ToString();
+            _labelCostPopulationValue.text = ((long)_currentlySelectedUnitData.PopulationCost * requestedQuantity).ToString();
+
+            _previewRecruitmentDurationSeconds = requestedQuantity > 0
+                ? (long)_currentlySelectedUnitData.RecruitmentTimeInSeconds * requestedQuantity
+                : -1;
+            _labelTotalRecruitmentTimeValue.text = _previewRecruitmentDurationSeconds >= 0
+                ? FormatRecruitmentDuration(_previewRecruitmentDurationSeconds)
+                : "--";
+            _nextRecruitmentEtaUpdateAt = 0f;
+            UpdateRecruitmentEtaDisplay();
+        }
+
+        private void UpdateRecruitmentEtaDisplay()
+        {
+            _labelRecruitmentEtaValue.text = _previewRecruitmentDurationSeconds >= 0
+                ? DateTime.UtcNow.AddSeconds(_previewRecruitmentDurationSeconds).ToString("dd/MM HH:mm:ss 'UTC'")
+                : "--";
+        }
+
+        private static string FormatRecruitmentDuration(long totalSeconds)
+        {
+            TimeSpan duration = TimeSpan.FromSeconds(Math.Max(0L, totalSeconds));
+            return duration.TotalDays >= 1d
+                ? $"{(int)duration.TotalDays}d {duration.Hours:00}:{duration.Minutes:00}:{duration.Seconds:00}"
+                : duration.ToString(@"hh\:mm\:ss");
         }
 
         private void UpdateExecuteButtonDynamicText(int amount)
@@ -152,7 +268,7 @@ namespace Project.Modules.UI.Windows.Implementations
 
         private void OnRecruitExecutionRequested()
         {
-            if (_currentlySelectedUnitData == null)
+            if (_currentlySelectedUnitData == null || !_currentlySelectedUnitData.IsUnlocked)
                 return;
 
             _executeRecruitButton.SetEnabled(false);
@@ -169,7 +285,7 @@ namespace Project.Modules.UI.Windows.Implementations
 
                     if (recruitmentResult.Success)
                     {
-                        CityStateManager.Instance?.InitiateResourceRefresh(_currentActiveCityId);
+                        CityStateManager.Instance?.RequestImmediateRefresh(_currentActiveCityId);
                     }
                     else
                     {
@@ -178,6 +294,5 @@ namespace Project.Modules.UI.Windows.Implementations
                 }));
         }
 
-        private string GetUnitHistoricalFlavorText(UnitTypeEnum type) => "Imperial forces specialized for regional conquest.";
     }
 }

@@ -13,7 +13,7 @@ namespace Application.Interfaces.IServices
         Task<OwnedUnitDeploymentDTO> SupportCityDeploymentAsync(SupportCityDeploymentRequestDTO dto);
         Task<OwnedUnitDeploymentDTO> RecallAsync(Guid deploymentId);
         Task<DeploymentTravelEstimateDTO> EstimateTravelAsync(DeploymentTravelEstimateRequestDTO dto) =>
-            Task.FromResult(new DeploymentTravelEstimateDTO(0, DateTime.UtcNow));
+            Task.FromResult(new DeploymentTravelEstimateDTO(0, DateTime.UtcNow, false, 0, 0, 0, true));
         Task<List<OwnedUnitDeploymentDTO>> GetDeploymentsAsync(Guid worldPlayerId);
         Task<List<IncomingAttackDTO>> GetIncomingAttacksAsync(Guid worldPlayerId) =>
             Task.FromResult(new List<IncomingAttackDTO>());

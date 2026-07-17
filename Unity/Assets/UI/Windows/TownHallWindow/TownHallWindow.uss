@@ -7,14 +7,20 @@
 }
 
 .building-grid-view .unity-scroll-view__content-container {
-    flex-direction: row; 
-    flex-wrap: wrap;     
-    justify-content: center;
-    align-items: flex-start;
+    flex-direction: column;
+    align-items: center;
     padding-left: 0;
     padding-right: 0;
-    padding-bottom: 25px; 
+    padding-bottom: 5px;
     min-width: 100%;
+}
+
+.building-secondary-grid {
+    width: 100%;
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: center;
+    align-items: flex-start;
 }
 
 /* HIDE SCROLLBARS */
@@ -40,6 +46,15 @@
     border-color: rgba(181, 145, 70, 0.55);
     background-color: rgba(165, 125, 50, 0.16);
     scale: 1.02;
+}
+
+.building-card-townhall {
+    width: 290px;
+    flex-shrink: 0;
+}
+
+.building-secondary-grid .building-card {
+    width: 215px;
 }
 
 /* FIX: Fjernet border-bottom-width som skabte "ghost line" buggen */
@@ -177,9 +192,6 @@
     position: absolute;
     width: 260px;
     background-color: rgba(10, 10, 10, 0.99); 
-    border-width: 2px;
-    border-color: var(--c-border);
-    border-radius: 8px;
     padding: 15px;
     display: none; 
     z-index: 999;

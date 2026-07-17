@@ -16,6 +16,7 @@ namespace Project.Modules.UI
         // State tracking
         private Dictionary<WindowTypeEnum, BaseWindow> _openWindows = new Dictionary<WindowTypeEnum, BaseWindow>();
         private int _currentSortOrder = 100; // Start z-index
+        private WindowTypeEnum _activeWindowType = WindowTypeEnum.None;
 
         private void Awake()
         {
@@ -23,6 +24,7 @@ namespace Project.Modules.UI
             {
                 Instance = this;
                 DontDestroyOnLoad(gameObject); // THIS IS KEY: It survives scene changes
+                ResponsiveUiStateManager.LayoutChanged += HandleLayoutChanged;
             }
             else
             {
@@ -38,6 +40,7 @@ namespace Project.Modules.UI
             // 1. Check if already open
             if (_openWindows.ContainsKey(type))
             {
+                EnforcePhoneWindowPolicy(type);
                 var existingWindow = _openWindows[type];
                 existingWindow.Focus();
                 existingWindow.OnOpen(payload); // Re-inject data if needed
@@ -52,6 +55,8 @@ namespace Project.Modules.UI
                 return;
             }
 
+            EnforcePhoneWindowPolicy(type);
+
             // 3. Instantiate as Child of Manager (so it is also DontDestroyOnLoad)
             GameObject windowInstance = Instantiate(config.Prefab, transform);
             windowInstance.name = $"Window_{type}";
@@ -63,6 +68,7 @@ namespace Project.Modules.UI
                 controller.Initialize(this, type);
                 controller.OnOpen(payload); // Inject Data
                 _openWindows.Add(type, controller);
+                _activeWindowType = type;
             }
             else
             {
@@ -76,6 +82,20 @@ namespace Project.Modules.UI
             {
                 _openWindows.Remove(type);
             }
+
+            if (_activeWindowType == type)
+            {
+                _activeWindowType = WindowTypeEnum.None;
+            }
+        }
+
+        private void OnDestroy()
+        {
+            if (Instance == this)
+            {
+                ResponsiveUiStateManager.LayoutChanged -= HandleLayoutChanged;
+                Instance = null;
+            }
         }
 
         public void CloseAllWindows()
@@ -84,22 +104,66 @@ namespace Project.Modules.UI
             {
                 if (window != null)
                 {
+                    window.ReleaseResponsiveLayout();
                     Destroy(window.gameObject);
                 }
             }
 
             _openWindows.Clear();
+            _activeWindowType = WindowTypeEnum.None;
         }
 
         public void NotifyWindowFocused(BaseWindow window)
         {
-            // Logic if you need to track the "Active" window
+            if (window != null)
+            {
+                _activeWindowType = window.Type;
+            }
         }
 
         public int GetNextSortingOrder()
         {
             _currentSortOrder += 10;
             return _currentSortOrder;
+        }
+
+        private void HandleLayoutChanged(FrontendLayoutSnapshot snapshot)
+        {
+            if (snapshot.Mode == FrontendLayoutMode.Phone)
+            {
+                EnforcePhoneWindowPolicy(_activeWindowType);
+            }
+        }
+
+        private void EnforcePhoneWindowPolicy(WindowTypeEnum windowTypeToKeep)
+        {
+            if (!ResponsiveUiStateManager.IsPhoneLayout || _openWindows.Count <= 1)
+            {
+                return;
+            }
+
+            if (windowTypeToKeep == WindowTypeEnum.None || !_openWindows.ContainsKey(windowTypeToKeep))
+            {
+                windowTypeToKeep = _openWindows.Keys.First();
+            }
+
+            foreach (var openWindow in _openWindows.ToList())
+            {
+                if (openWindow.Key == windowTypeToKeep)
+                {
+                    continue;
+                }
+
+                if (openWindow.Value != null)
+                {
+                    openWindow.Value.ReleaseResponsiveLayout();
+                    Destroy(openWindow.Value.gameObject);
+                }
+
+                _openWindows.Remove(openWindow.Key);
+            }
+
+            _activeWindowType = windowTypeToKeep;
         }
     }
 

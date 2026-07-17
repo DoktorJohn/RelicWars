@@ -40,7 +40,7 @@ namespace Project.Scripts.Network
             }
         }
 
-        public IEnumerator GetActiveDeployments(Guid worldPlayerId, string jwtToken, Action<List<UnitDeploymentDTO>> callback)
+        public IEnumerator GetActiveDeployments(Guid worldPlayerId, string jwtToken, Action<List<UnitDeploymentDTO>> callback, Action<string> errorCallback = null)
         {
             string url = $"{_baseUrl}/worldPlayers/{worldPlayerId}/deployments";
 
@@ -50,7 +50,11 @@ namespace Project.Scripts.Network
                     webRequest,
                     callback,
                     "Deployment",
-                    _ => new List<UnitDeploymentDTO>());
+                    request =>
+                    {
+                        errorCallback?.Invoke(BackendRequestHelper.GetErrorMessage(request));
+                        return errorCallback == null ? new List<UnitDeploymentDTO>() : null;
+                    });
             }
         }
 

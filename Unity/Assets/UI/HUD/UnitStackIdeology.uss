@@ -2,123 +2,91 @@
 
 .right-side-bar-main-container {
     position: absolute;
-    bottom: 20px;
-    left: 50%;
-    translate: -50% 0;
-    width: auto;
-    height: 160px;
-    flex-direction: row;
-    justify-content: center;
-    align-items: flex-end;
-    
-    /* VIGTIGT: Tillader at kortene skaleres ud over containerens top */
-    overflow: visible; 
+    top: 516px;
+    bottom: 0;
+    left: 0;
+    width: 184px;
+    min-height: 100px;
+    padding: 0 10px 12px 10px;
+    background-color: rgba(0, 0, 0, 0);
+    border-width: 0;
+    border-radius: 0;
+    overflow: hidden;
 }
 
-/* BASE CARD STYLING */
-.hud-card {
-    --c-hud-bg-dark: rgba(28, 24, 22, 0.98);
-    --c-hud-border-gold: rgb(165, 125, 50);
-    --c-hud-text-light: rgb(235, 230, 220);
-
-    width: 110px;
-    height: 135px;
-    margin: 0 6px;
-    padding: 8px;
-    
-    background-color: var(--c-hud-bg-dark);
-    background-image: url('project://database/Assets/UI/TopBarHUD.jpg');
-    -unity-background-scale-mode: scale-and-crop;
-    -unity-background-image-tint-color: rgba(100, 100, 100, 0.4);
-
-    border-width: 2px;
-    border-color: var(--c-hud-border-gold);
-    border-radius: 12px;
-
-    align-items: center;
-    justify-content: center;
-    
-    /* FIX: Ændret fra hidden til visible så borders ikke klippes ved hover */
-    overflow: visible; 
-    
-    transition-property: scale, border-color, background-color;
-    transition-duration: 0.15s;
-}
-
-.hud-card:hover {
-    scale: 1.1;
-    border-color: rgb(255, 215, 100);
-}
-
-/* IKON STYLING */
-.hud-card-icon {
-    width: 65px;
-    height: 65px;
+.city-command-city-divider {
+    width: 100%;
+    height: 2px;
+    margin-bottom: 12px;
     flex-shrink: 0;
-    -unity-background-scale-mode: scale-to-fit;
-    margin-top: auto;
-    margin-bottom: auto;
+    background-color: rgb(178, 139, 68);
 }
 
-.icon-ideology { background-image: url('project://database/Assets/UI/Icons/ideology.png'); }
-.icon-unit-default { background-image: url('project://database/Assets/UI/Icons/Unit.png'); }
-
-/* TEKST STYLING */
-.hud-card-label {
-    color: var(--c-hud-text-light);
-    font-size: 10px;
+.city-command-eyebrow,
+.city-command-section-title {
+    color: rgb(178, 139, 68);
+    -unity-font-definition: var(--font-header);
     -unity-font-style: bold;
+    font-size: 9px;
+    letter-spacing: 0.8px;
+}
+
+.city-command-eyebrow {
+    width: 100%;
+    margin-bottom: 7px;
+    font-size: 12px;
     -unity-text-align: middle-center;
-    text-transform: uppercase;
-    white-space: nowrap;
-    margin-top: 4px;
 }
+.city-command-section-title { margin-bottom: 5px; color: rgb(191, 181, 160); }
 
-/* QUANTITY BADGE */
-.hud-card-quantity-badge {
-    background-color: rgba(0, 0, 0, 0.9);
-    border-width: 1px;
-    border-color: var(--c-hud-border-gold);
-    border-radius: 4px;
-    padding: 1px 5px;
-    position: absolute;
-    top: 5px;
-    right: 5px;
-}
-
-.hud-card-quantity-text {
-    color: var(--c-hud-border-gold);
-    font-size: 10px;
-    -unity-font-style: bold;
-}
-
-/* ============================================================
-    SCROLLVIEW & CLIPPING FIX
-   ============================================================ */
-.troop-list-scrollview {
+.city-command-button {
+    width: 100%;
+    height: 38px;
+    padding-right: 8px;
+    padding-left: 9px;
+    flex-shrink: 0;
     flex-direction: row;
-    flex-grow: 0;
-    /* Sørger for at ScrollView-rammen ikke klipper kortene */
-    overflow: visible; 
+    align-items: center;
+    background-color: rgba(12, 14, 15, 0.18);
+    border-left-width: 2px;
+    border-left-color: rgba(205, 166, 88, 0.28);
+    border-bottom-width: 1px;
+    border-bottom-color: rgba(8, 8, 8, 0.58);
+    border-radius: 2px;
+    cursor: link;
+    transition-property: translate;
+    transition-duration: 0.12s;
 }
 
-/* Tvinger ScrollViewets interne viewports til at vise opskaleret indhold */
-.troop-list-scrollview #unity-content-viewport,
-.troop-list-scrollview #unity-content-container {
+.city-command-button:hover { translate: 3px 0; background-color: rgba(132, 96, 42, 0.3); border-left-color: rgb(205, 166, 88); }
+.city-command-button:active { translate: 1px 0; background-color: rgba(91, 34, 28, 0.45); }
+.city-command-button-icon { width: 23px; height: 23px; margin-right: 9px; -unity-background-scale-mode: scale-to-fit; }
+.city-command-button-label { color: rgb(226, 219, 204); -unity-font-definition: var(--font-body); -unity-font-style: bold; font-size: 11px; letter-spacing: 0.7px; }
+.icon-ideology { background-image: url('project://database/Assets/UI/Icons/ideology.png'); }
+
+.city-command-separator { height: 1px; margin-top: 11px; margin-bottom: 9px; flex-shrink: 0; background-color: rgba(205, 166, 88, 0.38); }
+.city-unit-list { flex-grow: 1; min-height: 42px; }
+.city-unit-list #unity-content-viewport,
+.city-unit-list #unity-content-container { width: 100%; }
+.city-unit-list Scroller { display: none; }
+
+.city-unit-row {
+    width: 100%;
+    min-height: 30px;
+    margin-bottom: 3px;
+    padding-right: 7px;
+    padding-left: 7px;
     flex-direction: row;
-    justify-content: center;
-    align-items: flex-end;
-    overflow: visible; 
+    align-items: center;
+    background-color: rgba(12, 14, 15, 0.2);
+    border-left-width: 2px;
+    border-left-color: rgba(205, 166, 88, 0.28);
+    border-bottom-width: 1px;
+    border-bottom-color: rgba(8, 8, 8, 0.5);
 }
 
-/* DEAKTIVERING AF SCROLLBARS (Forbliver skjult) */
-.troop-list-scrollview Scroller {
-    display: none;
-    opacity: 0;
-}
-
-.troop-list-scrollview #unity-low-button, 
-.troop-list-scrollview #unity-high-button, 
-.troop-list-scrollview #unity-slider {
-    display: none;
-}
+.city-unit-row:hover { background-color: rgba(132, 96, 42, 0.16); border-left-color: rgb(205, 166, 88); }
+.city-unit-row-marker { display: none; }
+.city-unit-row-name { min-width: 0; flex-grow: 1; color: rgb(215, 208, 195); -unity-font-definition: var(--font-body); font-size: 10px; overflow: hidden; white-space: nowrap; }
+.city-unit-row-quantity { margin-left: 5px; color: var(--c-value-total-on-dark); -unity-font-definition: var(--font-body); -unity-font-style: bold; font-size: 11px; -unity-text-align: middle-right; }
+.city-unit-list-empty { padding-top: 9px; color: rgb(145, 140, 132); -unity-font-definition: var(--font-body); -unity-font-style: italic; font-size: 10px; -unity-text-align: upper-center; }

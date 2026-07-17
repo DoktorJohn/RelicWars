@@ -205,34 +205,9 @@ namespace Project.Modules.UI
                 item.AddToClassList("battle-report-item--unread");
             }
 
-            var topRow = new VisualElement();
-            topRow.AddToClassList("battle-report-item__top-row");
-
-            var titleLabel = new Label(report.Title);
+            var titleLabel = new Label($"{report.Title} - {FormatReportListTimestamp(report.OccurredAt)}");
             titleLabel.AddToClassList("battle-report-item__title");
-            topRow.Add(titleLabel);
-
-            var typeBadge = new Label(GetReportTypeDisplayName(report.ReportType));
-            typeBadge.AddToClassList("battle-report-item__type-badge");
-            typeBadge.AddToClassList(GetReportTypeClass(report.ReportType));
-            topRow.Add(typeBadge);
-
-            if (!report.IsRead)
-            {
-                var unreadBadge = new Label("NEW");
-                unreadBadge.AddToClassList("battle-report-item__badge");
-                topRow.Add(unreadBadge);
-            }
-
-            item.Add(topRow);
-
-            var bodyPreview = new Label(Truncate(report.Body, 120));
-            bodyPreview.AddToClassList("battle-report-item__body");
-            item.Add(bodyPreview);
-
-            var timestamp = new Label(FormatServerTimestamp(report.OccurredAt));
-            timestamp.AddToClassList("battle-report-item__timestamp");
-            item.Add(timestamp);
+            item.Add(titleLabel);
 
             item.RegisterCallback<ClickEvent>(_ => SelectReport(report.Id));
             return item;
@@ -464,16 +439,6 @@ namespace Project.Modules.UI
             };
         }
 
-        private static string GetReportTypeClass(ReportTypeEnum reportType)
-        {
-            return reportType switch
-            {
-                ReportTypeEnum.BuildingCompleted => "battle-report-item__type-badge--building",
-                ReportTypeEnum.RecruitmentCompleted => "battle-report-item__type-badge--recruitment",
-                _ => "battle-report-item__type-badge--battle"
-            };
-        }
-
         private static string FormatStacks(List<UnitStackDTO> stacks)
         {
             if (stacks == null || stacks.Count == 0)
@@ -495,22 +460,6 @@ namespace Project.Modules.UI
             return string.IsNullOrWhiteSpace(joined) ? "None" : joined;
         }
 
-        private static string Truncate(string value, int maxLength)
-        {
-            if (string.IsNullOrWhiteSpace(value))
-            {
-                return string.Empty;
-            }
-
-            var trimmed = value.Trim();
-            if (trimmed.Length <= maxLength)
-            {
-                return trimmed;
-            }
-
-            return trimmed.Substring(0, Math.Max(0, maxLength - 3)).TrimEnd() + "...";
-        }
-
         private static string FormatServerTimestamp(DateTime timestamp, bool includeDayName = false)
         {
             var utcTimestamp = timestamp.Kind == DateTimeKind.Unspecified
@@ -519,6 +468,15 @@ namespace Project.Modules.UI
 
             var format = includeDayName ? "dddd, MMMM d yyyy HH:mm 'UTC'" : "MMM d, yyyy HH:mm 'UTC'";
             return utcTimestamp.ToString(format);
+        }
+
+        private static string FormatReportListTimestamp(DateTime timestamp)
+        {
+            var utcTimestamp = timestamp.Kind == DateTimeKind.Unspecified
+                ? DateTime.SpecifyKind(timestamp, DateTimeKind.Utc)
+                : timestamp.ToUniversalTime();
+
+            return utcTimestamp.ToString("MMM d, HH:mm 'UTC'");
         }
     }
 }

@@ -22,11 +22,13 @@ namespace Domain.StaticData.Data
         public int Mobility { get; set; }
         public int LootCapacity { get; set; }
         public bool IsElite { get; set; }
+        public bool IsDefaultUnlocked { get; set; }
 
         public int WoodCost { get; set; }
         public int StoneCost { get; set; }
         public int MetalCost { get; set; }
         public int PopulationCost { get; set; }
+        public int UnitCapacity { get; set; }
 
         public int RecruitmentTimeInSeconds { get; set; }
         public List<UnitRequirement> Prerequisites { get; set; } = new();

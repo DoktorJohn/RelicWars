@@ -72,10 +72,38 @@ namespace Application.Services
         {
             var city = await _playerAccessService.RequireOwnedCityAsync(cityId);
 
-            var activeJobs = await _jobRepo.GetBuildingJobsAsync(cityId);
-            var buildingJobs = activeJobs.OfType<BuildingJob>().ToList();
+            return await QueueUpgradeForCityAsync(city, type);
+        }
 
-            if (buildingJobs.Count >= 5)
+        public async Task<BuildingResult> QueueNPCUpgradeAsync(Guid cityId, BuildingTypeEnum type)
+        {
+            var city = await _cityRepo.GetByIdAsync(cityId);
+            if (city == null || !city.IsNPC || city.WorldPlayerId != null)
+                return new BuildingResult(false, "NPC-byen blev ikke fundet.");
+
+            return await QueueUpgradeForCityAsync(city, type);
+        }
+
+        public Task<BuildingResult> QueueNPCUpgradeAsync(City city, BuildingTypeEnum type)
+        {
+            if (!city.IsNPC || city.WorldPlayerId != null)
+                return Task.FromResult(new BuildingResult(false, "NPC-byen blev ikke fundet."));
+
+            return QueueUpgradeForCityAsync(city, type, Array.Empty<BuildingJob>());
+        }
+
+        private async Task<BuildingResult> QueueUpgradeForCityAsync(
+            City city,
+            BuildingTypeEnum type,
+            IReadOnlyCollection<BuildingJob>? knownBuildingJobs = null)
+        {
+            Guid cityId = city.Id;
+
+            var buildingJobs = knownBuildingJobs?.ToList()
+                ?? await _jobRepo.GetBuildingJobsAsync(cityId);
+
+            int maximumQueueSize = city.IsNPC ? 1 : 5;
+            if (buildingJobs.Count >= maximumQueueSize)
                 return new BuildingResult(false, "Byggekøen er fuld.");
 
             var currentBuilding = city.Buildings.FirstOrDefault(b => b.Type == type);
@@ -84,7 +112,8 @@ namespace Application.Services
                 ? queuedLevels + 1
                 : currentBuilding.Level + queuedLevels + 1;
 
-            if (nextLevel > 30) return new BuildingResult(false, "Maksimum niveau nået.");
+            int maximumLevel = _buildingDataReader.GetMaximumLevel(type);
+            if (nextLevel > maximumLevel) return new BuildingResult(false, "Maksimum niveau nået.");
 
             var config = _buildingDataReader.GetConfig<BuildingLevelData>(type, nextLevel);
 
@@ -113,7 +142,8 @@ namespace Application.Services
             }
 
             // --- RESOURCE CALCULATION ---
-            var snapshot = _resService.CalculateCityResources(city, DateTime.UtcNow);
+            DateTime currentDateTime = DateTime.UtcNow;
+            var snapshot = _resService.CalculateCityResources(city, currentDateTime);
 
             if (snapshot.Wood < buildingWoodCost.FinalValue ||
                 snapshot.Stone < buildingStoneCost.FinalValue ||
@@ -123,18 +153,18 @@ namespace Application.Services
             }
 
             // --- EXECUTION ---
-            DateTime startTime = buildingJobs.Any() ? buildingJobs.Last().ExecutionTime : DateTime.UtcNow;
+            DateTime startTime = buildingJobs.Any() ? buildingJobs.Last().ExecutionTime : currentDateTime;
 
             // Opdater byens ressourcer baseret på den modificerede pris
             city.Wood = snapshot.Wood - buildingWoodCost.FinalValue;
             city.Stone = snapshot.Stone - buildingStoneCost.FinalValue;
             city.Metal = snapshot.Metal - buildingMetalCost.FinalValue;
 
-            city.LastResourceUpdate = DateTime.UtcNow;
+            city.LastResourceUpdate = currentDateTime;
 
             var buildingJob = new BuildingJob
             {
-                WorldPlayerId = city.WorldPlayerId.Value,
+                WorldPlayerId = city.WorldPlayerId ?? Guid.Empty,
                 CityId = cityId,
                 BuildingType = type,
                 TargetLevel = nextLevel,

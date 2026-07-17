@@ -13,7 +13,8 @@ namespace Application.DTOs
         string CityName,
         int X,
         int Y,
-        int Points
+        int Points,
+        bool IsNPC = false
         );
 
     public record CityInspectionDTO(
@@ -27,7 +28,8 @@ namespace Application.DTOs
         Guid? AllianceId,
         string? AllianceName,
         bool CanAttack,
-        bool CanSupport);
+        bool CanSupport,
+        bool IsNPC = false);
 
 
     public class CityControllerGetDetailedCityInformationDTO
@@ -49,9 +51,13 @@ namespace Application.DTOs
         public double WoodProductionPerHour { get; set; }
         public double StoneProductionPerHour { get; set; }
         public double MetalProductionPerHour { get; set; }
+        public double CoinsProductionPerHour { get; set; }
+        public double ResearchPointsPerHour { get; set; }
+        public double IdeologyFocusPointsPerHour { get; set; }
 
         public int CurrentPopulationUsage { get; set; }
         public int MaxPopulationCapacity { get; set; }
+        public PopulationBreakdownDTO Population { get; set; } = new(0, 0, 0, 0, 0);
         public double Resistance { get; set; }
         public double ResistanceTarget { get; set; }
         public double ResistanceRecoveryPerHour { get; set; }
@@ -138,9 +144,11 @@ namespace Application.DTOs
 );
 
     public record PopulationBreakdownDTO(
-        int MaxCapacity,
-        double ModifierBonus
-    );
+        int HousingCapacity,
+        double ModifierBonus,
+        int TotalCapacity,
+        int InUse,
+        int Remaining);
     public record BarracksQueueOverviewDTO(
         bool IsBusy,
         int TotalUnitsInQueue,

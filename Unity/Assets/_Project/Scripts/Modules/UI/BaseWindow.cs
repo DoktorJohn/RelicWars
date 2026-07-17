@@ -22,9 +22,18 @@ namespace Project.Modules.UI
         private GlobalWindowManager _manager;
         private bool _isReadyToShow;
         private bool _pendingFocus;
-        private int _openSequence;
+        private int _deferredOpenSequenceCounter;
         private VisualElement _windowTooltip;
         private bool _isWindowTooltipPinned;
+        private bool _hasDesktopLayout;
+        private StyleLength _desktopLeft;
+        private StyleLength _desktopRight;
+        private StyleLength _desktopTop;
+        private StyleLength _desktopBottom;
+        private StyleLength _desktopWidth;
+        private StyleLength _desktopHeight;
+        private StyleTranslate _desktopTranslate;
+        private bool _responsiveLayoutReleased;
 
         public void Initialize(GlobalWindowManager manager, WindowTypeEnum type)
         {
@@ -35,6 +44,10 @@ namespace Project.Modules.UI
             Root = MyUiDocument.rootVisualElement;
             MainContainer = Root.Q<VisualElement>(VisualContainerName);
             SetWindowVisibility(false);
+            ResponsiveUiStateManager.RegisterRoot(Root);
+            CacheDesktopLayout();
+            ApplyLayout(ResponsiveUiStateManager.CurrentSnapshot);
+            ResponsiveUiStateManager.LayoutChanged += ApplyLayout;
 
             // 1. Setup Dragging
             var header = Root.Q<VisualElement>(HeaderName);
@@ -47,7 +60,9 @@ namespace Project.Modules.UI
             SetupWindowTooltip(header);
 
             // 2. Setup Close Button (Standardized naming recommended)
-            var closeBtn = Root.Q<Button>($"{WindowName}-Close-Button");
+            var closeBtn = Root.Q<Button>($"{WindowName}-Close-Button")
+                ?? Root.Q<Button>("Header-Close-Button")
+                ?? Root.Q<Button>(className: "window-close-btn");
             if (closeBtn != null) closeBtn.clicked += Close;
 
             // Capture pointer interaction before child controls can stop propagation.
@@ -93,6 +108,8 @@ namespace Project.Modules.UI
 
             _windowTooltip = new VisualElement { pickingMode = PickingMode.Ignore };
             _windowTooltip.name = $"{WindowName}-Info-Tooltip";
+            _windowTooltip.AddToClassList("window-frame");
+            _windowTooltip.AddToClassList("floating-window-frame");
             _windowTooltip.AddToClassList("window-info-tooltip");
             _windowTooltip.style.display = DisplayStyle.None;
 
@@ -142,15 +159,15 @@ namespace Project.Modules.UI
 
         protected int BeginDeferredOpen()
         {
-            _openSequence++;
+            _deferredOpenSequenceCounter++;
             _isReadyToShow = false;
             SetWindowVisibility(false);
-            return _openSequence;
+            return _deferredOpenSequenceCounter;
         }
 
         protected bool IsDeferredOpenCurrent(int sequence)
         {
-            return sequence == _openSequence;
+            return sequence == _deferredOpenSequenceCounter;
         }
 
         protected void CompleteDeferredOpen(int sequence, bool bringToFront = true)
@@ -171,7 +188,7 @@ namespace Project.Modules.UI
 
         protected void InvalidateDeferredOpen()
         {
-            _openSequence++;
+            _deferredOpenSequenceCounter++;
             _pendingFocus = false;
             _isReadyToShow = false;
             SetWindowVisibility(false);
@@ -180,6 +197,7 @@ namespace Project.Modules.UI
         public void Close()
         {
             _manager.CloseWindow(Type);
+            ReleaseResponsiveLayout();
             Destroy(gameObject); // We destroy the GameObject to clean up
         }
 
@@ -206,6 +224,69 @@ namespace Project.Modules.UI
             }
 
             Root.style.visibility = isVisible ? Visibility.Visible : Visibility.Hidden;
+        }
+
+        private void OnDestroy()
+        {
+            ReleaseResponsiveLayout();
+        }
+
+        internal void ReleaseResponsiveLayout()
+        {
+            if (_responsiveLayoutReleased)
+            {
+                return;
+            }
+
+            _responsiveLayoutReleased = true;
+            ResponsiveUiStateManager.LayoutChanged -= ApplyLayout;
+            ResponsiveUiStateManager.UnregisterRoot(Root);
+        }
+
+        private void CacheDesktopLayout()
+        {
+            if (MainContainer == null || _hasDesktopLayout)
+            {
+                return;
+            }
+
+            _desktopLeft = MainContainer.style.left;
+            _desktopRight = MainContainer.style.right;
+            _desktopTop = MainContainer.style.top;
+            _desktopBottom = MainContainer.style.bottom;
+            _desktopWidth = MainContainer.style.width;
+            _desktopHeight = MainContainer.style.height;
+            _desktopTranslate = MainContainer.style.translate;
+            _hasDesktopLayout = true;
+        }
+
+        private void ApplyLayout(FrontendLayoutSnapshot snapshot)
+        {
+            if (MainContainer == null || !_hasDesktopLayout)
+            {
+                return;
+            }
+
+            if (snapshot.Mode != FrontendLayoutMode.Phone)
+            {
+                MainContainer.style.left = _desktopLeft;
+                MainContainer.style.right = _desktopRight;
+                MainContainer.style.top = _desktopTop;
+                MainContainer.style.bottom = _desktopBottom;
+                MainContainer.style.width = _desktopWidth;
+                MainContainer.style.height = _desktopHeight;
+                MainContainer.style.translate = _desktopTranslate;
+                return;
+            }
+
+            Vector4 safeAreaInsets = ResponsiveUiStateManager.GetSafeAreaInsets();
+            MainContainer.style.left = safeAreaInsets.x;
+            MainContainer.style.right = safeAreaInsets.z;
+            MainContainer.style.top = safeAreaInsets.y;
+            MainContainer.style.bottom = safeAreaInsets.w;
+            MainContainer.style.width = StyleKeyword.Auto;
+            MainContainer.style.height = StyleKeyword.Auto;
+            MainContainer.style.translate = StyleKeyword.None;
         }
     }
 

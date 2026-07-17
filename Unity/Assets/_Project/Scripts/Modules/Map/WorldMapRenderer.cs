@@ -131,7 +131,10 @@ namespace Project.Scripts.Modules.Map
             int totalTiles = data.Width * data.Height;
             Vector3Int[] positions = new Vector3Int[totalTiles];
             TileBase[] tiles = new TileBase[totalTiles];
-            HashSet<Vector2Int> cityPositions = new HashSet<Vector2Int>(data.Cities.Select(c => new Vector2Int(c.X, c.Y)));
+            Dictionary<Vector2Int, CityDTO> citiesByPosition = data.Cities
+                .ToDictionary(city => new Vector2Int(city.X, city.Y));
+            HashSet<Vector2Int> futureCitySites = new HashSet<Vector2Int>(
+                data.FutureCitySites.Select(site => new Vector2Int(site.X, site.Y)));
 
             int index = 0;
             for (short x = (short)data.ChunkX; x < data.ChunkX + data.Width; x++)
@@ -139,8 +142,15 @@ namespace Project.Scripts.Modules.Map
                 for (short y = (short)data.ChunkY; y < data.ChunkY + data.Height; y++)
                 {
                     positions[index] = new Vector3Int(x, y, 0);
-                    if (cityPositions.Contains(new Vector2Int(x, y))) tiles[index] = VisualConfig.CityTile;
-                    else tiles[index] = VisualConfig.GetTile(WorldGenerationService.CalculateWorldMapBiomeVariant(x, y, data.WorldSeed));
+                    var position = new Vector2Int(x, y);
+                    if (citiesByPosition.TryGetValue(position, out CityDTO city))
+                        tiles[index] = city.IsNPC
+                            ? VisualConfig.NPCVillageTile
+                            : VisualConfig.GetCityTile(city.Points, data.MaximumCityPoints);
+                    else if (futureCitySites.Contains(position))
+                        tiles[index] = VisualConfig.FutureCitySiteTile;
+                    else
+                        tiles[index] = VisualConfig.GetTile(WorldGenerationService.CalculateWorldMapBiomeVariant(x, y, data.WorldSeed));
                     index++;
                 }
             }

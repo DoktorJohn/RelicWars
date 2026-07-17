@@ -236,7 +236,7 @@ namespace Project.Scripts.Modules.UI
                 {
                     if (success && CityStateManager.Instance != null)
                     {
-                        CityStateManager.Instance.InitiateResourceRefresh(cityId);
+                        CityStateManager.Instance.RequestImmediateRefresh(cityId);
                     }
 
                     return;
@@ -249,7 +249,7 @@ namespace Project.Scripts.Modules.UI
 #endif
                     if (CityStateManager.Instance != null)
                     {
-                        CityStateManager.Instance.InitiateResourceRefresh(cityId);
+                        CityStateManager.Instance.RequestImmediateRefresh(cityId);
                     }
 
                     RequestTownHallAvailableBuildingsRefresh(cityId, _requestVersion, showLoadingState: false);

@@ -24,7 +24,12 @@ namespace Application.DTOs
 
     public record DeploymentTravelEstimateDTO(
         long DurationSeconds,
-        DateTime ArrivalTime);
+        DateTime ArrivalTime,
+        bool RequiresTransport,
+        int RequiredTransportCapacity,
+        int AvailableTransportCapacity,
+        int TransportCapacityMargin,
+        bool HasSufficientTransportCapacity);
 
     public record MoveUnitRequestDTO(
         Guid UnitDeploymentId,
@@ -55,6 +60,18 @@ namespace Application.DTOs
         int TargetY,
         DateTime ArrivalTime);
 
+    public record DeploymentLocationDTO(
+        Guid CityId,
+        string CityName,
+        int X,
+        int Y,
+        bool IsNPC,
+        Guid? WorldPlayerId,
+        string? WorldPlayerName,
+        Guid? AllianceId,
+        string? AllianceName,
+        string? AllianceTag);
+
     public record OwnedUnitDeploymentDTO(
         Guid Id,
         string Name,
@@ -75,7 +92,29 @@ namespace Application.DTOs
         int Mobility,
         UnitDeploymentTypeEnum Type,
         List<UnitStackDTO> UnitStacks,
-        string WorldPlayerUserName
+        string WorldPlayerUserName,
+        DeploymentLocationDTO OriginLocation,
+        DeploymentLocationDTO? TargetLocation
     );
+
+    public record CombatSimulationRequestDTO(
+        Guid OriginCityId,
+        Guid TargetCityId,
+        List<UnitSelectionDTO> AttackerUnits,
+        List<UnitSelectionDTO> DefenderUnits);
+
+    public record CombatSimulationResultDTO(
+        List<UnitStackDTO> RemainingAttackers,
+        List<UnitStackDTO> RemainingDefenders,
+        List<UnitStackDTO> AttackerLosses,
+        List<UnitStackDTO> DefenderLosses,
+        List<UnitStackDTO> RevivedDefenders,
+        double LuckModifier,
+        List<string> AppliedModifiers,
+        bool RequiresTransport,
+        int RequiredTransportCapacity,
+        int AvailableTransportCapacity,
+        int TransportCapacityMargin,
+        bool HasSufficientTransportCapacity);
 
 }

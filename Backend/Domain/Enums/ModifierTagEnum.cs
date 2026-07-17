@@ -13,7 +13,7 @@ namespace Domain.Enums
         RecruitmentSpeed, Construction, ConstructionCost, Research, Population, 
         WarehouseCapacity, Market,
 
-        InfantryCost, CavalryCost, SiegeCost, InfantryStats, CavalryStats, SiegeStats, InfantryUpkeep, CavalryUpkeep, SiegeUpkeep, SiegeRecruitmentSpeed, InfantryRecruitmentSpeed, CavalryRecruitmentSpeed,
+        InfantryCost, CavalryCost, SiegeCost, NavalCost, InfantryStats, CavalryStats, SiegeStats, NavalStats, InfantryUpkeep, CavalryUpkeep, SiegeUpkeep, NavalUpkeep, SiegeRecruitmentSpeed, InfantryRecruitmentSpeed, CavalryRecruitmentSpeed, NavalRecruitmentSpeed,
         Upkeep, BuildingUpkeep, UnitUpkeep, TravelSpeed, Power, Armor, Discipline, Casualties, Wall, LootCapacity,
         Ideology, IdeologyFocus,
 

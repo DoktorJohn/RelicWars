@@ -66,10 +66,11 @@ namespace Application.Services.Buildings
 
             var buildingProjectionList = new List<ResourceBuildingInfoDTO>();
             int levelsToProject = 5;
+            int maximumLevel = _buildingDataReader.GetMaximumLevel(resourceBuildingType);
 
             for (int i = 0; i < levelsToProject; i++)
             {
-                if (currentBuildingLevel + i > 19) break;
+                if (currentBuildingLevel + i > maximumLevel) break;
 
                 int levelToCheck = currentBuildingLevel + i;
                 double baseProduction = 0;

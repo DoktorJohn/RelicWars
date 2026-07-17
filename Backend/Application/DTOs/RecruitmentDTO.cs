@@ -35,8 +35,10 @@ namespace Application.DTOs
         public int Reach { get; set; }
         public int LootCapacity { get; set; }
         public int PopulationCost { get; set; }
+        public int UnitCapacity { get; set; }
         public int RecruitmentTimeInSeconds { get; set; }
         public bool IsUnlocked { get; set; }
+        public List<string> UnmetRequirements { get; set; } = new();
     }
 
     public class StableFullViewDTO
@@ -61,8 +63,10 @@ namespace Application.DTOs
         public int Reach { get; set; }
         public int LootCapacity { get; set; }
         public int PopulationCost { get; set; }
+        public int UnitCapacity { get; set; }
         public int RecruitmentTimeInSeconds { get; set; }
         public bool IsUnlocked { get; set; }
+        public List<string> UnmetRequirements { get; set; } = new();
     }
 
     // Response: Det fulde overblik over barracks
@@ -88,8 +92,37 @@ namespace Application.DTOs
         public int Reach { get; set; }
         public int LootCapacity { get; set; }
         public int PopulationCost { get; set; }
+        public int UnitCapacity { get; set; }
         public int RecruitmentTimeInSeconds { get; set; }
         public bool IsUnlocked { get; set; }
+        public List<string> UnmetRequirements { get; set; } = new();
+    }
+
+    public class HarborFullViewDTO
+    {
+        public int BuildingLevel { get; set; }
+        public List<HarborUnitInfoDTO> AvailableUnits { get; set; } = new();
+    }
+
+    public class HarborUnitInfoDTO
+    {
+        public UnitTypeEnum UnitType { get; set; }
+        public string UnitName { get; set; } = string.Empty;
+        public int AlreadyOwnedCount { get; set; }
+        public int CostWood { get; set; }
+        public int CostStone { get; set; }
+        public int CostMetal { get; set; }
+        public int Power { get; set; }
+        public int Armor { get; set; }
+        public int Discipline { get; set; }
+        public int Mobility { get; set; }
+        public int Reach { get; set; }
+        public int LootCapacity { get; set; }
+        public int PopulationCost { get; set; }
+        public int UnitCapacity { get; set; }
+        public int RecruitmentTimeInSeconds { get; set; }
+        public bool IsUnlocked { get; set; }
+        public List<string> UnmetRequirements { get; set; } = new();
     }
 
     // Detaljer om et job i køen

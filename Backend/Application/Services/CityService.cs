@@ -75,7 +75,7 @@ namespace Application.Services
                 ?? throw new InvalidOperationException("Byens ejer blev ikke fundet.");
             var currentDateTime = DateTime.UtcNow;
 
-            _worldPlayerService.SyncGlobalResources(playerEntity, currentDateTime);
+            await _worldPlayerService.SyncGlobalResourcesAsync(playerEntity, currentDateTime);
 
             SyncCityResources(cityEntity, currentDateTime);
             var exoticResources = await _exoticResourceService.SyncCityExoticResourcesAsync(cityEntity, currentDateTime);
@@ -95,7 +95,7 @@ namespace Application.Services
                 CreateCoinsProductionBreakdown(cityEntity),
                 CreateProductionBreakdown(cityEntity, BuildingTypeEnum.University, ModifierTagEnum.Research),
                 CreateIdeologyProductionBreakdown(playerEntity),
-                CreatePopulationBreakdown(cityEntity, activeBuildingJobs),
+                CreatePopulationBreakdown(cityEntity, activeRecruitmentJobs),
                 cityEntity.Resistance,
                 cityEntity.ResistanceTarget,
                 _resistanceService.CalculateRecoveryPerHour(cityEntity),
@@ -128,6 +128,10 @@ namespace Application.Services
                 .ToList();
 
             var activeRecruitmentJobs = await _jobRepository.GetRecruitmentJobsAsync(cityIdentifier);
+            var playerEntity = cityEntity.WorldPlayer
+                ?? throw new InvalidOperationException("Byens ejer blev ikke fundet.");
+            var cityProduction = _resourceService.CalculateCityProduction(playerEntity, cityEntity);
+            var population = CreatePopulationBreakdown(cityEntity, activeRecruitmentJobs);
 
             return new CityControllerGetDetailedCityInformationDTO
             {
@@ -149,9 +153,13 @@ namespace Application.Services
                 WoodProductionPerHour = currentCitySnapshot.WoodProductionPerHour,
                 StoneProductionPerHour = currentCitySnapshot.StoneProductionPerHour,
                 MetalProductionPerHour = currentCitySnapshot.MetalProductionPerHour,
+                CoinsProductionPerHour = cityProduction.CoinsProductionPerHour,
+                ResearchPointsPerHour = cityProduction.ResearchPointsPerHour,
+                IdeologyFocusPointsPerHour = cityProduction.IdeologyFocusPointsPerHour,
 
-                CurrentPopulationUsage = _cityStatService.GetCurrentPopulationUsage(cityEntity, activeRecruitmentJobs),
-                MaxPopulationCapacity = _cityStatService.GetMaxPopulation(cityEntity),
+                CurrentPopulationUsage = population.InUse,
+                MaxPopulationCapacity = population.TotalCapacity,
+                Population = population,
                 Resistance = cityEntity.Resistance,
                 ResistanceTarget = cityEntity.ResistanceTarget,
                 ResistanceRecoveryPerHour = _resistanceService.CalculateRecoveryPerHour(cityEntity),
@@ -233,7 +241,9 @@ namespace Application.Services
                     ?? (existingBuilding is null ? 1 : existingBuilding.Level + 1);
 
                 // En manglende bygning har intet level; dens første konstruktion bruger level 1-data.
-                BuildingLevelData? nextLevelConfiguration = _buildingDataReader.GetConfig<BuildingLevelData>(buildingType, targetUpgradeLevel);
+                int maximumLevel = _buildingDataReader.GetMaximumLevel(buildingType);
+                int configurationLevel = Math.Min(targetUpgradeLevel, maximumLevel);
+                BuildingLevelData? nextLevelConfiguration = _buildingDataReader.GetConfig<BuildingLevelData>(buildingType, configurationLevel);
 
                 if (nextLevelConfiguration == null) continue;
 
@@ -264,6 +274,7 @@ namespace Application.Services
                     BuildingName = buildingType.ToString(),
                     CurrentLevel = existingBuilding?.Level,
                     IsConstructed = existingBuilding != null,
+                    MaximumLevel = maximumLevel,
 
                     // Brug de modificerede værdier til DTO'en
                     WoodCost = modifiedWoodCost,
@@ -372,12 +383,18 @@ namespace Application.Services
 
         private PopulationBreakdownDTO CreatePopulationBreakdown(City cityEntity, IEnumerable<BaseJob> activeJobs)
         {
-            int unitUsage = cityEntity.UnitStacks.Sum(s => s.Quantity * (_unitDataReader.GetUnit(s.Type)?.PopulationCost ?? 0));
+            int housingCapacity = cityEntity.Buildings
+                .Where(building => building.Type == BuildingTypeEnum.Housing)
+                .Sum(building => _buildingDataReader.GetConfig<HousingLevelData>(BuildingTypeEnum.Housing, building.Level)?.Population ?? 0);
+            int totalCapacity = _cityStatService.GetMaxPopulation(cityEntity);
+            int inUse = _cityStatService.GetCurrentPopulationUsage(cityEntity, activeJobs);
 
             return new PopulationBreakdownDTO(
-                _cityStatService.GetMaxPopulation(cityEntity),
-                0
-            );
+                housingCapacity,
+                totalCapacity - housingCapacity,
+                totalCapacity,
+                inUse,
+                Math.Max(0, totalCapacity - inUse));
         }
 
         private BuildingQueueOverviewDTO CreateBuildingQueueOverview(List<BuildingJob> buildingJobs)
@@ -402,7 +419,7 @@ namespace Application.Services
 
             // 3. Map to simple DTOs
             return cities
-                .Select(c => new CityDTO(c.Id, c.Name, c.X, c.Y, 0)) // Points 0 for now as requested
+                .Select(c => new CityDTO(c.Id, c.Name, c.X, c.Y, 0, c.IsNPC)) // Points 0 for now as requested
                 .OrderBy(c => c.CityName)
                 .ToList();
         }

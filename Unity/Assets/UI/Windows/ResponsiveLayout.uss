@@ -1,0 +1,731 @@
+/* Applied through the root layout classes from ResponsiveUiStateManager. */
+.layout-phone .screen-overlay,
+.layout-phone .login-screen-overlay,
+.layout-phone .auth-screen-overlay,
+.layout-phone .world-selection-overlay,
+.layout-phone .ideology-overlay {
+    position: absolute;
+    left: 0;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    justify-content: flex-start;
+    align-items: stretch;
+}
+
+.layout-phone .window-frame {
+    min-width: 0;
+    max-width: 100%;
+    border-radius: 0;
+    border-width: 4px;
+    box-shadow: none;
+}
+
+.layout-phone .window-frame.floating-window-frame {
+    border-radius: 7px;
+}
+
+.layout-phone .window-frame * {
+    min-width: 0;
+    max-width: 100%;
+}
+
+.layout-phone .window-header {
+    height: 52px;
+    min-height: 52px;
+    padding-left: 12px;
+    padding-right: 6px;
+    cursor: default;
+}
+
+.layout-phone .window-header-label {
+    font-size: 17px;
+    letter-spacing: 1px;
+}
+
+.layout-phone .window-close-btn,
+.layout-phone .window-info-button {
+    width: 44px;
+    height: 44px;
+    min-width: 44px;
+    min-height: 44px;
+}
+
+.layout-phone .window-info-tooltip {
+    left: 8px;
+    right: 8px;
+    top: 48px;
+    width: auto;
+    max-width: none;
+    padding: 12px;
+}
+
+.layout-phone .window-tabs {
+    flex-wrap: wrap;
+}
+
+.layout-phone .window-tab {
+    min-width: 33%;
+    min-height: 44px;
+    height: 44px;
+    font-size: 12px;
+}
+
+.layout-phone .btn-global-base {
+    min-height: 44px;
+    height: 44px;
+    margin-top: 8px;
+    padding-right: 12px;
+    padding-left: 12px;
+    font-size: 13px;
+}
+
+.layout-phone .game-input,
+.layout-phone .auth-text-field > .unity-base-text-field__input {
+    min-height: 44px;
+    font-size: 16px;
+}
+
+.layout-phone .window-content-container,
+.layout-phone ScrollView {
+    min-height: 0;
+}
+
+.layout-phone .auth-shell,
+.layout-phone .world-main-container,
+.layout-phone .ideology-main-container {
+    width: auto;
+    height: auto;
+    min-width: 0;
+    max-width: 100%;
+    flex-grow: 1;
+}
+
+.layout-phone .auth-form-panel,
+.layout-phone .world-content-body,
+.layout-phone .ideology-content-body {
+    padding: 18px;
+}
+
+.layout-phone .world-entry-row {
+    padding: 14px;
+    flex-wrap: wrap;
+}
+
+.layout-phone .world-name-label {
+    font-size: 20px;
+}
+
+.layout-phone .world-stats-label {
+    font-size: 14px;
+}
+
+.layout-phone .ideology-cards-horizontal-container {
+    flex-direction: column;
+    overflow: hidden;
+}
+
+/* City HUD */
+.layout-phone .city-top-bar-main-container {
+    height: 108px;
+    padding: 0 6px;
+    overflow: hidden;
+}
+
+.layout-phone .city-top-bar-time-section {
+    display: none;
+}
+
+.layout-phone .city-selector-section {
+    position: absolute;
+    left: 142px;
+    right: 50px;
+    top: 3px;
+    min-width: 0;
+    max-width: none;
+    height: 42px;
+    margin: 0;
+    padding: 0;
+}
+
+.layout-phone .city-selector-label,
+.layout-phone .city-selector-rename-input {
+    min-width: 0;
+    height: 38px;
+    font-size: 13px;
+}
+
+.layout-phone .city-selector-arrow {
+    width: 34px;
+    height: 38px;
+    min-width: 34px;
+    font-size: 14px;
+}
+
+.layout-phone .city-selector-dropdown-container {
+    left: 0;
+    right: 0;
+    top: 44px;
+    width: auto;
+    max-height: 280px;
+}
+
+.layout-phone .city-top-bar-resource-section-right {
+    position: absolute;
+    left: 4px;
+    right: 4px;
+    top: 50px;
+    height: 54px;
+    justify-content: space-between;
+}
+
+.layout-phone .city-top-bar-inventory-button {
+    top: 9px;
+    left: 54px;
+    right: auto;
+    width: 38px;
+    height: 32px;
+    margin: 0;
+    padding: 0;
+}
+
+.layout-phone .city-top-bar-administration-button {
+    left: 98px;
+}
+
+.layout-phone .city-top-bar-inventory-icon {
+    width: 28px;
+    height: 28px;
+    translate: 0 0;
+}
+
+.layout-phone .city-top-bar-inventory-label,
+.layout-phone .city-top-bar-administration-label {
+    display: none;
+}
+
+/* City inspection command layout */
+.layout-phone .march-command-window .march-detail-panel,
+.layout-phone .march-command-window .march-command-footer {
+    flex-direction: column;
+}
+
+.layout-phone .march-command-window .march-detail-copy,
+.layout-phone .march-command-window .march-detail-data {
+    width: 100%;
+    min-width: 0;
+}
+
+.layout-phone .march-command-window .march-detail-copy {
+    padding: 2px 0 8px;
+    border-right-width: 0;
+    border-bottom-width: 1px;
+    border-bottom-color: rgba(165, 125, 50, 0.35);
+}
+
+.layout-phone .march-command-window .march-detail-data {
+    padding: 8px 0 0;
+}
+
+.layout-phone .march-command-window .march-mission-badge {
+    min-height: 28px;
+    margin-bottom: 8px;
+}
+
+.layout-phone .march-command-window .march-route {
+    width: 100%;
+    min-height: 54px;
+}
+
+.layout-phone .march-command-window .march-route-city {
+    width: 34%;
+}
+
+.layout-phone .march-command-window .march-route-line {
+    min-width: 42px;
+    margin-right: 5px;
+    margin-left: 5px;
+}
+
+.layout-phone .march-command-window .march-metric-card {
+    min-height: 48px;
+    padding-left: 4px;
+    padding-right: 4px;
+}
+
+.layout-phone .march-unit-name {
+    width: 36%;
+}
+
+.layout-phone .march-unit-available {
+    width: 22%;
+}
+
+.layout-phone .march-unit-quantity {
+    width: 24%;
+    min-width: 62px;
+}
+
+.layout-phone .march-unit-send {
+    width: 24%;
+}
+
+.layout-phone .march-unit-max {
+    width: 18%;
+}
+
+.layout-phone .march-max-button {
+    width: 18%;
+    min-width: 58px;
+}
+
+.layout-phone .march-command-window .march-footer-summary,
+.layout-phone .march-command-window .march-status,
+.layout-phone .march-command-window .march-total,
+.layout-phone .march-command-window .march-submit {
+    width: 100%;
+}
+
+.layout-phone .march-command-window .march-footer-summary {
+    padding-right: 0;
+    padding-bottom: 8px;
+}
+
+.layout-phone .march-command-window .march-status {
+    margin-right: 0;
+    -unity-text-align: middle-center;
+}
+
+.layout-phone .march-command-window .march-total {
+    min-height: 30px;
+    -unity-text-align: middle-center;
+}
+
+.layout-phone .march-command-window .march-submit { min-height: 44px; }
+
+/* Administration */
+.layout-phone .administration-body {
+    padding: 10px;
+}
+
+.layout-phone .administration-tabs {
+    margin-bottom: 8px;
+}
+
+.layout-phone .administration-tab {
+    min-width: 0;
+    flex-grow: 1;
+}
+
+.layout-phone .administration-table-row {
+    min-height: 76px;
+}
+
+.layout-phone .administration-table {
+    width: 1000px;
+    min-width: 1000px;
+    max-width: none;
+}
+
+.layout-phone .city-resource-group {
+    width: auto;
+    height: 48px;
+    min-width: 0;
+    margin: 0;
+    padding: 0;
+    flex-grow: 1;
+}
+
+.layout-phone .city-resource-icon-container,
+.layout-phone .city-resource-icon-base {
+    width: 28px;
+    height: 28px;
+}
+
+.layout-phone .city-warehouse-capacity-bar {
+    left: -5px;
+    top: -5px;
+    width: 38px;
+    height: 38px;
+}
+
+.layout-phone .city-resource-label-amount {
+    display: none;
+}
+
+.layout-phone .city-top-bar-map-button {
+    top: 4px;
+    left: 6px;
+    width: 42px;
+    height: 42px;
+    border-radius: 21px;
+    border-width: 2px;
+}
+
+.layout-phone .city-top-bar-logout-button {
+    top: 9px;
+    right: 6px;
+    width: 38px;
+    height: 32px;
+    padding: 0;
+    font-size: 7px;
+}
+
+.layout-phone .city-exotic-tooltip,
+.layout-phone .city-standard-resource-tooltip,
+.layout-phone .city-population-tooltip {
+    left: 8px;
+    right: 8px;
+    top: 112px;
+    width: auto;
+}
+
+.layout-phone .city-exotic-tooltip-row {
+    height: auto;
+    flex-wrap: wrap;
+}
+
+.layout-phone .city-exotic-tooltip-item {
+    width: 100%;
+    flex-basis: auto;
+    margin-bottom: 4px;
+}
+
+.layout-phone .city-exotic-tooltip-item--left {
+    margin-right: 0;
+}
+
+/* Bottom navigation */
+.layout-phone .side-bar-main-container {
+    top: auto;
+    right: 0;
+    bottom: 0;
+    width: auto;
+    height: 52px;
+    padding: 4px 2px;
+    flex-direction: row;
+    align-items: center;
+    border-top-width: 2px;
+    border-right-width: 0;
+    border-bottom-width: 0;
+    border-radius: 0;
+    overflow: hidden;
+}
+
+.layout-phone .side-bar-button-container {
+    width: auto;
+    min-width: 0;
+    height: 44px;
+    margin: 0;
+    padding: 0;
+    flex-grow: 1;
+    flex-shrink: 1;
+    justify-content: center;
+    border-left-width: 0;
+    border-bottom-width: 0;
+}
+
+.layout-phone .side-bar-command-button {
+    margin: 0;
+    padding: 0;
+    justify-content: center;
+}
+
+.layout-phone .side-bar-label {
+    display: none;
+}
+
+.layout-phone .side-bar-icon-base {
+    width: 23px;
+    height: 23px;
+}
+
+.layout-phone .notification-dot {
+    right: 1px;
+    top: 1px;
+}
+
+.layout-phone .dailies-claim-button {
+    min-height: 44px;
+}
+
+/* Unit and ideology HUD */
+.layout-phone .right-side-bar-main-container {
+    top: auto;
+    left: 4px;
+    right: 4px;
+    bottom: 74px;
+    width: auto;
+    height: 104px;
+    min-height: 0;
+    padding: 6px 8px;
+    translate: 0 0;
+    background-color: rgb(29, 31, 33);
+    background-image: var(--img-window-background);
+    -unity-background-image-tint-color: rgba(44, 43, 41, 0.96);
+    border-width: 1px;
+    border-color: rgb(126, 94, 43);
+    border-radius: 3px;
+    overflow: hidden;
+}
+
+.layout-phone .city-command-city-divider { display: none; }
+.layout-phone .city-command-eyebrow { display: none; }
+.layout-phone .city-command-button { height: 34px; }
+.layout-phone .city-command-separator { margin-top: 5px; margin-bottom: 4px; }
+.layout-phone .city-command-section-title { margin-bottom: 2px; }
+.layout-phone .city-unit-list { min-height: 28px; }
+.layout-phone .city-unit-row { min-height: 25px; margin-bottom: 1px; }
+
+/* Recruitment windows retain gesture scrolling while their scroller chrome stays hidden. */
+.layout-phone .recruitment-window .recruitment-body-scroll .unity-scroller,
+.layout-phone .recruitment-window .tabs-scroll-view .unity-scroller,
+.layout-phone .recruitment-window .queue-scroll-view .unity-scroller {
+    display: none;
+    width: 0;
+    height: 0;
+}
+
+/* Recruitment command windows: Barracks, Stable and Workshop. */
+.layout-phone .recruitment-command-window .recruitment-body-scroll {
+    flex-grow: 1;
+    min-height: 0;
+    padding: 8px;
+}
+
+.layout-phone .recruitment-command-window .recruitment-panel {
+    padding: 10px;
+}
+
+.layout-phone .recruitment-command-window .tabs-wrapper,
+.layout-phone .recruitment-command-window .tabs-scroll-view {
+    height: 48px;
+}
+
+.layout-phone .recruitment-command-window .window-tab {
+    width: auto;
+    min-width: 132px;
+    height: 44px;
+    flex-grow: 0;
+}
+
+.layout-phone .recruitment-command-window .detail-split {
+    flex-direction: column;
+    min-height: 0;
+    padding: 10px;
+}
+
+.layout-phone .recruitment-command-window .detail-left,
+.layout-phone .recruitment-command-window .detail-right {
+    width: 100%;
+    flex-basis: auto;
+    padding-right: 0;
+}
+
+.layout-phone .recruitment-command-window .detail-left {
+    margin-bottom: 10px;
+}
+
+.layout-phone .recruitment-command-window .flavor-text {
+    width: 100%;
+    max-width: none;
+}
+
+.layout-phone .recruitment-command-window .stats-grid {
+    width: 100%;
+    height: 104px;
+}
+
+.layout-phone .recruitment-command-window .stat-column {
+    width: 33.333%;
+    padding: 0 4px;
+}
+
+.layout-phone .recruitment-command-window .stat-row {
+    height: 30px;
+    flex-direction: column;
+    align-items: stretch;
+}
+
+.layout-phone .recruitment-command-window .stat-label,
+.layout-phone .recruitment-command-window .stat-value,
+.layout-phone .recruitment-command-window .stat-value-time {
+    width: 100%;
+    margin-right: 0;
+    -unity-text-align: middle-center;
+    font-size: 8px;
+}
+
+.layout-phone .recruitment-command-window .stat-value {
+    font-size: 10px;
+}
+
+.layout-phone .recruitment-command-window .cost-row {
+    height: auto;
+    min-height: 76px;
+    flex-wrap: wrap;
+    padding: 8px 4px;
+}
+
+.layout-phone .recruitment-command-window .section-label-small {
+    width: 100%;
+    margin: 0 0 6px 0;
+    -unity-text-align: middle-center;
+}
+
+.layout-phone .recruitment-command-window .cost-resource {
+    width: 25%;
+    margin-left: 0;
+    justify-content: center;
+}
+
+.layout-phone .recruitment-command-window .cost-value {
+    width: auto;
+    min-width: 30px;
+}
+
+.layout-phone .recruitment-command-window .recruitment-timing-field {
+    padding: 0 5px;
+}
+
+.layout-phone .recruitment-command-window .recruitment-timing-label {
+    font-size: 8px;
+}
+
+.layout-phone .recruitment-command-window .recruitment-timing-value {
+    margin-left: 4px;
+    font-size: 9px;
+}
+
+.layout-phone .recruitment-command-window .recruitment-eta-value {
+    font-size: 8px;
+}
+
+.layout-phone .recruitment-command-window .recruitment-controls {
+    flex-direction: column;
+    align-items: stretch;
+}
+
+.layout-phone .recruitment-command-window .quantity-label {
+    width: 100%;
+    margin-bottom: 5px;
+}
+
+.layout-phone .recruitment-command-window .slider-container {
+    width: 100%;
+    margin-right: 0;
+}
+
+.layout-phone .recruitment-command-window .game-slider {
+    min-width: 0;
+}
+
+.layout-phone .recruitment-command-window .game-input-number {
+    width: 72px;
+    min-width: 72px;
+    min-height: 44px;
+}
+
+.layout-phone .recruitment-command-window .recruit-execute-btn {
+    width: 100%;
+    min-width: 0;
+    max-width: none;
+    margin-top: 8px;
+}
+
+.layout-phone .recruitment-command-window .queue-section {
+    height: 140px;
+    min-height: 140px;
+    flex-grow: 0;
+}
+
+.layout-phone .recruitment-command-window .queue-scroll-view {
+    height: 106px;
+    min-height: 106px;
+    flex-grow: 0;
+}
+
+.layout-phone .recruitment-command-window .recruitment-queue-slot {
+    width: 150px;
+    min-width: 150px;
+    height: 88px;
+    min-height: 88px;
+    flex-shrink: 0;
+}
+
+/* Harbor keeps its legacy content while sharing the responsive recruitment shell. */
+.layout-phone .recruitment-legacy-window .recruitment-body-scroll {
+    flex-grow: 1;
+    min-height: 0;
+    padding: 8px;
+}
+
+.layout-phone .recruitment-legacy-window .tabs-wrapper,
+.layout-phone .recruitment-legacy-window .tabs-scroll-view {
+    height: 48px;
+}
+
+.layout-phone .recruitment-legacy-window .tab-button {
+    width: auto;
+    min-width: 120px;
+    height: 44px;
+    flex-grow: 0;
+    flex-shrink: 0;
+}
+
+.layout-phone .recruitment-legacy-window .detail-container {
+    overflow: visible;
+}
+
+.layout-phone .recruitment-legacy-window .detail-split {
+    flex-direction: column;
+}
+
+.layout-phone .recruitment-legacy-window .detail-left,
+.layout-phone .recruitment-legacy-window .detail-right {
+    width: 100%;
+    flex-basis: auto;
+    padding-right: 0;
+}
+
+.layout-phone .recruitment-legacy-window .detail-left {
+    margin-bottom: 10px;
+}
+
+.layout-phone .recruitment-legacy-window .stats-grid {
+    width: 100%;
+}
+
+.layout-phone .recruitment-legacy-window .recruitment-controls {
+    flex-direction: column;
+    align-items: stretch;
+}
+
+.layout-phone .recruitment-legacy-window .slider-container {
+    width: 100%;
+    margin-right: 0;
+}
+
+.layout-phone .recruitment-legacy-window .recruit-execute-btn {
+    width: 100%;
+    min-width: 0;
+    max-width: none;
+    margin-top: 8px;
+}
+
+.layout-phone .recruitment-legacy-window .queue-section {
+    height: 140px;
+    min-height: 140px;
+}
+
+.layout-phone .recruitment-legacy-window .queue-scroll-view {
+    height: 106px;
+}
+
+.layout-phone .recruitment-legacy-window .recruitment-item-card {
+    width: 150px;
+    min-width: 150px;
+    max-width: 150px;
+    flex-grow: 0;
+    flex-shrink: 0;
+}

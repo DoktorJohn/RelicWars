@@ -141,6 +141,11 @@ namespace Project.Scripts.Modules.Map
                 yield return SpawnCityVisual(data, key, city);
             }
 
+            if (data.FutureCitySites is { Count: > 0 })
+            {
+                yield return SpawnFutureCitySiteButtons(key, data.FutureCitySites);
+            }
+
             if (data.Islands != null && _islandButtonPrefab != null)
             {
                 var occupiedTiles = CreateOccupiedTileSet(data);
@@ -163,6 +168,29 @@ namespace Project.Scripts.Modules.Map
 
             inst.GetComponent<WorldMapCityInteractionLabelController>()?.InitializeCityInteractionLabel(city.CityName);
             _activeMapObjectsPerChunk[key].Add(inst);
+            yield return null;
+        }
+
+        private IEnumerator SpawnFutureCitySiteButtons(
+            Vector2Int key,
+            IReadOnlyCollection<WorldMapCoordinateDTO> sites)
+        {
+            if (_islandButtonPrefab == null)
+            {
+                yield break;
+            }
+
+            GameObject buttonGroup = Instantiate(_islandButtonPrefab, Vector3.zero, Quaternion.identity, _objectContainer);
+            buttonGroup.name = $"FutureCitySites_{key.x}_{key.y}";
+
+            var uiDocument = buttonGroup.GetComponent<UIDocument>();
+            if (uiDocument != null) uiDocument.sortingOrder = _islandResourceButtonSortingOrder;
+
+            var worldPositions = sites
+                .Select(site => TerrainTilemap.GetCellCenterWorld(new Vector3Int(site.X, site.Y, 0)))
+                .ToList();
+            buttonGroup.GetComponent<WorldMapIslandButtonController>()?.InitializeFutureCitySites(worldPositions);
+            _activeMapObjectsPerChunk[key].Add(buttonGroup);
             yield return null;
         }
 
@@ -203,6 +231,14 @@ namespace Project.Scripts.Modules.Map
                 foreach (var city in data.Cities)
                 {
                     occupiedTiles.Add(new Vector2Int(city.X, city.Y));
+                }
+            }
+
+            if (data.FutureCitySites != null)
+            {
+                foreach (var site in data.FutureCitySites)
+                {
+                    occupiedTiles.Add(new Vector2Int(site.X, site.Y));
                 }
             }
 

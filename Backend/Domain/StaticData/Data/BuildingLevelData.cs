@@ -67,6 +67,10 @@ namespace Domain.StaticData.Data
     {
     }
 
+    public class HarborLevelData : BuildingLevelData
+    {
+    }
+
     public class UniversityLevelData : BuildingLevelData
     {
         public int ProductionPerHour { get; set; }

@@ -1,0 +1,227 @@
+.combat-sim-window {
+    min-width: 1120px;
+    min-height: 700px;
+    width: 1180px;
+    height: auto;
+}
+
+.combat-sim-body {
+    padding: 16px 18px 18px 18px;
+    gap: 12px;
+}
+
+.combat-sim-state {
+    min-height: 120px;
+}
+
+.combat-sim-content {
+    flex-direction: column;
+    gap: 12px;
+}
+
+.combat-sim-summary,
+.combat-sim-army-panel,
+.combat-sim-results-summary,
+.combat-sim-results {
+    border-width: 1px;
+    border-color: var(--c-border);
+    border-radius: 6px;
+    background-color: rgba(0, 0, 0, 0.04);
+    padding: 10px 12px;
+}
+
+.combat-sim-summary {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.combat-sim-summary-row {
+    flex-direction: row;
+    align-items: center;
+    min-height: 22px;
+    gap: 8px;
+}
+
+.combat-sim-summary-key {
+    width: 92px;
+    -unity-font-definition: var(--font-header);
+    -unity-font-style: bold;
+    color: var(--c-text-muted);
+    font-size: 11px;
+}
+
+.combat-sim-summary-value {
+    flex-grow: 1;
+    -unity-font-definition: var(--font-body);
+    color: var(--c-text-body);
+    font-size: 14px;
+}
+
+.combat-sim-army-grid {
+    flex-direction: row;
+    gap: 12px;
+}
+
+.combat-sim-army-panel {
+    flex-grow: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.combat-sim-army-header {
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    gap: 8px;
+}
+
+.combat-sim-army-actions {
+    flex-direction: row;
+    gap: 6px;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+}
+
+.combat-sim-action {
+    height: 30px;
+    min-height: 30px;
+    padding: 4px 10px;
+    margin-top: 0;
+    font-size: 11px;
+}
+
+.combat-sim-unit-header,
+.combat-sim-unit-row,
+.combat-sim-result-card {
+    flex-direction: row;
+    align-items: center;
+    gap: 8px;
+}
+
+.combat-sim-unit-header {
+    min-height: 24px;
+    padding: 0 4px;
+}
+
+.combat-sim-unit-header-label {
+    -unity-font-definition: var(--font-header);
+    -unity-font-style: bold;
+    color: var(--c-text-muted);
+    font-size: 11px;
+}
+
+.combat-sim-unit-header-label:first-child {
+    width: 185px;
+}
+
+.combat-sim-unit-header-label:nth-child(2) {
+    width: 80px;
+}
+
+.combat-sim-unit-header-label:nth-child(3) {
+    flex-grow: 1;
+}
+
+.combat-sim-unit-scroll {
+    height: 230px;
+    border-width: 1px;
+    border-color: rgba(165, 125, 50, 0.35);
+    background-color: rgba(255, 255, 255, 0.11);
+}
+
+.combat-sim-unit-list {
+    gap: 6px;
+    padding: 8px;
+}
+
+.sim-unit-row {
+    flex-direction: row;
+    align-items: center;
+    gap: 8px;
+    padding: 4px 0;
+}
+
+.sim-unit-type {
+    width: 185px;
+}
+
+.sim-unit-quantity {
+    width: 80px;
+    height: 32px;
+}
+
+.sim-unit-quantity .unity-base-text-field__input {
+    -unity-text-align: middle-center;
+}
+
+.sim-unit-remove {
+    width: 48px;
+    height: 32px;
+    min-height: 32px;
+    margin-top: 0;
+    padding: 2px 6px;
+}
+
+.combat-sim-actions {
+    flex-direction: row;
+    justify-content: center;
+}
+
+.combat-sim-simulate {
+    width: 260px;
+}
+
+.combat-sim-results {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.combat-sim-result-scroll {
+    min-height: 180px;
+    max-height: 260px;
+    border-width: 1px;
+    border-color: rgba(165, 125, 50, 0.35);
+    background-color: rgba(255, 255, 255, 0.10);
+}
+
+.combat-sim-result-list {
+    gap: 8px;
+    padding: 8px;
+}
+
+.combat-sim-result-section {
+    border-width: 1px;
+    border-color: rgba(165, 125, 50, 0.30);
+    border-radius: 5px;
+    background-color: rgba(0, 0, 0, 0.04);
+    padding: 8px;
+    gap: 6px;
+}
+
+.combat-sim-result-section > Label:first-child {
+    -unity-font-definition: var(--font-header);
+    -unity-font-style: bold;
+    color: var(--c-text-header);
+    font-size: 12px;
+}
+
+.combat-sim-result-card {
+    justify-content: space-between;
+    padding: 4px 0;
+    border-bottom-width: 1px;
+    border-bottom-color: rgba(165, 125, 50, 0.18);
+}
+
+.combat-sim-result-card Label {
+    -unity-font-definition: var(--font-body);
+    color: var(--c-text-body);
+    font-size: 13px;
+}
+
+.combat-sim-modifiers {
+    white-space: normal;
+}

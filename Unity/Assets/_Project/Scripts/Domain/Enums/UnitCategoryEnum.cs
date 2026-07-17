@@ -12,6 +12,7 @@ namespace Assets._Project.Scripts.Domain.Enums
         Ranged,
         Cavalry,
         Siege,
-        Support
+        Support,
+        Naval
     }
 }

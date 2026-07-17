@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ui:UXML xmlns:ui="UnityEngine.UIElements" editor-extension-mode="False">
+    <ui:Style src="project://database/Assets/UI/Windows/WindowTheme.uss" />
+    <ui:Style src="project://database/Assets/UI/Windows/CombatSimulatorWindow/CombatSimulatorWindow.uss" />
+
+    <ui:VisualElement name="Combat-Simulator-Window-Overlay" picking-mode="Ignore" class="screen-overlay">
+        <ui:VisualElement name="Combat-Simulator-Window-MainContainer" class="window-frame size-large combat-sim-window">
+            <ui:VisualElement name="Combat-Simulator-Window-Header" class="window-header">
+                <ui:Label class="window-header-label" text="COMBAT SIMULATOR" />
+                <ui:Button name="CombatSimulator-Close-Button" class="window-close-btn" text="x" />
+            </ui:VisualElement>
+
+            <ui:VisualElement class="window-body combat-sim-body">
+                <ui:VisualElement name="Combat-Simulator-State-Container" class="combat-sim-state" />
+
+                <ui:VisualElement name="Combat-Simulator-Content-Container" class="combat-sim-content">
+                    <ui:VisualElement class="combat-sim-summary">
+                        <ui:Label text="SCENARIO" class="section-label" />
+                        <ui:VisualElement class="combat-sim-summary-row">
+                            <ui:Label text="ORIGIN" class="combat-sim-summary-key" />
+                            <ui:Label name="Origin-City-Label" class="combat-sim-summary-value" text="-" />
+                        </ui:VisualElement>
+                        <ui:VisualElement class="combat-sim-summary-row">
+                            <ui:Label text="TARGET" class="combat-sim-summary-key" />
+                            <ui:Label name="Target-City-Label" class="combat-sim-summary-value" text="-" />
+                        </ui:VisualElement>
+                        <ui:VisualElement class="combat-sim-summary-row">
+                            <ui:Label text="ROUTE" class="combat-sim-summary-key" />
+                            <ui:Label name="Route-Label" class="combat-sim-summary-value" text="-" />
+                        </ui:VisualElement>
+                        <ui:VisualElement class="combat-sim-summary-row">
+                            <ui:Label text="TRANSPORT" class="combat-sim-summary-key" />
+                            <ui:Label name="Transport-Label" class="combat-sim-summary-value" text="Waiting for simulation..." />
+                        </ui:VisualElement>
+                        <ui:VisualElement class="combat-sim-summary-row">
+                            <ui:Label text="STATUS" class="combat-sim-summary-key" />
+                            <ui:Label name="Status-Label" class="combat-sim-summary-value" text="Build or adjust both armies, then simulate." />
+                        </ui:VisualElement>
+                    </ui:VisualElement>
+
+                    <ui:VisualElement class="combat-sim-army-grid">
+                        <ui:VisualElement class="combat-sim-army-panel">
+                            <ui:VisualElement class="combat-sim-army-header">
+                                <ui:Label text="ATTACKERS" class="section-label-small" />
+                                <ui:VisualElement class="combat-sim-army-actions">
+                                    <ui:Button name="Use-Origin-Army-Button" text="USE ORIGIN ARMY" class="btn-global-base btn-imperial-primary combat-sim-action" />
+                                    <ui:Button name="Add-Attacker-Button" text="ADD ROW" class="btn-global-base btn-imperial-primary combat-sim-action" />
+                                    <ui:Button name="Clear-Attacker-Button" text="CLEAR" class="btn-global-base btn-imperial-primary combat-sim-action" />
+                                </ui:VisualElement>
+                            </ui:VisualElement>
+                            <ui:VisualElement class="combat-sim-unit-header">
+                                <ui:Label text="UNIT TYPE" class="combat-sim-unit-header-label" />
+                                <ui:Label text="QTY" class="combat-sim-unit-header-label" />
+                                <ui:Label text="" class="combat-sim-unit-header-label" />
+                            </ui:VisualElement>
+                            <ui:ScrollView name="Attacker-Units-Scroll" class="combat-sim-unit-scroll" mode="Vertical" vertical-scroller-visibility="Auto" horizontal-scroller-visibility="Hidden">
+                                <ui:VisualElement name="Attacker-Units-Container" class="combat-sim-unit-list" />
+                            </ui:ScrollView>
+                        </ui:VisualElement>
+
+                        <ui:VisualElement class="combat-sim-army-panel">
+                            <ui:VisualElement class="combat-sim-army-header">
+                                <ui:Label text="DEFENDERS" class="section-label-small" />
+                                <ui:VisualElement class="combat-sim-army-actions">
+                                    <ui:Button name="Add-Defender-Button" text="ADD ROW" class="btn-global-base btn-imperial-primary combat-sim-action" />
+                                    <ui:Button name="Clear-Defender-Button" text="CLEAR" class="btn-global-base btn-imperial-primary combat-sim-action" />
+                                </ui:VisualElement>
+                            </ui:VisualElement>
+                            <ui:VisualElement class="combat-sim-unit-header">
+                                <ui:Label text="UNIT TYPE" class="combat-sim-unit-header-label" />
+                                <ui:Label text="QTY" class="combat-sim-unit-header-label" />
+                                <ui:Label text="" class="combat-sim-unit-header-label" />
+                            </ui:VisualElement>
+                            <ui:ScrollView name="Defender-Units-Scroll" class="combat-sim-unit-scroll" mode="Vertical" vertical-scroller-visibility="Auto" horizontal-scroller-visibility="Hidden">
+                                <ui:VisualElement name="Defender-Units-Container" class="combat-sim-unit-list" />
+                            </ui:ScrollView>
+                        </ui:VisualElement>
+                    </ui:VisualElement>
+
+                    <ui:VisualElement class="combat-sim-actions">
+                        <ui:Button name="Simulate-Button" text="SIMULATE BATTLE" class="btn-global-base btn-imperial-success combat-sim-simulate" />
+                    </ui:VisualElement>
+
+                    <ui:VisualElement class="combat-sim-results">
+                        <ui:VisualElement class="combat-sim-results-summary">
+                            <ui:Label text="RESULTS" class="section-label" />
+                            <ui:VisualElement class="combat-sim-summary-row">
+                                <ui:Label text="LUCK" class="combat-sim-summary-key" />
+                                <ui:Label name="Luck-Label" class="combat-sim-summary-value" text="-" />
+                            </ui:VisualElement>
+                            <ui:VisualElement class="combat-sim-summary-row">
+                                <ui:Label text="MODIFIERS" class="combat-sim-summary-key" />
+                                <ui:Label name="Modifiers-Label" class="combat-sim-summary-value combat-sim-modifiers" text="-" />
+                            </ui:VisualElement>
+                        </ui:VisualElement>
+
+                        <ui:ScrollView name="Simulation-Result-Scroll" class="combat-sim-result-scroll" mode="Vertical" vertical-scroller-visibility="Auto" horizontal-scroller-visibility="Hidden">
+                            <ui:VisualElement name="Simulation-Result-Container" class="combat-sim-result-list" />
+                        </ui:ScrollView>
+                    </ui:VisualElement>
+                </ui:VisualElement>
+            </ui:VisualElement>
+        </ui:VisualElement>
+    </ui:VisualElement>
+</ui:UXML>

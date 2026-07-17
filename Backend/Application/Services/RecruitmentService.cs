@@ -29,6 +29,7 @@ namespace Application.Services
         private readonly BuildingDataReader _buildingDataReader;
         private readonly RecruitmentTimeCalculationService _recruitmentTimeCalculationService;
         private readonly ITransactionManager _transactionManager;
+        private readonly UnitAvailabilityEvaluator _unitAvailabilityEvaluator;
 
         public RecruitmentService(
             ICityRepository cityRepository,
@@ -41,7 +42,8 @@ namespace Application.Services
             BuildingDataReader buildingDataReader,
             ICityStatService cityStatService,
             RecruitmentTimeCalculationService recruitmentTimeCalculationService,
-            ITransactionManager transactionManager)
+            ITransactionManager transactionManager,
+            UnitAvailabilityEvaluator unitAvailabilityEvaluator)
         {
             _cityRepository = cityRepository;
             _jobRepository = jobRepository;
@@ -54,6 +56,7 @@ namespace Application.Services
             _cityStatService = cityStatService;
             _recruitmentTimeCalculationService = recruitmentTimeCalculationService;
             _transactionManager = transactionManager;
+            _unitAvailabilityEvaluator = unitAvailabilityEvaluator;
         }
 
         public async Task<RecruitmentResult> QueueRecruitmentAsync(Guid userId, Guid cityId, UnitTypeEnum type, int quantity)
@@ -63,6 +66,17 @@ namespace Application.Services
 
             var unitStaticData = _unitDataReader.GetUnit(type);
             var currentDateTime = DateTime.UtcNow;
+
+            if (quantity <= 0)
+            {
+                return new RecruitmentResult(false, "Antallet af enheder skal være positivt.");
+            }
+
+            var availability = _unitAvailabilityEvaluator.Evaluate(cityEntity, unitStaticData);
+            if (!availability.IsUnlocked)
+            {
+                return new RecruitmentResult(false, $"Unit locked: {string.Join(" ", availability.UnmetRequirements)}");
+            }
 
             // 2. Saml alle aktive jobs for at beregne nuværende befolkningskapacitet
             List<BaseJob> activeJobsInCity = new List<BaseJob>();
@@ -76,18 +90,13 @@ namespace Application.Services
             int currentlyAvailablePopulation = _cityStatService.GetAvailablePopulation(cityEntity, activeJobsInCity);
             int totalPopulationRequiredForRequest = quantity * unitStaticData.PopulationCost;
 
-            if (quantity <= 0)
-            {
-                return new RecruitmentResult(false, "Antallet af enheder skal være positivt.");
-            }
-
             if (totalPopulationRequiredForRequest > currentlyAvailablePopulation)
             {
                 return new RecruitmentResult(false, $"Utilstrækkelig boligkapacitet. Kræver {totalPopulationRequiredForRequest}, men der er kun {currentlyAvailablePopulation} ledig.");
             }
 
             // 4. Opdater ressourcetilstand (Globalt og lokalt) før fratrækning
-            _worldPlayerService.SyncGlobalResources(cityEntity.WorldPlayer, currentDateTime);
+            await _worldPlayerService.SyncGlobalResourcesAsync(cityEntity.WorldPlayer, currentDateTime);
             var cityResourceSnapshot = _resourceService.CalculateCityResources(cityEntity, currentDateTime);
 
             // 5. Valider om byen har råd til rekrutteringen

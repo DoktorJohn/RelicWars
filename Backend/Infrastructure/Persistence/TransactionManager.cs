@@ -13,6 +13,8 @@ namespace Infrastructure.Persistence
             _context = context;
         }
 
+        public bool HasActiveTransaction => _context.Database.CurrentTransaction != null;
+
         public Task ExecuteAsync(Func<Task> operation)
         {
             return ExecuteAsync(async () =>
@@ -38,6 +40,11 @@ namespace Infrastructure.Persistence
                 await transaction.CommitAsync();
                 return result;
             });
+        }
+
+        public Task SaveChangesAsync()
+        {
+            return _context.SaveChangesAsync();
         }
     }
 }

@@ -1,4 +1,4 @@
-using UnityEngine;
+ï»¿using UnityEngine;
 using UnityEngine.EventSystems;
 using System.Collections.Generic;
 using System.Linq;
@@ -14,7 +14,7 @@ namespace Project.Modules.City
 {
     /// <summary>
     /// Kontrollerer visuel interaktion for komplekse bygnings-prefabs.
-    /// Opdateret til at bruge Unity Input System pakken for at undgå InvalidOperationException.
+    /// Opdateret til at bruge Unity Input System pakken for at undgÃ¥ InvalidOperationException.
     /// </summary>
     [RequireComponent(typeof(BoxCollider))]
     public class CityBuildingInteractionController : MonoBehaviour, IPointerClickHandler, IPointerEnterHandler, IPointerExitHandler
@@ -66,14 +66,14 @@ namespace Project.Modules.City
         }
 
         /// <summary>
-        /// Hjælpemetode til at afgøre om musen er over et UI-vindue.
-        /// Bruger det nye Input System til at læse musens position.
+        /// HjÃ¦lpemetode til at afgÃ¸re om musen er over et UI-vindue.
+        /// Bruger det nye Input System til at lÃ¦se musens position.
         /// </summary>
         private bool IsPointerOverBlockingWindow()
         {
             if (EventSystem.current == null) return false;
 
-            // FIX: Vi læser positionen fra det nye Input System i stedet for den gamle Input-klasse
+            // FIX: Vi lÃ¦ser positionen fra det nye Input System i stedet for den gamle Input-klasse
             Vector2 currentMousePosition = Vector2.zero;
 
             if (Mouse.current != null)
@@ -169,6 +169,7 @@ namespace Project.Modules.City
                 BuildingTypeEnum.University => WindowTypeEnum.University,
                 BuildingTypeEnum.Stable => WindowTypeEnum.Stable,
                 BuildingTypeEnum.Workshop => WindowTypeEnum.Workshop,
+                BuildingTypeEnum.Harbor => WindowTypeEnum.Harbor,
                 BuildingTypeEnum.MarketPlace => WindowTypeEnum.MarketPlace,
                 _ => WindowTypeEnum.None
             };

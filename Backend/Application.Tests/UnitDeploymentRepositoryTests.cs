@@ -10,6 +10,80 @@ namespace Application.Tests;
 public class UnitDeploymentRepositoryTests
 {
     [Fact]
+    public async Task GetActiveDeploymentsByWorldPlayerIdAsync_ReturnsAllOwnedPhasesInDeterministicDisplayOrder()
+    {
+        var options = new DbContextOptionsBuilder<GameContext>()
+            .UseInMemoryDatabase(Guid.NewGuid().ToString())
+            .Options;
+        var worldId = Guid.NewGuid();
+        var originAlliance = new Alliance { Id = Guid.NewGuid(), WorldId = worldId, Name = "Origin Alliance", Tag = "ORA" };
+        var targetAlliance = new Alliance { Id = Guid.NewGuid(), WorldId = worldId, Name = "Target Alliance", Tag = "TAR" };
+        var owner = Player(worldId, originAlliance.Id, "Owner");
+        owner.Alliance = originAlliance;
+        var other = Player(worldId, targetAlliance.Id, "Other");
+        other.Alliance = targetAlliance;
+        var origin = City(owner, "Origin", 0, 0);
+        var target = City(other, "Target", 1, 0);
+        DateTime now = DateTime.UtcNow;
+
+        UnitDeployment Deployment(string name, UnitDeploymentPhaseEnum phase, DateTime arrival, DateTime? stationedAt = null) => new()
+        {
+            Id = Guid.NewGuid(),
+            Name = name,
+            Mobility = 2,
+            Type = phase == UnitDeploymentPhaseEnum.Stationed ? UnitDeploymentTypeEnum.Support : UnitDeploymentTypeEnum.Attack,
+            Phase = phase,
+            UnitDeploymentMovementStatus = phase == UnitDeploymentPhaseEnum.Stationed
+                ? UnitDeploymentMovementStatusEnum.Stationed
+                : UnitDeploymentMovementStatusEnum.Moving,
+            DepartureTime = now.AddMinutes(-10),
+            ArrivalTime = arrival,
+            StationedAt = stationedAt,
+            OriginCity = origin,
+            OriginCityId = origin.Id,
+            TargetCity = target,
+            TargetCityId = target.Id,
+            OwnerWorldPlayer = owner,
+            WorldPlayerId = owner.Id,
+            WorldId = worldId,
+            UnitStacks = [new UnitStack { Id = Guid.NewGuid(), Type = UnitTypeEnum.Militia, Quantity = 2, WorldPlayerId = owner.Id }]
+        };
+
+        var returning = Deployment("Returning", UnitDeploymentPhaseEnum.Returning, now.AddMinutes(2));
+        var outbound = Deployment("Outbound", UnitDeploymentPhaseEnum.Outbound, now.AddMinutes(5));
+        var stationedNewest = Deployment("Stationed newest", UnitDeploymentPhaseEnum.Stationed, now.AddMinutes(-1), now.AddMinutes(-1));
+        var stationedOlder = Deployment("Stationed older", UnitDeploymentPhaseEnum.Stationed, now.AddMinutes(-5), now.AddMinutes(-5));
+        var otherDeployment = Deployment("Other owner", UnitDeploymentPhaseEnum.Outbound, now.AddMinutes(1));
+        otherDeployment.WorldPlayerId = other.Id;
+        otherDeployment.OwnerWorldPlayer = other;
+
+        await using (var writeContext = new GameContext(options))
+        {
+            writeContext.UnitDeployments.AddRange(outbound, stationedOlder, otherDeployment, returning, stationedNewest);
+            await writeContext.SaveChangesAsync();
+        }
+
+        await using var readContext = new GameContext(options);
+        var result = await new UnitDeploymentRepository(readContext)
+            .GetActiveDeploymentsByWorldPlayerIdAsync(owner.Id);
+
+        Assert.Equal([returning.Id, outbound.Id, stationedNewest.Id, stationedOlder.Id], result.Select(item => item.Id));
+        Assert.All(result, item => Assert.Equal(owner.Id, item.WorldPlayerId));
+        Assert.All(result, item => Assert.NotEmpty(item.UnitStacks));
+        Assert.All(result, item => Assert.NotNull(item.OriginCity));
+        Assert.All(result, item => Assert.NotNull(item.TargetCity));
+        Assert.All(result, item => Assert.Equal("Origin", item.OriginCity.Name));
+        Assert.All(result, item => Assert.Equal("Target", item.TargetCity!.Name));
+        Assert.All(result, item => Assert.Equal("Owner", item.OriginCity.WorldPlayer!.PlayerProfile.UserName));
+        Assert.All(result, item => Assert.Equal("Origin Alliance", item.OriginCity.WorldPlayer!.Alliance!.Name));
+        Assert.All(result, item => Assert.Equal("ORA", item.OriginCity.WorldPlayer!.Alliance!.Tag));
+        Assert.All(result, item => Assert.Equal("Other", item.TargetCity!.WorldPlayer!.PlayerProfile.UserName));
+        Assert.All(result, item => Assert.Equal("Target Alliance", item.TargetCity!.WorldPlayer!.Alliance!.Name));
+        Assert.All(result, item => Assert.Equal("TAR", item.TargetCity!.WorldPlayer!.Alliance!.Tag));
+        Assert.All(result, item => Assert.Equal(2, Assert.Single(item.UnitStacks).Quantity));
+    }
+
+    [Fact]
     public async Task GetDueMovementsAsync_LoadsCompleteCombatContext()
     {
         var options = new DbContextOptionsBuilder<GameContext>()

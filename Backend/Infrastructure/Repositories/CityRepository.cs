@@ -1,5 +1,7 @@
 ﻿using Application.Interfaces.IRepositories;
 using Domain.Entities;
+using Domain.Enums;
+using Domain.Workers;
 using Infrastructure.Context;
 using Microsoft.EntityFrameworkCore;
 
@@ -94,6 +96,37 @@ namespace Infrastructure.Repositories
                 .FirstOrDefaultAsync(city => city.Id == cityIdentifier);
         }
 
+        public Task<City?> GetForJobProcessingAsync(Guid cityIdentifier, bool includeWorldPlayer)
+        {
+            IQueryable<City> query = _context.Cities
+                .AsSplitQuery()
+                .Include(city => city.Buildings)
+                .Include(city => city.UnitStacks)
+                .Include(city => city.ExoticResources)
+                .Include(city => city.ActiveFocuses)
+                .Include(city => city.ModifiersInternal);
+
+            if (includeWorldPlayer)
+            {
+                query = query
+                    .Include(city => city.WorldPlayer)
+                        .ThenInclude(player => player!.ModifiersInternal)
+                    .Include(city => city.WorldPlayer)
+                        .ThenInclude(player => player!.CompletedResearches)
+                    .Include(city => city.WorldPlayer)
+                        .ThenInclude(player => player!.Cities)
+                            .ThenInclude(playerCity => playerCity.Buildings)
+                    .Include(city => city.WorldPlayer)
+                        .ThenInclude(player => player!.Cities)
+                            .ThenInclude(playerCity => playerCity.UnitStacks)
+                    .Include(city => city.WorldPlayer)
+                        .ThenInclude(player => player!.Cities)
+                            .ThenInclude(playerCity => playerCity.ActiveFocuses);
+            }
+
+            return query.FirstOrDefaultAsync(city => city.Id == cityIdentifier);
+        }
+
         public async Task<List<City>> GetCitiesByListOfIdsAsync(List<Guid> ids)
         {
             return await _context.Cities
@@ -126,6 +159,29 @@ namespace Infrastructure.Repositories
                 .ToListAsync();
         }
 
+        public Task<List<City>> GetNPCsForBuildingAutomationAsync()
+        {
+            return _context.Cities
+                .AsSplitQuery()
+                .Where(city => city.IsNPC &&
+                               city.WorldPlayerId == null &&
+                               city.Points < Application.Services.Workers.NPCBuildingWorker.TargetCityPoints &&
+                               !_context.Jobs.OfType<BuildingJob>().Any(job =>
+                                   !job.IsCompleted && job.CityId == city.Id))
+                .Include(city => city.Buildings)
+                .Include(city => city.ExoticResources)
+                .Include(city => city.ActiveFocuses)
+                .Include(city => city.ModifiersInternal)
+                .ToListAsync();
+        }
+
+        public Task<List<City>> GetCitiesForNPCBackfillAsync()
+        {
+            return _context.Cities
+                .AsNoTracking()
+                .ToListAsync();
+        }
+
         public async Task<City?> GetByCoordinatesAsync(int x, int y)
         {
             return await _context.Cities
@@ -151,6 +207,28 @@ namespace Infrastructure.Repositories
         public async Task AddAsync(City city)
         {
             await _context.Cities.AddAsync(city);
+            await _context.SaveChangesAsync();
+        }
+
+        public async Task AddNPCVillagesWithMapObjectsAsync(IReadOnlyCollection<City> cities)
+        {
+            if (cities.Count == 0)
+            {
+                return;
+            }
+
+            var mapObjects = cities.Select(city => new WorldMapObject
+            {
+                Id = Guid.NewGuid(),
+                WorldId = city.WorldId,
+                X = checked((short)city.X),
+                Y = checked((short)city.Y),
+                Type = MapObjectTypeEnum.City,
+                ReferenceEntityId = city.Id
+            }).ToList();
+
+            await _context.Cities.AddRangeAsync(cities);
+            await _context.WorldMapObjects.AddRangeAsync(mapObjects);
             await _context.SaveChangesAsync();
         }
 

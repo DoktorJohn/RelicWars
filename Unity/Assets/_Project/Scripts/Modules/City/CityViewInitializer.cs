@@ -36,7 +36,7 @@ namespace Project.Modules.CityView
                 // Hvis denne klasse også fejler, skal den opdateres til at bruge NetworkManager.Instance.City.GetDetailedCityInfo(...)
                 if (CityStateManager.Instance != null)
                 {
-                    CityStateManager.Instance.InitiateResourceRefresh(activeCityId.Value);
+                    CityStateManager.Instance.StartPollingForCity(activeCityId.Value);
                 }
                 else
                 {

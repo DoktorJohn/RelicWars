@@ -1,5 +1,6 @@
 ﻿using Domain.Enums;
 using Domain.StaticData.Data;
+using Domain.StaticData.Generators;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -28,6 +29,15 @@ namespace Domain.StaticData.Readers
             };
 
             var list = JsonSerializer.Deserialize<List<UnitData>>(json, options) ?? new();
+            if (!list.Any(unit => unit.Type == UnitTypeEnum.Longship)
+                || !list.Any(unit => unit.Type == UnitTypeEnum.WarGalley)
+                || !list.Any(unit => unit.Type == UnitTypeEnum.Transport)
+                || !list.Any(unit => unit.Type == UnitTypeEnum.GrandTransport))
+            {
+                UnitDataGenerator.GenerateDefaultJson(path);
+                json = File.ReadAllText(path);
+                list = JsonSerializer.Deserialize<List<UnitData>>(json, options) ?? new();
+            }
             _units = list.ToDictionary(u => u.Type);
         }
 

@@ -1,138 +1,202 @@
-﻿using Application.Interfaces.IRepositories;
-using Application.Interfaces.IServices;
+using Application.Interfaces.IRepositories;
+using Application.Utility;
 using Domain.Entities;
 using Domain.Enums;
 using Domain.StaticData.Generators;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Application.Generators
 {
     public class NPCSpawnerService
     {
-        private readonly ICityRepository _cityRepo;
+        private static readonly string[] NamePrefixes =
+        {
+            "Ruins of", "Old", "Lost", "Shadow", "Iron", "Grim"
+        };
+
+        private static readonly string[] NameSuffixes =
+        {
+            "Crest", "Watch", "Keep", "Falls", "Mine", "Grave"
+        };
+
+        private readonly ICityRepository _cityRepository;
         private readonly IWorldRepository _worldRepository;
-        private readonly IWorldMapObjectService _worldMapObjectService;
-        private readonly Random _random = new();
+        private readonly CityPointCalculator _cityPointCalculator;
 
-        public NPCSpawnerService(ICityRepository cityRepo, IWorldRepository worldRepository, IWorldMapObjectService worldMapObjectService)
+        public NPCSpawnerService(
+            ICityRepository cityRepository,
+            IWorldRepository worldRepository,
+            CityPointCalculator cityPointCalculator)
         {
-            _cityRepo = cityRepo;
+            _cityRepository = cityRepository;
             _worldRepository = worldRepository;
-            _worldMapObjectService = worldMapObjectService;
+            _cityPointCalculator = cityPointCalculator;
         }
 
-        public async Task SpawnInitialNPCsAsync(int count, int mapRange)
+        public async Task<int> EnsureNPCVillagesAsync()
         {
-            const int targetCitiesPerIsland = 25;
-            var world = (await _worldRepository.GetAllAsync()).FirstOrDefault();
-            if (world == null) return;
+            int createdCount = 0;
+            var worlds = await _worldRepository.GetAllAsync();
+            var allCities = await _cityRepository.GetCitiesForNPCBackfillAsync();
 
-            var existingCities = (await _cityRepo.GetAllAsync())
-                .Where(city => city.WorldId == world.Id)
-                .ToList();
-
-            // Vi bruger en HashSet til hurtigt at tjekke om koordinaterne er optaget
-            var occupied = existingCities.Select(c => (c.X, c.Y)).ToHashSet();
-
-            for (int i = 0; i < count; i++)
+            foreach (var world in worlds)
             {
-                var position = FindCoastalPosition(
-                    existingCities, occupied, world.MapSeed, mapRange, targetCitiesPerIsland);
-                if (!position.HasValue) continue;
+                var worldCities = allCities.Where(city => city.WorldId == world.Id).ToList();
+                var occupiedSites = worldCities.Select(city => (city.X, city.Y)).ToHashSet();
+                var existingNPCCountsByIsland = worldCities
+                    .Where(city => city.IsNPC)
+                    .Select(city => WorldGenerationService.TryGetIslandCoordinates(
+                        city.X,
+                        city.Y,
+                        world.MapSeed,
+                        out int cityIslandX,
+                        out int cityIslandY)
+                            ? ((int X, int Y)?)(cityIslandX, cityIslandY)
+                            : null)
+                    .Where(island => island.HasValue)
+                    .GroupBy(island => island!.Value)
+                    .ToDictionary(group => group.Key, group => group.Count());
+                var villagesToCreate = new List<City>();
 
-                var (x, y) = position.Value;
-
-                var npcCity = new City
+                foreach (var island in GetActiveIslands(world))
                 {
-                    Id = Guid.NewGuid(),
-                    Name = GenerateNPCName(),
-                    WorldId = world.Id,
-                    X = x,
-                    Y = y,
-                    IsNPC = true,
-                    Wood = 500,
-                    Stone = 500,
-                    Metal = 500,
-                    LastResourceUpdate = DateTime.UtcNow,
-                    LastExoticResourceUpdate = DateTime.UtcNow,
-                    ExoticResources = CreateInitialExoticResources(),
-                    Buildings = new List<Building>
+                    var canonicalSites = PlayerCitySiteGenerator.GenerateCanonicalSites(
+                        island,
+                        world.MapSeed,
+                        -world.Width / 2,
+                        -world.Width / 2 + world.Width - 1,
+                        -world.Height / 2,
+                        -world.Height / 2 + world.Height - 1);
+                    if (canonicalSites.Count == 0)
                     {
-                        new Building { Type = BuildingTypeEnum.TimberCamp, Level = _random.Next(1, 3) },
-                        new Building { Type = BuildingTypeEnum.StoneQuarry, Level = _random.Next(1, 3) }
-                    },
-                    UnitStacks = new List<UnitStack>
-                    {
-                        new UnitStack { Type = UnitTypeEnum.Militia, Quantity = _random.Next(5, 25) }
+                        continue;
                     }
-                };
 
-                await _cityRepo.AddAsync(npcCity);
-                await _worldMapObjectService.AddEntityToWorldMapAsync(npcCity);
-                occupied.Add((x, y));
-                existingCities.Add(npcCity);
-            }
-        }
+                    int existingNPCCount = existingNPCCountsByIsland.GetValueOrDefault((island.CellX, island.CellY));
+                    int missingNPCCount = Math.Max(
+                        0,
+                        CalculateTargetCount(world.MapSeed, island.CellX, island.CellY, canonicalSites.Count)
+                            - existingNPCCount);
 
-        private (int X, int Y)? FindCoastalPosition(
-            List<City> cities,
-            HashSet<(int X, int Y)> occupied,
-            int mapSeed,
-            int mapRange,
-            int targetCitiesPerIsland)
-        {
-            const int islandCellSize = WorldGenerationService.IslandCellSize;
-            const int islandSearchRadius = WorldGenerationService.MaximumIslandRadius + 2;
+                    var selectedSites = canonicalSites
+                        .Where(site => !occupiedSites.Contains(site))
+                        .OrderBy(site => GetStableHash(
+                            world.MapSeed,
+                            island.CellX,
+                            island.CellY,
+                            site.X,
+                            site.Y,
+                            101))
+                        .ThenBy(site => site.X)
+                        .ThenBy(site => site.Y)
+                        .Take(missingNPCCount)
+                        .ToList();
 
-            var cityCounts = cities
-                .Select(city => WorldGenerationService.TryGetIslandCoordinates(
-                    city.X, city.Y, mapSeed, out int islandX, out int islandY)
-                    ? ((int X, int Y)?)(islandX, islandY)
-                    : null)
-                .Where(island => island.HasValue)
-                .GroupBy(island => island!.Value)
-                .ToDictionary(group => group.Key, group => group.Count());
-
-            var activeIsland = cityCounts
-                .Where(pair => pair.Value < targetCitiesPerIsland)
-                .OrderByDescending(pair => pair.Value)
-                .Select(pair => ((int X, int Y)?)pair.Key)
-                .FirstOrDefault();
-
-            for (int attempt = 0; attempt < 100; attempt++)
-            {
-                var island = activeIsland ?? (
-                    _random.Next(-mapRange / islandCellSize, mapRange / islandCellSize + 1),
-                    _random.Next(-mapRange / WorldGenerationService.IslandRowHeight, mapRange / WorldGenerationService.IslandRowHeight + 1));
-                if (!WorldGenerationService.IsIslandCellActive(island.X, island.Y, mapSeed))
-                {
-                    activeIsland = null;
-                    continue;
+                    foreach (var site in selectedSites)
+                    {
+                        var village = CreateVillage(world, island, site.X, site.Y);
+                        villagesToCreate.Add(village);
+                        worldCities.Add(village);
+                        if (!allCities.Contains(village))
+                        {
+                            allCities.Add(village);
+                        }
+                        occupiedSites.Add(site);
+                        createdCount++;
+                    }
                 }
 
-                var islandDefinition = WorldGenerationService.GetIslandDefinition(island.X, island.Y, mapSeed);
-
-                var candidates = (
-                    from x in Enumerable.Range(islandDefinition.CenterX - islandSearchRadius, islandSearchRadius * 2 + 1)
-                    from y in Enumerable.Range(islandDefinition.CenterY - islandSearchRadius, islandSearchRadius * 2 + 1)
-                    where x >= -mapRange && x < mapRange && y >= -mapRange && y < mapRange
-                    where !occupied.Contains((x, y))
-                    where WorldGenerationService.IsCoastal(x, y, mapSeed)
-                    where WorldGenerationService.TryGetIslandCoordinates(x, y, mapSeed, out int islandX, out int islandY)
-                        && islandX == island.X && islandY == island.Y
-                    select (x, y)).ToList();
-
-                if (candidates.Count > 0)
-                    return candidates[_random.Next(candidates.Count)];
-
-                activeIsland = null;
+                await _cityRepository.AddNPCVillagesWithMapObjectsAsync(villagesToCreate);
             }
 
-            return null;
+            return createdCount;
+        }
+
+        public static int CalculateTargetPercentage(int mapSeed, int cellX, int cellY)
+        {
+            return 15 + (int)(GetStableHash(mapSeed, cellX, cellY, 0, 0, 17) % 11);
+        }
+
+        public static int CalculateTargetCount(int mapSeed, int cellX, int cellY, int siteCount)
+        {
+            int percentage = CalculateTargetPercentage(mapSeed, cellX, cellY);
+            return (int)Math.Round(siteCount * percentage / 100d, MidpointRounding.AwayFromZero);
+        }
+
+        private City CreateVillage(
+            World world,
+            WorldGenerationService.IslandDefinition island,
+            int x,
+            int y)
+        {
+            var village = new City
+            {
+                Id = Guid.NewGuid(),
+                Name = GenerateNPCName(world.MapSeed, island.CellX, island.CellY, x, y),
+                WorldId = world.Id,
+                X = x,
+                Y = y,
+                IsNPC = true,
+                Wood = 500,
+                Stone = 500,
+                Metal = 500,
+                LastResourceUpdate = DateTime.UtcNow,
+                LastExoticResourceUpdate = DateTime.UtcNow,
+                ExoticResources = CreateInitialExoticResources(),
+                Buildings =
+                [
+                    new Building
+                    {
+                        Id = Guid.NewGuid(),
+                        Type = BuildingTypeEnum.TimberCamp,
+                        Level = GetDeterministicLevel(world.MapSeed, island.CellX, island.CellY, x, y, 31)
+                    },
+                    new Building
+                    {
+                        Id = Guid.NewGuid(),
+                        Type = BuildingTypeEnum.StoneQuarry,
+                        Level = GetDeterministicLevel(world.MapSeed, island.CellX, island.CellY, x, y, 47)
+                    }
+                ],
+                UnitStacks =
+                [
+                    new UnitStack
+                    {
+                        Id = Guid.NewGuid(),
+                        Type = UnitTypeEnum.Militia,
+                        Quantity = 5 + (int)(GetStableHash(
+                            world.MapSeed,
+                            island.CellX,
+                            island.CellY,
+                            x,
+                            y,
+                            59) % 20)
+                    }
+                ]
+            };
+
+            village.Points = _cityPointCalculator.CalculateTotalPointsForCity(village);
+            return village;
+        }
+
+        private static IEnumerable<WorldGenerationService.IslandDefinition> GetActiveIslands(World world)
+        {
+            int minimumX = -world.Width / 2;
+            int maximumX = minimumX + world.Width - 1;
+            int minimumY = -world.Height / 2;
+            int maximumY = minimumY + world.Height - 1;
+            int minimumCellX = FloorDivide(minimumX, WorldGenerationService.IslandCellSize) - 1;
+            int maximumCellX = FloorDivide(maximumX, WorldGenerationService.IslandCellSize) + 1;
+            int minimumCellY = FloorDivide(minimumY, WorldGenerationService.IslandRowHeight) - 1;
+            int maximumCellY = FloorDivide(maximumY, WorldGenerationService.IslandRowHeight) + 1;
+
+            for (int cellX = minimumCellX; cellX <= maximumCellX; cellX++)
+            for (int cellY = minimumCellY; cellY <= maximumCellY; cellY++)
+            {
+                if (WorldGenerationService.IsIslandCellActive(cellX, cellY, world.MapSeed))
+                {
+                    yield return WorldGenerationService.GetIslandDefinition(cellX, cellY, world.MapSeed);
+                }
+            }
         }
 
         private static List<CityExoticResource> CreateInitialExoticResources()
@@ -147,11 +211,54 @@ namespace Application.Generators
                 .ToList();
         }
 
-        private string GenerateNPCName()
+        private static int GetDeterministicLevel(
+            int mapSeed,
+            int cellX,
+            int cellY,
+            int x,
+            int y,
+            int salt)
         {
-            string[] names = { "Ruins of", "Old", "Lost", "Shadow", "Iron", "Grim" };
-            string[] sites = { "Crest", "Watch", "Keep", "Falls", "Mine", "Grave" };
-            return $"{names[_random.Next(names.Length)]} {sites[_random.Next(sites.Length)]}";
+            return 1 + (int)(GetStableHash(mapSeed, cellX, cellY, x, y, salt) % 2);
+        }
+
+        private static string GenerateNPCName(int mapSeed, int cellX, int cellY, int x, int y)
+        {
+            int prefixIndex = (int)(GetStableHash(mapSeed, cellX, cellY, x, y, 71) % NamePrefixes.Length);
+            int suffixIndex = (int)(GetStableHash(mapSeed, cellX, cellY, x, y, 89) % NameSuffixes.Length);
+            return $"{NamePrefixes[prefixIndex]} {NameSuffixes[suffixIndex]}";
+        }
+
+        private static uint GetStableHash(
+            int mapSeed,
+            int cellX,
+            int cellY,
+            int x,
+            int y,
+            int salt)
+        {
+            unchecked
+            {
+                uint hash = 2166136261;
+                hash = (hash ^ (uint)mapSeed) * 16777619;
+                hash = (hash ^ (uint)cellX) * 16777619;
+                hash = (hash ^ (uint)cellY) * 16777619;
+                hash = (hash ^ (uint)x) * 16777619;
+                hash = (hash ^ (uint)y) * 16777619;
+                hash = (hash ^ (uint)salt) * 16777619;
+                hash ^= hash >> 16;
+                hash *= 0x7feb352d;
+                hash ^= hash >> 15;
+                hash *= 0x846ca68b;
+                hash ^= hash >> 16;
+                return hash;
+            }
+        }
+
+        private static int FloorDivide(int value, int divisor)
+        {
+            int quotient = value / divisor;
+            return value % divisor < 0 ? quotient - 1 : quotient;
         }
     }
 }

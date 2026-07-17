@@ -30,7 +30,7 @@ namespace Project.Network
                     _ => new AuthenticationResponse
                     {
                         IsAuthenticated = false,
-                        FeedbackMessage = BackendRequestHelper.GetErrorMessage(request)
+                        FeedbackMessage = GetUserFacingErrorMessage(request)
                     });
             }
         }
@@ -49,9 +49,17 @@ namespace Project.Network
                     _ => new AuthenticationResponse
                     {
                         IsAuthenticated = false,
-                        FeedbackMessage = BackendRequestHelper.GetErrorMessage(request)
+                        FeedbackMessage = GetUserFacingErrorMessage(request)
                     });
             }
+        }
+
+        private static string GetUserFacingErrorMessage(UnityWebRequest request)
+        {
+            var apiError = BackendRequestHelper.ParseApiError(request);
+            return string.IsNullOrWhiteSpace(apiError?.Message)
+                ? "Unable to reach the realm. Please try again."
+                : apiError.Message;
         }
     }
 }

@@ -19,6 +19,10 @@ namespace Project.Scripts.Modules.UI
             }
 
             buildingDataList ??= new List<AvailableBuildingDTO>();
+            buildingDataList = buildingDataList
+                .OrderBy(building => building.BuildingType == BuildingTypeEnum.TownHall ? 0 : 1)
+                .ThenBy(building => (int)building.BuildingType)
+                .ToList();
             _availableBuildings = buildingDataList;
 
             if (buildingDataList.Count == 0)
@@ -59,13 +63,29 @@ namespace Project.Scripts.Modules.UI
         {
             _buildingGridScrollView.Clear();
             _buildingCards.Clear();
+            VisualElement secondaryBuildingGrid = new VisualElement();
+            secondaryBuildingGrid.AddToClassList("building-secondary-grid");
 
             foreach (var building in buildingDataList)
             {
                 var card = new BuildingCardView(_buildingRowTemplateAsset.Instantiate(), building);
                 card.Initialize(cityIdentifier, this);
                 _buildingCards.Add(card);
-                _buildingGridScrollView.Add(card.Root);
+
+                if (building.BuildingType == BuildingTypeEnum.TownHall)
+                {
+                    card.Root.AddToClassList("building-card-townhall");
+                    _buildingGridScrollView.Add(card.Root);
+                }
+                else
+                {
+                    secondaryBuildingGrid.Add(card.Root);
+                }
+            }
+
+            if (secondaryBuildingGrid.childCount > 0)
+            {
+                _buildingGridScrollView.Add(secondaryBuildingGrid);
             }
         }
 
@@ -164,17 +184,12 @@ namespace Project.Scripts.Modules.UI
                 }
 
                 int targetLevel = (CurrentData.CurrentLevel ?? 0) + queuedUpgradesForThisBuilding;
-                int maxLevelAllowed = 20;
+                int maxLevelAllowed = CurrentData.MaximumLevel > 0 ? CurrentData.MaximumLevel : 20;
                 bool canAfford = ResolveCanAfford(cityStateManager);
-                bool isCurrentlyUpgrading = CurrentData.IsCurrentlyUpgrading || queuedUpgradesForThisBuilding > 0;
 
                 if (targetLevel >= maxLevelAllowed)
                 {
                     ConfigureButton("MAX LEVEL", false, "btn-imperial-primary");
-                }
-                else if (isCurrentlyUpgrading)
-                {
-                    ConfigureButton("UPGRADING", false, "btn-imperial-primary");
                 }
                 else if (isUpgradeInFlight)
                 {
@@ -190,7 +205,10 @@ namespace Project.Scripts.Modules.UI
                 }
                 else
                 {
-                    ConfigureButton(CurrentData.IsConstructed ? "UPGRADE" : "BUILD", true, "btn-imperial-success");
+                    string buttonText = queuedUpgradesForThisBuilding > 0
+                        ? "QUEUE NEXT LEVEL"
+                        : CurrentData.IsConstructed ? "UPGRADE" : "BUILD";
+                    ConfigureButton(buttonText, true, "btn-imperial-success");
                 }
             }
 

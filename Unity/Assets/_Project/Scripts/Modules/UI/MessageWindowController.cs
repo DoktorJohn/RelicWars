@@ -25,6 +25,7 @@ namespace Project.Modules.UI
         private Button _deleteConversationButton;
         private VisualElement _newMessageHeader;
         private TextField _recipientInput;
+        private VisualElement _recipientChips;
         private TextField _subjectInput;
         private VisualElement _suggestionList;
         private Label _conversationTitle;
@@ -57,13 +58,11 @@ namespace Project.Modules.UI
                     if (dataPayload is Guid targetUserId)
                     {
                         StartNewMessageMode();
-                        _state.StartComposing(targetUserId);
                         LoadRecipientProfile(targetUserId, version);
                     }
                     else if (dataPayload is string targetIdStr && Guid.TryParse(targetIdStr, out var tid))
                     {
                         StartNewMessageMode();
-                        _state.StartComposing(tid);
                         LoadRecipientProfile(tid, version);
                     }
                     else
@@ -96,6 +95,7 @@ namespace Project.Modules.UI
             _deleteConversationButton = Root.Q<Button>("DeleteConversationButton");
             _newMessageHeader = Root.Q<VisualElement>("NewMessageHeader");
             _recipientInput = Root.Q<TextField>("RecipientInput");
+            _recipientChips = Root.Q<VisualElement>("RecipientChips");
             _subjectInput = Root.Q<TextField>("SubjectInput");
             _suggestionList = Root.Q<VisualElement>("SuggestionList");
             _conversationTitle = Root.Q<Label>("ConversationTitle");
@@ -158,11 +158,9 @@ namespace Project.Modules.UI
 
             if (NetworkManager.Instance == null)
             {
-                if (_recipientInput != null)
-                {
-                    _recipientInput.SetValueWithoutNotify(targetUserId.ToString());
-                }
-
+                _state.AddRecipient(targetUserId, targetUserId.ToString());
+                RenderRecipientChips();
+                UpdateNewMessageTitle();
                 CompleteDeferredOpen(version);
                 return;
             }
@@ -176,14 +174,15 @@ namespace Project.Modules.UI
 
                 if (profile != null)
                 {
-                    _recipientInput?.SetValueWithoutNotify(profile.UserName);
-                    if (_conversationTitle != null) _conversationTitle.text = "New Message to: " + profile.UserName;
+                    _state.AddRecipient(targetUserId, profile.UserName);
                 }
                 else
                 {
-                    _recipientInput?.SetValueWithoutNotify(targetUserId.ToString());
+                    _state.AddRecipient(targetUserId, targetUserId.ToString());
                 }
 
+                RenderRecipientChips();
+                UpdateNewMessageTitle();
                 CompleteDeferredOpen(version);
             }));
         }

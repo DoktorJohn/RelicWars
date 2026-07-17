@@ -84,8 +84,14 @@ namespace Application.Services
                 double discipline = data.Discipline;
                 if (city != null)
                 {
-                    var categoryTag = data.Category == UnitCategoryEnum.Infantry ? ModifierTagEnum.InfantryStats :
-                        data.Category == UnitCategoryEnum.Cavalry ? ModifierTagEnum.CavalryStats : ModifierTagEnum.SiegeStats;
+                    var categoryTag = data.Category switch
+                    {
+                        UnitCategoryEnum.Infantry => ModifierTagEnum.InfantryStats,
+                        UnitCategoryEnum.Cavalry => ModifierTagEnum.CavalryStats,
+                        UnitCategoryEnum.Siege => ModifierTagEnum.SiegeStats,
+                        UnitCategoryEnum.Naval => ModifierTagEnum.NavalStats,
+                        _ => ModifierTagEnum.Placeholder
+                    };
                     power = _modifierService.CalculateCityUnitValue(city, data, power, ModifierTagEnum.Power, categoryTag).FinalValue;
                     discipline = _modifierService.CalculateCityUnitValue(city, data, discipline, ModifierTagEnum.Discipline, categoryTag).FinalValue;
                     if (isDefender)

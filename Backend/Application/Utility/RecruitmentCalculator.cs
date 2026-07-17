@@ -28,6 +28,7 @@ namespace Application.Utility
                 UnitCategoryEnum.Infantry => ModifierTagEnum.InfantryRecruitmentSpeed,
                 UnitCategoryEnum.Cavalry => ModifierTagEnum.CavalryRecruitmentSpeed,
                 UnitCategoryEnum.Siege => ModifierTagEnum.SiegeRecruitmentSpeed,
+                UnitCategoryEnum.Naval => ModifierTagEnum.NavalRecruitmentSpeed,
                 _ => ModifierTagEnum.Placeholder
             };
             double finalRecruitmentSpeedMultiplier = _modifierService.CalculateCityValue(

@@ -109,6 +109,7 @@ internal sealed class MemoryCityRepository : ICityRepository
     public Task<City?> GetCityWithBuildingsByCityIdentifierAsync(Guid cityId) => GetByIdAsync(cityId);
     public Task UpdateAsync(City city) => Task.CompletedTask;
     public Task AddAsync(City city) => Task.CompletedTask;
+    public Task AddNPCVillagesWithMapObjectsAsync(IReadOnlyCollection<City> cities) => Task.CompletedTask;
     public Task<List<City>> GetAllAsync() => Task.FromResult(new List<City> { _city });
     public Task<List<City>> GetCitiesByListOfIdsAsync(List<Guid> ids) => Task.FromResult(ids.Contains(_city.Id) ? new List<City> { _city } : new());
     public Task UpdateRangeAsync(List<City> cities) => Task.CompletedTask;

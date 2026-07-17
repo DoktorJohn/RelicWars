@@ -1,4 +1,5 @@
 /* Assets/UI/Windows/WindowTheme.uss */
+@import url("ResponsiveLayout.uss");
 
 /* ============================================================
    GLOBAL VARIABLES & FONTS (VIBRANT STONE)
@@ -18,6 +19,16 @@
     --c-text-highlight: rgb(165, 125, 50);
     --c-entity-link: rgb(145, 45, 45);
     --c-entity-link-hover: rgb(100, 180, 255);
+
+    /* --- SEMANTIC VALUES (light surfaces / dark HUD) --- */
+    --c-value-positive: rgb(28, 103, 52);
+    --c-value-total: rgb(122, 71, 8);
+    --c-value-warning: rgb(148, 78, 0);
+    --c-value-negative: rgb(150, 34, 34);
+    --c-value-positive-on-dark: rgb(119, 207, 126);
+    --c-value-total-on-dark: rgb(238, 194, 103);
+    --c-value-warning-on-dark: rgb(241, 163, 73);
+    --c-value-negative-on-dark: rgb(235, 104, 94);
 
     /* --- IMPERIAL BUTTONS --- */
     /* Chill / Primary (Red) */
@@ -161,6 +172,30 @@
     scale: 1;
 }
 
+/* Shared text link for non-entity navigation such as auth scene changes */
+.btn-text-link {
+    min-height: 38px;
+    margin-top: 7px;
+    padding: 6px;
+    color: var(--c-text-muted);
+    background-color: rgba(0, 0, 0, 0);
+    border-width: 0;
+    -unity-font-definition: var(--font-body);
+    -unity-font-style: bold;
+    -unity-text-align: middle-center;
+    font-size: 12px;
+    cursor: link;
+}
+
+.btn-text-link:hover {
+    color: var(--c-text-highlight);
+}
+
+.btn-text-link:disabled {
+    color: var(--c-text-muted);
+    opacity: 0.5;
+}
+
 /* ============================================================
    WINDOW STRUCTURE
    ============================================================ */
@@ -254,10 +289,6 @@
     width: 340px;
     padding: 12px 14px;
     background-color: rgb(236, 226, 207);
-    border-width: 2px;
-    border-color: var(--c-border);
-    border-radius: 5px;
-    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.48);
 }
 
 .window-info-tooltip__title {

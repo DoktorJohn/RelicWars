@@ -10,19 +10,28 @@
             <ui:Label name="City-ServerTime-Label" class="city-time-value" text="00:00:00" />
         </ui:VisualElement>
 
+        <ui:Button name="City-TopBar-InventoryButton" class="city-top-bar-inventory-button">
+            <ui:VisualElement class="city-top-bar-inventory-icon" picking-mode="Ignore" />
+            <ui:Label text="INVENTORY" class="city-top-bar-inventory-label" picking-mode="Ignore" />
+        </ui:Button>
+
+        <ui:Button name="City-TopBar-AdministrationButton" class="city-top-bar-inventory-button city-top-bar-administration-button">
+            <ui:VisualElement class="city-top-bar-inventory-icon city-top-bar-administration-icon" picking-mode="Ignore" />
+            <ui:Label text="ADMIN" class="city-top-bar-inventory-label city-top-bar-administration-label" picking-mode="Ignore" />
+        </ui:Button>
+
         <ui:VisualElement name="City-Selector-Section" class="city-selector-section">
             <ui:Button name="City-Selector-Arrow-Left" class="city-selector-arrow" text="◄" />
             <ui:Label name="City-Selector-CurrentCity-Label" class="city-selector-label" text="Current City" />
             <ui:TextField name="City-Selector-Rename-Input" class="city-selector-rename-input" style="display: none;" />
             <ui:Button name="City-Selector-Arrow-Right" class="city-selector-arrow" text="►" />
 
-            <ui:VisualElement name="City-Selector-Dropdown-Container" class="city-selector-dropdown-container" style="display: none;">
+            <ui:VisualElement name="City-Selector-Dropdown-Container" class="window-frame floating-window-frame city-selector-dropdown-container" style="display: none;">
                 <ui:ScrollView name="City-Selector-Dropdown-Scroll" />
             </ui:VisualElement>
         </ui:VisualElement>
 
         <ui:VisualElement name="City-TopBar-ResourceSection-Right" class="city-top-bar-resource-section-right">
-
             <ui:VisualElement name="City-TopBar-ExoticResources-Trigger" class="city-resource-group city-exotic-resource-trigger">
                 <ui:VisualElement class="city-resource-icon-container city-exotic-resource-icon-container">
                     <ui:VisualElement class="city-exotic-resource-stack">
@@ -34,7 +43,7 @@
                 <ui:Label name="City-ResourceLabel-ExoticAmount" class="city-resource-label-amount city-exotic-resource-total" text="0" />
             </ui:VisualElement>
 
-            <ui:VisualElement class="city-resource-group">
+            <ui:VisualElement name="City-TopBar-Population-Trigger" class="city-resource-group city-standard-resource-trigger">
                 <ui:VisualElement class="city-resource-icon-container">
                     <ui:VisualElement class="city-resource-icon-base icon-population" />
                     <ui:VisualElement name="City-WarehouseBar-Population" class="city-warehouse-capacity-bar" />
@@ -42,7 +51,7 @@
                 <ui:Label name="City-ResourceLabel-PopulationAmount" class="city-resource-label-amount" text="0" />
             </ui:VisualElement>
 
-            <ui:VisualElement class="city-resource-group">
+            <ui:VisualElement name="City-TopBar-Wood-Trigger" class="city-resource-group city-standard-resource-trigger">
                 <ui:VisualElement class="city-resource-icon-container">
                     <ui:VisualElement class="city-resource-icon-base icon-wood" />
                     <ui:VisualElement name="City-WarehouseBar-Wood" class="city-warehouse-capacity-bar" />
@@ -50,7 +59,7 @@
                 <ui:Label name="City-ResourceLabel-WoodAmount" class="city-resource-label-amount" text="0" />
             </ui:VisualElement>
 
-            <ui:VisualElement class="city-resource-group">
+            <ui:VisualElement name="City-TopBar-Stone-Trigger" class="city-resource-group city-standard-resource-trigger">
                 <ui:VisualElement class="city-resource-icon-container">
                     <ui:VisualElement class="city-resource-icon-base icon-stone" />
                     <ui:VisualElement name="City-WarehouseBar-Stone" class="city-warehouse-capacity-bar" />
@@ -58,7 +67,7 @@
                 <ui:Label name="City-ResourceLabel-StoneAmount" class="city-resource-label-amount" text="0" />
             </ui:VisualElement>
 
-            <ui:VisualElement class="city-resource-group">
+            <ui:VisualElement name="City-TopBar-Metal-Trigger" class="city-resource-group city-standard-resource-trigger">
                 <ui:VisualElement class="city-resource-icon-container">
                     <ui:VisualElement class="city-resource-icon-base icon-metal" />
                     <ui:VisualElement name="City-WarehouseBar-Metal" class="city-warehouse-capacity-bar" />
@@ -66,21 +75,21 @@
                 <ui:Label name="City-ResourceLabel-MetalAmount" class="city-resource-label-amount" text="0" />
             </ui:VisualElement>
 
-            <ui:VisualElement class="city-resource-group">
+            <ui:VisualElement name="City-TopBar-Coins-Trigger" class="city-resource-group city-standard-resource-trigger">
                 <ui:VisualElement class="city-resource-icon-container">
                     <ui:VisualElement class="city-resource-icon-base icon-coins" />
                 </ui:VisualElement>
                 <ui:Label name="City-ResourceLabel-CoinsAmount" class="city-resource-label-amount" text="0" />
             </ui:VisualElement>
 
-            <ui:VisualElement class="city-resource-group">
+            <ui:VisualElement name="City-TopBar-Research-Trigger" class="city-resource-group city-standard-resource-trigger">
                 <ui:VisualElement class="city-resource-icon-container">
                     <ui:VisualElement class="city-resource-icon-base icon-research" />
                 </ui:VisualElement>
                 <ui:Label name="City-ResourceLabel-ResearchAmount" class="city-resource-label-amount" text="0" />
             </ui:VisualElement>
 
-            <ui:VisualElement class="city-resource-group">
+            <ui:VisualElement name="City-TopBar-Ideology-Trigger" class="city-resource-group city-standard-resource-trigger">
                 <ui:VisualElement class="city-resource-icon-container">
                     <ui:VisualElement class="city-resource-icon-base icon-ideology" />
                     <ui:VisualElement name="City-WarehouseBar-Ideology" class="city-warehouse-capacity-bar" />
@@ -92,10 +101,62 @@
         <ui:Button name="City-TopBar-LogoutButton" class="city-top-bar-logout-button" text="LOG OUT" />
         <ui:Button name="City-TopBar-MapButton" class="city-top-bar-map-button" />
     </ui:VisualElement>
-    <ui:VisualElement name="City-TopBar-ExoticResources-Tooltip" class="window-frame city-exotic-tooltip" picking-mode="Ignore">
+    <ui:VisualElement name="City-TopBar-ExoticResources-Tooltip" class="window-frame floating-window-frame city-exotic-tooltip" picking-mode="Ignore">
         <ui:VisualElement class="city-exotic-tooltip-header">
             <ui:Label name="City-TopBar-ExoticResources-TooltipTitle" text="EXOTIC STOCKPILE" class="city-exotic-tooltip-title" />
         </ui:VisualElement>
         <ui:VisualElement name="City-TopBar-ExoticResources-TooltipGrid" class="city-exotic-tooltip-grid" />
+    </ui:VisualElement>
+    <ui:VisualElement name="City-TopBar-StandardResource-Tooltip" class="window-frame floating-window-frame city-standard-resource-tooltip" picking-mode="Ignore">
+        <ui:VisualElement class="city-standard-resource-tooltip-header">
+            <ui:VisualElement name="City-TopBar-StandardResource-TooltipIcon" class="city-standard-resource-tooltip-icon icon-wood" />
+            <ui:Label name="City-TopBar-StandardResource-TooltipTitle" class="city-standard-resource-tooltip-title" />
+        </ui:VisualElement>
+        <ui:VisualElement class="city-standard-resource-tooltip-content">
+            <ui:VisualElement name="City-TopBar-StandardResource-CityRow" class="city-standard-resource-tooltip-row">
+                <ui:Label name="City-TopBar-StandardResource-CityKey" text="IN THIS CITY" class="city-standard-resource-tooltip-key" />
+                <ui:Label name="City-TopBar-StandardResource-CityAmount" class="city-standard-resource-tooltip-value" />
+            </ui:VisualElement>
+            <ui:VisualElement class="city-standard-resource-tooltip-row">
+                <ui:Label name="City-TopBar-StandardResource-ProductionKey" text="PRODUCTION / HOUR" class="city-standard-resource-tooltip-key" />
+                <ui:Label name="City-TopBar-StandardResource-Production" class="city-standard-resource-tooltip-value city-standard-resource-tooltip-value--positive" />
+            </ui:VisualElement>
+            <ui:VisualElement name="City-TopBar-StandardResource-CapacityRow" class="city-standard-resource-tooltip-row">
+                <ui:Label text="WAREHOUSE FULL IN" class="city-standard-resource-tooltip-key" />
+                <ui:Label name="City-TopBar-StandardResource-TimeToCapacity" class="city-standard-resource-tooltip-value" />
+            </ui:VisualElement>
+            <ui:VisualElement class="city-standard-resource-tooltip-row city-standard-resource-tooltip-row--total">
+                <ui:Label text="PLAYER TOTAL" class="city-standard-resource-tooltip-key" />
+                <ui:Label name="City-TopBar-StandardResource-PlayerTotal" class="city-standard-resource-tooltip-value city-standard-resource-tooltip-value--total" />
+            </ui:VisualElement>
+        </ui:VisualElement>
+    </ui:VisualElement>
+    <ui:VisualElement name="City-TopBar-Population-Tooltip" class="window-frame floating-window-frame city-population-tooltip" picking-mode="Ignore">
+        <ui:VisualElement class="city-standard-resource-tooltip-header">
+            <ui:VisualElement class="city-standard-resource-tooltip-icon icon-population" />
+            <ui:Label text="POPULATION" class="city-standard-resource-tooltip-title" />
+        </ui:VisualElement>
+        <ui:VisualElement class="city-standard-resource-tooltip-content">
+            <ui:VisualElement class="city-standard-resource-tooltip-row">
+                <ui:Label text="HOUSING CAPACITY" class="city-standard-resource-tooltip-key" />
+                <ui:Label name="City-TopBar-Population-Housing" class="city-standard-resource-tooltip-value" />
+            </ui:VisualElement>
+            <ui:VisualElement class="city-standard-resource-tooltip-row">
+                <ui:Label text="MODIFIER BONUS" class="city-standard-resource-tooltip-key" />
+                <ui:Label name="City-TopBar-Population-Modifier" class="city-standard-resource-tooltip-value city-standard-resource-tooltip-value--positive" />
+            </ui:VisualElement>
+            <ui:VisualElement class="city-standard-resource-tooltip-row">
+                <ui:Label text="TOTAL CAPACITY" class="city-standard-resource-tooltip-key" />
+                <ui:Label name="City-TopBar-Population-Total" class="city-standard-resource-tooltip-value" />
+            </ui:VisualElement>
+            <ui:VisualElement class="city-standard-resource-tooltip-row">
+                <ui:Label text="IN USE" class="city-standard-resource-tooltip-key" />
+                <ui:Label name="City-TopBar-Population-InUse" class="city-standard-resource-tooltip-value" />
+            </ui:VisualElement>
+            <ui:VisualElement class="city-standard-resource-tooltip-row city-standard-resource-tooltip-row--total">
+                <ui:Label text="REMAINING" class="city-standard-resource-tooltip-key" />
+                <ui:Label name="City-TopBar-Population-Remaining" class="city-standard-resource-tooltip-value city-standard-resource-tooltip-value--total" />
+            </ui:VisualElement>
+        </ui:VisualElement>
     </ui:VisualElement>
 </ui:UXML>

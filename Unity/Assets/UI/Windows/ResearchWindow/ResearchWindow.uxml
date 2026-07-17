@@ -15,6 +15,7 @@
                 <ui:Button name="Tab-Economy" text="ECONOMY" class="research-tab-button" />
                 <ui:Button name="Tab-War" text="WAR" class="research-tab-button" />
                 <ui:Button name="Tab-Utility" text="UTILITY" class="research-tab-button" />
+                <ui:Button name="Tab-Unlocks" text="UNLOCKS" class="research-tab-button" />
             </ui:VisualElement>
 
             <ui:VisualElement class="research-stats-bar">
@@ -48,7 +49,7 @@
 
         </ui:VisualElement>
 
-        <ui:VisualElement name="Research-Lock-Tooltip" class="window-frame research-lock-tooltip" picking-mode="Ignore">
+        <ui:VisualElement name="Research-Lock-Tooltip" class="window-frame floating-window-frame research-lock-tooltip" picking-mode="Ignore">
             <ui:VisualElement class="research-lock-tooltip-header">
                 <ui:Label text="UNLOCKED BY" class="research-lock-tooltip-title" />
             </ui:VisualElement>

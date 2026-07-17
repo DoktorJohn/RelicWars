@@ -24,17 +24,11 @@ namespace Project.Modules.UI
 
             if (query.Length < SearchMinimumLength)
             {
-                _suggestionList.style.display = DisplayStyle.None;
+                if (_suggestionList != null) _suggestionList.style.display = DisplayStyle.None;
                 _state.SetSuggestions(null);
                 return;
             }
 
-            if (_state.SelectedRecipientId != Guid.Empty && query == _state.Suggestions.FirstOrDefault(s => s.WorldPlayerId == _state.SelectedRecipientId)?.Username)
-            {
-                return;
-            }
-
-            _state.ClearRecipient();
             if (_recipientSearchCoroutine != null)
             {
                 StopCoroutine(_recipientSearchCoroutine);
@@ -166,9 +160,17 @@ namespace Project.Modules.UI
 
                 if (requestedQuery != _state.LatestSearchQuery) return;
 
-                if (results != null && results.Count > 0)
+                var currentPlayerId = ResolveCurrentWorldPlayerId();
+                var availableResults = results?
+                    .Where(result => result != null &&
+                        result.WorldPlayerId != Guid.Empty &&
+                        result.WorldPlayerId != currentPlayerId &&
+                        !_state.HasRecipient(result.WorldPlayerId))
+                    .ToList();
+
+                if (availableResults != null && availableResults.Count > 0)
                 {
-                    _state.SetSuggestions(results);
+                    _state.SetSuggestions(availableResults);
                     _suggestionList.style.display = DisplayStyle.Flex;
                     RenderSuggestions();
                 }
@@ -182,6 +184,8 @@ namespace Project.Modules.UI
 
         private void RenderSuggestions()
         {
+            if (_suggestionList == null) return;
+
             _suggestionList.Clear();
             for (int i = 0; i < _state.Suggestions.Count; i++)
             {
@@ -198,11 +202,61 @@ namespace Project.Modules.UI
         private void SelectSuggestion(PlayerSearchResultDTO suggestion)
         {
             if (suggestion == null) return;
-            _state.SelectRecipient(suggestion);
-            _recipientInput.SetValueWithoutNotify(suggestion.Username);
-            _suggestionList.style.display = DisplayStyle.None;
-            if (_conversationTitle != null) _conversationTitle.text = "New Message to: " + suggestion.Username;
-            if (_subjectInput != null) _subjectInput.Focus();
+            if (suggestion.WorldPlayerId == ResolveCurrentWorldPlayerId()) return;
+
+            _state.AddRecipient(suggestion);
+            _state.SetSearchQuery(string.Empty);
+            _state.SetSuggestions(null);
+            _recipientInput?.SetValueWithoutNotify(string.Empty);
+            if (_suggestionList != null) _suggestionList.style.display = DisplayStyle.None;
+            RenderRecipientChips();
+            UpdateNewMessageTitle();
+            _recipientInput?.Focus();
+        }
+
+        private void RenderRecipientChips()
+        {
+            if (_recipientChips == null) return;
+
+            _recipientChips.Clear();
+            foreach (var recipient in _state.SelectedRecipients)
+            {
+                var recipientId = recipient.WorldPlayerId;
+                var chip = new VisualElement();
+                chip.AddToClassList("recipient-chip");
+
+                var label = new Label(recipient.Username);
+                label.AddToClassList("recipient-chip-label");
+                chip.Add(label);
+
+                var removeButton = new Button(() => RemoveRecipient(recipientId)) { text = "X" };
+                removeButton.AddToClassList("recipient-chip-remove");
+                chip.Add(removeButton);
+
+                _recipientChips.Add(chip);
+            }
+        }
+
+        private void RemoveRecipient(Guid recipientId)
+        {
+            _state.RemoveRecipient(recipientId);
+            RenderRecipientChips();
+            UpdateNewMessageTitle();
+            _recipientInput?.Focus();
+        }
+
+        private void UpdateNewMessageTitle()
+        {
+            if (_conversationTitle == null) return;
+
+            var names = _state.SelectedRecipients
+                .Select(recipient => recipient.Username)
+                .Where(username => !string.IsNullOrWhiteSpace(username))
+                .ToList();
+
+            _conversationTitle.text = names.Count == 0
+                ? "New Message"
+                : "New Message to: " + string.Join(", ", names);
         }
 
         private void UpdateInputAreaState()
@@ -226,9 +280,11 @@ namespace Project.Modules.UI
             if (_deleteConversationButton != null) _deleteConversationButton.style.display = DisplayStyle.None;
             if (_newMessageHeader != null) _newMessageHeader.style.display = DisplayStyle.Flex;
             if (_messageList != null) _messageList.Clear();
-            if (_recipientInput != null) _recipientInput.value = "";
+            if (_recipientInput != null) _recipientInput.SetValueWithoutNotify(string.Empty);
             if (_subjectInput != null) _subjectInput.value = "";
-            if (_conversationTitle != null) _conversationTitle.text = "New Message";
+            if (_suggestionList != null) _suggestionList.style.display = DisplayStyle.None;
+            RenderRecipientChips();
+            UpdateNewMessageTitle();
             SetMessageState("Write a message");
             RenderConversationList();
             UpdateInputAreaState();

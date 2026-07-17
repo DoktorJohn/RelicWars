@@ -46,6 +46,7 @@ namespace Project.Network.Models
         public int X { get; set; }
         public int Y { get; set; }
         public int Points { get; set; }
+        public bool IsNPC { get; set; }
     }
 
     [Serializable]
@@ -62,6 +63,7 @@ namespace Project.Network.Models
         public string AllianceName { get; set; } = string.Empty;
         public bool CanAttack { get; set; }
         public bool CanSupport { get; set; }
+        public bool IsNPC { get; set; }
     }
 
     [Serializable]
@@ -124,8 +126,11 @@ namespace Project.Network.Models
     [Serializable]
     public class PopulationBreakdownDTO
     {
-        public int MaxCapacity;
+        public int HousingCapacity;
         public double ModifierBonus;
+        public int TotalCapacity;
+        public int InUse;
+        public int Remaining;
     }
 
     [Serializable]
@@ -175,6 +180,7 @@ namespace Project.Network.Models
 
         public int CurrentPopulationUsage;
         public int MaxPopulationCapacity;
+        public PopulationBreakdownDTO Population = new();
         public double Resistance;
         public double ResistanceTarget;
         public double ResistanceRecoveryPerHour;

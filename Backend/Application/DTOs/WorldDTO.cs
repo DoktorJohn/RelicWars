@@ -37,10 +37,14 @@ public class WorldMapChunkResponseDTO
     public int ChunkY { get; set; }
     public int Width { get; set; }
     public int Height { get; set; }
+    public int MaximumCityPoints { get; set; }
     public List<WorldMapObjectDTO> MapObjects { get; set; } = new();
     public List<CityDTO> Cities { get; set; } = new();
+    public List<WorldMapCoordinateDTO> FutureCitySites { get; set; } = new();
     public List<WorldIslandMapDTO> Islands { get; set; } = new();
 }
+
+public record WorldMapCoordinateDTO(int X, int Y);
 
 public record WorldIslandMapDTO(Guid Id, int CenterX, int CenterY);
 
@@ -61,7 +65,8 @@ public record WorldIslandCityDTO(
     int Y,
     int Points,
     Guid? AllianceId,
-    string? AllianceName);
+    string? AllianceName,
+    bool IsNPC = false);
 
 public record WorldIslandExoticResourceDTO(
     int SlotIndex,

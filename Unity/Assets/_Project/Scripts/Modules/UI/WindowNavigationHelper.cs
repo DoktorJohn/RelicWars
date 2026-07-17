@@ -54,6 +54,8 @@ namespace Project.Modules.UI
 
         public static void OpenMessageToPlayer(Guid worldPlayerId) => OpenWindow(WindowTypeEnum.Message, worldPlayerId);
 
+        public static void OpenCombatSimulator(object payload = null) => OpenWindow(WindowTypeEnum.CombatSimulator, payload);
+
         public static void OpenWindow(WindowTypeEnum windowType, object payload = null)
         {
             if (GlobalWindowManager.Instance == null)

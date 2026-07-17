@@ -2,7 +2,9 @@ using Application.DTOs;
 using Application.Interfaces.IRepositories;
 using Application.Interfaces.IServices;
 using Application.Services;
+using Application.Utility;
 using Domain.Entities;
+using Domain.StaticData.Generators;
 using Domain.User;
 using Microsoft.Extensions.Logging.Abstractions;
 
@@ -10,6 +12,70 @@ namespace Application.Tests;
 
 public class WorldServiceTests
 {
+    [Fact]
+    public async Task GetWorldMapChunk_GeneratesSitesWithOneMapObjectAreaQuery()
+    {
+        const int seed = 42069;
+        var activeCell = (
+            from cellX in Enumerable.Range(-10, 21)
+            from cellY in Enumerable.Range(-10, 21)
+            where WorldGenerationService.IsIslandCellActive(cellX, cellY, seed)
+            select (cellX, cellY)).First();
+        var definition = WorldGenerationService.GetIslandDefinition(activeCell.cellX, activeCell.cellY, seed);
+        var world = new World
+        {
+            Id = Guid.NewGuid(),
+            Name = "Performance test world",
+            Width = 2_000,
+            Height = 2_000,
+            MapSeed = seed
+        };
+        var viewer = new WorldPlayer
+        {
+            Id = Guid.NewGuid(),
+            WorldId = world.Id,
+            PlayerProfileId = Guid.NewGuid()
+        };
+        var island = new WorldIsland
+        {
+            Id = Guid.NewGuid(),
+            WorldId = world.Id,
+            CellX = activeCell.cellX,
+            CellY = activeCell.cellY,
+            CenterX = definition.CenterX,
+            CenterY = definition.CenterY
+        };
+        var mapObjects = new RecordingWorldMapObjectRepository();
+        var service = new WorldService(
+            new CountingWorldRepository(world, 1),
+            mapObjects,
+            new SingleCityRepository(new City { Id = Guid.NewGuid(), WorldId = world.Id }),
+            new TestPlayerAccessService([viewer]),
+            new FixedWorldIslandRepository(island),
+            new NoOpExoticResourceService(),
+            new DeploymentPermissionService(new TestAllianceRepository()),
+            new CityPointCalculator(TestData.BuildingReader()));
+        var request = new GetWorldMapChunkDTO
+        {
+            worldId = world.Id,
+            startX = checked((short)(definition.CenterX - 25)),
+            startY = checked((short)(definition.CenterY - 25)),
+            width = 50,
+            height = 50
+        };
+
+        var response = await service.GetWorldMapChunk(request);
+
+        Assert.NotNull(response);
+        Assert.Equal(1, mapObjects.AreaQueryCount);
+        Assert.NotEmpty(response!.FutureCitySites);
+        Assert.All(response.FutureCitySites, site =>
+        {
+            Assert.InRange(site.X, request.startX, request.startX + request.width - 1);
+            Assert.InRange(site.Y, request.startY, request.startY + request.height - 1);
+        });
+    }
+
     [Fact]
     public async Task ObtainAllActiveGameWorldsAsync_UsesActualWorldPlayerCount()
     {
@@ -28,6 +94,82 @@ public class WorldServiceTests
 
         var result = Assert.Single(worlds);
         Assert.Equal(2, result.CurrentPlayerCount);
+    }
+
+    [Fact]
+    public async Task WorldMapAndIslandDTOs_ExposeNPCVillageState()
+    {
+        const int seed = 42069;
+        var activeCell = (
+            from cellX in Enumerable.Range(-10, 21)
+            from cellY in Enumerable.Range(-10, 21)
+            where WorldGenerationService.IsIslandCellActive(cellX, cellY, seed)
+            select (cellX, cellY)).First();
+        var definition = WorldGenerationService.GetIslandDefinition(activeCell.cellX, activeCell.cellY, seed);
+        var world = new World
+        {
+            Id = Guid.NewGuid(),
+            Width = 2_000,
+            Height = 2_000,
+            MapSeed = seed
+        };
+        var viewer = new WorldPlayer { Id = Guid.NewGuid(), WorldId = world.Id, PlayerProfileId = Guid.NewGuid() };
+        var island = new WorldIsland
+        {
+            Id = Guid.NewGuid(),
+            WorldId = world.Id,
+            CellX = activeCell.cellX,
+            CellY = activeCell.cellY,
+            CenterX = definition.CenterX,
+            CenterY = definition.CenterY
+        };
+        var site = PlayerCitySiteGenerator.GenerateCanonicalSites(
+            definition,
+            seed,
+            -1_000,
+            999,
+            -1_000,
+            999).First();
+        var village = new City
+        {
+            Id = Guid.NewGuid(),
+            Name = "Old Watch",
+            WorldId = world.Id,
+            X = site.X,
+            Y = site.Y,
+            IsNPC = true
+        };
+        var mapObject = new WorldMapObject
+        {
+            Id = Guid.NewGuid(),
+            WorldId = world.Id,
+            X = (short)village.X,
+            Y = (short)village.Y,
+            Type = Domain.Enums.MapObjectTypeEnum.City,
+            ReferenceEntityId = village.Id
+        };
+        var service = new WorldService(
+            new CountingWorldRepository(world, 1),
+            new RecordingWorldMapObjectRepository(mapObject),
+            new SingleCityRepository(village),
+            new TestPlayerAccessService([viewer]),
+            new FixedWorldIslandRepository(island),
+            new NoOpExoticResourceService(),
+            new DeploymentPermissionService(new TestAllianceRepository()),
+            new CityPointCalculator(TestData.BuildingReader()));
+
+        var chunk = await service.GetWorldMapChunk(new GetWorldMapChunkDTO
+        {
+            worldId = world.Id,
+            startX = (short)(village.X - 5),
+            startY = (short)(village.Y - 5),
+            width = 10,
+            height = 10
+        });
+        var details = await service.GetIslandDetailsAsync(island.Id);
+
+        Assert.True(Assert.Single(chunk!.Cities).IsNPC);
+        Assert.True(Assert.Single(details!.Cities).IsNPC);
     }
 
     [Fact]
@@ -110,8 +252,9 @@ public class WorldServiceTests
         Assert.Null(dto.WorldPlayerName);
         Assert.Null(dto.AllianceId);
         Assert.Null(dto.AllianceName);
-        Assert.False(dto.CanAttack);
-        Assert.False(dto.CanSupport);
+        Assert.True(dto.IsNPC);
+        Assert.True(dto.CanAttack);
+        Assert.True(dto.CanSupport);
     }
 
     [Fact]
@@ -182,7 +325,8 @@ public class WorldServiceTests
             new TestPlayerAccessService([viewer]),
             new NoOpWorldIslandRepository(),
             new NoOpExoticResourceService(),
-            new DeploymentPermissionService(new TestAllianceRepository(relations)));
+            new DeploymentPermissionService(new TestAllianceRepository(relations)),
+            new CityPointCalculator(TestData.BuildingReader()));
     }
 
     private sealed class SingleCityRepository(City city) : ICityRepository
@@ -195,6 +339,7 @@ public class WorldServiceTests
         public Task<List<City>> GetAllAsync() => Task.FromResult(new List<City> { city });
         public Task UpdateRangeAsync(List<City> cities) => Task.CompletedTask;
         public Task AddAsync(City city) => Task.CompletedTask;
+        public Task AddNPCVillagesWithMapObjectsAsync(IReadOnlyCollection<City> cities) => Task.CompletedTask;
         public Task<City?> GetCityWithBuildingsByCityIdentifierAsync(Guid cityId) => GetByIdAsync(cityId);
         public Task<City?> GetTownHallCityByCityIdentifierAsync(Guid cityId) => GetByIdAsync(cityId);
         public Task<City?> GetByCoordinatesAsync(int x, int y) => Task.FromResult<City?>(city.X == x && city.Y == y ? city : null);
@@ -238,6 +383,39 @@ public class WorldServiceTests
         public Task<WorldIsland?> GetByIdAsync(Guid islandId) => Task.FromResult<WorldIsland?>(null);
         public Task<List<WorldIsland>> GetInAreaAsync(Guid worldId, int startX, int startY, int width, int height) => Task.FromResult(new List<WorldIsland>());
         public Task UpdateAsync(WorldIsland island) => Task.CompletedTask;
+    }
+
+    private sealed class FixedWorldIslandRepository(WorldIsland island) : IWorldIslandRepository
+    {
+        public Task<WorldIsland?> GetByCellAsync(Guid worldId, int cellX, int cellY) =>
+            Task.FromResult<WorldIsland?>(cellX == island.CellX && cellY == island.CellY ? island : null);
+        public Task<WorldIsland?> GetByIdAsync(Guid islandId) =>
+            Task.FromResult<WorldIsland?>(islandId == island.Id ? island : null);
+        public Task<List<WorldIsland>> GetInAreaAsync(Guid worldId, int startX, int startY, int width, int height) =>
+            Task.FromResult(new List<WorldIsland> { island });
+        public Task UpdateAsync(WorldIsland updatedIsland) => Task.CompletedTask;
+    }
+
+    private sealed class RecordingWorldMapObjectRepository(params WorldMapObject[] objects) : IWorldMapObjectRepository
+    {
+        private readonly List<WorldMapObject> _objects = objects.ToList();
+        public int AreaQueryCount { get; private set; }
+
+        public Task AddAsync(WorldMapObject worldMapObject) => Task.CompletedTask;
+        public Task<WorldMapObject?> GetWorldMapObjectByReferenceIdAsync(Guid referenceId) => Task.FromResult<WorldMapObject?>(null);
+        public Task<List<WorldMapObject>> GetObjectsInAreaAsync(Guid worldId, short startX, short startY, byte width, byte height)
+        {
+            AreaQueryCount++;
+            return Task.FromResult(_objects.Where(mapObject => mapObject.WorldId == worldId
+                && mapObject.X >= startX && mapObject.X < startX + width
+                && mapObject.Y >= startY && mapObject.Y < startY + height).ToList());
+        }
+        public Task DeleteAtCoordinatesAsync(Guid worldId, short x, short y) => Task.CompletedTask;
+        public Task DeleteByReferenceIdAsync(Guid referenceEntityId) => Task.CompletedTask;
+        public Task UpdateAsync(WorldMapObject worldMapObject) => Task.CompletedTask;
+        public Task<WorldMapObject?> GetCityOnCoordinatesAsync(Guid worldId, short X, short Y) => Task.FromResult<WorldMapObject?>(null);
+        public Task<List<WorldMapObject>> GetObjectsByTypeAsync(Guid id, Domain.Enums.MapObjectTypeEnum type) =>
+            Task.FromResult(_objects.Where(mapObject => mapObject.WorldId == id && mapObject.Type == type).ToList());
     }
 
     private sealed class NoOpExoticResourceService : IExoticResourceService

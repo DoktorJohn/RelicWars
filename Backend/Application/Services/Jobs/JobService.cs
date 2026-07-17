@@ -23,6 +23,8 @@ namespace Application.Services.Jobs
         private readonly IWorldPlayerRepository _worldPlayerRepo;
         private readonly CityPointCalculator _cityPointCalculator;
         private readonly ILogger<JobService> _logger;
+        private readonly IDailyObjectiveService? _dailyObjectiveService;
+        private readonly ICityStatService? _cityStatService;
 
         public JobService(
             IBattleReportRepository battleReportRepository,
@@ -31,7 +33,9 @@ namespace Application.Services.Jobs
             ILogger<JobService> logger,
             IWorldPlayerRepository userRepo,
             IWorldPlayerService worldPlayerService,
-            CityPointCalculator cityPointCalculator)
+            CityPointCalculator cityPointCalculator,
+            IDailyObjectiveService? dailyObjectiveService = null,
+            ICityStatService? cityStatService = null)
         {
             _battleReportRepository = battleReportRepository;
             _resourceService = resourceService;
@@ -40,11 +44,13 @@ namespace Application.Services.Jobs
             _worldPlayerRepo = userRepo;
             _worldPlayerService = worldPlayerService;
             _cityPointCalculator = cityPointCalculator;
+            _dailyObjectiveService = dailyObjectiveService;
+            _cityStatService = cityStatService;
         }
 
         public async Task ProcessAsync(BaseJob job)
         {
-            _logger.LogInformation("[JobService] Processing {JobType} {JobId}", job.GetType().Name, job.Id);
+            _logger.LogDebug("[JobService] Processing {JobType} {JobId}", job.GetType().Name, job.Id);
 
             switch (job)
             {
@@ -62,17 +68,46 @@ namespace Application.Services.Jobs
 
         private async Task ProcessCityJob(BaseJob job, Action<City, BaseJob> handler)
         {
-            var city = await _cityRepo.GetByIdAsync((Guid)job.GetType().GetProperty("CityId")!.GetValue(job)!);
+            var city = await _cityRepo.GetForJobProcessingAsync(
+                (Guid)job.GetType().GetProperty("CityId")!.GetValue(job)!,
+                job.WorldPlayerId != Guid.Empty);
             if (city == null) return;
 
+            int previousPoints = city.Points;
+            int previousPopulation = _cityStatService?.GetMaxPopulation(city) ?? 0;
+            int previousCompletedQuantity = job is RecruitmentJob recruitment ? recruitment.CompletedQuantity : 0;
+
             // 1. Synkroniser ressourcer til jobbets afslutningstidspunkt
-            SyncResourcesToJobCompletion(city, job.ExecutionTime);
+            await SyncResourcesToJobCompletion(city, job.ExecutionTime);
 
             // 2. Kør den specifikke logik (Bygning eller Rekruttering)
             handler(city, job);
 
+            if (_dailyObjectiveService != null && city.WorldPlayerId.HasValue)
+            {
+                if (job is BuildingJob)
+                {
+                    await _dailyObjectiveService.ApplyProgressAsync(city.WorldPlayerId.Value,
+                        new(DailyObjectiveProgressTypeEnum.BuildingsCompleted, 1, job.ExecutionTime));
+                    int pointsGained = Math.Max(0, city.Points - previousPoints);
+                    if (pointsGained > 0)
+                        await _dailyObjectiveService.ApplyProgressAsync(city.WorldPlayerId.Value,
+                            new(DailyObjectiveProgressTypeEnum.CityPointsGained, pointsGained, job.ExecutionTime));
+                    int populationGained = Math.Max(0, (_cityStatService?.GetMaxPopulation(city) ?? previousPopulation) - previousPopulation);
+                    if (populationGained > 0)
+                        await _dailyObjectiveService.ApplyProgressAsync(city.WorldPlayerId.Value,
+                            new(DailyObjectiveProgressTypeEnum.PopulationCapacityIncreased, populationGained, job.ExecutionTime));
+                }
+                else if (job is RecruitmentJob recruitmentJob)
+                {
+                    int delivered = recruitmentJob.CompletedQuantity - previousCompletedQuantity;
+                    if (delivered > 0)
+                        await _dailyObjectiveService.ApplyProgressAsync(city.WorldPlayerId.Value,
+                            new(DailyObjectiveProgressTypeEnum.UnitsRecruited, delivered, recruitmentJob.LastTickTime, recruitmentJob.UnitType));
+                }
+            }
+
             // 3. Gem byen. Workeren gemmer selve job-tilstanden efterfølgende.
-            await _cityRepo.UpdateAsync(city);
             await CreateCompletionReportAsync(city, job);
         }
 
@@ -92,7 +127,9 @@ namespace Application.Services.Jobs
             }
 
             job.IsCompleted = true;
-            await _worldPlayerRepo.UpdateAsync(player);
+            if (_dailyObjectiveService != null)
+                await _dailyObjectiveService.ApplyProgressAsync(job.WorldPlayerId,
+                    new(DailyObjectiveProgressTypeEnum.ResearchCompleted, 1, job.ExecutionTime));
         }
 
         private void HandleBuildingJob(City city, BuildingJob job)
@@ -144,7 +181,7 @@ namespace Application.Services.Jobs
 
         private async Task CreateCompletionReportAsync(City city, BaseJob job)
         {
-            if (!job.IsCompleted)
+            if (!job.IsCompleted || city.WorldPlayerId == null)
             {
                 return;
             }
@@ -152,7 +189,7 @@ namespace Application.Services.Jobs
             switch (job)
             {
                 case BuildingJob buildingJob:
-                    await _battleReportRepository.AddAsync(new BattleReport
+                    await _battleReportRepository.AddPendingAsync(new BattleReport
                     {
                         Id = Guid.NewGuid(),
                         WorldPlayerId = buildingJob.WorldPlayerId,
@@ -167,7 +204,7 @@ namespace Application.Services.Jobs
                     });
                     break;
                 case RecruitmentJob recruitmentJob:
-                    await _battleReportRepository.AddAsync(new BattleReport
+                    await _battleReportRepository.AddPendingAsync(new BattleReport
                     {
                         Id = Guid.NewGuid(),
                         WorldPlayerId = recruitmentJob.WorldPlayerId,
@@ -184,7 +221,7 @@ namespace Application.Services.Jobs
             }
         }
 
-        private void SyncResourcesToJobCompletion(City city, DateTime executionTime)
+        private async Task SyncResourcesToJobCompletion(City city, DateTime executionTime)
         {
             var snapshot = _resourceService.CalculateCityResources(city, executionTime);
             city.Wood = snapshot.Wood;
@@ -193,7 +230,7 @@ namespace Application.Services.Jobs
             city.LastResourceUpdate = executionTime;
 
             if (city.WorldPlayer != null)
-                _worldPlayerService.SyncGlobalResources(city.WorldPlayer, executionTime);
+                await _worldPlayerService.SyncGlobalResourcesAsync(city.WorldPlayer, executionTime);
         }
     }
 }

@@ -12,7 +12,13 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c0447c1fa5c046444b15e87edd475822, type: 3}
   m_Name: Maps
   m_EditorClassIdentifier: Assembly-CSharp::BiomeVisuals
-  CityTile: {fileID: 11400000, guid: 72ac554d8dad4624685d8cd563b85950, type: 2}
+  CityTier0To20Tile: {fileID: 11400000, guid: ff764736e51e9884885b9e78a7a55cc5, type: 2}
+  CityTier21To40Tile: {fileID: 11400000, guid: 4afbf2484eae0ce40916893da92a9e93, type: 2}
+  CityTier41To60Tile: {fileID: 11400000, guid: b71e21c770b3ed940b81b24df6c088df, type: 2}
+  CityTier61To80Tile: {fileID: 11400000, guid: d204dcd9ca6f9074aa111a968f5578e6, type: 2}
+  CityTier81To100Tile: {fileID: 11400000, guid: 72ac554d8dad4624685d8cd563b85950, type: 2}
+  FutureCitySiteTile: {fileID: 11400000, guid: 59eefca0c80d3b94eb967a9432d67f76, type: 2}
+  NPCVillageTile: {fileID: 11400000, guid: 75817b1dcb77b294da2c3212c179f493, type: 2}
   Biomes:
   - Type: 23
     TileAsset: {fileID: 11400000, guid: 45120de954cf9a14ca148a02301dd271, type: 2}

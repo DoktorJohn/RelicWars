@@ -114,6 +114,95 @@ public class WorldGenerationServiceTests
     }
 
     [Fact]
+    public void PlayerCitySites_AreCoastalAndAtLeastThreeHexesApart()
+    {
+        const int seed = 42069;
+        var activeCell = Coordinates(-10, 10)
+            .First(cell => WorldGenerationService.IsIslandCellActive(cell.X, cell.Y, seed));
+        var island = WorldGenerationService.GetIslandDefinition(activeCell.X, activeCell.Y, seed);
+
+        var sites = PlayerCitySiteGenerator.GenerateFutureSites(
+            island,
+            seed,
+            -1_000,
+            1_000,
+            -1_000,
+            1_000,
+            []);
+
+        Assert.NotEmpty(sites);
+        Assert.All(sites, site =>
+        {
+            Assert.True(WorldGenerationService.IsCoastalOnIsland(site.X, site.Y, seed, island));
+            Assert.True(WorldGenerationService.IsCoastal(site.X, site.Y, seed));
+        });
+        for (int first = 0; first < sites.Count; first++)
+        {
+            for (int second = first + 1; second < sites.Count; second++)
+            {
+                Assert.True(PlayerCitySiteGenerator.HexDistance(
+                    sites[first].X,
+                    sites[first].Y,
+                    sites[second].X,
+                    sites[second].Y) >= PlayerCitySiteGenerator.MinimumCityDistance);
+            }
+        }
+
+        var expectedSpawnOrder = new List<(int X, int Y)>();
+        while (PlayerCitySiteGenerator.FindNextSite(
+            island,
+            seed,
+            -1_000,
+            1_000,
+            -1_000,
+            1_000,
+            expectedSpawnOrder) is { } nextSite)
+        {
+            expectedSpawnOrder.Add(nextSite);
+        }
+
+        Assert.Equal(expectedSpawnOrder, sites);
+    }
+
+    [Fact]
+    public void PlayerCitySites_RemainCanonicalWhenSitesBecomeOccupied()
+    {
+        const int seed = 42069;
+        var activeCell = Coordinates(-10, 10)
+            .First(cell => WorldGenerationService.IsIslandCellActive(cell.X, cell.Y, seed));
+        var island = WorldGenerationService.GetIslandDefinition(activeCell.X, activeCell.Y, seed);
+        var canonicalSites = PlayerCitySiteGenerator.GenerateCanonicalSites(
+            island,
+            seed,
+            -1_000,
+            1_000,
+            -1_000,
+            1_000);
+        var occupied = canonicalSites.Where((_, index) => index % 3 == 0).ToHashSet();
+
+        var availableSites = PlayerCitySiteGenerator.GenerateFutureSites(
+            island,
+            seed,
+            -1_000,
+            1_000,
+            -1_000,
+            1_000,
+            occupied);
+
+        Assert.Equal(canonicalSites.Where(site => !occupied.Contains(site)), availableSites);
+        Assert.Equal(
+            canonicalSites.First(site => !occupied.Contains(site)),
+            PlayerCitySiteGenerator.FindNextSite(
+                island,
+                seed,
+                -1_000,
+                1_000,
+                -1_000,
+                1_000,
+                occupied));
+    }
+
+    [Fact]
     public void IslandDefinitions_IncludeRoundLongOvalAndIrregularShapes()
     {
         const int seed = 42069;

@@ -33,6 +33,7 @@ namespace Application.Services
         private readonly TimeProvider _timeProvider;
         private readonly InstantFocusGrantService _instantGrantService;
         private readonly FocusEnactmentPolicy _enactmentPolicy;
+        private readonly IDailyObjectiveService? _dailyObjectiveService;
 
         public IdeologyFocusService(
             IWorldPlayerRepository worldPlayerRepo,
@@ -50,7 +51,8 @@ namespace Application.Services
             IRandomService random,
             TimeProvider timeProvider,
             InstantFocusGrantService instantGrantService,
-            FocusEnactmentPolicy enactmentPolicy)
+            FocusEnactmentPolicy enactmentPolicy,
+            IDailyObjectiveService? dailyObjectiveService = null)
         {
             _worldPlayerRepo = worldPlayerRepo;
             _worldPlayerService = worldPlayerService;
@@ -68,6 +70,7 @@ namespace Application.Services
             _timeProvider = timeProvider;
             _instantGrantService = instantGrantService;
             _enactmentPolicy = enactmentPolicy;
+            _dailyObjectiveService = dailyObjectiveService;
         }
 
         public async Task<IdeologyFocusAnswerDTO?> EnactIdeologyFocus(IdeologyFocusRequestDTO ideologyFocusDTO)
@@ -108,11 +111,8 @@ namespace Application.Services
                 }
             }
 
-            var resourceSnapshot = _resourceService.CalculateGlobalResources(worldPlayer, now);
-            worldPlayer.IdeologyFocusPoints = resourceSnapshot.IdeologyFocusPoints - ideologyFocusData.IdeologyFocusPointCost;
-            worldPlayer.LastResourceUpdate = now;
-
-            _worldPlayerService.SyncGlobalResources(worldPlayer, now);
+            await _worldPlayerService.SyncGlobalResourcesAsync(worldPlayer, now);
+            worldPlayer.IdeologyFocusPoints -= ideologyFocusData.IdeologyFocusPointCost;
             await _worldPlayerRepo.UpdateAsync(worldPlayer);
 
             bool shouldPersistFocus = _enactmentPolicy.ShouldPersist(ideologyFocusData);
@@ -135,6 +135,18 @@ namespace Application.Services
             }
 
             await _cityRepo.UpdateAsync(city);
+
+            if (_dailyObjectiveService != null)
+            {
+                await _dailyObjectiveService.ApplyProgressAsync(worldPlayer.Id,
+                    new(DailyObjectiveProgressTypeEnum.FocusesEnacted, 1, now));
+                if (effectResult?.GrantedUnits != null)
+                {
+                    foreach (var grantedUnit in effectResult.GrantedUnits)
+                        await _dailyObjectiveService.ApplyProgressAsync(worldPlayer.Id,
+                            new(DailyObjectiveProgressTypeEnum.UnitsRecruited, grantedUnit.Quantity, now, grantedUnit.Type));
+                }
+            }
 
             var successMessage = ideologyFocusData.EffectKind == IdeologyFocusEffectKindEnum.Instant
                 ? effectResult!.Summary

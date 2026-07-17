@@ -60,14 +60,16 @@
 }
 
 .battle-report-item {
-    min-height: 74px;
-    padding: 10px;
-    margin-bottom: 8px;
+    height: 38px;
+    padding-left: 10px;
+    padding-right: 10px;
+    margin-bottom: 4px;
     border-width: 1px;
     border-color: rgba(165, 125, 50, 0.24);
     border-radius: 8px;
     background-color: rgba(255, 255, 255, 0.06);
-    flex-direction: column;
+    flex-direction: row;
+    align-items: center;
 }
 
 .battle-report-item:hover {
@@ -85,69 +87,14 @@
     border-left-color: rgb(155, 45, 35);
 }
 
-.battle-report-item__top-row {
-    flex-direction: row;
-    align-items: center;
-    justify-content: space-between;
-}
-
 .battle-report-item__title {
     flex-grow: 1;
     -unity-font-style: bold;
     color: var(--c-text-header);
     font-size: 14px;
-    margin-right: 8px;
-}
-
-.battle-report-item__type-badge {
-    min-width: 82px;
-    height: 18px;
-    padding-left: 6px;
-    padding-right: 6px;
-    border-radius: 9px;
-    color: white;
-    font-size: 10px;
-    -unity-font-style: bold;
-    -unity-text-align: middle-center;
-    margin-right: 8px;
-}
-
-.battle-report-item__type-badge--battle {
-    background-color: rgba(60, 104, 163, 0.90);
-}
-
-.battle-report-item__type-badge--building {
-    background-color: rgba(80, 130, 70, 0.90);
-}
-
-.battle-report-item__type-badge--recruitment {
-    background-color: rgba(163, 104, 60, 0.90);
-}
-
-.battle-report-item__badge {
-    min-width: 34px;
-    height: 18px;
-    padding-left: 6px;
-    padding-right: 6px;
-    border-radius: 9px;
-    background-color: rgb(155, 45, 35);
-    color: white;
-    font-size: 10px;
-    -unity-font-style: bold;
-    -unity-text-align: middle-center;
-}
-
-.battle-report-item__body {
-    margin-top: 5px;
-    color: var(--c-text-body);
-    font-size: 12px;
-    white-space: normal;
-}
-
-.battle-report-item__timestamp {
-    margin-top: 6px;
-    color: var(--c-text-muted);
-    font-size: 11px;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    overflow: hidden;
 }
 
 .battle-report-details {

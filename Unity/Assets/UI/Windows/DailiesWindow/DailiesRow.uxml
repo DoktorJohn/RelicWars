@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ui:UXML xmlns:ui="UnityEngine.UIElements">
+    <ui:Style src="project://database/Assets/UI/Windows/WindowTheme.uss" />
+    <ui:Style src="DailiesWindow.uss" />
+
+    <ui:VisualElement name="Dailies-Row" class="dailies-table-row">
+        <ui:Label name="Dailies-Row-Level" class="dailies-row-label dailies-col-level" />
+        <ui:Label name="Dailies-Row-Objective" class="dailies-row-label dailies-col-objective" />
+        <ui:Label name="Dailies-Row-Completion" class="dailies-row-label dailies-col-completion" />
+        <ui:Label name="Dailies-Row-Reward" class="dailies-row-label dailies-col-reward" />
+        <ui:VisualElement class="dailies-claim-cell dailies-col-claim">
+            <ui:Label name="Dailies-Row-Status" class="dailies-row-label dailies-status-label" />
+        </ui:VisualElement>
+    </ui:VisualElement>
+</ui:UXML>
