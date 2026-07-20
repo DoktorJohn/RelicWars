@@ -61,7 +61,7 @@ public class IdeologyFocusGameplayTests
         var modifiers = TestData.ModifierService(out _);
         var stats = new FixedCityStatService { Available = 100 };
         ResourceService CreateService() => new(TestData.BuildingReader(), TestData.ResearchReader(),
-            TestData.IdeologyReader(), TestData.UnitReader(), stats, modifiers, NullLogger<ResourceService>.Instance);
+            TestData.IdeologyReader(), stats, modifiers, NullLogger<ResourceService>.Instance);
 
         var city = TestData.CityWithFocus(focus);
         city.WorldPlayer!.LastResourceUpdate = TestData.Now;

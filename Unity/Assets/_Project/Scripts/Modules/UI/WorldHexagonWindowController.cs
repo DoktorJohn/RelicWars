@@ -815,7 +815,7 @@ namespace Project.Modules.UI.Windows.Implementations
             {
                 OriginCityId = originCityId,
                 OriginCityName = CityStateManager.Instance.CurrentCityName,
-                OriginCoordinates = new Vector2Int(CityStateManager.Instance.HomeCityX, CityStateManager.Instance.HomeCityY),
+                OriginCoordinates = new Vector2Int(CityStateManager.Instance.CurrentCityX, CityStateManager.Instance.CurrentCityY),
                 TargetCityId = _currentInspectionData.CityId,
                 TargetCityName = _currentInspectionData.CityName,
                 TargetCoordinates = new Vector2Int(_currentInspectionData.X, _currentInspectionData.Y),

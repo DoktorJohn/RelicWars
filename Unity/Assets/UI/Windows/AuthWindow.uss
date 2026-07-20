@@ -156,6 +156,32 @@
     white-space: normal;
 }
 
+.auth-remember-toggle {
+    height: 30px;
+    margin: 0 0 4px 0;
+    color: var(--c-text-body);
+    -unity-font-definition: var(--font-body);
+    font-size: 13px;
+}
+
+.auth-remember-toggle > .unity-toggle__input {
+    width: 20px;
+    height: 20px;
+    margin-right: 8px;
+    background-color: rgba(54, 43, 34, 0.1);
+    border-width: 1px;
+    border-color: var(--c-border);
+    border-radius: 3px;
+}
+
+.auth-remember-toggle:hover > .unity-toggle__input {
+    border-color: var(--c-text-highlight);
+}
+
+.auth-remember-toggle:disabled {
+    opacity: 0.58;
+}
+
 .auth-status-message {
     min-height: 20px;
     margin: 2px 0 4px 0;
@@ -248,7 +274,8 @@
 .layout-phone .auth-text-field,
 .layout-phone .auth-text-field > .unity-base-text-field__input,
 .layout-phone .auth-primary-button,
-.layout-phone .auth-navigation-link {
+.layout-phone .auth-navigation-link,
+.layout-phone .auth-remember-toggle {
     min-height: 44px;
 }
 

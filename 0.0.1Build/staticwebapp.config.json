@@ -4,24 +4,45 @@
   },
   "routes": [
     {
+      "route": "/index.html",
+      "headers": {
+        "Cache-Control": "no-cache, must-revalidate"
+      }
+    },
+    {
+      "route": "/deployment-info.json",
+      "headers": {
+        "Cache-Control": "no-cache, must-revalidate"
+      }
+    },
+    {
+      "route": "/Build/*.loader.js",
+      "headers": {
+        "Cache-Control": "no-cache, must-revalidate"
+      }
+    },
+    {
       "route": "/Build/*.wasm.br",
       "headers": {
         "Content-Encoding": "br",
-        "Content-Type": "application/wasm"
+        "Content-Type": "application/wasm",
+        "Cache-Control": "no-cache, must-revalidate"
       }
     },
     {
       "route": "/Build/*.js.br",
       "headers": {
         "Content-Encoding": "br",
-        "Content-Type": "application/javascript"
+        "Content-Type": "application/javascript",
+        "Cache-Control": "no-cache, must-revalidate"
       }
     },
     {
       "route": "/Build/*.data.br",
       "headers": {
         "Content-Encoding": "br",
-        "Content-Type": "application/octet-stream"
+        "Content-Type": "application/octet-stream",
+        "Cache-Control": "no-cache, must-revalidate"
       }
     }
   ],

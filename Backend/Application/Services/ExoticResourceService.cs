@@ -283,8 +283,13 @@ namespace Application.Services
             if (expectedTypes.All(actualTypes.Contains) && actualTypes.Count == expectedTypes.Length)
                 return;
 
+            var missingTypes = expectedTypes
+                .Where(type => !actualTypes.Contains(type));
+
             throw new InvalidOperationException(
-                $"City {city.Id} har en ufuldstændig exotic resource-beholdning. Kør de ventende databasemigrationer.");
+                $"City {city.Id} har en ufuldstændig exotic resource-beholdning. " +
+                $"Aktuelt antal rækker: {city.ExoticResources.Count}/{expectedTypes.Length}. " +
+                $"Manglende typer: {string.Join(", ", missingTypes)}. Kør de ventende databasemigrationer.");
         }
 
         private static bool AreValidInvestmentAmounts(ExoticResourceInvestmentRequestDTO request)

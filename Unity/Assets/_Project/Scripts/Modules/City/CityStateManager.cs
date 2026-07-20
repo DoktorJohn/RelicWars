@@ -68,8 +68,8 @@ namespace Project.Modules.City
 
         public Guid CityId { get; private set; }
         public string CurrentCityName { get; private set; }
-        public int HomeCityX { get; private set; }
-        public int HomeCityY { get; private set; }
+        public int CurrentCityX { get; private set; }
+        public int CurrentCityY { get; private set; }
         public double Resistance { get; private set; }
         public double ResistanceTarget { get; private set; }
         public double ResistanceRecoveryPerHour { get; private set; }
@@ -77,6 +77,13 @@ namespace Project.Modules.City
         public bool HasBuildingQueueData => _hasBuildingQueueData;
         public bool HasBuildingStateData => _hasBuildingStateData;
         public bool HasTownHallAvailableBuildingsData => _hasTownHallAvailableBuildingsData;
+
+        public bool HasDetailedCityStateFor(Guid cityIdentifier)
+        {
+            return cityIdentifier != Guid.Empty &&
+                   _isDataInitialized &&
+                   CityId == cityIdentifier;
+        }
 
         public bool IsPollingCity(Guid cityIdentifier)
         {
@@ -247,6 +254,8 @@ namespace Project.Modules.City
             _hasTownHallAvailableBuildingsData = false;
             CityId = Guid.Empty;
             CurrentCityName = string.Empty;
+            CurrentCityX = 0;
+            CurrentCityY = 0;
             _currentResourceState = new CityResourceState();
             _currentBuildingQueue.Clear();
             _currentBuildingState.Clear();
@@ -427,8 +436,8 @@ namespace Project.Modules.City
                     OnCityNameChanged?.Invoke(this.CurrentCityName);
                 }
                 
-                this.HomeCityX = detailedInformationDto.X;
-                this.HomeCityY = detailedInformationDto.Y;
+                this.CurrentCityX = detailedInformationDto.X;
+                this.CurrentCityY = detailedInformationDto.Y;
 
                 // Opdatering af ressourcer
                 _currentResourceState.WoodAmount = detailedInformationDto.CurrentWoodAmount;

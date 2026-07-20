@@ -2,12 +2,19 @@
 using Project.Scripts.Domain.Enums;
 using Project.Scripts.Network;
 using System;
+using System.Text;
+using Newtonsoft.Json.Linq;
 using UnityEngine;
 
 namespace Project.Network.Manager
 {
     public class NetworkManager : MonoBehaviour
     {
+        private const string RememberedSessionEnabledKey = "RelicWars.Auth.Remembered";
+        private const string RememberedJwtTokenKey = "RelicWars.Auth.JwtToken";
+        private const string RememberedPlayerProfileIdKey = "RelicWars.Auth.PlayerProfileId";
+        private const string RememberedPlayerNameKey = "RelicWars.Auth.PlayerName";
+
         public static NetworkManager Instance;
 
         [Header("Configuration")]
@@ -24,6 +31,8 @@ namespace Project.Network.Manager
         public Guid ActiveWorldId { get; private set; }
         public string PlayerName { get; private set; }
         public Guid? ActiveCityId { get; private set; }
+        public bool HasRememberedSession { get; private set; }
+        public event Action<Guid> ActiveCityChanged;
 
         // --- Services ---
         public ClientAuthService Auth { get; private set; }
@@ -55,6 +64,7 @@ namespace Project.Network.Manager
                 DontDestroyOnLoad(gameObject);
                 ConfigureBackendUrl();
                 InitializeServices();
+                RestoreRememberedSession();
 
             }
             else
@@ -94,13 +104,22 @@ namespace Project.Network.Manager
 
         // --- Public Methods til UI ---
 
-        public void AuthenticateUser(string email, string password, Action<AuthenticationResponse> onComplete)
+        public void AuthenticateUser(string email, string password, bool rememberLogin, Action<AuthenticationResponse> onComplete)
         {
             StartCoroutine(Auth.Login(email, password, (response) =>
             {
                 if (response != null && response.IsAuthenticated)
                 {
                     SetSessionData(response);
+
+                    if (rememberLogin)
+                    {
+                        SaveRememberedSession();
+                    }
+                    else
+                    {
+                        ClearRememberedSession();
+                    }
                 }
 
                 onComplete?.Invoke(response);
@@ -128,7 +147,7 @@ namespace Project.Network.Manager
                 {
                     ActiveWorldId = worldId;
                     if (response.ActiveCityId.HasValue)
-                        ActiveCityId = response.ActiveCityId;
+                        SelectActiveCity(response.ActiveCityId.Value);
 
                     if (response.WorldPlayerId.HasValue)
                         WorldPlayerId = response.WorldPlayerId.Value.ToString();
@@ -176,6 +195,7 @@ namespace Project.Network.Manager
             ActiveWorldId = Guid.Empty;
             PlayerName = null;
             ActiveCityId = null;
+            ClearRememberedSession();
         }
 
         private void SetSessionData(AuthenticationResponse response)
@@ -185,6 +205,98 @@ namespace Project.Network.Manager
                 JwtToken = response.JwtToken;
                 PlayerProfileId = response.Profile.PlayerId;
                 PlayerName = response.Profile.UserName;
+            }
+        }
+
+        public void SelectActiveCity(Guid cityId)
+        {
+            if (cityId == Guid.Empty || ActiveCityId == cityId)
+            {
+                return;
+            }
+
+            ActiveCityId = cityId;
+            ActiveCityChanged?.Invoke(cityId);
+        }
+
+        private void RestoreRememberedSession()
+        {
+            if (PlayerPrefs.GetInt(RememberedSessionEnabledKey, 0) != 1)
+            {
+                return;
+            }
+
+            string jwtToken = PlayerPrefs.GetString(RememberedJwtTokenKey, string.Empty);
+            string playerProfileId = PlayerPrefs.GetString(RememberedPlayerProfileIdKey, string.Empty);
+            string playerName = PlayerPrefs.GetString(RememberedPlayerNameKey, string.Empty);
+
+            if (string.IsNullOrWhiteSpace(playerProfileId)
+                || string.IsNullOrWhiteSpace(playerName)
+                || !HasValidLifetime(jwtToken))
+            {
+                ClearRememberedSession();
+                return;
+            }
+
+            JwtToken = jwtToken;
+            PlayerProfileId = playerProfileId;
+            PlayerName = playerName;
+            HasRememberedSession = true;
+        }
+
+        private void SaveRememberedSession()
+        {
+            if (string.IsNullOrWhiteSpace(JwtToken)
+                || string.IsNullOrWhiteSpace(PlayerProfileId)
+                || string.IsNullOrWhiteSpace(PlayerName))
+            {
+                ClearRememberedSession();
+                return;
+            }
+
+            PlayerPrefs.SetInt(RememberedSessionEnabledKey, 1);
+            PlayerPrefs.SetString(RememberedJwtTokenKey, JwtToken);
+            PlayerPrefs.SetString(RememberedPlayerProfileIdKey, PlayerProfileId);
+            PlayerPrefs.SetString(RememberedPlayerNameKey, PlayerName);
+            PlayerPrefs.Save();
+            HasRememberedSession = true;
+        }
+
+        private void ClearRememberedSession()
+        {
+            PlayerPrefs.DeleteKey(RememberedSessionEnabledKey);
+            PlayerPrefs.DeleteKey(RememberedJwtTokenKey);
+            PlayerPrefs.DeleteKey(RememberedPlayerProfileIdKey);
+            PlayerPrefs.DeleteKey(RememberedPlayerNameKey);
+            PlayerPrefs.Save();
+            HasRememberedSession = false;
+        }
+
+        private static bool HasValidLifetime(string jwtToken)
+        {
+            if (string.IsNullOrWhiteSpace(jwtToken))
+            {
+                return false;
+            }
+
+            try
+            {
+                string[] tokenParts = jwtToken.Split('.');
+                if (tokenParts.Length != 3)
+                {
+                    return false;
+                }
+
+                string payload = tokenParts[1].Replace('-', '+').Replace('_', '/');
+                payload = payload.PadRight(payload.Length + ((4 - payload.Length % 4) % 4), '=');
+                string payloadJson = Encoding.UTF8.GetString(Convert.FromBase64String(payload));
+                long expiresAt = JObject.Parse(payloadJson).Value<long?>("exp") ?? 0;
+
+                return expiresAt > DateTimeOffset.UtcNow.ToUnixTimeSeconds();
+            }
+            catch (Exception)
+            {
+                return false;
             }
         }
     }

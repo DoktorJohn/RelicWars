@@ -19,6 +19,8 @@ namespace Project.Scripts.Modules.UI
         protected override string HeaderName => "Research-Window-Header";
 
         private Label _researchPointsLabel;
+        private VisualElement _researchRequirementNotice;
+        private Label _researchRequirementNoticeLabel;
         private VisualElement _researchTreeContainer;
         private VisualElement _activeJobPanel;
         private Label _activeResearchNameLabel;
@@ -41,6 +43,7 @@ namespace Project.Scripts.Modules.UI
         private Guid _currentCancelResearchJobId;
         private Coroutine _activeTimerCoroutine;
         private bool _isCommandInFlight;
+        private bool _canStartResearch;
 
         public override void OnOpen(object dataPayload)
         {
@@ -115,6 +118,8 @@ namespace Project.Scripts.Modules.UI
         private void InitializeUserInterfaceReferences()
         {
             _researchPointsLabel = Root.Q<Label>("Research-Points-Amount");
+            _researchRequirementNotice = Root.Q<VisualElement>("Research-Requirement-Notice");
+            _researchRequirementNoticeLabel = Root.Q<Label>("Research-Requirement-Notice-Label");
             _researchTreeContainer = Root.Q<VisualElement>("Research-Tree-Container");
             _activeJobPanel = Root.Q<VisualElement>("Active-Research-Panel");
             _activeResearchNameLabel = Root.Q<Label>("Active-Research-Name");
@@ -229,7 +234,9 @@ namespace Project.Scripts.Modules.UI
 
                 _cachedResearchNodes = researchTreeData.Nodes;
                 _activeResearchJob = researchTreeData.ActiveJob;
+                _canStartResearch = researchTreeData.CanStartResearch;
                 UpdateResearchPointsDisplay(researchTreeData.CurrentResearchPoints);
+                UpdateResearchAvailability(researchTreeData.CanStartResearch, researchTreeData.UnmetRequirements);
                 if (_cachedResearchNodes == null || _cachedResearchNodes.Count == 0)
                 {
                     WindowAsyncStateHelper.ShowEmpty(_researchTreeContainer, "No research available.");
@@ -273,6 +280,7 @@ namespace Project.Scripts.Modules.UI
                 else
                 {
                     _isCommandInFlight = false;
+                    ShowResearchNotice(message);
                     WindowAsyncStateHelper.SetButtonsEnabled(new[] { _cancelResearchButton, _tabButtonEconomy, _tabButtonWar, _tabButtonUtility, _tabButtonUnlocks }, true);
                 }
             }));

@@ -124,8 +124,12 @@ internal sealed class FixedCityStatService : ICityStatService
     public int Available { get; set; }
     public double GetWarehouseCapacity(City city) => 1000;
     public int GetMaxPopulation(City city) => Available;
-    public int GetCurrentPopulationUsage(City city, IEnumerable<BaseJob> activeJobs) => 0;
-    public int GetAvailablePopulation(City city, IEnumerable<BaseJob> activeJobs) => Available - city.UnitStacks.Sum(x => TestData.UnitReader().GetUnit(x.Type).PopulationCost * x.Quantity);
+    public int GetCurrentPopulationUsage(City city, IEnumerable<BaseJob> activeJobs) =>
+        city.UnitStacks
+            .Concat(city.OriginUnitDeployments.SelectMany(deployment => deployment.UnitStacks))
+            .Sum(stack => TestData.UnitReader().GetUnit(stack.Type).PopulationCost * stack.Quantity);
+    public int GetAvailablePopulation(City city, IEnumerable<BaseJob> activeJobs) =>
+        Available - GetCurrentPopulationUsage(city, activeJobs);
 }
 
 internal sealed class EmptyJobRepository : IJobRepository

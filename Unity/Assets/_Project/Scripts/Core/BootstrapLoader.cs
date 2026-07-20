@@ -7,6 +7,7 @@ public class BootstrapLoader : MonoBehaviour
 {
     [Header("Scene Konfiguration")]
     [SerializeField] private string targetInitialLoginSceneName = "LoginScene";
+    [SerializeField] private string rememberedSessionSceneName = "WorldSelectionScene";
 
     [Header("Forsinkelse (Valgfri)")]
     [SerializeField] private float minimalBootstrapDisplayDuration = 0.5f;
@@ -40,14 +41,18 @@ public class BootstrapLoader : MonoBehaviour
         // Giv systemet et øjeblik til at vågne helt op (og vise splash screen)
         yield return new WaitForSeconds(minimalBootstrapDisplayDuration);
 
-        if (ApplicationCanPathToTargetScene(targetInitialLoginSceneName))
+        string targetSceneName = NetworkManager.Instance != null && NetworkManager.Instance.HasRememberedSession
+            ? rememberedSessionSceneName
+            : targetInitialLoginSceneName;
+
+        if (ApplicationCanPathToTargetScene(targetSceneName))
         {
-            Debug.Log($"[Bootstrap] Skifter nu til indlæsnings-scene: {targetInitialLoginSceneName}");
-            SceneManager.LoadScene(targetInitialLoginSceneName);
+            Debug.Log($"[Bootstrap] Skifter nu til indlæsnings-scene: {targetSceneName}");
+            SceneManager.LoadScene(targetSceneName);
         }
         else
         {
-            Debug.LogError($"[Bootstrap] FATAL FEJL: Scenen '{targetInitialLoginSceneName}' kunne ikke findes! " +
+            Debug.LogError($"[Bootstrap] FATAL FEJL: Scenen '{targetSceneName}' kunne ikke findes! " +
                            "Tjek venligst Build Settings (File -> Build Settings) og verificer navngivningen.");
         }
     }

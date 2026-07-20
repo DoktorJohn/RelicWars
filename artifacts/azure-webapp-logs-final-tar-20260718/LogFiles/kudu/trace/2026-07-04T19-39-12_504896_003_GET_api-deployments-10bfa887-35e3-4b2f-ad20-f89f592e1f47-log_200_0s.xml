@@ -1,0 +1,6 @@
+<step title="Incoming Request" date="2026-07-04T19:39:12.571" instance="504896" url="/api/deployments/10bfa887-35e3-4b2f-ad20-f89f592e1f47/log" method="GET" type="request" pid="833,1,15" Accept="*/*" Host="reignofrelicswebapp-cdbgc5eyhvd2g0ah.scm.belgiumcentral-01.azurewebsites.net" User-Agent="AZURECLI/2.69.0 (MSI)" Accept-Encoding="gzip, deflate" Authorization="Bea..." x-ms-client-request-id="053a9be5-77e0-11f1-aac2-74563cf8b763" X-ARR-LOG-ID="053a9be5-77e0-11f1-aac2-74563cf8b763" CLIENT-IP="185.136.116.89:62532" X-SITE-DEPLOYMENT-ID="reignofrelicswebapp" WAS-DEFAULT-HOSTNAME="reignofrelicswebapp-cdbgc5eyhvd2g0ah.scm.belgiumcentral-01.azurewebsites.net" X-Forwarded-Proto="https" X-AppService-Proto="https" X-Forwarded-TlsVersion="1.3" X-WAWS-Unencoded-URL="/api/deployments/10bfa887-35e3-4b2f-ad20-f89f592e1f47/log" X-Client-IP="185.136.116.89" X-Client-Port="62532" >
+  <step title="DeploymentService.GetLogEntry" date="2026-07-04T19:39:12.702" >
+    <step title="DeploymentManager.GetLogEntries(id:10bfa887-35e3-4b2f-ad20-f89f592e1f47)" date="2026-07-04T19:39:12.720" /><!-- duration: 70ms -->
+  </step><!-- duration: 92ms -->
+  <step title="Outgoing response" date="2026-07-04T19:39:12.802" type="response" statusCode="200" statusText="OK" /><!-- duration: 10ms -->
+</step><!-- duration: 249ms -->

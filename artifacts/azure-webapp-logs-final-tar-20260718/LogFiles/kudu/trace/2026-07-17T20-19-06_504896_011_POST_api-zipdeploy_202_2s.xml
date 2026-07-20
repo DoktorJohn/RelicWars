@@ -1,0 +1,15 @@
+<step title="Incoming Request" date="2026-07-17T20:19:06.046" instance="504896" url="/api/zipdeploy?isAsync=true" method="POST" type="request" pid="831,1,18" Accept="*/*" Host="reignofrelicswebapp-cdbgc5eyhvd2g0ah.scm.belgiumcentral-01.azurewebsites.net" User-Agent="AZURECLI/2.69.0 (MSI)" Accept-Encoding="gzip, deflate" Authorization="Bea..." Cache-Control="no-cache" Content-Type="application/octet-stream" Content-Length="21413822" x-ms-client-request-id="c004b8db-821c-11f1-8d67-74563cf8b763" x-ms-artifact-checksum="a7fbd42f816f62a39e2edcf0d2a42b69afe76c19e69986643a5a95dad2433741" X-ARR-LOG-ID="c004b8db-821c-11f1-8d67-74563cf8b763" CLIENT-IP="185.136.116.89:63105" X-SITE-DEPLOYMENT-ID="reignofrelicswebapp" WAS-DEFAULT-HOSTNAME="reignofrelicswebapp-cdbgc5eyhvd2g0ah.scm.belgiumcentral-01.azurewebsites.net" X-Forwarded-Proto="https" X-AppService-Proto="https" X-Forwarded-TlsVersion="1.3" X-WAWS-Unencoded-URL="/api/zipdeploy?isAsync=true" X-Client-IP="185.136.116.89" X-Client-Port="63105" >
+  <step title="ZipPushDeploy" date="2026-07-17T20:19:06.218" >
+    <step title="ZipDeploy. Extract zip." date="2026-07-17T20:19:06.223" /><!-- duration: 3ms -->
+    <step title="Starting PushDeployAsync" date="2026-07-17T20:19:06.228" /><!-- duration: 1ms -->
+    <step title="Writing artifact to /tmp/zipdeploy/69bd2b10-e318-4e1a-b4fd-b44fb21be62e.zip" date="2026-07-17T20:19:06.247" >
+      <step title="Writing multipart request body to /tmp/zipdeploy/69bd2b10-e318-4e1a-b4fd-b44fb21be62e.zip" date="2026-07-17T20:19:06.249" /><!-- duration: 4ms -->
+      <step title="Writing zip file to /tmp/zipdeploy/69bd2b10-e318-4e1a-b4fd-b44fb21be62e.zip" date="2026-07-17T20:19:06.254" /><!-- duration: 1378ms -->
+    </step><!-- duration: 1636ms -->
+    <step title="Start deployment in the background" date="2026-07-17T20:19:07.907" >
+      <step title="Acquiring Deployment Lock" date="2026-07-17T20:19:07.961" /><!-- duration: 2ms -->
+      <step title="Acquired Deployment Lock" date="2026-07-17T20:19:07.990" /><!-- duration: 1ms -->
+    </step><!-- duration: 161ms -->
+  </step><!-- duration: 1868ms -->
+  <step title="Outgoing response" date="2026-07-17T20:19:08.089" type="response" statusCode="202" statusText="Accepted" /><!-- duration: 2ms -->
+</step><!-- duration: 2046ms -->

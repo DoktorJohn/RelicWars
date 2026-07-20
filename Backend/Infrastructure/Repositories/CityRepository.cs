@@ -121,6 +121,10 @@ namespace Infrastructure.Repositories
                             .ThenInclude(playerCity => playerCity.UnitStacks)
                     .Include(city => city.WorldPlayer)
                         .ThenInclude(player => player!.Cities)
+                            .ThenInclude(playerCity => playerCity.OriginUnitDeployments)
+                                .ThenInclude(deployment => deployment.UnitStacks)
+                    .Include(city => city.WorldPlayer)
+                        .ThenInclude(player => player!.Cities)
                             .ThenInclude(playerCity => playerCity.ActiveFocuses);
             }
 

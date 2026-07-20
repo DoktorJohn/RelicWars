@@ -26,6 +26,10 @@
                 </ui:VisualElement>
             </ui:VisualElement>
 
+            <ui:VisualElement name="Research-Requirement-Notice" class="research-requirement-notice">
+                <ui:Label name="Research-Requirement-Notice-Label" text="" class="research-requirement-notice-label" />
+            </ui:VisualElement>
+
             <ui:VisualElement class="research-content-body">
                 <ui:ScrollView class="research-scroll-view">
                     <ui:VisualElement name="Research-Tree-Container" class="research-tree-grid" />

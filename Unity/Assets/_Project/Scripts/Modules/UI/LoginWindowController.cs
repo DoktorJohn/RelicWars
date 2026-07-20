@@ -20,6 +20,7 @@ namespace Project.Modules.Auth
         private Label _emailErrorLabel;
         private Label _passwordErrorLabel;
         private Label _statusFeedbackLabel;
+        private Toggle _rememberLoginToggle;
         private Button _loginExecutionButton;
         private Button _navigateToRegisterButton;
 
@@ -76,13 +77,15 @@ namespace Project.Modules.Auth
             _emailErrorLabel = _rootVisualElement.Q<Label>("Error-Email");
             _passwordErrorLabel = _rootVisualElement.Q<Label>("Error-Password");
             _statusFeedbackLabel = _rootVisualElement.Q<Label>("Label-Status-Feedback");
+            _rememberLoginToggle = _rootVisualElement.Q<Toggle>("Toggle-Remember-Login");
             _loginExecutionButton = _rootVisualElement.Q<Button>("Button-Execute-Login");
             _navigateToRegisterButton = _rootVisualElement.Q<Button>("Button-Navigate-Register");
 
             _emailTextField.tabIndex = 0;
             _passwordTextField.tabIndex = 1;
-            _loginExecutionButton.tabIndex = 2;
-            _navigateToRegisterButton.tabIndex = 3;
+            _rememberLoginToggle.tabIndex = 2;
+            _loginExecutionButton.tabIndex = 3;
+            _navigateToRegisterButton.tabIndex = 4;
 
             _passwordTextField.isPasswordField = true;
             _loginExecutionButton.text = DefaultLoginButtonText;
@@ -146,7 +149,8 @@ namespace Project.Modules.Auth
             SetStatusFeedback("Authenticating your profile...", false);
 
             int requestVersion = _lifecycleVersion;
-            NetworkManager.Instance.AuthenticateUser(email, password, response =>
+            bool rememberLogin = _rememberLoginToggle.value;
+            NetworkManager.Instance.AuthenticateUser(email, password, rememberLogin, response =>
             {
                 if (!_isUiActive || requestVersion != _lifecycleVersion)
                 {
@@ -279,6 +283,7 @@ namespace Project.Modules.Auth
         {
             _emailTextField?.SetEnabled(isInteractable);
             _passwordTextField?.SetEnabled(isInteractable);
+            _rememberLoginToggle?.SetEnabled(isInteractable);
             _loginExecutionButton?.SetEnabled(isInteractable);
             _navigateToRegisterButton?.SetEnabled(isInteractable);
         }

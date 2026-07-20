@@ -19,11 +19,19 @@ public class ResourceServiceProductionTests
         var city = CreateCity();
         city.Buildings.Add(new Building { Type = BuildingTypeEnum.TimberCamp, Level = 1, CityId = city.Id });
         city.UnitStacks.Add(new UnitStack { Type = UnitTypeEnum.Militia, Quantity = 2, CityId = city.Id });
+        city.OriginUnitDeployments.Add(new UnitDeployment
+        {
+            OriginCity = city,
+            OriginCityId = city.Id,
+            WorldPlayerId = city.WorldPlayerId!.Value,
+            WorldId = city.WorldPlayer!.WorldId,
+            UnitStacks = [new UnitStack { Type = UnitTypeEnum.Militia, Quantity = 1 }]
+        });
         var service = CreateService(new SelectiveModifierService());
 
         var production = service.CalculateCityProduction(city.WorldPlayer!, city);
 
-        int unitPopulation = TestData.UnitReader().GetUnit(UnitTypeEnum.Militia).PopulationCost * 2;
+        int unitPopulation = TestData.UnitReader().GetUnit(UnitTypeEnum.Militia).PopulationCost * 3;
         int buildingUpkeep = TestData.BuildingReader()
             .GetConfig<BuildingLevelData>(BuildingTypeEnum.TimberCamp, 1).UpkeepCost;
         double expected = 700d - ((unitPopulation * 7d * 2d) + (buildingUpkeep * 0.5d));
@@ -53,7 +61,6 @@ public class ResourceServiceProductionTests
         TestData.BuildingReader(),
         TestData.ResearchReader(),
         TestData.IdeologyReader(),
-        TestData.UnitReader(),
         new FixedProductionCityStatService(),
         modifierService,
         NullLogger<ResourceService>.Instance);
@@ -80,7 +87,10 @@ public class ResourceServiceProductionTests
     {
         public double GetWarehouseCapacity(City city) => 1_000;
         public int GetMaxPopulation(City city) => 100;
-        public int GetCurrentPopulationUsage(City city, IEnumerable<BaseJob> activeJobs) => 0;
+        public int GetCurrentPopulationUsage(City city, IEnumerable<BaseJob> activeJobs) =>
+            city.UnitStacks
+                .Concat(city.OriginUnitDeployments.SelectMany(deployment => deployment.UnitStacks))
+                .Sum(stack => TestData.UnitReader().GetUnit(stack.Type).PopulationCost * stack.Quantity);
         public int GetAvailablePopulation(City city, IEnumerable<BaseJob> activeJobs) => 100;
     }
 

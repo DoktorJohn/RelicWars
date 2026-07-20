@@ -113,11 +113,6 @@ namespace Game.Controllers
                 _logger.LogWarning("[WorldPlayerController] Player {PlayerId} not found.", worldPlayerId);
                 return NotFound(new ApiError("resource.not_found", "Ressourcen blev ikke fundet."));
             }
-            catch (Exception exception)
-            {
-                _logger.LogError(exception, "Error retrieving economy data for player {PlayerId}", worldPlayerId);
-                return StatusCode(500, new ApiError("server.error", "En intern serverfejl opstod."));
-            }
         }
 
         [HttpPost("selectIdeology")]

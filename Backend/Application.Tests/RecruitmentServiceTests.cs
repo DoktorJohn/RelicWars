@@ -42,6 +42,47 @@ public class RecruitmentServiceTests
     }
 
     [Fact]
+    public async Task QueueRecruitmentAsync_CannotReusePopulationConsumedByDeployedUnits()
+    {
+        var setup = CreateSetup(availablePopulation: 100, wood: 10_000, stone: 10_000, metal: 10_000);
+        setup.City.Buildings.Add(new Building { Type = BuildingTypeEnum.Housing, Level = 1, CityId = setup.City.Id });
+        setup.City.OriginUnitDeployments.Add(new UnitDeployment
+        {
+            OriginCity = setup.City,
+            OriginCityId = setup.City.Id,
+            WorldPlayerId = setup.Player.Id,
+            WorldId = setup.Player.WorldId,
+            Phase = UnitDeploymentPhaseEnum.Outbound,
+            UnitDeploymentMovementStatus = UnitDeploymentMovementStatusEnum.Moving,
+            UnitStacks = [new UnitStack { Type = UnitTypeEnum.Militia, Quantity = 1 }]
+        });
+        var cityStats = new CityStatService(TestData.BuildingReader(), setup.UnitReader, new NoOpModifierService());
+        var service = new RecruitmentService(
+            new MemoryCityRepository(setup.City),
+            setup.JobRepository,
+            new SnapshotResourceService(),
+            new NoOpWorldPlayerService(),
+            new TestPlayerAccessService([setup.Player], [setup.City]),
+            new NoOpResearchService(),
+            setup.UnitReader,
+            TestData.BuildingReader(),
+            cityStats,
+            new RecruitmentTimeCalculationService(new NoOpModifierService()),
+            new ImmediateTransactionManager(),
+            new UnitAvailabilityEvaluator(new UnitUnlockCatalog(setup.UnitReader, TestData.ResearchReader())));
+
+        var result = await service.QueueRecruitmentAsync(
+            setup.Player.Id,
+            setup.City.Id,
+            UnitTypeEnum.Militia,
+            26);
+
+        Assert.False(result.Success);
+        Assert.Contains("boligkapacitet", result.Message);
+        Assert.Empty(setup.JobRepository.AddedJobs);
+    }
+
+    [Fact]
     public async Task QueueRecruitmentAsync_DeductsResourcesAndCreatesJob()
     {
         var setup = CreateSetup(availablePopulation: 100, wood: 500, stone: 500, metal: 500);

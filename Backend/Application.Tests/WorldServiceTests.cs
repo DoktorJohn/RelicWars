@@ -54,7 +54,8 @@ public class WorldServiceTests
             new FixedWorldIslandRepository(island),
             new NoOpExoticResourceService(),
             new DeploymentPermissionService(new TestAllianceRepository()),
-            new CityPointCalculator(TestData.BuildingReader()));
+            new CityPointCalculator(TestData.BuildingReader()),
+            NullLogger<WorldService>.Instance);
         var request = new GetWorldMapChunkDTO
         {
             worldId = world.Id,
@@ -74,6 +75,61 @@ public class WorldServiceTests
             Assert.InRange(site.X, request.startX, request.startX + request.width - 1);
             Assert.InRange(site.Y, request.startY, request.startY + request.height - 1);
         });
+    }
+
+    [Fact]
+    public async Task GetWorldMapChunk_DuplicateCityCoordinatesSelectLowestId()
+    {
+        var world = new World { Id = Guid.NewGuid(), Width = 200, Height = 200, MapSeed = 42069 };
+        var viewer = new WorldPlayer { Id = Guid.NewGuid(), WorldId = world.Id, PlayerProfileId = Guid.NewGuid() };
+        var selectedCity = new City
+        {
+            Id = Guid.Parse("00000000-0000-0000-0000-000000000001"),
+            WorldId = world.Id,
+            Name = "Selected",
+            X = 27,
+            Y = 9
+        };
+        var discardedCity = new City
+        {
+            Id = Guid.Parse("00000000-0000-0000-0000-000000000002"),
+            WorldId = world.Id,
+            Name = "Discarded",
+            X = 27,
+            Y = 9
+        };
+        var mapObjects = new RecordingWorldMapObjectRepository(
+            new WorldMapObject
+            {
+                Id = Guid.NewGuid(), WorldId = world.Id, X = 27, Y = 9,
+                Type = Domain.Enums.MapObjectTypeEnum.City, ReferenceEntityId = discardedCity.Id
+            },
+            new WorldMapObject
+            {
+                Id = Guid.NewGuid(), WorldId = world.Id, X = 27, Y = 9,
+                Type = Domain.Enums.MapObjectTypeEnum.City, ReferenceEntityId = selectedCity.Id
+            });
+        var service = new WorldService(
+            new CountingWorldRepository(world, 1),
+            mapObjects,
+            new SingleCityRepository(discardedCity, selectedCity),
+            new TestPlayerAccessService([viewer]),
+            new NoOpWorldIslandRepository(),
+            new NoOpExoticResourceService(),
+            new DeploymentPermissionService(new TestAllianceRepository()),
+            new CityPointCalculator(TestData.BuildingReader()),
+            NullLogger<WorldService>.Instance);
+
+        var response = await service.GetWorldMapChunk(new GetWorldMapChunkDTO
+        {
+            worldId = world.Id,
+            startX = 25,
+            startY = 5,
+            width = 10,
+            height = 10
+        });
+
+        Assert.Equal(selectedCity.Id, Assert.Single(response!.Cities).Id);
     }
 
     [Fact]
@@ -156,7 +212,8 @@ public class WorldServiceTests
             new FixedWorldIslandRepository(island),
             new NoOpExoticResourceService(),
             new DeploymentPermissionService(new TestAllianceRepository()),
-            new CityPointCalculator(TestData.BuildingReader()));
+            new CityPointCalculator(TestData.BuildingReader()),
+            NullLogger<WorldService>.Instance);
 
         var chunk = await service.GetWorldMapChunk(new GetWorldMapChunkDTO
         {
@@ -326,26 +383,27 @@ public class WorldServiceTests
             new NoOpWorldIslandRepository(),
             new NoOpExoticResourceService(),
             new DeploymentPermissionService(new TestAllianceRepository(relations)),
-            new CityPointCalculator(TestData.BuildingReader()));
+            new CityPointCalculator(TestData.BuildingReader()),
+            NullLogger<WorldService>.Instance);
     }
 
-    private sealed class SingleCityRepository(City city) : ICityRepository
+    private sealed class SingleCityRepository(params City[] cities) : ICityRepository
     {
         public Task<List<City>> GetCitiesByListOfIdsAsync(List<Guid> ids) =>
-            Task.FromResult(ids.Contains(city.Id) ? new List<City> { city } : new List<City>());
+            Task.FromResult(cities.Where(city => ids.Contains(city.Id)).ToList());
 
-        public Task<City?> GetByIdAsync(Guid cityId) => Task.FromResult<City?>(cityId == city.Id ? city : null);
+        public Task<City?> GetByIdAsync(Guid cityId) => Task.FromResult(cities.SingleOrDefault(city => cityId == city.Id));
         public Task UpdateAsync(City city) => Task.CompletedTask;
-        public Task<List<City>> GetAllAsync() => Task.FromResult(new List<City> { city });
+        public Task<List<City>> GetAllAsync() => Task.FromResult(cities.ToList());
         public Task UpdateRangeAsync(List<City> cities) => Task.CompletedTask;
         public Task AddAsync(City city) => Task.CompletedTask;
         public Task AddNPCVillagesWithMapObjectsAsync(IReadOnlyCollection<City> cities) => Task.CompletedTask;
         public Task<City?> GetCityWithBuildingsByCityIdentifierAsync(Guid cityId) => GetByIdAsync(cityId);
         public Task<City?> GetTownHallCityByCityIdentifierAsync(Guid cityId) => GetByIdAsync(cityId);
-        public Task<City?> GetByCoordinatesAsync(int x, int y) => Task.FromResult<City?>(city.X == x && city.Y == y ? city : null);
-        public Task<Guid?> GetWorldPlayerIdByCityIdAsync(Guid cityId) => Task.FromResult<Guid?>(cityId == city.Id ? city.WorldPlayerId : null);
+        public Task<City?> GetByCoordinatesAsync(int x, int y) => Task.FromResult(cities.FirstOrDefault(city => city.X == x && city.Y == y));
+        public Task<Guid?> GetWorldPlayerIdByCityIdAsync(Guid cityId) => Task.FromResult(cities.SingleOrDefault(city => cityId == city.Id)?.WorldPlayerId);
         public Task<List<City>> GetCitiesByWorldPlayerIdAsync(Guid worldPlayerId) =>
-            Task.FromResult(city.WorldPlayerId == worldPlayerId ? new List<City> { city } : new List<City>());
+            Task.FromResult(cities.Where(city => city.WorldPlayerId == worldPlayerId).ToList());
     }
 
     private sealed class NoOpWorldRepository : IWorldRepository

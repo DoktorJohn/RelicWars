@@ -368,12 +368,11 @@ namespace Infrastructure.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("WorldId");
-
                     b.HasIndex("WorldPlayerId");
 
-                    b.HasIndex("X", "Y")
-                        .HasDatabaseName("IX_City_Coordinates");
+                    b.HasIndex("WorldId", "X", "Y")
+                        .IsUnique()
+                        .HasDatabaseName("UX_Cities_World_Coordinates");
 
                     b.ToTable("Cities");
                 });
@@ -993,8 +992,9 @@ namespace Infrastructure.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("WorldId", "X", "Y")
-                        .HasDatabaseName("IX_WorldMapObject_Coordinates");
+                    b.HasIndex("WorldId", "X", "Y", "Type")
+                        .IsUnique()
+                        .HasDatabaseName("UX_WorldMapObjects_World_Coordinates_Type");
 
                     b.ToTable("WorldMapObjects");
                 });
@@ -1112,10 +1112,11 @@ namespace Infrastructure.Migrations
 
                     b.HasIndex("AllianceId");
 
-                    b.HasIndex("PlayerProfileId");
+                    b.HasIndex("WorldId");
 
-                    b.HasIndex("WorldId")
-                        .HasDatabaseName("IX_WorldPlayers_WorldId");
+                    b.HasIndex("PlayerProfileId", "WorldId")
+                        .IsUnique()
+                        .HasDatabaseName("UX_WorldPlayers_Profile_World");
 
                     b.ToTable("WorldPlayers");
                 });

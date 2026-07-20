@@ -70,7 +70,12 @@ namespace Application.Services
 
         public int GetCurrentPopulationUsage(City city, IEnumerable<BaseJob> activeJobs)
         {
-            int unitUsage = city.UnitStacks
+            int stationedUnitUsage = city.UnitStacks
+                .Select(s => new { Stack = s, Def = _unitData.GetUnit(s.Type) })
+                .Where(x => x.Def != null)
+                .Sum(x => x.Stack.Quantity * x.Def!.PopulationCost);
+            int deployedUnitUsage = city.OriginUnitDeployments
+                .SelectMany(deployment => deployment.UnitStacks)
                 .Select(s => new { Stack = s, Def = _unitData.GetUnit(s.Type) })
                 .Where(x => x.Def != null)
                 .Sum(x => x.Stack.Quantity * x.Def!.PopulationCost);
@@ -85,7 +90,7 @@ namespace Application.Services
                 }
             }
 
-            return unitUsage + reservedInQueue;
+            return stationedUnitUsage + deployedUnitUsage + reservedInQueue;
         }
 
         public int GetAvailablePopulation(City city, IEnumerable<BaseJob> activeJobs)

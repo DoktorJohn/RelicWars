@@ -16,6 +16,8 @@ namespace Application.Services
 {
     public class ResearchService : IResearchService
     {
+        private const string UniversityRequirementMessage = "Build a University in one of your cities to begin research.";
+
         private readonly IJobRepository _jobRepo;
         private readonly IWorldPlayerRepository _userRepo;
         private readonly IPlayerAccessService _playerAccessService;
@@ -86,7 +88,14 @@ namespace Application.Services
                 );
             }
 
-            return new ResearchTreeDTO(nodeDtos, activeJobDto, user.ResearchPoints);
+            var unmetRequirements = GetUnmetResearchRequirements(user);
+
+            return new ResearchTreeDTO(
+                nodeDtos,
+                activeJobDto,
+                user.ResearchPoints,
+                unmetRequirements.Count == 0,
+                unmetRequirements);
         }
 
         public async Task<BuildingResult> QueueResearchAsync(Guid worldPlayerId, string researchId)
@@ -108,6 +117,12 @@ namespace Application.Services
                 {
                     return new BuildingResult(false, $"Du skal udforske {researchNode.ParentId} før du kan påbegynde {researchNode.Name}.");
                 }
+            }
+
+            var unmetRequirements = GetUnmetResearchRequirements(worldPlayer);
+            if (unmetRequirements.Count > 0)
+            {
+                return new BuildingResult(false, unmetRequirements[0]);
             }
 
             // Tjek om der allerede kører et forsknings-job
@@ -142,6 +157,15 @@ namespace Application.Services
             });
 
             return new BuildingResult(true, $"Forskningen af {researchNode.Name} er nu sat i gang.");
+        }
+
+        private static List<string> GetUnmetResearchRequirements(WorldPlayer worldPlayer)
+        {
+            bool hasUniversity = worldPlayer.Cities.Any(city =>
+                city.Buildings.Any(building =>
+                    building.Type == BuildingTypeEnum.University && building.Level > 0));
+
+            return hasUniversity ? [] : [UniversityRequirementMessage];
         }
 
         public async Task<BuildingResult> CancelResearchAsync(Guid userId, Guid jobId)

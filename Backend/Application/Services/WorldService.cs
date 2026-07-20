@@ -6,6 +6,7 @@ using Domain.Entities;
 using Domain.Enums;
 using Domain.StaticData.Generators;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -24,8 +25,18 @@ namespace Application.Services
         private readonly IExoticResourceService _exoticResourceService;
         private readonly IDeploymentPermissionService _deploymentPermissionService;
         private readonly CityPointCalculator _cityPointCalculator;
+        private readonly ILogger<WorldService> _logger;
 
-        public WorldService(IWorldRepository worldRepository, IWorldMapObjectRepository worldMapObject, ICityRepository cityRepository, IPlayerAccessService playerAccessService, IWorldIslandRepository worldIslandRepository, IExoticResourceService exoticResourceService, IDeploymentPermissionService deploymentPermissionService, CityPointCalculator cityPointCalculator)
+        public WorldService(
+            IWorldRepository worldRepository,
+            IWorldMapObjectRepository worldMapObject,
+            ICityRepository cityRepository,
+            IPlayerAccessService playerAccessService,
+            IWorldIslandRepository worldIslandRepository,
+            IExoticResourceService exoticResourceService,
+            IDeploymentPermissionService deploymentPermissionService,
+            CityPointCalculator cityPointCalculator,
+            ILogger<WorldService> logger)
         {
             _worldRepository = worldRepository;
             _worldMapObject = worldMapObject;
@@ -35,6 +46,7 @@ namespace Application.Services
             _exoticResourceService = exoticResourceService;
             _deploymentPermissionService = deploymentPermissionService;
             _cityPointCalculator = cityPointCalculator;
+            _logger = logger;
         }
 
         public async Task<WorldMapChunkResponseDTO?> GetWorldMapChunk(GetWorldMapChunkDTO dto)
@@ -86,6 +98,26 @@ namespace Application.Services
                 .Select(mapObject => mapObject.ReferenceEntityId!.Value)
                 .ToList();
             var cityEntities = await _cityRepository.GetCitiesByListOfIdsAsync(cityIdentifiers);
+            var normalizedCityEntities = cityEntities
+                .GroupBy(city => (city.X, city.Y))
+                .Select(group =>
+                {
+                    var orderedCities = group.OrderBy(city => city.Id).ToList();
+                    var selectedCity = orderedCities[0];
+                    if (orderedCities.Count > 1)
+                    {
+                        _logger.LogWarning(
+                            "Legacy duplicate cities at world {WorldId} coordinate ({X},{Y}); selected {SelectedCityId}, discarded {DiscardedCityIds}.",
+                            dto.worldId,
+                            group.Key.X,
+                            group.Key.Y,
+                            selectedCity.Id,
+                            string.Join(",", orderedCities.Skip(1).Select(city => city.Id)));
+                    }
+
+                    return selectedCity;
+                })
+                .ToList();
             var nearbyCities = nearbyMapObjects
                 .Where(mapObject => mapObject.Type == MapObjectTypeEnum.City)
                 .ToList();
@@ -144,7 +176,7 @@ namespace Application.Services
                     ReferenceEntityId = o.ReferenceEntityId
                 }).ToList(),
 
-                Cities = cityEntities.Select(c => new CityDTO(
+                Cities = normalizedCityEntities.Select(c => new CityDTO(
                     c.Id,
                     c.Name,
                     c.X,

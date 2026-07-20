@@ -16,6 +16,8 @@ namespace Project.Modules.WorldSelection
         private ScrollView _worldListScrollView;
         private Label _playerNameLabel;
         private Button _backToLoginButton;
+        private readonly List<Button> _enterButtons = new List<Button>();
+        private bool _isJoinInFlight;
 
         [Header("Data Skabelon")]
         [SerializeField] private VisualTreeAsset _worldEntryTemplate;
@@ -42,6 +44,8 @@ namespace Project.Modules.WorldSelection
         {
             Project.Modules.UI.ResponsiveUiStateManager.UnregisterRoot(_rootVisualElement);
             StopAllCoroutines();
+            _isJoinInFlight = false;
+            _enterButtons.Clear();
 
             if (_backToLoginButton != null)
             {
@@ -112,6 +116,7 @@ namespace Project.Modules.WorldSelection
             }
 
             _worldListScrollView.Clear();
+            _enterButtons.Clear();
 
             foreach (var worldData in activeWorlds)
             {
@@ -121,6 +126,7 @@ namespace Project.Modules.WorldSelection
                 Label nameLabel = worldEntryInstance.Q<Label>("World-Name");
                 Label statsLabel = worldEntryInstance.Q<Label>("World-Stats");
                 Button enterButton = worldEntryInstance.Q<Button>("Button-Enter");
+                _enterButtons.Add(enterButton);
 
                 nameLabel.text = worldData.WorldName;
                 statsLabel.text = $"Players: {worldData.CurrentPlayerCount}";
@@ -137,6 +143,11 @@ namespace Project.Modules.WorldSelection
 
         private void HandleWorldSelectionRequest(Guid worldIdentifier)
         {
+            if (_isJoinInFlight)
+            {
+                return;
+            }
+
 #if UNITY_EDITOR || DEVELOPMENT_BUILD
             Debug.Log($"[WorldSelection] Attempting to join realm: {worldIdentifier}");
 #endif
@@ -145,6 +156,9 @@ namespace Project.Modules.WorldSelection
             {
                 return;
             }
+
+            _isJoinInFlight = true;
+            SetEnterButtonsEnabled(false);
 
             // Vi modtager nu både succes-status OG den valgte ideologi
             NetworkManager.Instance.JoinWorld(worldIdentifier, (isJoinSuccessful, selectedIdeology) =>
@@ -179,8 +193,21 @@ namespace Project.Modules.WorldSelection
                 else
                 {
                     Debug.LogError("[WorldSelection] Failed to join realm.");
+                    _isJoinInFlight = false;
+                    SetEnterButtonsEnabled(true);
                 }
             });
+        }
+
+        private void SetEnterButtonsEnabled(bool enabled)
+        {
+            foreach (var enterButton in _enterButtons)
+            {
+                if (enterButton != null)
+                {
+                    enterButton.SetEnabled(enabled);
+                }
+            }
         }
     }
 }

@@ -12,9 +12,6 @@ public class CameraEdgePan : MonoBehaviour
     [Header("Bevægelse Indstillinger (Pan)")]
     [SerializeField] private float _panSpeed = 3f;
 
-    // Objektiv OBS: 150f er en meget stor grænse. 
-    // Hvis den ignorerer UI, vil den panorerer så snart musen er i nærheden af vinduet.
-    // Overvej at sætte denne til 10-20 for en mere præcis "Edge" følelse.
     [SerializeField] private float _edgeBoundary = 20f;
 
     [Header("Zoom Indstillinger")]
@@ -24,14 +21,12 @@ public class CameraEdgePan : MonoBehaviour
     [SerializeField] private float _minOrthographicSize = 5f;
     [SerializeField] private float _maxOrthographicSize = 40f;
 
-    [Header("Kort Grænser (fallback indtil world-data er loadet)")]
+    [Header("Kort Grænser")]
     [SerializeField] private bool _useLimits = true;
-    [SerializeField] private float _minX = 0f;
-    [SerializeField] private float _maxX = 1000f;
-    [SerializeField] private float _minY = 0f;
-    [SerializeField] private float _maxY = 1000f;
 
     private float _targetOrthographicSize;
+    private bool _inputEnabled = true;
+    private bool _edgePanRequiresRearm;
     private bool _hasDynamicMapBounds;
     private float _mapMinX;
     private float _mapMaxX;
@@ -73,9 +68,24 @@ public class CameraEdgePan : MonoBehaviour
         transform.position = ClampPositionToMap(transform.position);
     }
 
+    public void SetInputEnabled(bool inputEnabled)
+    {
+        bool wasInputEnabled = _inputEnabled;
+        _inputEnabled = inputEnabled;
+        if (!inputEnabled)
+        {
+            _hasPreviousTouchPosition = false;
+            _previousPinchDistance = 0f;
+        }
+        else if (!wasInputEnabled)
+        {
+            _edgePanRequiresRearm = true;
+        }
+    }
+
     private void Update()
     {
-        if (_associatedCamera == null) return;
+        if (_associatedCamera == null || !_inputEnabled) return;
 
         ExecuteCameraPanLogic();
         ExecuteCameraZoomLogic();
@@ -94,10 +104,21 @@ public class CameraEdgePan : MonoBehaviour
 
         if (Mouse.current == null) return;
 
-        // FIX: Vi fjerner checken for IsMouseOverUI her. 
-        // Det gør at kameraet ALTID lytter til skærmens kanter, uanset om der er vinduer.
-
         Vector2 mousePosition = Mouse.current.position.ReadValue();
+        bool pointerIsAtEdge = mousePosition.x >= Screen.width - _edgeBoundary ||
+                               mousePosition.x <= _edgeBoundary ||
+                               mousePosition.y >= Screen.height - _edgeBoundary ||
+                               mousePosition.y <= _edgeBoundary;
+        if (_edgePanRequiresRearm)
+        {
+            if (pointerIsAtEdge)
+            {
+                return;
+            }
+
+            _edgePanRequiresRearm = false;
+        }
+
         Vector3 currentPosition = transform.position;
         float moveX = 0f;
         float moveY = 0f;
@@ -114,7 +135,7 @@ public class CameraEdgePan : MonoBehaviour
 
         Vector3 newPosition = currentPosition + new Vector3(moveX, moveY, 0);
 
-        if (_useLimits)
+        if (_useLimits && _hasDynamicMapBounds)
         {
             newPosition = ClampPositionToMap(newPosition);
         }
@@ -131,8 +152,7 @@ public class CameraEdgePan : MonoBehaviour
 
         if (Mouse.current == null) return;
 
-        // VIGTIGT: Vi BEHOLDER checken for Zoom.
-        // Hvis du fjerner den her, vil kortet zoome ind/ud når du scroller i din enhedsliste.
+        // Scrolling over UI belongs to the UI surface, not map zoom.
         if (WorldMapInteractionHandler.Instance != null && WorldMapInteractionHandler.Instance.IsMouseOverUI) return;
 
         float scrollDelta = Mouse.current.scroll.ReadValue().y;
@@ -152,42 +172,20 @@ public class CameraEdgePan : MonoBehaviour
                 _zoomInterpolationSpeed * Time.deltaTime
             );
 
-            if (_useLimits) transform.position = ClampPositionToMap(transform.position);
+            if (_useLimits && _hasDynamicMapBounds) transform.position = ClampPositionToMap(transform.position);
         }
     }
 
     private Vector3 ClampPositionToMap(Vector3 position)
     {
-        float minimumX = _hasDynamicMapBounds ? _mapMinX : _minX;
-        float maximumX = _hasDynamicMapBounds ? _mapMaxX : _maxX;
-        float minimumY = _hasDynamicMapBounds ? _mapMinY : _minY;
-        float maximumY = _hasDynamicMapBounds ? _mapMaxY : _maxY;
-
-        if (_hasDynamicMapBounds && _associatedCamera != null)
+        if (!_hasDynamicMapBounds)
         {
-            float halfHeight = _associatedCamera.orthographicSize;
-            float halfWidth = halfHeight * _associatedCamera.aspect;
-            ClampAxisToViewport(ref minimumX, ref maximumX, halfWidth);
-            ClampAxisToViewport(ref minimumY, ref maximumY, halfHeight);
+            return position;
         }
 
-        position.x = Mathf.Clamp(position.x, minimumX, maximumX);
-        position.y = Mathf.Clamp(position.y, minimumY, maximumY);
+        position.x = Mathf.Clamp(position.x, _mapMinX, _mapMaxX);
+        position.y = Mathf.Clamp(position.y, _mapMinY, _mapMaxY);
         return position;
-    }
-
-    private static void ClampAxisToViewport(ref float minimum, ref float maximum, float halfViewportSize)
-    {
-        if (maximum - minimum <= halfViewportSize * 2f)
-        {
-            float center = (minimum + maximum) * 0.5f;
-            minimum = center;
-            maximum = center;
-            return;
-        }
-
-        minimum += halfViewportSize;
-        maximum -= halfViewportSize;
     }
 
     private void ExecuteTouchPanAndPinch()
@@ -220,7 +218,9 @@ public class CameraEdgePan : MonoBehaviour
                 screenDelta.y * worldUnitsPerScreenPixel,
                 0f);
 
-            transform.position = _useLimits ? ClampPositionToMap(nextPosition) : nextPosition;
+            transform.position = _useLimits && _hasDynamicMapBounds
+                ? ClampPositionToMap(nextPosition)
+                : nextPosition;
         }
 
         _previousTouchPosition = currentPanPosition;

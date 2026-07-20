@@ -1,4 +1,5 @@
 using Application.Interfaces;
+using Application.DTOs;
 using Application.Interfaces.IRepositories;
 using Application.Interfaces.IServices;
 using Application.Services;
@@ -8,6 +9,11 @@ using Domain.StaticData.Readers;
 using Domain.User;
 using Domain.Workers;
 using Domain.StaticData.Data;
+using System.Collections.Concurrent;
+using Infrastructure.Context;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Update;
 using Xunit;
 
 namespace Application.Tests;
@@ -159,6 +165,175 @@ public class DailyObjectiveServiceTests
     }
 
     [Fact]
+    public async Task Same_player_is_serialized_until_the_first_transaction_commits()
+    {
+        var database = new TransactionAwareDailyObjectiveDatabase();
+        var firstTransaction = new TransactionAwareTransactionManager { PauseBeforeCompletion = true };
+        var secondTransaction = new TransactionAwareTransactionManager();
+        Guid playerId = Guid.NewGuid();
+        var firstService = CreateTransactionAwareService(database, firstTransaction);
+        var secondService = CreateTransactionAwareService(database, secondTransaction);
+
+        Task<DailyObjectivesDTO> first = firstService.GetAsync(playerId);
+        await firstTransaction.CompletionReached.Task.WaitAsync(TimeSpan.FromSeconds(2));
+        Task<DailyObjectivesDTO> second = secondService.GetAsync(playerId);
+        await database.WaitForLockAttemptsAsync(2);
+
+        Assert.False(second.IsCompleted);
+        firstTransaction.AllowCompletion.TrySetResult();
+        await Task.WhenAll(first, second);
+
+        Assert.Equal(20, database.Sets[playerId].Assignments.Count);
+        Assert.Equal(2, database.LockResources.Count(resource => resource == $"RelicWars:DailyObjective:{playerId}"));
+    }
+
+    [Fact]
+    public async Task Concurrent_rollover_and_progress_preserve_and_clamp_progress()
+    {
+        var database = new TransactionAwareDailyObjectiveDatabase();
+        Guid playerId = Guid.NewGuid();
+        var initialTime = new MutableTimeProvider(new DateTimeOffset(2026, 7, 17, 12, 0, 0, TimeSpan.Zero));
+        await CreateTransactionAwareService(database, new TransactionAwareTransactionManager(), initialTime).GetAsync(playerId);
+        var nextDay = new MutableTimeProvider(new DateTimeOffset(2026, 7, 18, 0, 0, 0, TimeSpan.Zero));
+        var rolloverTransaction = new TransactionAwareTransactionManager { PauseBeforeCompletion = true };
+        var rollover = CreateTransactionAwareService(database, rolloverTransaction, nextDay);
+        var progress = CreateTransactionAwareService(database, new TransactionAwareTransactionManager(), nextDay);
+
+        Task<DailyObjectivesDTO> read = rollover.GetAsync(playerId);
+        await rolloverTransaction.CompletionReached.Task.WaitAsync(TimeSpan.FromSeconds(2));
+        Task update = progress.ApplyProgressAsync(playerId,
+            new(DailyObjectiveProgressTypeEnum.BuildingsCompleted, 100, nextDay.UtcNow.UtcDateTime));
+        await database.WaitForLockAttemptsAsync(3);
+        rolloverTransaction.AllowCompletion.TrySetResult();
+        await Task.WhenAll(read, update);
+
+        DailyObjectiveSet set = database.Sets[playerId];
+        Assert.Equal(new DateTime(2026, 7, 18), set.DayStartUtc);
+        Assert.Equal(20, set.Assignments.Count);
+        var assignment = Assert.Single(set.Assignments, assignment => assignment.DefinitionId == 2);
+        Assert.Equal(assignment.Target, assignment.Progress);
+        Assert.True(assignment.IsComplete);
+    }
+
+    [Fact]
+    public async Task Rollback_releases_player_lock_for_a_retry()
+    {
+        var database = new TransactionAwareDailyObjectiveDatabase { ThrowOnNextRead = true };
+        Guid playerId = Guid.NewGuid();
+        var first = CreateTransactionAwareService(database, new TransactionAwareTransactionManager());
+        var retry = CreateTransactionAwareService(database, new TransactionAwareTransactionManager());
+
+        await Assert.ThrowsAsync<InvalidOperationException>(() => first.GetAsync(playerId));
+        DailyObjectivesDTO response = await retry.GetAsync(playerId).WaitAsync(TimeSpan.FromSeconds(2));
+
+        Assert.Equal(20, response.Rows.Count);
+    }
+
+    [Fact]
+    public async Task Different_players_use_different_lock_resources_and_do_not_block_each_other()
+    {
+        var database = new TransactionAwareDailyObjectiveDatabase();
+        var heldTransaction = new TransactionAwareTransactionManager { PauseBeforeCompletion = true };
+        Guid firstPlayerId = Guid.NewGuid();
+        Guid secondPlayerId = Guid.NewGuid();
+        Task<DailyObjectivesDTO> held = CreateTransactionAwareService(database, heldTransaction).GetAsync(firstPlayerId);
+        await heldTransaction.CompletionReached.Task.WaitAsync(TimeSpan.FromSeconds(2));
+
+        DailyObjectivesDTO other = await CreateTransactionAwareService(database, new TransactionAwareTransactionManager())
+            .GetAsync(secondPlayerId).WaitAsync(TimeSpan.FromSeconds(2));
+        heldTransaction.AllowCompletion.TrySetResult();
+        await held;
+
+        Assert.Equal(20, other.Rows.Count);
+        Assert.Contains($"RelicWars:DailyObjective:{firstPlayerId}", database.LockResources);
+        Assert.Contains($"RelicWars:DailyObjective:{secondPlayerId}", database.LockResources);
+    }
+
+    [Fact]
+    public async Task Standalone_progress_reloads_daily_state_once_after_concurrency_conflict()
+    {
+        var repository = new MemoryDailyObjectiveRepository();
+        using var conflictContext = CreateConflictContext(new DailyObjectiveAssignment());
+        var transactionManager = new RetryOnceTransactionManager(DailyConflict(conflictContext));
+        var unitReader = new UnitDataReader();
+        unitReader.Load(RepositoryFile("Backend", "Game", "units.json"));
+        var service = new DailyObjectiveService(
+            repository,
+            new AllowPlayerAccessService(),
+            CreateCatalogReader(),
+            new CyclingRandom(),
+            new MutableTimeProvider(new DateTimeOffset(2026, 7, 17, 12, 0, 0, TimeSpan.Zero)),
+            transactionManager,
+            unitReader);
+
+        await service.ApplyProgressAsync(Guid.NewGuid(),
+            new(DailyObjectiveProgressTypeEnum.BuildingsCompleted, 1,
+                new DateTime(2026, 7, 17, 12, 0, 0, DateTimeKind.Utc)));
+
+        Assert.Equal(2, transactionManager.SaveAttempts);
+        Assert.Equal(2, repository.ResetCount);
+    }
+
+    [Fact]
+    public async Task Standalone_progress_does_not_retry_a_concurrency_conflict_without_daily_entries()
+    {
+        var repository = new MemoryDailyObjectiveRepository();
+        using var conflictContext = CreateConflictContext(new WorldPlayer());
+        var transactionManager = new RetryOnceTransactionManager(NonDailyConflict(conflictContext));
+        var unitReader = new UnitDataReader();
+        unitReader.Load(RepositoryFile("Backend", "Game", "units.json"));
+        var service = new DailyObjectiveService(
+            repository,
+            new AllowPlayerAccessService(),
+            CreateCatalogReader(),
+            new CyclingRandom(),
+            new MutableTimeProvider(new DateTimeOffset(2026, 7, 17, 12, 0, 0, TimeSpan.Zero)),
+            transactionManager,
+            unitReader);
+
+        await Assert.ThrowsAsync<DbUpdateConcurrencyException>(() => service.ApplyProgressAsync(Guid.NewGuid(),
+            new(DailyObjectiveProgressTypeEnum.BuildingsCompleted, 1,
+                new DateTime(2026, 7, 17, 12, 0, 0, DateTimeKind.Utc))));
+
+        Assert.Equal(1, transactionManager.SaveAttempts);
+        Assert.Equal(1, repository.ResetCount);
+    }
+
+    [Fact]
+    public async Task Standalone_read_reloads_daily_state_once_after_concurrency_conflict()
+    {
+        var repository = new MemoryDailyObjectiveRepository();
+        using var conflictContext = CreateConflictContext(new DailyObjectiveSet());
+        var transactionManager = new RetryOnceTransactionManager(DailySetConflict(conflictContext));
+        var unitReader = new UnitDataReader();
+        unitReader.Load(RepositoryFile("Backend", "Game", "units.json"));
+        var service = new DailyObjectiveService(
+            repository,
+            new AllowPlayerAccessService(),
+            CreateCatalogReader(),
+            new CyclingRandom(),
+            new MutableTimeProvider(new DateTimeOffset(2026, 7, 17, 12, 0, 0, TimeSpan.Zero)),
+            transactionManager,
+            unitReader);
+
+        DailyObjectivesDTO response = await service.GetAsync(Guid.NewGuid());
+
+        Assert.Equal(20, response.Rows.Count);
+        Assert.Equal(2, transactionManager.SaveAttempts);
+        Assert.Equal(2, repository.ResetCount);
+    }
+
+    [Fact]
+    public async Task Daily_state_is_reset_after_lock_and_before_load()
+    {
+        var service = CreateService(out var repository, out _, new CyclingRandom());
+
+        await service.GetAsync(Guid.NewGuid());
+
+        Assert.Equal(["Lock", "Reset", "Load"], repository.Calls.Take(3));
+    }
+
+    [Fact]
     public async Task Production_is_clipped_to_current_utc_day_and_negative_coins_are_ignored()
     {
         var service = CreateService(out var repository, out _, new CyclingRandom());
@@ -199,6 +374,23 @@ public class DailyObjectiveServiceTests
             unitReader);
     }
 
+    private static DailyObjectiveService CreateTransactionAwareService(
+        TransactionAwareDailyObjectiveDatabase database,
+        TransactionAwareTransactionManager transactionManager,
+        MutableTimeProvider? time = null)
+    {
+        var unitReader = new UnitDataReader();
+        unitReader.Load(RepositoryFile("Backend", "Game", "units.json"));
+        return new DailyObjectiveService(
+            new TransactionAwareDailyObjectiveRepository(database, transactionManager),
+            new AllowPlayerAccessService(),
+            CreateCatalogReader(),
+            new CyclingRandom(),
+            time ?? new MutableTimeProvider(new DateTimeOffset(2026, 7, 17, 12, 0, 0, TimeSpan.Zero)),
+            transactionManager,
+            unitReader);
+    }
+
     private static DailyObjectiveDataReader CreateCatalogReader()
     {
         var reader = new DailyObjectiveDataReader();
@@ -218,13 +410,28 @@ public class DailyObjectiveServiceTests
     {
         private readonly Dictionary<Guid, DailyObjectiveSet> _sets = new();
         public DailyObjectiveSet? Set { get; private set; }
-        public Task<DailyObjectiveSet?> GetByWorldPlayerIdAsync(Guid worldPlayerId) =>
-            Task.FromResult(_sets.GetValueOrDefault(worldPlayerId));
+        public int ResetCount { get; private set; }
+        public List<string> Calls { get; } = [];
+        public Task AcquirePlayerLockAsync(Guid worldPlayerId)
+        {
+            Calls.Add("Lock");
+            return Task.CompletedTask;
+        }
+        public Task<DailyObjectiveSet?> GetByWorldPlayerIdAsync(Guid worldPlayerId)
+        {
+            Calls.Add("Load");
+            return Task.FromResult(_sets.GetValueOrDefault(worldPlayerId));
+        }
         public Task<DailyObjectiveSet> ReplaceAsync(DailyObjectiveSet? existingSet, DailyObjectiveSet replacement)
         {
             Set = replacement;
             _sets[replacement.WorldPlayerId] = replacement;
             return Task.FromResult(replacement);
+        }
+        public void ResetTrackedState(Guid worldPlayerId)
+        {
+            ResetCount++;
+            Calls.Add("Reset");
         }
     }
 
@@ -233,6 +440,153 @@ public class DailyObjectiveServiceTests
         public async Task ExecuteAsync(Func<Task> operation) => await operation();
         public async Task<T> ExecuteAsync<T>(Func<Task<T>> operation) => await operation();
         public Task SaveChangesAsync() => Task.CompletedTask;
+    }
+
+    private sealed class TransactionAwareDailyObjectiveDatabase
+    {
+        private readonly ConcurrentDictionary<string, SemaphoreSlim> _locks = new();
+        private int _lockAttempts;
+        public ConcurrentDictionary<Guid, DailyObjectiveSet> Sets { get; } = new();
+        public ConcurrentQueue<string> LockResources { get; } = new();
+        public bool ThrowOnNextRead { get; set; }
+
+        public async Task AcquireAsync(Guid worldPlayerId, TransactionAwareTransactionManager transactionManager)
+        {
+            string resource = $"RelicWars:DailyObjective:{worldPlayerId}";
+            LockResources.Enqueue(resource);
+            Interlocked.Increment(ref _lockAttempts);
+            var gate = _locks.GetOrAdd(resource, _ => new SemaphoreSlim(1, 1));
+            await gate.WaitAsync();
+            transactionManager.Enlist(gate);
+        }
+
+        public async Task WaitForLockAttemptsAsync(int expected)
+        {
+            var timeout = DateTime.UtcNow.AddSeconds(2);
+            while (Volatile.Read(ref _lockAttempts) < expected && DateTime.UtcNow < timeout)
+                await Task.Delay(10);
+            Assert.True(Volatile.Read(ref _lockAttempts) >= expected);
+        }
+    }
+
+    private sealed class TransactionAwareDailyObjectiveRepository : IDailyObjectiveRepository
+    {
+        private readonly TransactionAwareDailyObjectiveDatabase _database;
+        private readonly TransactionAwareTransactionManager _transactionManager;
+
+        public TransactionAwareDailyObjectiveRepository(
+            TransactionAwareDailyObjectiveDatabase database,
+            TransactionAwareTransactionManager transactionManager)
+        {
+            _database = database;
+            _transactionManager = transactionManager;
+        }
+
+        public Task AcquirePlayerLockAsync(Guid worldPlayerId) => _database.AcquireAsync(worldPlayerId, _transactionManager);
+
+        public Task<DailyObjectiveSet?> GetByWorldPlayerIdAsync(Guid worldPlayerId)
+        {
+            if (_database.ThrowOnNextRead)
+            {
+                _database.ThrowOnNextRead = false;
+                throw new InvalidOperationException("Simulated transaction failure.");
+            }
+            return Task.FromResult(_database.Sets.GetValueOrDefault(worldPlayerId));
+        }
+
+        public Task<DailyObjectiveSet> ReplaceAsync(DailyObjectiveSet? existingSet, DailyObjectiveSet replacement)
+        {
+            if (existingSet != null)
+            {
+                existingSet.DayStartUtc = replacement.DayStartUtc;
+                existingSet.Assignments = replacement.Assignments;
+                foreach (var assignment in existingSet.Assignments)
+                    assignment.DailyObjectiveSetId = existingSet.Id;
+                return Task.FromResult(existingSet);
+            }
+            _database.Sets[replacement.WorldPlayerId] = replacement;
+            return Task.FromResult(replacement);
+        }
+
+        public void ResetTrackedState(Guid worldPlayerId) { }
+    }
+
+    private static GameContext CreateConflictContext(object entity)
+    {
+        var options = new DbContextOptionsBuilder<GameContext>()
+            .UseInMemoryDatabase(Guid.NewGuid().ToString())
+            .Options;
+        var context = new GameContext(options);
+        context.Attach(entity);
+        return context;
+    }
+
+    private static DbUpdateConcurrencyException DailyConflict(GameContext context) =>
+        Conflict(context.Entry(context.ChangeTracker.Entries<DailyObjectiveAssignment>().Single().Entity));
+
+    private static DbUpdateConcurrencyException DailySetConflict(GameContext context) =>
+        Conflict(context.Entry(context.ChangeTracker.Entries<DailyObjectiveSet>().Single().Entity));
+
+    private static DbUpdateConcurrencyException NonDailyConflict(GameContext context) =>
+        Conflict(context.Entry(context.ChangeTracker.Entries<WorldPlayer>().Single().Entity));
+
+    #pragma warning disable EF1001
+    private static DbUpdateConcurrencyException Conflict(Microsoft.EntityFrameworkCore.ChangeTracking.EntityEntry entry) =>
+        new("Simulated concurrency conflict.", [(IUpdateEntry)entry.GetInfrastructure()]);
+    #pragma warning restore EF1001
+
+    private sealed class RetryOnceTransactionManager(DbUpdateConcurrencyException conflict) : ITransactionManager
+    {
+        public int SaveAttempts { get; private set; }
+        public Task ExecuteAsync(Func<Task> operation) => operation();
+        public Task<T> ExecuteAsync<T>(Func<Task<T>> operation) => operation();
+
+        public Task SaveChangesAsync()
+        {
+            SaveAttempts++;
+            return SaveAttempts == 1
+                ? Task.FromException(conflict)
+                : Task.CompletedTask;
+        }
+    }
+
+    private sealed class TransactionAwareTransactionManager : ITransactionManager
+    {
+        private readonly AsyncLocal<List<SemaphoreSlim>?> _heldLocks = new();
+        public bool HasActiveTransaction => _heldLocks.Value != null;
+        public bool PauseBeforeCompletion { get; init; }
+        public TaskCompletionSource CompletionReached { get; } = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        public TaskCompletionSource AllowCompletion { get; } = new(TaskCreationOptions.RunContinuationsAsynchronously);
+
+        public Task ExecuteAsync(Func<Task> operation) => ExecuteAsync(async () =>
+        {
+            await operation();
+            return true;
+        });
+
+        public async Task<T> ExecuteAsync<T>(Func<Task<T>> operation)
+        {
+            if (HasActiveTransaction) return await operation();
+            _heldLocks.Value = new List<SemaphoreSlim>();
+            try
+            {
+                T result = await operation();
+                if (PauseBeforeCompletion)
+                {
+                    CompletionReached.TrySetResult();
+                    await AllowCompletion.Task;
+                }
+                return result;
+            }
+            finally
+            {
+                foreach (var gate in _heldLocks.Value!) gate.Release();
+                _heldLocks.Value = null;
+            }
+        }
+
+        public Task SaveChangesAsync() => Task.CompletedTask;
+        public void Enlist(SemaphoreSlim gate) => _heldLocks.Value!.Add(gate);
     }
 
     private sealed class MutableTimeProvider : TimeProvider

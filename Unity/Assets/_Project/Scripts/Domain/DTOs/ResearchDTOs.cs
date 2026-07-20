@@ -30,6 +30,8 @@ namespace Project.Scripts.Domain.DTOs
         public List<ResearchNodeDTO> Nodes;
         public ActiveResearchJobDTO ActiveJob;
         public double CurrentResearchPoints;
+        public bool CanStartResearch;
+        public List<string> UnmetRequirements;
     }
 
     [Serializable]

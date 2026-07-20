@@ -31,7 +31,6 @@ namespace Application.Services
         private readonly ICityStatService _cityStatService;
         private readonly IExoticResourceService _exoticResourceService;
         private readonly BuildingDataReader _buildingDataReader;
-        private readonly UnitDataReader _unitDataReader;
         private readonly ILogger<CityService> _logger;
         private readonly ConstructionTimeCalculator _constructionTimeCalculator;
         private readonly IResistanceService _resistanceService;
@@ -45,7 +44,6 @@ namespace Application.Services
             ICityStatService cityStatService,
             IExoticResourceService exoticResourceService,
             BuildingDataReader buildingDataReader,
-            UnitDataReader unitDataReader,
             IJobRepository jobRepository,
             ILogger<CityService> logger,
             ConstructionTimeCalculator constructionTimeCalculator,
@@ -58,7 +56,6 @@ namespace Application.Services
             _cityStatService = cityStatService;
             _exoticResourceService = exoticResourceService;
             _buildingDataReader = buildingDataReader;
-            _unitDataReader = unitDataReader;
             _jobRepository = jobRepository;
             _modifierService = modifierService;
             _logger = logger;
@@ -342,17 +339,12 @@ namespace Application.Services
             var incomeResult = _modifierService.CalculateCityValue(cityEntity, baseIncome, ModifierTagEnum.Coins, ModifierTagEnum.Market);
 
             // 2. Calculate coins EXPENDITURE
-            int stationedPopulation = cityEntity.UnitStacks
-                .Sum(stack => _unitDataReader.GetUnit(stack.Type).PopulationCost * stack.Quantity);
-
-            int deployedPopulation = cityEntity.OriginUnitDeployments
-                .SelectMany(deployment => deployment.UnitStacks)
-                .Sum(stack => _unitDataReader.GetUnit(stack.Type).PopulationCost * stack.Quantity);
+            int unitPopulation = _cityStatService.GetCurrentPopulationUsage(cityEntity, Array.Empty<BaseJob>());
 
             int buildingUpkeepCost = cityEntity.Buildings
                 .Sum(building => _buildingDataReader.GetConfig<BuildingLevelData>(building.Type, building.Level).UpkeepCost);
 
-            double baseExpenditure = ((stationedPopulation + deployedPopulation) * 7) + buildingUpkeepCost;
+            double baseExpenditure = (unitPopulation * 7) + buildingUpkeepCost;
 
             var expenditureResult = _modifierService.CalculateCityValue(cityEntity, baseExpenditure, ModifierTagEnum.Upkeep, ModifierTagEnum.BuildingUpkeep, ModifierTagEnum.UnitUpkeep);
 

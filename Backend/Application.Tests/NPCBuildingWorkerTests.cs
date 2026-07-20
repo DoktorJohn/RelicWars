@@ -102,6 +102,31 @@ public class NPCBuildingWorkerTests
         Assert.Equal(0, buildingService.QueueCalls);
     }
 
+    [Fact]
+    public async Task ProcessBuildingQueuesAsync_WhenOneNPCIsInvalid_ContinuesWithFollowingNPC()
+    {
+        var invalidCity = new City { Id = Guid.NewGuid(), IsNPC = true };
+        var validCity = new City { Id = Guid.NewGuid(), IsNPC = true };
+        var cityRepository = new WorkerCityRepository(invalidCity, validCity);
+        var jobRepository = new WorkerJobRepository();
+        var buildingService = new RecordingNPCBuildingService(jobRepository);
+        var exoticResourceService = new SelectivelyFailingExoticResourceService(invalidCity.Id);
+        var worker = new NPCBuildingWorker(
+            cityRepository,
+            jobRepository,
+            buildingService,
+            exoticResourceService,
+            TestData.BuildingReader(),
+            NullLogger<NPCBuildingWorker>.Instance);
+
+        await worker.ProcessBuildingQueuesAsync();
+
+        Assert.Equal([invalidCity.Id, validCity.Id], exoticResourceService.ProcessedCityIds);
+        Assert.Equal(1, buildingService.QueueCalls);
+        Assert.Single(jobRepository.BuildingJobs);
+        Assert.Equal(validCity.Id, jobRepository.BuildingJobs[0].CityId);
+    }
+
     private static Building Building(BuildingTypeEnum type) => new() { Type = type, Level = 20 };
 
     private sealed class RecordingNPCBuildingService(WorkerJobRepository jobRepository) : IBuildingService
@@ -148,6 +173,31 @@ public class NPCBuildingWorkerTests
             throw new NotSupportedException();
     }
 
+    private sealed class SelectivelyFailingExoticResourceService(Guid invalidCityId) : IExoticResourceService
+    {
+        public List<Guid> ProcessedCityIds { get; } = [];
+
+        public Task<List<CityExoticResourceDTO>> SyncCityExoticResourcesAsync(City city, DateTime currentDateTime)
+        {
+            ProcessedCityIds.Add(city.Id);
+            if (city.Id == invalidCityId)
+            {
+                throw new InvalidOperationException("Incomplete exotic resource inventory.");
+            }
+
+            return Task.FromResult(new List<CityExoticResourceDTO>());
+        }
+
+        public Task<List<WorldIslandExoticResourceDTO>> GetIslandResourcesAsync(Guid islandId) =>
+            throw new NotSupportedException();
+        public Task<List<WorldIslandExoticResourceDTO>> GetIslandResourcesForCityAsync(City city) =>
+            throw new NotSupportedException();
+        public Task<List<CityExoticResourceProductionDTO>> GetProductionBreakdownsForCityAsync(City city) =>
+            throw new NotSupportedException();
+        public Task<ExoticResourceInvestmentResponseDTO> InvestAsync(Guid cityId, ExoticResourceInvestmentRequestDTO request) =>
+            throw new NotSupportedException();
+    }
+
     private sealed class WorkerJobRepository : IJobRepository
     {
         public List<BuildingJob> BuildingJobs { get; } = [];
@@ -165,11 +215,12 @@ public class NPCBuildingWorkerTests
         public Task<List<ResearchJob>> GetResearchJobsByIdAsync(Guid id) => throw new NotSupportedException();
     }
 
-    private sealed class WorkerCityRepository(City city) : ICityRepository
+    private sealed class WorkerCityRepository(params City[] cities) : ICityRepository
     {
-        public Task<List<City>> GetNPCsForBuildingAutomationAsync() => Task.FromResult(new List<City> { city });
-        public Task<City?> GetByIdAsync(Guid cityId) => Task.FromResult<City?>(city.Id == cityId ? city : null);
-        public Task<List<City>> GetAllAsync() => Task.FromResult(new List<City> { city });
+        public Task<List<City>> GetNPCsForBuildingAutomationAsync() => Task.FromResult(cities.ToList());
+        public Task<City?> GetByIdAsync(Guid cityId) =>
+            Task.FromResult(cities.FirstOrDefault(city => city.Id == cityId));
+        public Task<List<City>> GetAllAsync() => Task.FromResult(cities.ToList());
         public Task<List<City>> GetCitiesByListOfIdsAsync(List<Guid> ids) => throw new NotSupportedException();
         public Task UpdateAsync(City updatedCity) => throw new NotSupportedException();
         public Task UpdateRangeAsync(List<City> cities) => throw new NotSupportedException();

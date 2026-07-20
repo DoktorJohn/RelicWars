@@ -1,0 +1,698 @@
+<step title="Incoming Request" date="2026-07-17T20:14:59.355" instance="504896" url="/api/publish?type=zip&amp;restart=True&amp;clean=True" method="POST" type="request" pid="831,1,29" Accept="*/*" Host="reignofrelicswebapp-cdbgc5eyhvd2g0ah.scm.belgiumcentral-01.azurewebsites.net" User-Agent="AZURECLI/2.69.0 (MSI)" Accept-Encoding="gzip, deflate" Authorization="Bea..." Cache-Control="no-cache" Content-Type="application/octet-stream" Content-Length="21413822" x-ms-client-request-id="2bbc0b99-821c-11f1-b58d-74563cf8b763" x-ms-artifact-checksum="a7fbd42f816f62a39e2edcf0d2a42b69afe76c19e69986643a5a95dad2433741" X-ARR-LOG-ID="2bbc0b99-821c-11f1-b58d-74563cf8b763" CLIENT-IP="185.136.116.89:61519" X-SITE-DEPLOYMENT-ID="reignofrelicswebapp" WAS-DEFAULT-HOSTNAME="reignofrelicswebapp-cdbgc5eyhvd2g0ah.scm.belgiumcentral-01.azurewebsites.net" X-Forwarded-Proto="https" X-AppService-Proto="https" X-Forwarded-TlsVersion="1.3" X-WAWS-Unencoded-URL="/api/publish?type=zip&amp;restart=True&amp;clean=True" X-Client-IP="185.136.116.89" X-Client-Port="61519" >
+  <step title="OneDeploy" date="2026-07-17T20:14:59.720" >
+    <step title="None repository commit" date="2026-07-17T20:14:59.742" >
+      <step title="Commit id: 3493de3a-1104-418d-886b-59a25ef22d8b" date="2026-07-17T20:14:59.744" Message="N/A" AuthorName="N/A" AuthorEmail="N/A" /><!-- duration: 2ms -->
+    </step><!-- duration: 7ms -->
+    <step title="Starting PushDeployAsync" date="2026-07-17T20:14:59.750" /><!-- duration: 3ms -->
+    <step title="Writing artifact to /tmp/zipdeploy/7b09f459-bc58-4dee-8165-8313e5a2dea7.zip" date="2026-07-17T20:14:59.847" >
+      <step title="Writing multipart request body to /tmp/zipdeploy/7b09f459-bc58-4dee-8165-8313e5a2dea7.zip" date="2026-07-17T20:14:59.857" /><!-- duration: 12ms -->
+      <step title="Writing zip file to /tmp/zipdeploy/7b09f459-bc58-4dee-8165-8313e5a2dea7.zip" date="2026-07-17T20:14:59.877" /><!-- duration: 400ms -->
+    </step><!-- duration: 761ms -->
+    <step title="Attempting to fetch target branch HEAD" date="2026-07-17T20:15:00.649" /><!-- duration: 8ms -->
+    <step title="Acquiring Deployment Lock" date="2026-07-17T20:15:00.688" /><!-- duration: 19ms -->
+    <step title="Acquired Deployment Lock" date="2026-07-17T20:15:01.006" /><!-- duration: 11ms -->
+    <step title="Performing fetch based deployment" date="2026-07-17T20:15:01.029" >
+      <step title="Creating temporary deployment" date="2026-07-17T20:15:01.066" /><!-- duration: 280ms -->
+      <step title="Releasing Deployment Lock" date="2026-07-17T20:15:02.941" /><!-- duration: 10ms -->
+      <step title="Cleaning up temp folders from previous zip deployments and extracting pushed zip file /tmp/zipdeploy/7b09f459-bc58-4dee-8165-8313e5a2dea7.zip (20.42 MB) to /tmp/zipdeploy/extracted" date="2026-07-17T20:15:03.031" >
+        <step title="ChmodRecursive Process exited with total time taken in ms: 201" date="2026-07-17T20:15:05.480" /><!-- duration: 9ms -->
+      </step><!-- duration: 2482ms -->
+      <step title="None repository commit" date="2026-07-17T20:15:05.541" >
+        <step title="Commit id: 3493de3a-1104-418d-886b-59a25ef22d8b" date="2026-07-17T20:15:05.543" Message="OneDeploy" AuthorName="N/A" AuthorEmail="N/A" /><!-- duration: 2ms -->
+      </step><!-- duration: 6ms -->
+      <step title="Deployment timer started" date="2026-07-17T20:15:07.597" >
+        <step title="DeploymentManager.Deploy(id:3493de3a-1104-418d-886b-59a25ef22d8b)" date="2026-07-17T20:15:07.615" >
+          <step title="Collecting changeset information" date="2026-07-17T20:15:07.667" /><!-- duration: 127ms -->
+          <step title="Updating submodules" date="2026-07-17T20:15:07.799" /><!-- duration: 1585ms -->
+          <step title="Determining deployment builder" date="2026-07-17T20:15:09.653" >
+            <step title="Builder is OneDeployBuilder" date="2026-07-17T20:15:09.682" /><!-- duration: 8ms -->
+          </step><!-- duration: 47ms -->
+          <step title="PreDeployment: context.CleanOutputPath False" date="2026-07-17T20:15:09.791" >
+            <step title="PreDeployment: context.OutputPath /home/site/wwwroot" date="2026-07-17T20:15:09.961" >
+              <step title="Building" date="2026-07-17T20:15:10.182" >
+                <step title="Executing external process" date="2026-07-17T20:15:10.804" type="process" path="starter.sh" arguments="/opt/Kudu/Scripts/parallel_rsync.sh /tmp/zipdeploy/extracted /home/site/wwwroot 8 /tmp/ True False  " >
+                  <step title="Process dump" date="2026-07-17T20:15:23.040" exitCode="123" type="processOutput" /><!-- duration: 2ms -->
+                </step><!-- duration: 12240ms -->
+                <step title="Error occurred" date="2026-07-17T20:15:23.151" type="error" text="rsync: [generator] recv_generator: failed to stat &quot;/home/site/wwwroot/runtimes\browser-wasm\nativeassets\net8.0\e_sqlite3.a&quot;: Invalid argument (22)
+rsync: [generator] recv_generator: failed to stat &quot;/home/site/wwwroot/runtimes\linux-arm\native\libe_sqlite3.so&quot;: Invalid argument (22)
+rsync: [generator] recv_generator: failed to stat &quot;/home/site/wwwroot/runtimes\win-arm64\native\e_sqlite3.dll&quot;: Invalid argument (22)
+rsync: [generator] recv_generator: failed to stat &quot;/home/site/wwwroot/runtimes\win-x64\native\e_sqlite3.dll&quot;: Invalid argument (22)
+rsync: [generator] recv_generator: failed to stat &quot;/home/site/wwwroot/runtimes\win\lib\net6.0\System.Runtime.Caching.dll&quot;: Invalid argument (22)
+rsync: [generator] recv_generator: failed to stat &quot;/home/site/wwwroot/runtimes\linux-x64\native\libe_sqlite3.so&quot;: Invalid argument (22)
+rsync: [generator] recv_generator: failed to stat &quot;/home/site/wwwroot/runtimes\maccatalyst-x64\native\libe_sqlite3.dylib&quot;: Invalid argument (22)
+rsync: [generator] recv_generator: failed to stat &quot;/home/site/wwwroot/runtimes\unix\lib\net6.0\Microsoft.Data.SqlClient.dll&quot;: Invalid argument (22)
+rsync: [generator] recv_generator: failed to stat &quot;/home/site/wwwroot/runtimes\win-x64\native\Microsoft.Data.SqlClient.SNI.dll&quot;: Invalid argument (22)
+rsync: [generator] recv_generator: failed to stat &quot;/home/site/wwwroot/runtimes\win\lib\net8.0\System.Diagnostics.EventLog.dll&quot;: Invalid argument (22)
+rsync: [generator] recv_generator: failed to stat &quot;/home/site/wwwroot/runtimes\linux-armel\native\libe_sqlite3.so&quot;: Invalid argument (22)
+rsync: [generator] recv_generator: failed to stat &quot;/home/site/wwwroot/runtimes\linux-mips64\native\libe_sqlite3.so&quot;: Invalid argument (22)
+rsync: [generator] recv_generator: failed to stat &quot;/home/site/wwwroot/runtimes\linux-s390x\native\libe_sqlite3.so&quot;: Invalid argument (22)
+rsync: [generator] recv_generator: failed to stat &quot;/home/site/wwwroot/runtimes\osx-arm64\native\libe_sqlite3.dylib&quot;: Invalid argument (22)
+rsync: [generator] recv_generator: failed to stat &quot;/home/site/wwwroot/runtimes\osx-x64\native\libe_sqlite3.dylib&quot;: Invalid argument (22)
+rsync: [generator] recv_generator: failed to stat &quot;/home/site/wwwroot/runtimes\win-arm\native\e_sqlite3.dll&quot;: Invalid argument (22)
+rsync: [generator] recv_generator: failed to stat &quot;/home/site/wwwroot/runtimes\browser\lib\net8.0\System.Text.Encodings.Web.dll&quot;: Invalid argument (22)
+rsync: [generator] recv_generator: failed to stat &quot;/home/site/wwwroot/runtimes\win\lib\net6.0\Microsoft.Win32.SystemEvents.dll&quot;: Invalid argument (22)
+rsync: [generator] recv_generator: failed to stat &quot;/home/site/wwwroot/runtimes\win\lib\net6.0\System.Drawing.Common.dll&quot;: Invalid argument (22)
+rsync: [generator] recv_generator: failed to stat &quot;/home/site/wwwroot/runtimes\win\lib\net6.0\System.Windows.Extensions.dll&quot;: Invalid argument (22)
+rsync: [generator] recv_generator: failed to stat &quot;/home/site/wwwroot/runtimes\win\lib\net8.0\System.Diagnostics.EventLog.Messages.dll&quot;: Invalid argument (22)
+rsync: [generator] recv_generator: failed to stat &quot;/home/site/wwwroot/runtimes\linux-musl-x64\native\libe_sqlite3.so&quot;: Invalid argument (22)
+rsync: [generator] recv_generator: failed to stat &quot;/home/site/wwwroot/runtimes\linux-x86\native\libe_sqlite3.so&quot;: Invalid argument (22)
+rsync: [generator] recv_generator: failed to stat &quot;/home/site/wwwroot/runtimes\linux-arm64\native\libe_sqlite3.so&quot;: Invalid argument (22)
+rsync: [generator] recv_generator: failed to stat &quot;/home/site/wwwroot/runtimes\linux-ppc64le\native\libe_sqlite3.so&quot;: Invalid argument (22)
+rsync: [generator] recv_generator: failed to stat &quot;/home/site/wwwroot/runtimes\unix\lib\net6.0\System.Drawing.Common.dll&quot;: Invalid argument (22)
+rsync: [generator] recv_generator: failed to stat &quot;/home/site/wwwroot/runtimes\win-arm64\native\Microsoft.Data.SqlClient.SNI.dll&quot;: Invalid argument (22)
+rsync: [generator] recv_generator: failed to stat &quot;/home/site/wwwroot/runtimes\win-arm\native\Microsoft.Data.SqlClient.SNI.dll&quot;: Invalid argument (22)
+rsync: [generator] recv_generator: failed to stat &quot;/home/site/wwwroot/runtimes\maccatalyst-arm64\native\libe_sqlite3.dylib&quot;: Invalid argument (22)
+rsync: [generator] recv_generator: failed to stat &quot;/home/site/wwwroot/runtimes\win-x86\native\Microsoft.Data.SqlClient.SNI.dll&quot;: Invalid argument (22)
+rsync: [generator] recv_generator: failed to stat &quot;/home/site/wwwroot/runtimes\win-x86\native\e_sqlite3.dll&quot;: Invalid argument (22)
+rsync: [generator] recv_generator: failed to stat &quot;/home/site/wwwroot/runtimes\win\lib\net6.0\Microsoft.Data.SqlClient.dll&quot;: Invalid argument (22)
+rsync: [generator] recv_generator: failed to stat &quot;/home/site/wwwroot/runtimes\linux-musl-arm64\native\libe_sqlite3.so&quot;: Invalid argument (22)
+rsync: [generator] recv_generator: failed to stat &quot;/home/site/wwwroot/runtimes\linux-musl-arm\native\libe_sqlite3.so&quot;: Invalid argument (22)
+rsync: [generator] recv_generator: failed to stat &quot;/home/site/wwwroot/runtimes\win\lib\net6.0\System.Security.Cryptography.ProtectedData.dll&quot;: Invalid argument (22)
+rsync error: some files/attrs were not transferred (see previous errors) (code 23) at main.c(1338) [sender=3.2.7]
+rsync error: some files/attrs were not transferred (see previous errors) (code 23) at main.c(1338) [sender=3.2.7]
+rsync error: some files/attrs were not transferred (see previous errors) (code 23) at main.c(1338) [sender=3.2.7]
+rsync: [generator] recv_generator: failed to stat &quot;/home/site/wwwroot/runtimes\browser-wasm\nativeassets\net8.0\e_sqlite3.a&quot;: Invalid argument (22)
+rsync: [generator] recv_generator: failed to stat &quot;/home/site/wwwroot/runtimes\linux-arm\native\libe_sqlite3.so&quot;: Invalid argument (22)
+rsync: [generator] recv_generator: failed to stat &quot;/home/site/wwwroot/runtimes\win-arm64\native\e_sqlite3.dll&quot;: Invalid argument (22)
+rsync: [generator] recv_generator: failed to stat &quot;/home/site/wwwroot/runtimes\win-x64\native\e_sqlite3.dll&quot;: Invalid argument (22)
+rsync: [generator] recv_generator: failed to stat &quot;/home/site/wwwroot/runtimes\win\lib\net6.0\System.Runtime.Caching.dll&quot;: Invalid argument (22)
+rsync: [generator] recv_generator: failed to stat &quot;/home/site/wwwroot/runtimes\browser\lib\net8.0\System.Text.Encodings.Web.dll&quot;: Invalid argument (22)
+rsync: [generator] recv_generator: failed to stat &quot;/home/site/wwwroot/runtimes\win\lib\net6.0\Microsoft.Win32.SystemEvents.dll&quot;: Invalid argument (22)
+rsync: [generator] recv_generator: failed to stat &quot;/home/site/wwwroot/runtimes\win\lib\net6.0\System.Drawing.Common.dll&quot;: Invalid argument (22)
+rsync: [generator] recv_generator: failed to stat &quot;/home/site/wwwroot/runtimes\win\lib\net6.0\System.Windows.Extensions.dll&quot;: Invalid argument (22)
+rsync: [generator] recv_generator: failed to stat &quot;/home/site/wwwroot/runtimes\win\lib\net8.0\System.Diagnostics.EventLog.Messages.dll&quot;: Invalid argument (22)
+rsync error: some files/attrs were not transferred (see previous errors) (code 23) at main.c(1338) [sender=3.2.7]
+rsync error: some files/attrs were not transferred (see previous errors) (code 23) at main.c(1338) [sender=3.2.7]
+rsync error: some files/attrs were not transferred (see previous errors) (code 23) at main.c(1338) [sender=3.2.7]
+rsync: [generator] recv_generator: failed to stat &quot;/home/site/wwwroot/runtimes\linux-arm64\native\libe_sqlite3.so&quot;: Invalid argument (22)
+rsync: [generator] recv_generator: failed to stat &quot;/home/site/wwwroot/runtimes\linux-ppc64le\native\libe_sqlite3.so&quot;: Invalid argument (22)
+rsync: [generator] recv_generator: failed to stat &quot;/home/site/wwwroot/runtimes\unix\lib\net6.0\System.Drawing.Common.dll&quot;: Invalid argument (22)
+rsync: [generator] recv_generator: failed to stat &quot;/home/site/wwwroot/runtimes\win-arm64\native\Microsoft.Data.SqlClient.SNI.dll&quot;: Invalid argument (22)
+rsync: [generator] recv_generator: failed to stat &quot;/home/site/wwwroot/runtimes\win-arm\native\Microsoft.Data.SqlClient.SNI.dll&quot;: Invalid argument (22)
+rsync: [generator] recv_generator: failed to stat &quot;/home/site/wwwroot/runtimes\linux-musl-arm64\native\libe_sqlite3.so&quot;: Invalid argument (22)
+rsync: [generator] recv_generator: failed to stat &quot;/home/site/wwwroot/runtimes\linux-musl-arm\native\libe_sqlite3.so&quot;: Invalid argument (22)
+rsync: [generator] recv_generator: failed to stat &quot;/home/site/wwwroot/runtimes\win\lib\net6.0\System.Security.Cryptography.ProtectedData.dll&quot;: Invalid argument (22)
+rsync error: some files/attrs were not transferred (see previous errors) (code 23) at main.c(1338) [sender=3.2.7]
+rsync error: some files/attrs were not transferred (see previous errors) (code 23) at main.c(1338) [sender=3.2.7]
+rsync: [generator] recv_generator: failed to stat &quot;/home/site/wwwroot/runtimes\linux-armel\native\libe_sqlite3.so&quot;: Invalid argument (22)
+rsync: [generator] recv_generator: failed to stat &quot;/home/site/wwwroot/runtimes\linux-mips64\native\libe_sqlite3.so&quot;: Invalid argument (22)
+rsync: [generator] recv_generator: failed to stat &quot;/home/site/wwwroot/runtimes\linux-s390x\native\libe_sqlite3.so&quot;: Invalid argument (22)
+rsync: [generator] recv_generator: failed to stat &quot;/home/site/wwwroot/runtimes\osx-arm64\native\libe_sqlite3.dylib&quot;: Invalid argument (22)
+rsync: [generator] recv_generator: failed to stat &quot;/home/site/wwwroot/runtimes\osx-x64\native\libe_sqlite3.dylib&quot;: Invalid argument (22)
+rsync: [generator] recv_generator: failed to stat &quot;/home/site/wwwroot/runtimes\win-arm\native\e_sqlite3.dll&quot;: Invalid argument (22)
+rsync error: some files/attrs were not transferred (see previous errors) (code 23) at main.c(1338) [sender=3.2.7]
+rsync error: some files/attrs were not transferred (see previous errors) (code 23) at main.c(1338) [sender=3.2.7]
+rsync error: some files/attrs were not transferred (see previous errors) (code 23) at main.c(1338) [sender=3.2.7]
+rsync error: some files/attrs were not transferred (see previous errors) (code 23) at main.c(1338) [sender=3.2.7]
+rsync error: some files/attrs were not transferred (see previous errors) (code 23) at main.c(1338) [sender=3.2.7]
+rsync: [generator] recv_generator: failed to stat &quot;/home/site/wwwroot/runtimes\linux-musl-x64\native\libe_sqlite3.so&quot;: Invalid argument (22)
+rsync: [generator] recv_generator: failed to stat &quot;/home/site/wwwroot/runtimes\linux-x86\native\libe_sqlite3.so&quot;: Invalid argument (22)
+rsync: [generator] recv_generator: failed to stat &quot;/home/site/wwwroot/runtimes\linux-x64\native\libe_sqlite3.so&quot;: Invalid argument (22)
+rsync: [generator] recv_generator: failed to stat &quot;/home/site/wwwroot/runtimes\maccatalyst-x64\native\libe_sqlite3.dylib&quot;: Invalid argument (22)
+rsync: [generator] recv_generator: failed to stat &quot;/home/site/wwwroot/runtimes\unix\lib\net6.0\Microsoft.Data.SqlClient.dll&quot;: Invalid argument (22)
+rsync: [generator] recv_generator: failed to stat &quot;/home/site/wwwroot/runtimes\win-x64\native\Microsoft.Data.SqlClient.SNI.dll&quot;: Invalid argument (22)
+rsync: [generator] recv_generator: failed to stat &quot;/home/site/wwwroot/runtimes\win\lib\net8.0\System.Diagnostics.EventLog.dll&quot;: Invalid argument (22)
+rsync: [generator] recv_generator: failed to stat &quot;/home/site/wwwroot/runtimes\maccatalyst-arm64\native\libe_sqlite3.dylib&quot;: Invalid argument (22)
+rsync: [generator] recv_generator: failed to stat &quot;/home/site/wwwroot/runtimes\win-x86\native\Microsoft.Data.SqlClient.SNI.dll&quot;: Invalid argument (22)
+rsync: [generator] recv_generator: failed to stat &quot;/home/site/wwwroot/runtimes\win-x86\native\e_sqlite3.dll&quot;: Invalid argument (22)
+rsync: [generator] recv_generator: failed to stat &quot;/home/site/wwwroot/runtimes\win\lib\net6.0\Microsoft.Data.SqlClient.dll&quot;: Invalid argument (22)
+rsync error: some files/attrs were not transferred (see previous errors) (code 23) at main.c(1338) [sender=3.2.7]
+rsync error: some files/attrs were not transferred (see previous errors) (code 23) at main.c(1338) [sender=3.2.7]
+rsync error: some files/attrs were not transferred (see previous errors) (code 23) at main.c(1338) [sender=3.2.7]
+/opt/Kudu/Scripts/starter.sh /opt/Kudu/Scripts/parallel_rsync.sh /tmp/zipdeploy/extracted /home/site/wwwroot 8 /tmp/ True False  " stackTrace="   at Kudu.Core.Infrastructure.Executable.ExecuteInternal(ITracer tracer, Func`2 onWriteOutput, Func`2 onWriteError, CancellationToken token, Encoding encoding, String arguments, Object[] args) in /tmp/KuduLite/Kudu.Core/Infrastructure/Executable.cs:line 239
+   at Kudu.Core.Infrastructure.Executable.ExecuteWithProgressWriter(ILogger logger, ITracer tracer, CancellationToken token, String arguments, Object[] args) in /tmp/KuduLite/Kudu.Core/Infrastructure/Executable.cs:line 118
+   at Kudu.Core.Deployment.Generator.ExternalCommandBuilder.RunCommand(DeploymentContext context, String command, Boolean ignoreManifest, CancellationToken token, String message, ILogger internalLogger) in /tmp/KuduLite/Kudu.Core/Deployment/Generator/ExternalCommandBuilder.cs:line 145" /><!-- duration: 3ms -->
+                <step title="Warning" date="2026-07-17T20:15:23.229" type="warning" text="Exception in parallel rsync: ExitCode: 123, Output: Run rsync from: /tmp/zipdeploy/extracted/ to: /home/site/wwwroot/ in 8 parallel threads
+Delete options: clean=True, use manifest=False, directory to ignore=
+Prev manifest = /tmp/tmpZLdn1D.tmp and next /tmp/tmpZLdn1D.tmp
+Cleaning up /tmp//filelist.txt and /tmp//splits
+Creating a list of all files at /tmp//filelist.txt
+No directory to exclude.
+Created /tmp//filelist.txt. Total number of files to be synced = 130.
+Created batches from the list of files. Processing 17 files in each thread
+Running rsync for filelist /tmp//splits/split.aa from /tmp/zipdeploy/extracted/ to /home/site/wwwroot/
+Running rsync for filelist /tmp//splits/split.ac from /tmp/zipdeploy/extracted/ to /home/site/wwwroot/
+Running rsync for filelist /tmp//splits/split.ad from /tmp/zipdeploy/extracted/ to /home/site/wwwroot/
+Running rsync for filelist /tmp//splits/split.ae from /tmp/zipdeploy/extracted/ to /home/site/wwwroot/
+Running rsync for filelist /tmp//splits/split.af from /tmp/zipdeploy/extracted/ to /home/site/wwwroot/
+Running rsync for filelist /tmp//splits/split.ag from /tmp/zipdeploy/extracted/ to /home/site/wwwroot/
+Running rsync for filelist /tmp//splits/split.ab from /tmp/zipdeploy/extracted/ to /home/site/wwwroot/
+Running rsync for filelist /tmp//splits/split.ah from /tmp/zipdeploy/extracted/ to /home/site/wwwroot/
+
+Number of files: 17 (reg: 17)
+Number of created files: 0
+Number of deleted files: 0
+Number of regular files transferred: 3
+Total file size: 6.89M bytes
+Total transferred file size: 323.77K bytes
+Literal data: 323.77K bytes
+Matched data: 0 bytes
+File list size: 0
+File list generation time: 0.008 seconds
+File list transfer time: 0.000 seconds
+Total bytes sent: 124.83K
+Total bytes received: 100
+
+sent 124.83K bytes  received 100 bytes  83.29K bytes/sec
+total size is 6.89M  speedup is 55.14
+Attempt 1: Rsync for filelist /tmp//splits/split.ad completed with exit code 23
+
+Number of files: 17 (reg: 17)
+Number of created files: 0
+Number of deleted files: 0
+Number of regular files transferred: 1
+Total file size: 2.41M bytes
+Total transferred file size: 138.75K bytes
+Literal data: 138.75K bytes
+Matched data: 0 bytes
+File list size: 0
+File list generation time: 0.011 seconds
+File list transfer time: 0.000 seconds
+Total bytes sent: 68.60K
+Total bytes received: 68
+
+sent 68.60K bytes  received 68 bytes  45.78K bytes/sec
+total size is 2.41M  speedup is 35.16
+Attempt 1: Rsync for filelist /tmp//splits/split.ae completed with exit code 23
+
+Number of files: 17 (reg: 17)
+Number of created files: 0
+Number of deleted files: 0
+Number of regular files transferred: 2
+Total file size: 7.28M bytes
+Total transferred file size: 18.29K bytes
+Literal data: 18.29K bytes
+Matched data: 0 bytes
+File list size: 0
+File list generation time: 0.002 seconds
+File list transfer time: 0.000 seconds
+Total bytes sent: 3.37K
+Total bytes received: 84
+
+sent 3.37K bytes  received 84 bytes  2.31K bytes/sec
+total size is 7.28M  speedup is 2,106.52
+Attempt 1: Rsync for filelist /tmp//splits/split.ac completed with exit code 23
+
+Number of files: 17 (reg: 17)
+Number of created files: 0
+Number of deleted files: 0
+Number of regular files transferred: 3
+Total file size: 7.86M bytes
+Total transferred file size: 4.54K bytes
+Literal data: 4.54K bytes
+Matched data: 0 bytes
+File list size: 0
+File list generation time: 0.022 seconds
+File list transfer time: 0.000 seconds
+Total bytes sent: 2.50K
+Total bytes received: 97
+
+sent 2.50K bytes  received 97 bytes  1.73K bytes/sec
+total size is 7.86M  speedup is 3,033.77
+Attempt 1: Rsync for filelist /tmp//splits/split.ab completed with exit code 23
+
+Number of files: 11 (reg: 11)
+Number of created files: 0
+Number of deleted files: 0
+Number of regular files transferred: 1
+Total file size: 5.63M bytes
+Total transferred file size: 628.74K bytes
+Literal data: 628.74K bytes
+Matched data: 0 bytes
+File list size: 0
+File list generation time: 0.020 seconds
+File list transfer time: 0.000 seconds
+Total bytes sent: 219.95K
+Total bytes received: 56
+
+sent 219.95K bytes  received 56 bytes  146.67K bytes/sec
+total size is 5.63M  speedup is 25.57
+
+Number of files: 17 (reg: 17)
+Number of created files: 0
+Number of deleted files: 0
+Number of regular files transferred: 0
+Total file size: 6.89M bytes
+Total transferred file size: 0 bytes
+Literal data: 0 bytes
+Matched data: 0 bytes
+File list size: 0
+File list generation time: 0.019 seconds
+File list transfer time: 0.000 seconds
+Total bytes sent: 821
+Total bytes received: 52
+
+sent 821 bytes  received 52 bytes  1.75K bytes/sec
+total size is 6.89M  speedup is 7,891.68
+Attempt 2: Rsync for filelist /tmp//splits/split.ad completed with exit code 23
+Attempt 1: Rsync for filelist /tmp//splits/split.ah completed with exit code 23
+
+Number of files: 17 (reg: 17)
+Number of created files: 0
+Number of deleted files: 0
+Number of regular files transferred: 0
+Total file size: 2.41M bytes
+Total transferred file size: 0 bytes
+Literal data: 0 bytes
+Matched data: 0 bytes
+File list size: 0
+File list generation time: 0.029 seconds
+File list transfer time: 0.000 seconds
+Total bytes sent: 959
+Total bytes received: 52
+
+sent 959 bytes  received 52 bytes  2.02K bytes/sec
+total size is 2.41M  speedup is 2,388.07
+Attempt 2: Rsync for filelist /tmp//splits/split.ae completed with exit code 23
+
+Number of files: 17 (reg: 17)
+Number of created files: 0
+Number of deleted files: 0
+Number of regular files transferred: 3
+Total file size: 4.23M bytes
+Total transferred file size: 231.41K bytes
+Literal data: 231.41K bytes
+Matched data: 0 bytes
+File list size: 0
+File list generation time: 0.198 seconds
+File list transfer time: 0.000 seconds
+Total bytes sent: 25.10K
+Total bytes received: 109
+
+sent 25.10K bytes  received 109 bytes  16.81K bytes/sec
+total size is 4.23M  speedup is 167.68
+Attempt 1: Rsync for filelist /tmp//splits/split.aa completed with exit code 23
+
+Number of files: 17 (reg: 17)
+Number of created files: 0
+Number of deleted files: 0
+Number of regular files transferred: 0
+Total file size: 7.28M bytes
+Total transferred file size: 0 bytes
+Literal data: 0 bytes
+Matched data: 0 bytes
+File list size: 0
+File list generation time: 0.001 seconds
+File list transfer time: 0.000 seconds
+Total bytes sent: 889
+Total bytes received: 52
+
+sent 889 bytes  received 52 bytes  1.88K bytes/sec
+total size is 7.28M  speedup is 7,741.08
+
+Number of files: 11 (reg: 11)
+Number of created files: 0
+Number of deleted files: 0
+Number of regular files transferred: 0
+Total file size: 5.63M bytes
+Total transferred file size: 0 bytes
+Literal data: 0 bytes
+Matched data: 0 bytes
+File list size: 0
+File list generation time: 0.001 seconds
+File list transfer time: 0.000 seconds
+Total bytes sent: 625
+Total bytes received: 40
+
+sent 625 bytes  received 40 bytes  1.33K bytes/sec
+total size is 5.63M  speedup is 8,459.22
+Attempt 2: Rsync for filelist /tmp//splits/split.ah completed with exit code 23
+Attempt 2: Rsync for filelist /tmp//splits/split.ac completed with exit code 23
+
+Number of files: 17 (reg: 17)
+Number of created files: 1 (reg: 1)
+Number of deleted files: 0
+Number of regular files transferred: 3
+Total file size: 8.94M bytes
+Total transferred file size: 1.00M bytes
+Literal data: 1.00M bytes
+Matched data: 0 bytes
+File list size: 0
+File list generation time: 0.128 seconds
+File list transfer time: 0.000 seconds
+Total bytes sent: 207.31K
+Total bytes received: 103
+
+sent 207.31K bytes  received 103 bytes  138.28K bytes/sec
+total size is 8.94M  speedup is 43.09
+Attempt 1: Rsync for filelist /tmp//splits/split.ag completed with exit code 23
+
+Number of files: 17 (reg: 17)
+Number of created files: 0
+Number of deleted files: 0
+Number of regular files transferred: 0
+Total file size: 7.86M bytes
+Total transferred file size: 0 bytes
+Literal data: 0 bytes
+Matched data: 0 bytes
+File list size: 0
+File list generation time: 0.027 seconds
+File list transfer time: 0.000 seconds
+Total bytes sent: 889
+Total bytes received: 49
+
+sent 889 bytes  received 49 bytes  1.88K bytes/sec
+total size is 7.86M  speedup is 8,383.29
+Attempt 2: Rsync for filelist /tmp//splits/split.ab completed with exit code 23
+
+Number of files: 17 (reg: 17)
+Number of created files: 0
+Number of deleted files: 0
+Number of regular files transferred: 5
+Total file size: 7.17M bytes
+Total transferred file size: 609.37K bytes
+Literal data: 609.37K bytes
+Matched data: 0 bytes
+File list size: 0
+File list generation time: 0.011 seconds
+File list transfer time: 0.000 seconds
+Total bytes sent: 180.90K
+Total bytes received: 132
+
+sent 180.90K bytes  received 132 bytes  120.69K bytes/sec
+total size is 7.17M  speedup is 39.60
+Attempt 1: Rsync for filelist /tmp//splits/split.af completed with exit code 23
+
+Number of files: 17 (reg: 17)
+Number of created files: 0
+Number of deleted files: 0
+Number of regular files transferred: 0
+Total file size: 4.23M bytes
+Total transferred file size: 0 bytes
+Literal data: 0 bytes
+Matched data: 0 bytes
+File list size: 0
+File list generation time: 0.001 seconds
+File list transfer time: 0.000 seconds
+Total bytes sent: 790
+Total bytes received: 61
+
+sent 790 bytes  received 61 bytes  1.70K bytes/sec
+total size is 4.23M  speedup is 4,967.67
+Attempt 2: Rsync for filelist /tmp//splits/split.aa completed with exit code 23
+
+Number of files: 17 (reg: 17)
+Number of created files: 0
+Number of deleted files: 0
+Number of regular files transferred: 0
+Total file size: 7.17M bytes
+Total transferred file size: 0 bytes
+Literal data: 0 bytes
+Matched data: 0 bytes
+File list size: 0
+File list generation time: 0.029 seconds
+File list transfer time: 0.000 seconds
+Total bytes sent: 849
+Total bytes received: 52
+
+sent 849 bytes  received 52 bytes  1.80K bytes/sec
+total size is 7.17M  speedup is 7,957.75
+Attempt 2: Rsync for filelist /tmp//splits/split.af completed with exit code 23
+
+Number of files: 17 (reg: 17)
+Number of created files: 0
+Number of deleted files: 0
+Number of regular files transferred: 0
+Total file size: 8.94M bytes
+Total transferred file size: 0 bytes
+Literal data: 0 bytes
+Matched data: 0 bytes
+File list size: 0
+File list generation time: 0.020 seconds
+File list transfer time: 0.000 seconds
+Total bytes sent: 881
+Total bytes received: 55
+
+sent 881 bytes  received 55 bytes  1.87K bytes/sec
+total size is 8.94M  speedup is 9,549.15
+Attempt 2: Rsync for filelist /tmp//splits/split.ag completed with exit code 23
+An error has occurred during web site deployment.
+Rsync failed in 3 seconds, Error: rsync: [generator] recv_generator: failed to stat &quot;/home/site/wwwroot/runtimes\browser-wasm\nativeassets\net8.0\e_sqlite3.a&quot;: Invalid argument (22)
+rsync: [generator] recv_generator: failed to stat &quot;/home/site/wwwroot/runtimes\linux-arm\native\libe_sqlite3.so&quot;: Invalid argument (22)
+rsync: [generator] recv_generator: failed to stat &quot;/home/site/wwwroot/runtimes\win-arm64\native\e_sqlite3.dll&quot;: Invalid argument (22)
+rsync: [generator] recv_generator: failed to stat &quot;/home/site/wwwroot/runtimes\win-x64\native\e_sqlite3.dll&quot;: Invalid argument (22)
+rsync: [generator] recv_generator: failed to stat &quot;/home/site/wwwroot/runtimes\win\lib\net6.0\System.Runtime.Caching.dll&quot;: Invalid argument (22)
+rsync: [generator] recv_generator: failed to stat &quot;/home/site/wwwroot/runtimes\linux-x64\native\libe_sqlite3.so&quot;: Invalid argument (22)
+rsync: [generator] recv_generator: failed to stat &quot;/home/site/wwwroot/runtimes\maccatalyst-x64\native\libe_sqlite3.dylib&quot;: Invalid argument (22)
+rsync: [generator] recv_generator: failed to stat &quot;/home/site/wwwroot/runtimes\unix\lib\net6.0\Microsoft.Data.SqlClient.dll&quot;: Invalid argument (22)
+rsync: [generator] recv_generator: failed to stat &quot;/home/site/wwwroot/runtimes\win-x64\native\Microsoft.Data.SqlClient.SNI.dll&quot;: Invalid argument (22)
+rsync: [generator] recv_generator: failed to stat &quot;/home/site/wwwroot/runtimes\win\lib\net8.0\System.Diagnostics.EventLog.dll&quot;: Invalid argument (22)
+rsync: [generator] recv_generator: failed to stat &quot;/home/site/wwwroot/runtimes\linux-armel\native\libe_sqlite3.so&quot;: Invalid argument (22)
+rsync: [generator] recv_generator: failed to stat &quot;/home/site/wwwroot/runtimes\linux-mips64\native\libe_sqlite3.so&quot;: Invalid argument (22)
+rsync: [generator] recv_generator: failed to stat &quot;/home/site/wwwroot/runtimes\linux-s390x\native\libe_sqlite3.so&quot;: Invalid argument (22)
+rsync: [generator] recv_generator: failed to stat &quot;/home/site/wwwroot/runtimes\osx-arm64\native\libe_sqlite3.dylib&quot;: Invalid argument (22)
+rsync: [generator] recv_generator: failed to stat &quot;/home/site/wwwroot/runtimes\osx-x64\native\libe_sqlite3.dylib&quot;: Invalid argument (22)
+rsync: [generator] recv_generator: failed to stat &quot;/home/site/wwwroot/runtimes\win-arm\native\e_sqlite3.dll&quot;: Invalid argument (22)
+rsync: [generator] recv_generator: failed to stat &quot;/home/site/wwwroot/runtimes\browser\lib\net8.0\System.Text.Encodings.Web.dll&quot;: Invalid argument (22)
+rsync: [generator] recv_generator: failed to stat &quot;/home/site/wwwroot/runtimes\win\lib\net6.0\Microsoft.Win32.SystemEvents.dll&quot;: Invalid argument (22)
+rsync: [generator] recv_generator: failed to stat &quot;/home/site/wwwroot/runtimes\win\lib\net6.0\System.Drawing.Common.dll&quot;: Invalid argument (22)
+rsync: [generator] recv_generator: failed to stat &quot;/home/site/wwwroot/runtimes\win\lib\net6.0\System.Windows.Extensions.dll&quot;: Invalid argument (22)
+rsync: [generator] recv_generator: failed to stat &quot;/home/site/wwwroot/runtimes\win\lib\net8.0\System.Diagnostics.EventLog.Messages.dll&quot;: Invalid argument (22)
+rsync: [generator] recv_generator: failed to stat &quot;/home/site/wwwroot/runtimes\linux-musl-x64\native\libe_sqlite3.so&quot;: Invalid argument (22)
+rsync: [generator] recv_generator: failed to stat &quot;/home/site/wwwroot/runtimes\linux-x86\native\libe_sqlite3.so&quot;: Invalid argument (22)
+rsync: [generator] recv_generator: failed to stat &quot;/home/site/wwwroot/runtimes\linux-arm64\native\libe_sqlite3.so&quot;: Invalid argument (22)
+rsync: [generator] recv_generator: failed to stat &quot;/home/site/wwwroot/runtimes\linux-ppc64le\native\libe_sqlite3.so&quot;: Invalid argument (22)
+rsync: [generator] recv_generator: failed to stat &quot;/home/site/wwwroot/runtimes\unix\lib\net6.0\System.Drawing.Common.dll&quot;: Invalid argument (22)
+rsync: [generator] recv_generator: failed to stat &quot;/home/site/wwwroot/runtimes\win-arm64\native\Microsoft.Data.SqlClient.SNI.dll&quot;: Invalid argument (22)
+rsync: [generator] recv_generator: failed to stat &quot;/home/site/wwwroot/runtimes\win-arm\native\Microsoft.Data.SqlClient.SNI.dll&quot;: Invalid argument (22)
+rsync: [generator] recv_generator: failed to stat &quot;/home/site/wwwroot/runtimes\maccatalyst-arm64\native\libe_sqlite3.dylib&quot;: Invalid argument (22)
+rsync: [generator] recv_generator: failed to stat &quot;/home/site/wwwroot/runtimes\win-x86\native\Microsoft.Data.SqlClient.SNI.dll&quot;: Invalid argument (22)
+rsync: [generator] recv_generator: failed to stat &quot;/home/site/wwwroot/runtimes\win-x86\native\e_sqlite3.dll&quot;: Invalid argument (22)
+rsync: [generator] recv_generator: failed to stat &quot;/home/site/wwwroot/runtimes\win\lib\net6.0\Microsoft.Data.SqlClient.dll&quot;: Invalid argument (22)
+rsync: [generator] recv_generator: failed to stat &quot;/home/site/wwwroot/runtimes\linux-musl-arm64\native\libe_sqlite3.so&quot;: Invalid argument (22)
+rsync: [generator] recv_generator: failed to stat &quot;/home/site/wwwroot/runtimes\linux-musl-arm\native\libe_sqlite3.so&quot;: Invalid argument (22)
+rsync: [generator] recv_generator: failed to stat &quot;/home/site/wwwroot/runtimes\win\lib\net6.0\System.Security.Cryptography.ProtectedData.dll&quot;: Invalid argument (22)
+rsync error: some files/attrs were not transferred (see previous errors) (code 23) at main.c(1338) [sender=3.2.7]
+rsync error: some files/attrs were not transferred (see previous errors) (code 23) at main.c(1338) [sender=3.2.7]
+rsync error: some files/attrs were not transferred (see previous errors) (code 23) at main.c(1338) [sender=3.2.7]
+rsync: [generator] recv_generator: failed to stat &quot;/home/site/wwwroot/runtimes\browser-wasm\nativeassets\net8.0\e_sqlite3.a&quot;: Invalid argument (22)
+rsync: [generator] recv_generator: failed to stat &quot;/home/site/wwwroot/runtimes\linux-arm\native\libe_sqlite3.so&quot;: Invalid argument (22)
+rsync: [generator] recv_generator: failed to stat &quot;/home/site/wwwroot/runtimes\win-arm64\native\e_sqlite3.dll&quot;: Invalid argument (22)
+rsync: [generator] recv_generator: failed to stat &quot;/home/site/wwwroot/runtimes\win-x64\native\e_sqlite3.dll&quot;: Invalid argument (22)
+rsync: [generator] recv_generator: failed to stat &quot;/home/site/wwwroot/runtimes\win\lib\net6.0\System.Runtime.Caching.dll&quot;: Invalid argument (22)
+rsync: [generator] recv_generator: failed to stat &quot;/home/site/wwwroot/runtimes\browser\lib\net8.0\System.Text.Encodings.Web.dll&quot;: Invalid argument (22)
+rsync: [generator] recv_generator: failed to stat &quot;/home/site/wwwroot/runtimes\win\lib\net6.0\Microsoft.Win32.SystemEvents.dll&quot;: Invalid argument (22)
+rsync: [generator] recv_generator: failed to stat &quot;/home/site/wwwroot/runtimes\win\lib\net6.0\System.Drawing.Common.dll&quot;: Invalid argument (22)
+rsync: [generator] recv_generator: failed to stat &quot;/home/site/wwwroot/runtimes\win\lib\net6.0\System.Windows.Extensions.dll&quot;: Invalid argument (22)
+rsync: [generator] recv_generator: failed to stat &quot;/home/site/wwwroot/runtimes\win\lib\net8.0\System.Diagnostics.EventLog.Messages.dll&quot;: Invalid argument (22)
+rsync error: some files/attrs were not transferred (see previous errors) (code 23) at main.c(1338) [sender=3.2.7]
+rsync error: some files/attrs were not transferred (see previous errors) (code 23) at main.c(1338) [sender=3.2.7]
+rsync error: some files/attrs were not transferred (see previous errors) (code 23) at main.c(1338) [sender=3.2.7]
+rsync: [generator] recv_generator: failed to stat &quot;/home/site/wwwroot/runtimes\linux-arm64\native\libe_sqlite3.so&quot;: Invalid argument (22)
+rsync: [generator] recv_generator: failed to stat &quot;/home/site/wwwroot/runtimes\linux-ppc64le\native\libe_sqlite3.so&quot;: Invalid argument (22)
+rsync: [generator] recv_generator: failed to stat &quot;/home/site/wwwroot/runtimes\unix\lib\net6.0\System.Drawing.Common.dll&quot;: Invalid argument (22)
+rsync: [generator] recv_generator: failed to stat &quot;/home/site/wwwroot/runtimes\win-arm64\native\Microsoft.Data.SqlClient.SNI.dll&quot;: Invalid argument (22)
+rsync: [generator] recv_generator: failed to stat &quot;/home/site/wwwroot/runtimes\win-arm\native\Microsoft.Data.SqlClient.SNI.dll&quot;: Invalid argument (22)
+rsync: [generator] recv_generator: failed to stat &quot;/home/site/wwwroot/runtimes\linux-musl-arm64\native\libe_sqlite3.so&quot;: Invalid argument (22)
+rsync: [generator] recv_generator: failed to stat &quot;/home/site/wwwroot/runtimes\linux-musl-arm\native\libe_sqlite3.so&quot;: Invalid argument (22)
+rsync: [generator] recv_generator: failed to stat &quot;/home/site/wwwroot/runtimes\win\lib\net6.0\System.Security.Cryptography.ProtectedData.dll&quot;: Invalid argument (22)
+rsync error: some files/attrs were not transferred (see previous errors) (code 23) at main.c(1338) [sender=3.2.7]
+rsync error: some files/attrs were not transferred (see previous errors) (code 23) at main.c(1338) [sender=3.2.7]
+rsync: [generator] recv_generator: failed to stat &quot;/home/site/wwwroot/runtimes\linux-armel\native\libe_sqlite3.so&quot;: Invalid argument (22)
+rsync: [generator] recv_generator: failed to stat &quot;/home/site/wwwroot/runtimes\linux-mips64\native\libe_sqlite3.so&quot;: Invalid argument (22)
+rsync: [generator] recv_generator: failed to stat &quot;/home/site/wwwroot/runtimes\linux-s390x\native\libe_sqlite3.so&quot;: Invalid argument (22)
+rsync: [generator] recv_generator: failed to stat &quot;/home/site/wwwroot/runtimes\osx-arm64\native\libe_sqlite3.dylib&quot;: Invalid argument (22)
+rsync: [generator] recv_generator: failed to stat &quot;/home/site/wwwroot/runtimes\osx-x64\native\libe_sqlite3.dylib&quot;: Invalid argument (22)
+rsync: [generator] recv_generator: failed to stat &quot;/home/site/wwwroot/runtimes\win-arm\native\e_sqlite3.dll&quot;: Invalid argument (22)
+rsync error: some files/attrs were not transferred (see previous errors) (code 23) at main.c(1338) [sender=3.2.7]
+rsync error: some files/attrs were not transferred (see previous errors) (code 23) at main.c(1338) [sender=3.2.7]
+rsync error: some files/attrs were not transferred (see previous errors) (code 23) at main.c(1338) [sender=3.2.7]
+rsync error: some files/attrs were not transferred (see previous errors) (code 23) at main.c(1338) [sender=3.2.7]
+rsync error: some files/attrs were not transferred (see previous errors) (code 23) at main.c(1338) [sender=3.2.7]
+rsync: [generator] recv_generator: failed to stat &quot;/home/site/wwwroot/runtimes\linux-musl-x64\native\libe_sqlite3.so&quot;: Invalid argument (22)
+rsync: [generator] recv_generator: failed to stat &quot;/home/site/wwwroot/runtimes\linux-x86\native\libe_sqlite3.so&quot;: Invalid argument (22)
+rsync: [generator] recv_generator: failed to stat &quot;/home/site/wwwroot/runtimes\linux-x64\native\libe_sqlite3.so&quot;: Invalid argument (22)
+rsync: [generator] recv_generator: failed to stat &quot;/home/site/wwwroot/runtimes\maccatalyst-x64\native\libe_sqlite3.dylib&quot;: Invalid argument (22)
+rsync: [generator] recv_generator: failed to stat &quot;/home/site/wwwroot/runtimes\unix\lib\net6.0\Microsoft.Data.SqlClient.dll&quot;: Invalid argument (22)
+rsync: [generator] recv_generator: failed to stat &quot;/home/site/wwwroot/runtimes\win-x64\native\Microsoft.Data.SqlClient.SNI.dll&quot;: Invalid argument (22)
+rsync: [generator] recv_generator: failed to stat &quot;/home/site/wwwroot/runtimes\win\lib\net8.0\System.Diagnostics.EventLog.dll&quot;: Invalid argument (22)
+rsync: [generator] recv_generator: failed to stat &quot;/home/site/wwwroot/runtimes\maccatalyst-arm64\native\libe_sqlite3.dylib&quot;: Invalid argument (22)
+rsync: [generator] recv_generator: failed to stat &quot;/home/site/wwwroot/runtimes\win-x86\native\Microsoft.Data.SqlClient.SNI.dll&quot;: Invalid argument (22)
+rsync: [generator] recv_generator: failed to stat &quot;/home/site/wwwroot/runtimes\win-x86\native\e_sqlite3.dll&quot;: Invalid argument (22)
+rsync: [generator] recv_generator: failed to stat &quot;/home/site/wwwroot/runtimes\win\lib\net6.0\Microsoft.Data.SqlClient.dll&quot;: Invalid argument (22)
+rsync error: some files/attrs were not transferred (see previous errors) (code 23) at main.c(1338) [sender=3.2.7]
+rsync error: some files/attrs were not transferred (see previous errors) (code 23) at main.c(1338) [sender=3.2.7]
+rsync error: some files/attrs were not transferred (see previous errors) (code 23) at main.c(1338) [sender=3.2.7], Kudu.Core.Infrastructure.CommandLineException: rsync: [generator] recv_generator: failed to stat &quot;/home/site/wwwroot/runtimes\browser-wasm\nativeassets\net8.0\e_sqlite3.a&quot;: Invalid argument (22)
+rsync: [generator] recv_generator: failed to stat &quot;/home/site/wwwroot/runtimes\linux-arm\native\libe_sqlite3.so&quot;: Invalid argument (22)
+rsync: [generator] recv_generator: failed to stat &quot;/home/site/wwwroot/runtimes\win-arm64\native\e_sqlite3.dll&quot;: Invalid argument (22)
+rsync: [generator] recv_generator: failed to stat &quot;/home/site/wwwroot/runtimes\win-x64\native\e_sqlite3.dll&quot;: Invalid argument (22)
+rsync: [generator] recv_generator: failed to stat &quot;/home/site/wwwroot/runtimes\win\lib\net6.0\System.Runtime.Caching.dll&quot;: Invalid argument (22)
+rsync: [generator] recv_generator: failed to stat &quot;/home/site/wwwroot/runtimes\linux-x64\native\libe_sqlite3.so&quot;: Invalid argument (22)
+rsync: [generator] recv_generator: failed to stat &quot;/home/site/wwwroot/runtimes\maccatalyst-x64\native\libe_sqlite3.dylib&quot;: Invalid argument (22)
+rsync: [generator] recv_generator: failed to stat &quot;/home/site/wwwroot/runtimes\unix\lib\net6.0\Microsoft.Data.SqlClient.dll&quot;: Invalid argument (22)
+rsync: [generator] recv_generator: failed to stat &quot;/home/site/wwwroot/runtimes\win-x64\native\Microsoft.Data.SqlClient.SNI.dll&quot;: Invalid argument (22)
+rsync: [generator] recv_generator: failed to stat &quot;/home/site/wwwroot/runtimes\win\lib\net8.0\System.Diagnostics.EventLog.dll&quot;: Invalid argument (22)
+rsync: [generator] recv_generator: failed to stat &quot;/home/site/wwwroot/runtimes\linux-armel\native\libe_sqlite3.so&quot;: Invalid argument (22)
+rsync: [generator] recv_generator: failed to stat &quot;/home/site/wwwroot/runtimes\linux-mips64\native\libe_sqlite3.so&quot;: Invalid argument (22)
+rsync: [generator] recv_generator: failed to stat &quot;/home/site/wwwroot/runtimes\linux-s390x\native\libe_sqlite3.so&quot;: Invalid argument (22)
+rsync: [generator] recv_generator: failed to stat &quot;/home/site/wwwroot/runtimes\osx-arm64\native\libe_sqlite3.dylib&quot;: Invalid argument (22)
+rsync: [generator] recv_generator: failed to stat &quot;/home/site/wwwroot/runtimes\osx-x64\native\libe_sqlite3.dylib&quot;: Invalid argument (22)
+rsync: [generator] recv_generator: failed to stat &quot;/home/site/wwwroot/runtimes\win-arm\native\e_sqlite3.dll&quot;: Invalid argument (22)
+rsync: [generator] recv_generator: failed to stat &quot;/home/site/wwwroot/runtimes\browser\lib\net8.0\System.Text.Encodings.Web.dll&quot;: Invalid argument (22)
+rsync: [generator] recv_generator: failed to stat &quot;/home/site/wwwroot/runtimes\win\lib\net6.0\Microsoft.Win32.SystemEvents.dll&quot;: Invalid argument (22)
+rsync: [generator] recv_generator: failed to stat &quot;/home/site/wwwroot/runtimes\win\lib\net6.0\System.Drawing.Common.dll&quot;: Invalid argument (22)
+rsync: [generator] recv_generator: failed to stat &quot;/home/site/wwwroot/runtimes\win\lib\net6.0\System.Windows.Extensions.dll&quot;: Invalid argument (22)
+rsync: [generator] recv_generator: failed to stat &quot;/home/site/wwwroot/runtimes\win\lib\net8.0\System.Diagnostics.EventLog.Messages.dll&quot;: Invalid argument (22)
+rsync: [generator] recv_generator: failed to stat &quot;/home/site/wwwroot/runtimes\linux-musl-x64\native\libe_sqlite3.so&quot;: Invalid argument (22)
+rsync: [generator] recv_generator: failed to stat &quot;/home/site/wwwroot/runtimes\linux-x86\native\libe_sqlite3.so&quot;: Invalid argument (22)
+rsync: [generator] recv_generator: failed to stat &quot;/home/site/wwwroot/runtimes\linux-arm64\native\libe_sqlite3.so&quot;: Invalid argument (22)
+rsync: [generator] recv_generator: failed to stat &quot;/home/site/wwwroot/runtimes\linux-ppc64le\native\libe_sqlite3.so&quot;: Invalid argument (22)
+rsync: [generator] recv_generator: failed to stat &quot;/home/site/wwwroot/runtimes\unix\lib\net6.0\System.Drawing.Common.dll&quot;: Invalid argument (22)
+rsync: [generator] recv_generator: failed to stat &quot;/home/site/wwwroot/runtimes\win-arm64\native\Microsoft.Data.SqlClient.SNI.dll&quot;: Invalid argument (22)
+rsync: [generator] recv_generator: failed to stat &quot;/home/site/wwwroot/runtimes\win-arm\native\Microsoft.Data.SqlClient.SNI.dll&quot;: Invalid argument (22)
+rsync: [generator] recv_generator: failed to stat &quot;/home/site/wwwroot/runtimes\maccatalyst-arm64\native\libe_sqlite3.dylib&quot;: Invalid argument (22)
+rsync: [generator] recv_generator: failed to stat &quot;/home/site/wwwroot/runtimes\win-x86\native\Microsoft.Data.SqlClient.SNI.dll&quot;: Invalid argument (22)
+rsync: [generator] recv_generator: failed to stat &quot;/home/site/wwwroot/runtimes\win-x86\native\e_sqlite3.dll&quot;: Invalid argument (22)
+rsync: [generator] recv_generator: failed to stat &quot;/home/site/wwwroot/runtimes\win\lib\net6.0\Microsoft.Data.SqlClient.dll&quot;: Invalid argument (22)
+rsync: [generator] recv_generator: failed to stat &quot;/home/site/wwwroot/runtimes\linux-musl-arm64\native\libe_sqlite3.so&quot;: Invalid argument (22)
+rsync: [generator] recv_generator: failed to stat &quot;/home/site/wwwroot/runtimes\linux-musl-arm\native\libe_sqlite3.so&quot;: Invalid argument (22)
+rsync: [generator] recv_generator: failed to stat &quot;/home/site/wwwroot/runtimes\win\lib\net6.0\System.Security.Cryptography.ProtectedData.dll&quot;: Invalid argument (22)
+rsync error: some files/attrs were not transferred (see previous errors) (code 23) at main.c(1338) [sender=3.2.7]
+rsync error: some files/attrs were not transferred (see previous errors) (code 23) at main.c(1338) [sender=3.2.7]
+rsync error: some files/attrs were not transferred (see previous errors) (code 23) at main.c(1338) [sender=3.2.7]
+rsync: [generator] recv_generator: failed to stat &quot;/home/site/wwwroot/runtimes\browser-wasm\nativeassets\net8.0\e_sqlite3.a&quot;: Invalid argument (22)
+rsync: [generator] recv_generator: failed to stat &quot;/home/site/wwwroot/runtimes\linux-arm\native\libe_sqlite3.so&quot;: Invalid argument (22)
+rsync: [generator] recv_generator: failed to stat &quot;/home/site/wwwroot/runtimes\win-arm64\native\e_sqlite3.dll&quot;: Invalid argument (22)
+rsync: [generator] recv_generator: failed to stat &quot;/home/site/wwwroot/runtimes\win-x64\native\e_sqlite3.dll&quot;: Invalid argument (22)
+rsync: [generator] recv_generator: failed to stat &quot;/home/site/wwwroot/runtimes\win\lib\net6.0\System.Runtime.Caching.dll&quot;: Invalid argument (22)
+rsync: [generator] recv_generator: failed to stat &quot;/home/site/wwwroot/runtimes\browser\lib\net8.0\System.Text.Encodings.Web.dll&quot;: Invalid argument (22)
+rsync: [generator] recv_generator: failed to stat &quot;/home/site/wwwroot/runtimes\win\lib\net6.0\Microsoft.Win32.SystemEvents.dll&quot;: Invalid argument (22)
+rsync: [generator] recv_generator: failed to stat &quot;/home/site/wwwroot/runtimes\win\lib\net6.0\System.Drawing.Common.dll&quot;: Invalid argument (22)
+rsync: [generator] recv_generator: failed to stat &quot;/home/site/wwwroot/runtimes\win\lib\net6.0\System.Windows.Extensions.dll&quot;: Invalid argument (22)
+rsync: [generator] recv_generator: failed to stat &quot;/home/site/wwwroot/runtimes\win\lib\net8.0\System.Diagnostics.EventLog.Messages.dll&quot;: Invalid argument (22)
+rsync error: some files/attrs were not transferred (see previous errors) (code 23) at main.c(1338) [sender=3.2.7]
+rsync error: some files/attrs were not transferred (see previous errors) (code 23) at main.c(1338) [sender=3.2.7]
+rsync error: some files/attrs were not transferred (see previous errors) (code 23) at main.c(1338) [sender=3.2.7]
+rsync: [generator] recv_generator: failed to stat &quot;/home/site/wwwroot/runtimes\linux-arm64\native\libe_sqlite3.so&quot;: Invalid argument (22)
+rsync: [generator] recv_generator: failed to stat &quot;/home/site/wwwroot/runtimes\linux-ppc64le\native\libe_sqlite3.so&quot;: Invalid argument (22)
+rsync: [generator] recv_generator: failed to stat &quot;/home/site/wwwroot/runtimes\unix\lib\net6.0\System.Drawing.Common.dll&quot;: Invalid argument (22)
+rsync: [generator] recv_generator: failed to stat &quot;/home/site/wwwroot/runtimes\win-arm64\native\Microsoft.Data.SqlClient.SNI.dll&quot;: Invalid argument (22)
+rsync: [generator] recv_generator: failed to stat &quot;/home/site/wwwroot/runtimes\win-arm\native\Microsoft.Data.SqlClient.SNI.dll&quot;: Invalid argument (22)
+rsync: [generator] recv_generator: failed to stat &quot;/home/site/wwwroot/runtimes\linux-musl-arm64\native\libe_sqlite3.so&quot;: Invalid argument (22)
+rsync: [generator] recv_generator: failed to stat &quot;/home/site/wwwroot/runtimes\linux-musl-arm\native\libe_sqlite3.so&quot;: Invalid argument (22)
+rsync: [generator] recv_generator: failed to stat &quot;/home/site/wwwroot/runtimes\win\lib\net6.0\System.Security.Cryptography.ProtectedData.dll&quot;: Invalid argument (22)
+rsync error: some files/attrs were not transferred (see previous errors) (code 23) at main.c(1338) [sender=3.2.7]
+rsync error: some files/attrs were not transferred (see previous errors) (code 23) at main.c(1338) [sender=3.2.7]
+rsync: [generator] recv_generator: failed to stat &quot;/home/site/wwwroot/runtimes\linux-armel\native\libe_sqlite3.so&quot;: Invalid argument (22)
+rsync: [generator] recv_generator: failed to stat &quot;/home/site/wwwroot/runtimes\linux-mips64\native\libe_sqlite3.so&quot;: Invalid argument (22)
+rsync: [generator] recv_generator: failed to stat &quot;/home/site/wwwroot/runtimes\linux-s390x\native\libe_sqlite3.so&quot;: Invalid argument (22)
+rsync: [generator] recv_generator: failed to stat &quot;/home/site/wwwroot/runtimes\osx-arm64\native\libe_sqlite3.dylib&quot;: Invalid argument (22)
+rsync: [generator] recv_generator: failed to stat &quot;/home/site/wwwroot/runtimes\osx-x64\native\libe_sqlite3.dylib&quot;: Invalid argument (22)
+rsync: [generator] recv_generator: failed to stat &quot;/home/site/wwwroot/runtimes\win-arm\native\e_sqlite3.dll&quot;: Invalid argument (22)
+rsync error: some files/attrs were not transferred (see previous errors) (code 23) at main.c(1338) [sender=3.2.7]
+rsync error: some files/attrs were not transferred (see previous errors) (code 23) at main.c(1338) [sender=3.2.7]
+rsync error: some files/attrs were not transferred (see previous errors) (code 23) at main.c(1338) [sender=3.2.7]
+rsync error: some files/attrs were not transferred (see previous errors) (code 23) at main.c(1338) [sender=3.2.7]
+rsync error: some files/attrs were not transferred (see previous errors) (code 23) at main.c(1338) [sender=3.2.7]
+rsync: [generator] recv_generator: failed to stat &quot;/home/site/wwwroot/runtimes\linux-musl-x64\native\libe_sqlite3.so&quot;: Invalid argument (22)
+rsync: [generator] recv_generator: failed to stat &quot;/home/site/wwwroot/runtimes\linux-x86\native\libe_sqlite3.so&quot;: Invalid argument (22)
+rsync: [generator] recv_generator: failed to stat &quot;/home/site/wwwroot/runtimes\linux-x64\native\libe_sqlite3.so&quot;: Invalid argument (22)
+rsync: [generator] recv_generator: failed to stat &quot;/home/site/wwwroot/runtimes\maccatalyst-x64\native\libe_sqlite3.dylib&quot;: Invalid argument (22)
+rsync: [generator] recv_generator: failed to stat &quot;/home/site/wwwroot/runtimes\unix\lib\net6.0\Microsoft.Data.SqlClient.dll&quot;: Invalid argument (22)
+rsync: [generator] recv_generator: failed to stat &quot;/home/site/wwwroot/runtimes\win-x64\native\Microsoft.Data.SqlClient.SNI.dll&quot;: Invalid argument (22)
+rsync: [generator] recv_generator: failed to stat &quot;/home/site/wwwroot/runtimes\win\lib\net8.0\System.Diagnostics.EventLog.dll&quot;: Invalid argument (22)
+rsync: [generator] recv_generator: failed to stat &quot;/home/site/wwwroot/runtimes\maccatalyst-arm64\native\libe_sqlite3.dylib&quot;: Invalid argument (22)
+rsync: [generator] recv_generator: failed to stat &quot;/home/site/wwwroot/runtimes\win-x86\native\Microsoft.Data.SqlClient.SNI.dll&quot;: Invalid argument (22)
+rsync: [generator] recv_generator: failed to stat &quot;/home/site/wwwroot/runtimes\win-x86\native\e_sqlite3.dll&quot;: Invalid argument (22)
+rsync: [generator] recv_generator: failed to stat &quot;/home/site/wwwroot/runtimes\win\lib\net6.0\Microsoft.Data.SqlClient.dll&quot;: Invalid argument (22)
+rsync error: some files/attrs were not transferred (see previous errors) (code 23) at main.c(1338) [sender=3.2.7]
+rsync error: some files/attrs were not transferred (see previous errors) (code 23) at main.c(1338) [sender=3.2.7]
+rsync error: some files/attrs were not transferred (see previous errors) (code 23) at main.c(1338) [sender=3.2.7]
+/opt/Kudu/Scripts/starter.sh /opt/Kudu/Scripts/parallel_rsync.sh /tmp/zipdeploy/extracted /home/site/wwwroot 8 /tmp/ True False  
+   at Kudu.Core.Infrastructure.Executable.ExecuteInternal(ITracer tracer, Func`2 onWriteOutput, Func`2 onWriteError, CancellationToken token, Encoding encoding, String arguments, Object[] args) in /tmp/KuduLite/Kudu.Core/Infrastructure/Executable.cs:line 239
+   at Kudu.Core.Infrastructure.Executable.ExecuteWithProgressWriter(ILogger logger, ITracer tracer, CancellationToken token, String arguments, Object[] args) in /tmp/KuduLite/Kudu.Core/Infrastructure/Executable.cs:line 118
+   at Kudu.Core.Deployment.Generator.ExternalCommandBuilder.RunCommand(DeploymentContext context, String command, Boolean ignoreManifest, CancellationToken token, String message, ILogger internalLogger) in /tmp/KuduLite/Kudu.Core/Deployment/Generator/ExternalCommandBuilder.cs:line 145
+   at Kudu.Core.Deployment.Generator.GeneratorSiteBuilder.Build(DeploymentContext context, CancellationToken token) in /tmp/KuduLite/Kudu.Core/Deployment/Generator/GeneratorSiteBuilder.cs:line 70" /><!-- duration: 5ms -->
+                <step title="Generating deployment script" date="2026-07-17T20:15:23.238" >
+                  <step title="Using cached version of the deployment script for command: -y --no-dot-deployment -r &quot;/tmp/zipdeploy/extracted&quot; -o &quot;/home/site/deployments/tools&quot; --basic --sitePath &quot;/tmp/zipdeploy/extracted&quot;" date="2026-07-17T20:15:23.293" /><!-- duration: 2ms -->
+                </step><!-- duration: 84ms -->
+                <step title="Executing external process" date="2026-07-17T20:15:23.440" type="process" path="starter.sh" arguments="&quot;/home/site/deployments/tools/deploy.sh&quot;" >
+                  <step title="Process dump" date="2026-07-17T20:15:24.375" exitCode="1" type="processOutput" /><!-- duration: 10ms -->
+                </step><!-- duration: 948ms -->
+                <step title="Error occurred" date="2026-07-17T20:15:24.426" type="error" text="
+/opt/Kudu/Scripts/starter.sh &quot;/home/site/deployments/tools/deploy.sh&quot;" stackTrace="   at Kudu.Core.Infrastructure.Executable.ExecuteInternal(ITracer tracer, Func`2 onWriteOutput, Func`2 onWriteError, CancellationToken token, Encoding encoding, String arguments, Object[] args) in /tmp/KuduLite/Kudu.Core/Infrastructure/Executable.cs:line 239
+   at Kudu.Core.Infrastructure.Executable.ExecuteWithProgressWriter(ILogger logger, ITracer tracer, CancellationToken token, String arguments, Object[] args) in /tmp/KuduLite/Kudu.Core/Infrastructure/Executable.cs:line 118
+   at Kudu.Core.Deployment.Generator.ExternalCommandBuilder.RunCommand(DeploymentContext context, String command, Boolean ignoreManifest, CancellationToken token, String message, ILogger internalLogger) in /tmp/KuduLite/Kudu.Core/Deployment/Generator/ExternalCommandBuilder.cs:line 145" /><!-- duration: 2ms -->
+                <step title="Error occurred" date="2026-07-17T20:15:24.446" type="error" text="
+/opt/Kudu/Scripts/starter.sh &quot;/home/site/deployments/tools/deploy.sh&quot;" stackTrace="   at Kudu.Core.Infrastructure.Executable.ExecuteInternal(ITracer tracer, Func`2 onWriteOutput, Func`2 onWriteError, CancellationToken token, Encoding encoding, String arguments, Object[] args) in /tmp/KuduLite/Kudu.Core/Infrastructure/Executable.cs:line 239
+   at Kudu.Core.Infrastructure.Executable.ExecuteWithProgressWriter(ILogger logger, ITracer tracer, CancellationToken token, String arguments, Object[] args) in /tmp/KuduLite/Kudu.Core/Infrastructure/Executable.cs:line 118
+   at Kudu.Core.Deployment.Generator.ExternalCommandBuilder.RunCommand(DeploymentContext context, String command, Boolean ignoreManifest, CancellationToken token, String message, ILogger internalLogger) in /tmp/KuduLite/Kudu.Core/Deployment/Generator/ExternalCommandBuilder.cs:line 145
+   at Kudu.Core.Deployment.Generator.GeneratorSiteBuilder.Build(DeploymentContext context, CancellationToken token) in /tmp/KuduLite/Kudu.Core/Deployment/Generator/GeneratorSiteBuilder.cs:line 96
+--- End of stack trace from previous location ---
+   at Kudu.Core.Deployment.Generator.OneDeployBuilder.Build(DeploymentContext context, CancellationToken token) in /tmp/KuduLite/Kudu.Core/Deployment/Generator/OneDeployBuilder.cs:line 66
+   at Kudu.Core.Deployment.DeploymentManager.Build(ChangeSet changeSet, ITracer tracer, IDisposable deployStep, IRepository repository, DeploymentInfoBase deploymentInfo, DeploymentAnalytics deploymentAnalytics, Boolean fullBuildByDefault, CancellationToken cancellationToken) in /tmp/KuduLite/Kudu.Core/Deployment/DeploymentManager.cs:line 771" /><!-- duration: 8ms -->
+              </step><!-- duration: 14709ms -->
+            </step><!-- duration: 14934ms -->
+            <step title="Error occurred" date="2026-07-17T20:15:24.897" type="error" text="
+/opt/Kudu/Scripts/starter.sh &quot;/home/site/deployments/tools/deploy.sh&quot;" stackTrace="   at Kudu.Core.Infrastructure.Executable.ExecuteInternal(ITracer tracer, Func`2 onWriteOutput, Func`2 onWriteError, CancellationToken token, Encoding encoding, String arguments, Object[] args) in /tmp/KuduLite/Kudu.Core/Infrastructure/Executable.cs:line 239
+   at Kudu.Core.Infrastructure.Executable.ExecuteWithProgressWriter(ILogger logger, ITracer tracer, CancellationToken token, String arguments, Object[] args) in /tmp/KuduLite/Kudu.Core/Infrastructure/Executable.cs:line 118
+   at Kudu.Core.Deployment.Generator.ExternalCommandBuilder.RunCommand(DeploymentContext context, String command, Boolean ignoreManifest, CancellationToken token, String message, ILogger internalLogger) in /tmp/KuduLite/Kudu.Core/Deployment/Generator/ExternalCommandBuilder.cs:line 145
+   at Kudu.Core.Deployment.Generator.GeneratorSiteBuilder.Build(DeploymentContext context, CancellationToken token) in /tmp/KuduLite/Kudu.Core/Deployment/Generator/GeneratorSiteBuilder.cs:line 96
+--- End of stack trace from previous location ---
+   at Kudu.Core.Deployment.Generator.OneDeployBuilder.Build(DeploymentContext context, CancellationToken token) in /tmp/KuduLite/Kudu.Core/Deployment/Generator/OneDeployBuilder.cs:line 66
+   at Kudu.Core.Deployment.DeploymentManager.Build(ChangeSet changeSet, ITracer tracer, IDisposable deployStep, IRepository repository, DeploymentInfoBase deploymentInfo, DeploymentAnalytics deploymentAnalytics, Boolean fullBuildByDefault, CancellationToken cancellationToken) in /tmp/KuduLite/Kudu.Core/Deployment/DeploymentManager.cs:line 771
+   at Kudu.Core.Deployment.DeploymentManager.Build(ChangeSet changeSet, ITracer tracer, IDisposable deployStep, IRepository repository, DeploymentInfoBase deploymentInfo, DeploymentAnalytics deploymentAnalytics, Boolean fullBuildByDefault, CancellationToken cancellationToken) in /tmp/KuduLite/Kudu.Core/Deployment/DeploymentManager.cs:line 840" /><!-- duration: 2ms -->
+            <step title="Cleaning up temp files" date="2026-07-17T20:15:24.950" /><!-- duration: 10ms -->
+            <step title="Cleaning up temp files" date="2026-07-17T20:15:24.970" /><!-- duration: 520ms -->
+            <step title="Error occurred" date="2026-07-17T20:15:25.510" type="error" text="
+/opt/Kudu/Scripts/starter.sh &quot;/home/site/deployments/tools/deploy.sh&quot;" stackTrace="   at Kudu.Core.Infrastructure.Executable.ExecuteInternal(ITracer tracer, Func`2 onWriteOutput, Func`2 onWriteError, CancellationToken token, Encoding encoding, String arguments, Object[] args) in /tmp/KuduLite/Kudu.Core/Infrastructure/Executable.cs:line 239
+   at Kudu.Core.Infrastructure.Executable.ExecuteWithProgressWriter(ILogger logger, ITracer tracer, CancellationToken token, String arguments, Object[] args) in /tmp/KuduLite/Kudu.Core/Infrastructure/Executable.cs:line 118
+   at Kudu.Core.Deployment.Generator.ExternalCommandBuilder.RunCommand(DeploymentContext context, String command, Boolean ignoreManifest, CancellationToken token, String message, ILogger internalLogger) in /tmp/KuduLite/Kudu.Core/Deployment/Generator/ExternalCommandBuilder.cs:line 145
+   at Kudu.Core.Deployment.Generator.GeneratorSiteBuilder.Build(DeploymentContext context, CancellationToken token) in /tmp/KuduLite/Kudu.Core/Deployment/Generator/GeneratorSiteBuilder.cs:line 96
+--- End of stack trace from previous location ---
+   at Kudu.Core.Deployment.Generator.OneDeployBuilder.Build(DeploymentContext context, CancellationToken token) in /tmp/KuduLite/Kudu.Core/Deployment/Generator/OneDeployBuilder.cs:line 66
+   at Kudu.Core.Deployment.DeploymentManager.Build(ChangeSet changeSet, ITracer tracer, IDisposable deployStep, IRepository repository, DeploymentInfoBase deploymentInfo, DeploymentAnalytics deploymentAnalytics, Boolean fullBuildByDefault, CancellationToken cancellationToken) in /tmp/KuduLite/Kudu.Core/Deployment/DeploymentManager.cs:line 771
+   at Kudu.Core.Deployment.DeploymentManager.Build(ChangeSet changeSet, ITracer tracer, IDisposable deployStep, IRepository repository, DeploymentInfoBase deploymentInfo, DeploymentAnalytics deploymentAnalytics, Boolean fullBuildByDefault, CancellationToken cancellationToken) in /tmp/KuduLite/Kudu.Core/Deployment/DeploymentManager.cs:line 840
+   at Kudu.Core.Deployment.DeploymentManager.DeployAsync(IRepository repository, ChangeSet changeSet, String deployer, Boolean clean, DeploymentInfoBase deploymentInfo, Boolean needFileUpdate, Boolean fullBuildByDefault) in /tmp/KuduLite/Kudu.Core/Deployment/DeploymentManager.cs:line 266" /><!-- duration: 5ms -->
+          </step><!-- duration: 15735ms -->
+          <step title="Reloading status file with latest updates" date="2026-07-17T20:15:25.575" >
+            <step title="WebHooksManager.PublishEventAsync: PostDeployment" date="2026-07-17T20:15:25.578" /><!-- duration: 77ms -->
+          </step><!-- duration: 81ms -->
+          <step title="Error occurred" date="2026-07-17T20:15:25.658" type="error" text="
+/opt/Kudu/Scripts/starter.sh &quot;/home/site/deployments/tools/deploy.sh&quot;" stackTrace="   at Kudu.Core.Infrastructure.Executable.ExecuteInternal(ITracer tracer, Func`2 onWriteOutput, Func`2 onWriteError, CancellationToken token, Encoding encoding, String arguments, Object[] args) in /tmp/KuduLite/Kudu.Core/Infrastructure/Executable.cs:line 239
+   at Kudu.Core.Infrastructure.Executable.ExecuteWithProgressWriter(ILogger logger, ITracer tracer, CancellationToken token, String arguments, Object[] args) in /tmp/KuduLite/Kudu.Core/Infrastructure/Executable.cs:line 118
+   at Kudu.Core.Deployment.Generator.ExternalCommandBuilder.RunCommand(DeploymentContext context, String command, Boolean ignoreManifest, CancellationToken token, String message, ILogger internalLogger) in /tmp/KuduLite/Kudu.Core/Deployment/Generator/ExternalCommandBuilder.cs:line 145
+   at Kudu.Core.Deployment.Generator.GeneratorSiteBuilder.Build(DeploymentContext context, CancellationToken token) in /tmp/KuduLite/Kudu.Core/Deployment/Generator/GeneratorSiteBuilder.cs:line 96
+--- End of stack trace from previous location ---
+   at Kudu.Core.Deployment.Generator.OneDeployBuilder.Build(DeploymentContext context, CancellationToken token) in /tmp/KuduLite/Kudu.Core/Deployment/Generator/OneDeployBuilder.cs:line 66
+   at Kudu.Core.Deployment.DeploymentManager.Build(ChangeSet changeSet, ITracer tracer, IDisposable deployStep, IRepository repository, DeploymentInfoBase deploymentInfo, DeploymentAnalytics deploymentAnalytics, Boolean fullBuildByDefault, CancellationToken cancellationToken) in /tmp/KuduLite/Kudu.Core/Deployment/DeploymentManager.cs:line 771
+   at Kudu.Core.Deployment.DeploymentManager.Build(ChangeSet changeSet, ITracer tracer, IDisposable deployStep, IRepository repository, DeploymentInfoBase deploymentInfo, DeploymentAnalytics deploymentAnalytics, Boolean fullBuildByDefault, CancellationToken cancellationToken) in /tmp/KuduLite/Kudu.Core/Deployment/DeploymentManager.cs:line 840
+   at Kudu.Core.Deployment.DeploymentManager.DeployAsync(IRepository repository, ChangeSet changeSet, String deployer, Boolean clean, DeploymentInfoBase deploymentInfo, Boolean needFileUpdate, Boolean fullBuildByDefault) in /tmp/KuduLite/Kudu.Core/Deployment/DeploymentManager.cs:line 266" /><!-- duration: 4ms -->
+          <step title="Marking deployment as failed and cleaning up the temp deployment" date="2026-07-17T20:15:25.718" /><!-- duration: 2ms -->
+        </step><!-- duration: 18214ms -->
+      </step><!-- duration: 18236ms -->
+      <step title="Error occurred" date="2026-07-17T20:15:25.864" type="error" text="Deployment failed" stackTrace="   at Kudu.Core.Deployment.DeploymentManager.DeployAsync(IRepository repository, ChangeSet changeSet, String deployer, Boolean clean, DeploymentInfoBase deploymentInfo, Boolean needFileUpdate, Boolean fullBuildByDefault) in /tmp/KuduLite/Kudu.Core/Deployment/DeploymentManager.cs:line 307
+   at Kudu.Core.Deployment.FetchDeploymentManager.PerformDeployment(DeploymentInfoBase deploymentInfo, IDisposable tempDeployment, ChangeSet tempChangeSet, DeployStatusApiResult updateStatusObj) in /tmp/KuduLite/Kudu.Core/Deployment/FetchDeploymentManager.cs:line 230
+   at Kudu.Core.Deployment.FetchDeploymentManager.&lt;&gt;c__DisplayClass17_0.&lt;&lt;FetchDeploy&gt;b__0&gt;d.MoveNext() in /tmp/KuduLite/Kudu.Core/Deployment/FetchDeploymentManager.cs:line 131
+--- End of stack trace from previous location ---
+   at Kudu.Core.Deployment.FetchDeploymentManager.FetchDeploy(DeploymentInfoBase deployInfo, Boolean asyncRequested, Uri requestUri, String targetBranch) in /tmp/KuduLite/Kudu.Core/Deployment/FetchDeploymentManager.cs:line 124
+   at Kudu.Services.Deployment.PushDeploymentController.PushDeployAsync(ArtifactDeploymentInfo deploymentInfo, Boolean isAsync, HttpContext context, JObject requestJson) in /tmp/KuduLite/Kudu.Services/Deployment/PushDeploymentController.cs:line 804
+   at Kudu.Services.Deployment.PushDeploymentController.OneDeploy(String type, Boolean async, String path, Nullable`1 restart, Nullable`1 clean, Boolean ignoreStack, Boolean trackDeploymentProgress, Boolean trackStatus, Boolean reset) in /tmp/KuduLite/Kudu.Services/Deployment/PushDeploymentController.cs:line 624
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ActionMethodExecutor.TaskOfIActionResultExecutor.Execute(ActionContext actionContext, IActionResultTypeMapper mapper, ObjectMethodExecutor executor, Object controller, Object[] arguments)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.&lt;InvokeActionMethodAsync&gt;g__Awaited|12_0(ControllerActionInvoker invoker, ValueTask`1 actionResultValueTask)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.&lt;InvokeNextActionFilterAsync&gt;g__Awaited|10_0(ControllerActionInvoker invoker, Task lastTask, State next, Scope scope, Object state, Boolean isCompleted)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.Rethrow(ActionExecutedContextSealed context)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.Next(State&amp; next, Scope&amp; scope, Object&amp; state, Boolean&amp; isCompleted)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.&lt;InvokeInnerFilterAsync&gt;g__Awaited|13_0(ControllerActionInvoker invoker, Task lastTask, State next, Scope scope, Object state, Boolean isCompleted)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.&lt;InvokeNextResourceFilter&gt;g__Awaited|25_0(ResourceInvoker invoker, Task lastTask, State next, Scope scope, Object state, Boolean isCompleted)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.Rethrow(ResourceExecutedContextSealed context)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.Next(State&amp; next, Scope&amp; scope, Object&amp; state, Boolean&amp; isCompleted)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.&lt;InvokeFilterPipelineAsync&gt;g__Awaited|20_0(ResourceInvoker invoker, Task lastTask, State next, Scope scope, Object state, Boolean isCompleted)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.&lt;InvokeAsync&gt;g__Awaited|17_0(ResourceInvoker invoker, Task task, IDisposable scope)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.&lt;InvokeAsync&gt;g__Awaited|17_0(ResourceInvoker invoker, Task task, IDisposable scope)
+   at Microsoft.AspNetCore.Builder.RouterMiddleware.Invoke(HttpContext httpContext)
+   at Kudu.Services.Web.Startup.&lt;&gt;c.&lt;&lt;Configure&gt;b__11_7&gt;d.MoveNext() in /tmp/KuduLite/Kudu.Services.Web/Startup.cs:line 437
+--- End of stack trace from previous location ---
+   at Kudu.Services.Web.Tracing.TraceMiddleware.Invoke(HttpContext context) in /tmp/KuduLite/Kudu.Services.Web/Tracing/TraceMiddleware.cs:line 101" innerText="
+/opt/Kudu/Scripts/starter.sh &quot;/home/site/deployments/tools/deploy.sh&quot;" innerStackTrace="   at Kudu.Core.Infrastructure.Executable.ExecuteInternal(ITracer tracer, Func`2 onWriteOutput, Func`2 onWriteError, CancellationToken token, Encoding encoding, String arguments, Object[] args) in /tmp/KuduLite/Kudu.Core/Infrastructure/Executable.cs:line 239
+   at Kudu.Core.Infrastructure.Executable.ExecuteWithProgressWriter(ILogger logger, ITracer tracer, CancellationToken token, String arguments, Object[] args) in /tmp/KuduLite/Kudu.Core/Infrastructure/Executable.cs:line 118
+   at Kudu.Core.Deployment.Generator.ExternalCommandBuilder.RunCommand(DeploymentContext context, String command, Boolean ignoreManifest, CancellationToken token, String message, ILogger internalLogger) in /tmp/KuduLite/Kudu.Core/Deployment/Generator/ExternalCommandBuilder.cs:line 145
+   at Kudu.Core.Deployment.Generator.GeneratorSiteBuilder.Build(DeploymentContext context, CancellationToken token) in /tmp/KuduLite/Kudu.Core/Deployment/Generator/GeneratorSiteBuilder.cs:line 96
+--- End of stack trace from previous location ---
+   at Kudu.Core.Deployment.Generator.OneDeployBuilder.Build(DeploymentContext context, CancellationToken token) in /tmp/KuduLite/Kudu.Core/Deployment/Generator/OneDeployBuilder.cs:line 66
+   at Kudu.Core.Deployment.DeploymentManager.Build(ChangeSet changeSet, ITracer tracer, IDisposable deployStep, IRepository repository, DeploymentInfoBase deploymentInfo, DeploymentAnalytics deploymentAnalytics, Boolean fullBuildByDefault, CancellationToken cancellationToken) in /tmp/KuduLite/Kudu.Core/Deployment/DeploymentManager.cs:line 771
+   at Kudu.Core.Deployment.DeploymentManager.Build(ChangeSet changeSet, ITracer tracer, IDisposable deployStep, IRepository repository, DeploymentInfoBase deploymentInfo, DeploymentAnalytics deploymentAnalytics, Boolean fullBuildByDefault, CancellationToken cancellationToken) in /tmp/KuduLite/Kudu.Core/Deployment/DeploymentManager.cs:line 840
+   at Kudu.Core.Deployment.DeploymentManager.DeployAsync(IRepository repository, ChangeSet changeSet, String deployer, Boolean clean, DeploymentInfoBase deploymentInfo, Boolean needFileUpdate, Boolean fullBuildByDefault) in /tmp/KuduLite/Kudu.Core/Deployment/DeploymentManager.cs:line 266" /><!-- duration: 6ms -->
+      <step title="Incoming Request" date="2026-07-17T20:15:25.905" url="/Error?type=zip&amp;restart=True&amp;clean=True" method="POST" type="request" pid="831,1,43" Accept="*/*" Host="reignofrelicswebapp-cdbgc5eyhvd2g0ah.scm.belgiumcentral-01.azurewebsites.net" User-Agent="AZURECLI/2.69.0 (MSI)" Accept-Encoding="gzip, deflate" Authorization="Bea..." Cache-Control="no-cache" Content-Type="application/octet-stream" Content-Length="21413822" x-ms-client-request-id="2bbc0b99-821c-11f1-b58d-74563cf8b763" x-ms-artifact-checksum="a7fbd42f816f62a39e2edcf0d2a42b69afe76c19e69986643a5a95dad2433741" X-ARR-LOG-ID="2bbc0b99-821c-11f1-b58d-74563cf8b763" CLIENT-IP="185.136.116.89:61519" X-SITE-DEPLOYMENT-ID="reignofrelicswebapp" WAS-DEFAULT-HOSTNAME="reignofrelicswebapp-cdbgc5eyhvd2g0ah.scm.belgiumcentral-01.azurewebsites.net" X-Forwarded-Proto="https" X-AppService-Proto="https" X-Forwarded-TlsVersion="1.3" X-WAWS-Unencoded-URL="/api/publish?type=zip&amp;restart=True&amp;clean=True" X-Client-IP="185.136.116.89" X-Client-Port="61519" >
+        <step title="Outgoing response" date="2026-07-17T20:15:25.953" type="response" statusCode="400" statusText="BadRequest" /><!-- duration: 3ms -->
+      </step><!-- duration: 56ms -->

@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Routing;
 using Microsoft.Extensions.Logging.Abstractions;
+using Microsoft.EntityFrameworkCore;
 using Domain.User;
 using System.Security.Claims;
 using Xunit;
@@ -65,6 +66,17 @@ public class ControllerQualityTests
         var error = Assert.IsType<ApiError>(badRequest.Value);
         Assert.Equal("world_player.join_failed", error.Code);
         Assert.Equal("world is full", error.Message);
+    }
+
+    [Fact]
+    public async Task WorldPlayerEconomy_ConcurrencyErrorReachesGlobalMiddleware()
+    {
+        var controller = new WorldPlayerController(
+            NullLogger<WorldPlayerController>.Instance,
+            new ThrowingEconomyWorldPlayerService());
+
+        await Assert.ThrowsAsync<DbUpdateConcurrencyException>(() =>
+            controller.GetWorldPlayerEconomy(Guid.NewGuid()));
     }
 
     [Fact]
@@ -368,6 +380,18 @@ public class ControllerQualityTests
 
         public Task<WorldPlayerSelectIdeologyResponse> SelectIdeology(SelectIdeologyRequest request) =>
             Task.FromException<WorldPlayerSelectIdeologyResponse>(new NotImplementedException());
+    }
+
+    private sealed class ThrowingEconomyWorldPlayerService : IWorldPlayerService
+    {
+        public Task<WorldPlayerEconomyDTO> GetWorldPlayerEconomyAsync(Guid worldPlayerId) =>
+            Task.FromException<WorldPlayerEconomyDTO>(new DbUpdateConcurrencyException());
+        public Task<WorldPlayerJoinResponse> AssignPlayerToGameWorldAsync(Guid worldId) => throw new NotImplementedException();
+        public Task<WorldPlayerProfileDTO> GetWorldPlayerProfileAsync(Guid worldPlayerId) => throw new NotImplementedException();
+        public Task<WorldPlayerProfileDTO> UpdateWorldPlayerDescriptionAsync(Guid worldPlayerId, string description) => throw new NotImplementedException();
+        public Task<List<PlayerSearchResultDTO>> SearchPlayersAsync(Guid worldId, string query) => throw new NotImplementedException();
+        public void SyncGlobalResources(WorldPlayer player, DateTime currentDateTime) => throw new NotImplementedException();
+        public Task<WorldPlayerSelectIdeologyResponse> SelectIdeology(SelectIdeologyRequest request) => throw new NotImplementedException();
     }
 
     private sealed class ThrowingRankingService(Exception exception) : IRankingService

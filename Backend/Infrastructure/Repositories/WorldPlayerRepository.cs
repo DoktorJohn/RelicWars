@@ -90,7 +90,6 @@ namespace Infrastructure.Repositories
 
         public async Task UpdateAsync(WorldPlayer user)
         {
-            _context.WorldPlayers.Update(user);
             await _context.SaveChangesAsync();
         }
 

@@ -22,6 +22,30 @@ jobs:
         with:
           submodules: true
           lfs: false
+      - name: Generate deployment provenance
+        shell: bash
+        run: |
+          data_sha="$(sha256sum 0.0.1Build/Build/0.0.1Build.data.br | cut -d ' ' -f 1)"
+          framework_sha="$(sha256sum 0.0.1Build/Build/0.0.1Build.framework.js.br | cut -d ' ' -f 1)"
+          loader_sha="$(sha256sum 0.0.1Build/Build/0.0.1Build.loader.js | cut -d ' ' -f 1)"
+          wasm_sha="$(sha256sum 0.0.1Build/Build/0.0.1Build.wasm.br | cut -d ' ' -f 1)"
+          jq -n \
+            --arg commitSha "$GITHUB_SHA" \
+            --arg deployedAtUtc "$(date -u +'%Y-%m-%dT%H:%M:%SZ')" \
+            --arg dataSha "$data_sha" \
+            --arg frameworkSha "$framework_sha" \
+            --arg loaderSha "$loader_sha" \
+            --arg wasmSha "$wasm_sha" \
+            '{
+              commitSha: $commitSha,
+              deployedAtUtc: $deployedAtUtc,
+              webglBinaries: {
+                "Build/0.0.1Build.data.br": $dataSha,
+                "Build/0.0.1Build.framework.js.br": $frameworkSha,
+                "Build/0.0.1Build.loader.js": $loaderSha,
+                "Build/0.0.1Build.wasm.br": $wasmSha
+              }
+            }' > 0.0.1Build/deployment-info.json
       - name: Build And Deploy
         id: builddeploy
         uses: Azure/static-web-apps-deploy@v1

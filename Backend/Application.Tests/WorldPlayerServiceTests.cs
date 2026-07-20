@@ -1,3 +1,4 @@
+using Application.Interfaces;
 using Application.Interfaces.IRepositories;
 using Application.Interfaces.IServices;
 using Application.Services;
@@ -10,6 +11,10 @@ using Domain.StaticData.Readers;
 using Domain.User;
 using Domain.Workers;
 using Microsoft.Extensions.Logging.Abstractions;
+using Microsoft.EntityFrameworkCore;
+using Infrastructure.Context;
+using Infrastructure.Persistence;
+using Infrastructure.Repositories;
 using System.IO;
 using System.Text.Json;
 
@@ -42,7 +47,8 @@ public class WorldPlayerServiceTests
             new CapturingWorldMapObjectService(),
             new TestPlayerAccessService([player]),
             NullLogger<WorldPlayerService>.Instance,
-            new CityPointCalculator(TestData.BuildingReader()));
+            new CityPointCalculator(TestData.BuildingReader()),
+            new ImmediateTransactionManager());
 
         var result = await service.GetWorldPlayerEconomyAsync(player.Id);
 
@@ -82,7 +88,8 @@ public class WorldPlayerServiceTests
             mapService,
             new TestPlayerAccessService([authenticatedPlayer]),
             NullLogger<WorldPlayerService>.Instance,
-            new CityPointCalculator(TestData.BuildingReader()));
+            new CityPointCalculator(TestData.BuildingReader()),
+            new ImmediateTransactionManager());
 
         var response = await service.AssignPlayerToGameWorldAsync(world.Id);
 
@@ -121,7 +128,8 @@ public class WorldPlayerServiceTests
             mapService,
             new TestPlayerAccessService([authenticatedPlayer]),
             NullLogger<WorldPlayerService>.Instance,
-            new CityPointCalculator(TestData.BuildingReader()));
+            new CityPointCalculator(TestData.BuildingReader()),
+            new ImmediateTransactionManager());
 
         var response = await service.AssignPlayerToGameWorldAsync(world.Id);
 
@@ -140,6 +148,170 @@ public class WorldPlayerServiceTests
             city.Buildings.Select(building => building.Type));
         Assert.All(city.Buildings, building => Assert.Equal(1, building.Level));
         Assert.Equal(6, city.Buildings.Count);
+    }
+
+    [Fact]
+    public async Task AssignPlayerToGameWorldAsync_ConcurrentRequestsReuseSameParticipationAndCapital()
+    {
+        var world = new World { Id = Guid.NewGuid(), Width = 200, Height = 200, MapSeed = 42069 };
+        var profileId = Guid.NewGuid();
+        var authenticatedPlayer = new WorldPlayer
+        {
+            Id = Guid.NewGuid(),
+            PlayerProfileId = profileId,
+            WorldId = world.Id
+        };
+        var repository = new MemoryWorldPlayerRepository();
+        var mapService = new CapturingWorldMapObjectService();
+        var service = new WorldPlayerService(
+            repository,
+            new FixedPlayerProfileRepository(profileId, "ConcurrentPlayer"),
+            new NoOpCityRepository(),
+            new NoOpRankingService(),
+            new NoOpResourceService(),
+            new FixedWorldRepository(world),
+            new NoOpWorldMapObjectRepository(),
+            mapService,
+            new TestPlayerAccessService([authenticatedPlayer]),
+            NullLogger<WorldPlayerService>.Instance,
+            new CityPointCalculator(TestData.BuildingReader()),
+            new SerializingTransactionManager());
+
+        var responses = await Task.WhenAll(
+            service.AssignPlayerToGameWorldAsync(world.Id),
+            service.AssignPlayerToGameWorldAsync(world.Id));
+
+        Assert.All(responses, response => Assert.True(response.ConnectionSuccessful));
+        Assert.Equal(responses[0].WorldPlayerId, responses[1].WorldPlayerId);
+        Assert.Equal(responses[0].ActiveCityId, responses[1].ActiveCityId);
+        Assert.Equal(1, repository.Count);
+        Assert.Single(repository.SinglePlayer.Cities);
+    }
+
+    [Fact]
+    public async Task AssignPlayerToGameWorldAsync_RollsBackParticipationAndCityWhenMapObjectCreationFails()
+    {
+        var world = new World { Id = Guid.NewGuid(), Width = 200, Height = 200, MapSeed = 42069 };
+        var profileId = Guid.NewGuid();
+        var options = new DbContextOptionsBuilder<GameContext>()
+            .UseSqlite("Data Source=:memory:")
+            .Options;
+        await using var context = new GameContext(options);
+        await context.Database.OpenConnectionAsync();
+        await context.Database.EnsureCreatedAsync();
+        context.World.Add(world);
+        context.PlayerProfiles.Add(new PlayerProfile
+        {
+            Id = profileId,
+            UserName = "RollbackPlayer",
+            NormalizedUserName = "ROLLBACKPLAYER",
+            Email = "rollback@example.test",
+            NormalizedEmail = "ROLLBACK@EXAMPLE.TEST"
+        });
+        await context.SaveChangesAsync();
+
+        var service = new WorldPlayerService(
+            new WorldPlayerRepository(context),
+            new FixedPlayerProfileRepository(profileId, "RollbackPlayer"),
+            new NoOpCityRepository(),
+            new NoOpRankingService(),
+            new NoOpResourceService(),
+            new FixedWorldRepository(world),
+            new WorldMapObjectRepository(context),
+            new ThrowingWorldMapObjectService(),
+            new TestPlayerAccessService([new WorldPlayer { PlayerProfileId = profileId, WorldId = world.Id }]),
+            NullLogger<WorldPlayerService>.Instance,
+            new CityPointCalculator(TestData.BuildingReader()),
+            new TransactionManager(context));
+
+        await Assert.ThrowsAsync<InvalidOperationException>(() => service.AssignPlayerToGameWorldAsync(world.Id));
+
+        Assert.Equal(0, await context.WorldPlayers.AsNoTracking().CountAsync());
+        Assert.Equal(0, await context.Cities.AsNoTracking().CountAsync());
+        Assert.Equal(0, await context.WorldMapObjects.AsNoTracking().CountAsync());
+    }
+
+    [Fact]
+    public async Task AssignPlayerToGameWorldAsync_DbUpdateConflictReturnsWinningParticipation()
+    {
+        var world = new World { Id = Guid.NewGuid(), Width = 200, Height = 200, MapSeed = 42069 };
+        var profileId = Guid.NewGuid();
+        var winnerCity = new City { Id = Guid.NewGuid(), WorldId = world.Id };
+        var winner = new WorldPlayer
+        {
+            Id = Guid.NewGuid(),
+            PlayerProfileId = profileId,
+            WorldId = world.Id,
+            Cities = [winnerCity]
+        };
+        var service = new WorldPlayerService(
+            new WinnerAfterConflictRepository(winner),
+            new FixedPlayerProfileRepository(profileId, "RaceWinner"),
+            new NoOpCityRepository(),
+            new NoOpRankingService(),
+            new NoOpResourceService(),
+            new FixedWorldRepository(world),
+            new NoOpWorldMapObjectRepository(),
+            new NoOpWorldMapObjectService(),
+            new TestPlayerAccessService([winner]),
+            NullLogger<WorldPlayerService>.Instance,
+            new CityPointCalculator(TestData.BuildingReader()),
+            new ThrowingDbUpdateTransactionManager());
+
+        var response = await service.AssignPlayerToGameWorldAsync(world.Id);
+
+        Assert.True(response.ConnectionSuccessful);
+        Assert.Equal(winner.Id, response.WorldPlayerId);
+        Assert.Equal(winnerCity.Id, response.ActiveCityId);
+        Assert.Equal("Welcome back.", response.Message);
+    }
+
+    [Fact]
+    public async Task UniqueWorldJoinIndexesRejectDuplicateParticipationCityAndTypedMapObject()
+    {
+        await using (var context = await CreateSqliteContextAsync())
+        {
+            var world = new World { Id = Guid.NewGuid(), Name = "Participation world" };
+            var profile = new PlayerProfile { Id = Guid.NewGuid(), UserName = "UniquePlayer" };
+            context.AddRange(world, profile);
+            context.WorldPlayers.Add(new WorldPlayer { PlayerProfileId = profile.Id, WorldId = world.Id });
+            await context.SaveChangesAsync();
+            context.WorldPlayers.Add(new WorldPlayer { PlayerProfileId = profile.Id, WorldId = world.Id });
+
+            await Assert.ThrowsAsync<DbUpdateException>(() => context.SaveChangesAsync());
+        }
+
+        await using (var context = await CreateSqliteContextAsync())
+        {
+            var world = new World { Id = Guid.NewGuid(), Name = "City world" };
+            context.Add(world);
+            context.Cities.AddRange(
+                new City { WorldId = world.Id, X = 27, Y = 9, Name = "First" },
+                new City { WorldId = world.Id, X = 27, Y = 9, Name = "Second" });
+
+            await Assert.ThrowsAsync<DbUpdateException>(() => context.SaveChangesAsync());
+        }
+
+        await using (var context = await CreateSqliteContextAsync())
+        {
+            var world = new World { Id = Guid.NewGuid(), Name = "Map object world" };
+            context.Add(world);
+            context.WorldMapObjects.AddRange(
+                new WorldMapObject { WorldId = world.Id, X = 27, Y = 9, Type = MapObjectTypeEnum.City },
+                new WorldMapObject { WorldId = world.Id, X = 27, Y = 9, Type = MapObjectTypeEnum.City });
+
+            await Assert.ThrowsAsync<DbUpdateException>(() => context.SaveChangesAsync());
+        }
+    }
+
+    private static async Task<GameContext> CreateSqliteContextAsync()
+    {
+        var context = new GameContext(new DbContextOptionsBuilder<GameContext>()
+            .UseSqlite("Data Source=:memory:")
+            .Options);
+        await context.Database.OpenConnectionAsync();
+        await context.Database.EnsureCreatedAsync();
+        return context;
     }
 
     [Fact]
@@ -176,7 +348,8 @@ public class WorldPlayerServiceTests
                 mapService,
                 new TestPlayerAccessService([authenticatedPlayer]),
                 NullLogger<WorldPlayerService>.Instance,
-                new CityPointCalculator(TestData.BuildingReader()));
+                new CityPointCalculator(TestData.BuildingReader()),
+                new ImmediateTransactionManager());
 
             var response = await service.AssignPlayerToGameWorldAsync(world.Id);
 
@@ -267,7 +440,8 @@ public class WorldPlayerServiceTests
             new TrackingWorldMapObjectService(mapObjects),
             new TestPlayerAccessService([authenticatedPlayer]),
             NullLogger<WorldPlayerService>.Instance,
-            new CityPointCalculator(TestData.BuildingReader()));
+            new CityPointCalculator(TestData.BuildingReader()),
+            new ImmediateTransactionManager());
 
         var response = await service.AssignPlayerToGameWorldAsync(world.Id);
 
@@ -343,7 +517,8 @@ public class WorldPlayerServiceTests
             new NoOpWorldMapObjectService(),
             new TestPlayerAccessService([viewer]),
             NullLogger<WorldPlayerService>.Instance,
-            new CityPointCalculator(TestData.BuildingReader()));
+            new CityPointCalculator(TestData.BuildingReader()),
+            new ImmediateTransactionManager());
 
         var profile = await service.GetWorldPlayerProfileAsync(target.Id);
 
@@ -420,7 +595,8 @@ public class WorldPlayerServiceTests
                 new NoOpWorldMapObjectService(),
                 new TestPlayerAccessService([viewer]),
                 NullLogger<WorldPlayerService>.Instance,
-                new CityPointCalculator(TestData.BuildingReader()));
+                new CityPointCalculator(TestData.BuildingReader()),
+                new ImmediateTransactionManager());
 
             var profile = await service.GetWorldPlayerProfileAsync(target.Id);
 
@@ -474,7 +650,8 @@ public class WorldPlayerServiceTests
             new NoOpWorldMapObjectService(),
             new TestPlayerAccessService([target]),
             NullLogger<WorldPlayerService>.Instance,
-            new CityPointCalculator(TestData.BuildingReader()));
+            new CityPointCalculator(TestData.BuildingReader()),
+            new ImmediateTransactionManager());
 
         var result = await service.UpdateWorldPlayerDescriptionAsync(target.Id, "A new description");
 
@@ -518,6 +695,9 @@ public class WorldPlayerServiceTests
             _players = players.ToList();
         }
 
+        public int Count => _players.Count;
+        public WorldPlayer SinglePlayer => _players.Single();
+
         public Task<WorldPlayer?> GetByIdAsync(Guid id) =>
             Task.FromResult(_players.SingleOrDefault(player => player.Id == id));
 
@@ -537,6 +717,61 @@ public class WorldPlayerServiceTests
             Task.FromResult(_players.Where(player => player.AllianceId == allianceId).ToList());
         public Task<List<WorldPlayer>> SearchPlayersByUsernameAsync(Guid worldId, string usernameQuery) =>
             Task.FromResult(new List<WorldPlayer>());
+    }
+
+    private sealed class SerializingTransactionManager : ITransactionManager
+    {
+        private readonly SemaphoreSlim _gate = new(1, 1);
+
+        public async Task ExecuteAsync(Func<Task> operation) =>
+            await ExecuteAsync(async () =>
+            {
+                await operation();
+                return true;
+            });
+
+        public async Task<T> ExecuteAsync<T>(Func<Task<T>> operation)
+        {
+            await _gate.WaitAsync();
+            try
+            {
+                return await operation();
+            }
+            finally
+            {
+                _gate.Release();
+            }
+        }
+    }
+
+    private sealed class ThrowingWorldMapObjectService : IWorldMapObjectService
+    {
+        public Task AddEntityToWorldMapAsync(Domain.Abstraction.IMapEntity entity) =>
+            throw new InvalidOperationException("Map object creation failed.");
+        public Task UpdateEntityPositionOnWorldMapAsync(Domain.Abstraction.IMapEntity entity) => Task.CompletedTask;
+        public Task RemoveEntityFromWorldMapAsync(Domain.Abstraction.IMapEntity entity) => Task.CompletedTask;
+    }
+
+    private sealed class ThrowingDbUpdateTransactionManager : ITransactionManager
+    {
+        public Task ExecuteAsync(Func<Task> operation) => throw new DbUpdateException("Unique constraint conflict.");
+        public Task<T> ExecuteAsync<T>(Func<Task<T>> operation) => throw new DbUpdateException("Unique constraint conflict.");
+    }
+
+    private sealed class WinnerAfterConflictRepository(WorldPlayer winner) : IWorldPlayerRepository
+    {
+        private int _profileWorldReads;
+
+        public Task<WorldPlayer?> GetByProfileAndWorldAsync(Guid profileId, Guid worldId) =>
+            Task.FromResult<WorldPlayer?>(Interlocked.Increment(ref _profileWorldReads) == 1 ? null : winner);
+        public Task<WorldPlayer?> GetByIdAsync(Guid id) => Task.FromResult<WorldPlayer?>(winner.Id == id ? winner : null);
+        public Task<WorldPlayer?> GetByIdWithResearchAsync(Guid id) => GetByIdAsync(id);
+        public Task AddAsync(WorldPlayer user) => Task.CompletedTask;
+        public Task UpdateAsync(WorldPlayer user) => Task.CompletedTask;
+        public Task DeleteAsync(Guid id) => Task.CompletedTask;
+        public Task<List<WorldPlayer>>? GetAllAsync() => Task.FromResult(new List<WorldPlayer> { winner });
+        public Task<List<WorldPlayer>> GetAllByAllianceIdAsync(Guid allianceId) => Task.FromResult(new List<WorldPlayer>());
+        public Task<List<WorldPlayer>> SearchPlayersByUsernameAsync(Guid worldId, string usernameQuery) => Task.FromResult(new List<WorldPlayer>());
     }
 
     private sealed class NoOpPlayerProfileRepository : IPlayerProfileRepository

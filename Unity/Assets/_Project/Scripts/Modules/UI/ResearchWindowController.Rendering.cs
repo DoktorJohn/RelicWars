@@ -15,6 +15,36 @@ namespace Project.Scripts.Modules.UI
             if (_researchPointsLabel != null) _researchPointsLabel.text = currentPoints.ToString("N0");
         }
 
+        private void UpdateResearchAvailability(bool canStartResearch, List<string> unmetRequirements)
+        {
+            if (canStartResearch || unmetRequirements == null || unmetRequirements.Count == 0)
+            {
+                HideResearchNotice();
+                return;
+            }
+
+            ShowResearchNotice(string.Join("\n", unmetRequirements));
+        }
+
+        private void ShowResearchNotice(string message)
+        {
+            if (_researchRequirementNotice == null || _researchRequirementNoticeLabel == null || string.IsNullOrWhiteSpace(message))
+            {
+                return;
+            }
+
+            _researchRequirementNoticeLabel.text = message;
+            _researchRequirementNotice.style.display = DisplayStyle.Flex;
+        }
+
+        private void HideResearchNotice()
+        {
+            if (_researchRequirementNotice != null)
+            {
+                _researchRequirementNotice.style.display = DisplayStyle.None;
+            }
+        }
+
         private void PopulateResearchTreeVisuals(List<ResearchNodeDTO> nodes)
         {
             if (_researchTreeContainer == null) return;
@@ -99,7 +129,7 @@ namespace Project.Scripts.Modules.UI
                 researchBtn.style.fontSize = 10;
                 researchBtn.style.marginTop = 0;
 
-                researchBtn.SetEnabled(nodeData.CanAfford && _activeResearchJob == null);
+                researchBtn.SetEnabled(_canStartResearch && nodeData.CanAfford && _activeResearchJob == null);
                 costRow.Add(researchBtn);
             }
 

@@ -1,4 +1,5 @@
 using Application.DTOs;
+using Application.Interfaces;
 using Application.Interfaces.IRepositories;
 using Application.Interfaces.IServices;
 using Application.Utility;
@@ -8,6 +9,7 @@ using Domain.StaticData.Generators;
 using Domain.StaticData.Readers;
 using Domain.User;
 using Microsoft.Extensions.Logging;
+using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -29,6 +31,7 @@ namespace Application.Services
         private readonly CityPointCalculator _cityPointCalculator;
         private readonly ILogger<WorldPlayerService> _logger;
         private readonly IDailyObjectiveService? _dailyObjectiveService;
+        private readonly ITransactionManager _transactionManager;
 
         public WorldPlayerService(
             IWorldPlayerRepository worldPlayerRepository,
@@ -42,6 +45,7 @@ namespace Application.Services
             IPlayerAccessService playerAccessService,
             ILogger<WorldPlayerService> logger,
             CityPointCalculator cityPointCalculator,
+            ITransactionManager transactionManager,
             IDailyObjectiveService? dailyObjectiveService = null)
         {
             _worldPlayerRepository = worldPlayerRepository;
@@ -55,6 +59,7 @@ namespace Application.Services
             _worldMapObjectService = worldMapObjectService;
             _playerAccessService = playerAccessService;
             _cityPointCalculator = cityPointCalculator;
+            _transactionManager = transactionManager;
             _dailyObjectiveService = dailyObjectiveService;
         }
 
@@ -197,15 +202,7 @@ namespace Application.Services
 
             if (existingGameWorldParticipation != null)
             {
-                var primaryCityId = existingGameWorldParticipation.Cities.FirstOrDefault()?.Id;
-
-                return new WorldPlayerJoinResponse(
-                    ConnectionSuccessful: true,
-                    Message: "Welcome back.",
-                    ActiveCityId: primaryCityId,
-                    WorldPlayerId: existingGameWorldParticipation.Id,
-                    SelectedIdeology: existingGameWorldParticipation.Ideology
-                );
+                return CreateWelcomeBackResponse(existingGameWorldParticipation);
             }
 
             var targetGameWorld = await _worldRepo.GetByIdAsync(targetWorldId);
@@ -232,43 +229,88 @@ namespace Application.Services
                 );
             }
 
-            // Beregn spawn koordinater baseret på eksisterende byer i verdenen
-            var spawnCoordinates = await CalculateNextCoastalSpawnCoordinatesAsync(targetGameWorld);
-
-            var newlyCreatedWorldParticipation = new WorldPlayer
+            try
             {
-                Id = Guid.NewGuid(),
-                PlayerProfileId = playerProfileId,
-                WorldId = targetWorldId,
-                Coins = 1000,
-                ResearchPoints = 10,
-                IdeologyFocusPoints = 100,
-                Ideology = IdeologyTypeEnum.None,
-                LastResourceUpdate = DateTime.UtcNow,
-                Cities = new List<City>()
-            };
+                return await _transactionManager.ExecuteAsync(async () =>
+                {
+                    var participationInsideTransaction = await _worldPlayerRepository
+                        .GetByProfileAndWorldAsync(playerProfileId, targetWorldId);
+                    if (participationInsideTransaction != null)
+                    {
+                        return CreateWelcomeBackResponse(participationInsideTransaction);
+                    }
 
-            var initialPlayerCapitalCity = CreateStartingCity(
-                playerProfileUsername,
-                newlyCreatedWorldParticipation.Id,
-                targetWorldId,
-                spawnCoordinates.X,
-                spawnCoordinates.Y);
+                    var spawnCoordinates = await CalculateNextCoastalSpawnCoordinatesAsync(targetGameWorld);
+                    var newlyCreatedWorldParticipation = new WorldPlayer
+                    {
+                        Id = Guid.NewGuid(),
+                        PlayerProfileId = playerProfileId,
+                        WorldId = targetWorldId,
+                        Coins = 1000,
+                        ResearchPoints = 10,
+                        IdeologyFocusPoints = 100,
+                        Ideology = IdeologyTypeEnum.None,
+                        LastResourceUpdate = DateTime.UtcNow,
+                        Cities = new List<City>()
+                    };
 
-            newlyCreatedWorldParticipation.Cities.Add(initialPlayerCapitalCity);
-            await _worldPlayerRepository.AddAsync(newlyCreatedWorldParticipation);
+                    var initialPlayerCapitalCity = CreateStartingCity(
+                        playerProfileUsername,
+                        newlyCreatedWorldParticipation.Id,
+                        targetWorldId,
+                        spawnCoordinates.X,
+                        spawnCoordinates.Y);
 
-            await _worldMapObjectService.AddEntityToWorldMapAsync(initialPlayerCapitalCity);
+                    newlyCreatedWorldParticipation.Cities.Add(initialPlayerCapitalCity);
+                    await _worldPlayerRepository.AddAsync(newlyCreatedWorldParticipation);
+                    await _worldMapObjectService.AddEntityToWorldMapAsync(initialPlayerCapitalCity);
 
-            _logger.LogInformation("Player {Username} spawned at coordinates {X},{Y}", playerProfileUsername, spawnCoordinates.X, spawnCoordinates.Y);
+                    _logger.LogInformation(
+                        "Player {Username} spawned at coordinates {X},{Y}",
+                        playerProfileUsername,
+                        spawnCoordinates.X,
+                        spawnCoordinates.Y);
+
+                    return new WorldPlayerJoinResponse(
+                        ConnectionSuccessful: true,
+                        Message: "New character successfully created in world.",
+                        ActiveCityId: initialPlayerCapitalCity.Id,
+                        WorldPlayerId: newlyCreatedWorldParticipation.Id,
+                        SelectedIdeology: newlyCreatedWorldParticipation.Ideology);
+                });
+            }
+            catch (DbUpdateException exception)
+            {
+                var winningParticipation = await _worldPlayerRepository
+                    .GetByProfileAndWorldAsync(playerProfileId, targetWorldId);
+                if (winningParticipation == null)
+                {
+                    throw;
+                }
+
+                _logger.LogWarning(
+                    exception,
+                    "Concurrent world join lost uniqueness race for profile {ProfileId} and world {WorldId}; reusing participation {WorldPlayerId}.",
+                    playerProfileId,
+                    targetWorldId,
+                    winningParticipation.Id);
+                return CreateWelcomeBackResponse(winningParticipation);
+            }
+        }
+
+        private static WorldPlayerJoinResponse CreateWelcomeBackResponse(WorldPlayer participation)
+        {
+            var primaryCityId = participation.Cities
+                .OrderBy(city => city.Id)
+                .Select(city => (Guid?)city.Id)
+                .FirstOrDefault();
 
             return new WorldPlayerJoinResponse(
                 ConnectionSuccessful: true,
-                Message: "New character successfully created in world.",
-                ActiveCityId: initialPlayerCapitalCity.Id,
-                WorldPlayerId: newlyCreatedWorldParticipation.Id,
-                SelectedIdeology: newlyCreatedWorldParticipation.Ideology
-            );
+                Message: "Welcome back.",
+                ActiveCityId: primaryCityId,
+                WorldPlayerId: participation.Id,
+                SelectedIdeology: participation.Ideology);
         }
 
 

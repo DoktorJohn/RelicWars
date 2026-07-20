@@ -1,0 +1,973 @@
+2026-07-04T19:40:25  Fetching changes.
+2026-07-04T19:40:25    Starting  LocalZipHandler
+2026-07-04T19:40:25    Cleaning up temp folders from previous zip deployments and extracting pushed zip file /tmp/zipdeploy/26966c1c-cca4-4d2f-b50a-b04a75ab4eb2.zip (20.35 MB) to /tmp/zipdeploy/extracted
+2026-07-04T19:40:30  Updating submodules.
+2026-07-04T19:40:30  Preparing deployment for commit id '3017135a-e'.
+2026-07-04T19:40:30  PreDeployment: context.CleanOutputPath False
+2026-07-04T19:40:30  PreDeployment: context.OutputPath /home/site/wwwroot
+2026-07-04T19:40:31  Running build. Project type: OneDeploy
+2026-07-04T19:40:31  Copying the manifest
+2026-07-04T19:40:31  Running deployment command...
+2026-07-04T19:40:31    Command: /opt/Kudu/Scripts/parallel_rsync.sh /tmp/zipdeploy/extracted /home/site/wwwroot 8 /tmp/ False False  
+2026-07-04T19:40:31    Run rsync from: /tmp/zipdeploy/extracted/ to: /home/site/wwwroot/ in 8 parallel threads
+2026-07-04T19:40:31    Delete options: clean=False, use manifest=False, directory to ignore=
+2026-07-04T19:40:31    Prev manifest = /opt/Kudu/Scripts/firstDeploymentManifest and next /home/site/deployments/3017135a-edac-43b4-aa16-9ef63c85168d/manifest
+2026-07-04T19:40:31    Cleaning up /tmp//filelist.txt and /tmp//splits
+2026-07-04T19:40:31    Creating a list of all files at /tmp//filelist.txt
+2026-07-04T19:40:31    rsync: [generator] recv_generator: failed to stat "/home/site/wwwroot/runtimes\linux-arm64\native\libe_sqlite3.so": Invalid argument (22)
+2026-07-04T19:40:31    No directory to exclude.
+2026-07-04T19:40:32    rsync: [generator] recv_generator: failed to stat "/home/site/wwwroot/runtimes\linux-ppc64le\native\libe_sqlite3.so": Invalid argument (22)
+2026-07-04T19:40:32    rsync: [generator] recv_generator: failed to stat "/home/site/wwwroot/runtimes\unix\lib\net6.0\System.Drawing.Common.dll": Invalid argument (22)
+2026-07-04T19:40:32    rsync: [generator] recv_generator: failed to stat "/home/site/wwwroot/runtimes\win-arm64\native\Microsoft.Data.SqlClient.SNI.dll": Invalid argument (22)
+2026-07-04T19:40:32    Created batches from the list of files. Processing 17 files in each thread
+2026-07-04T19:40:32    rsync: [generator] recv_generator: failed to stat "/home/site/wwwroot/runtimes\win-arm\native\Microsoft.Data.SqlClient.SNI.dll": Invalid argument (22)
+2026-07-04T19:40:32    Running rsync for filelist /tmp//splits/split.aa from /tmp/zipdeploy/extracted/ to /home/site/wwwroot/
+2026-07-04T19:40:32    rsync: [generator] recv_generator: failed to stat "/home/site/wwwroot/runtimes\linux-musl-x64\native\libe_sqlite3.so": Invalid argument (22)
+2026-07-04T19:40:32    rsync: [generator] recv_generator: failed to stat "/home/site/wwwroot/runtimes\linux-x86\native\libe_sqlite3.so": Invalid argument (22)
+2026-07-04T19:40:32    Running rsync for filelist /tmp//splits/split.ab from /tmp/zipdeploy/extracted/ to /home/site/wwwroot/
+2026-07-04T19:40:32    rsync error: some files/attrs were not transferred (see previous errors) (code 23) at main.c(1338) [sender=3.2.7]
+2026-07-04T19:40:32    Running rsync for filelist /tmp//splits/split.ac from /tmp/zipdeploy/extracted/ to /home/site/wwwroot/
+2026-07-04T19:40:32    rsync: [generator] recv_generator: failed to stat "/home/site/wwwroot/runtimes\linux-x64\native\libe_sqlite3.so": Invalid argument (22)
+2026-07-04T19:40:32    rsync: [generator] recv_generator: failed to stat "/home/site/wwwroot/runtimes\maccatalyst-x64\native\libe_sqlite3.dylib": Invalid argument (22)
+2026-07-04T19:40:32    Running rsync for filelist /tmp//splits/split.ad from /tmp/zipdeploy/extracted/ to /home/site/wwwroot/
+2026-07-04T19:40:32    rsync: [generator] recv_generator: failed to stat "/home/site/wwwroot/runtimes\unix\lib\net6.0\Microsoft.Data.SqlClient.dll": Invalid argument (22)
+2026-07-04T19:40:32    rsync: [generator] recv_generator: failed to stat "/home/site/wwwroot/runtimes\win-x64\native\Microsoft.Data.SqlClient.SNI.dll": Invalid argument (22)
+2026-07-04T19:40:32    rsync: [generator] recv_generator: failed to stat "/home/site/wwwroot/runtimes\win\lib\net8.0\System.Diagnostics.EventLog.dll": Invalid argument (22)
+2026-07-04T19:40:32    rsync: [generator] recv_generator: failed to stat "/home/site/wwwroot/runtimes\linux-armel\native\libe_sqlite3.so": Invalid argument (22)
+2026-07-04T19:40:32    Running rsync for filelist /tmp//splits/split.af from /tmp/zipdeploy/extracted/ to /home/site/wwwroot/
+2026-07-04T19:40:32    rsync: [generator] recv_generator: failed to stat "/home/site/wwwroot/runtimes\linux-mips64\native\libe_sqlite3.so": Invalid argument (22)
+2026-07-04T19:40:32    Running rsync for filelist /tmp//splits/split.ag from /tmp/zipdeploy/extracted/ to /home/site/wwwroot/
+2026-07-04T19:40:32    rsync: [generator] recv_generator: failed to stat "/home/site/wwwroot/runtimes\linux-s390x\native\libe_sqlite3.so": Invalid argument (22)
+2026-07-04T19:40:32    Running rsync for filelist /tmp//splits/split.ae from /tmp/zipdeploy/extracted/ to /home/site/wwwroot/
+2026-07-04T19:40:32    rsync: [generator] recv_generator: failed to stat "/home/site/wwwroot/runtimes\osx-arm64\native\libe_sqlite3.dylib": Invalid argument (22)
+2026-07-04T19:40:32    Running rsync for filelist /tmp//splits/split.ah from /tmp/zipdeploy/extracted/ to /home/site/wwwroot/
+2026-07-04T19:40:32    
+sync: [generator] recv_generator: failed to stat "/home/site/wwwroot/runtimes\osx-x64\native\libe_sqlite3.dylib": Invalid argument (22)
+2026-07-04T19:40:32    rsync: [generator] recv_generator: failed to stat "/home/site/wwwroot/runtimes\win-arm\native\e_sqlite3.dll": Invalid argument (22)
+2026-07-04T19:40:32    Number of files: 17 (reg: 17)
+2026-07-04T19:40:32    rsync: [generator] recv_generator: failed to stat "/home/site/wwwroot/runtimes\browser-wasm\nativeassets\net8.0\e_sqlite3.a": Invalid argument (22)
+2026-07-04T19:40:32    Number of created files: 0
+2026-07-04T19:40:32    rsync: [generator] recv_generator: failed to stat "/home/site/wwwroot/runtimes\linux-arm\native\libe_sqlite3.so": Invalid argument (22)
+2026-07-04T19:40:32    Number of deleted files: 0
+2026-07-04T19:40:32    rsync: [generator] recv_generator: failed to stat "/home/site/wwwroot/runtimes\win-arm64\native\e_sqlite3.dll": Invalid argument (22)
+2026-07-04T19:40:32    Number of regular files transferred: 0
+2026-07-04T19:40:32    rsync: [generator] recv_generator: failed to stat "/home/site/wwwroot/runtimes\win-x64\native\e_sqlite3.dll": Invalid argument (22)
+2026-07-04T19:40:32    Total file size: 7.28M bytes
+2026-07-04T19:40:32    rsync: [generator] recv_generator: failed to stat "/home/site/wwwroot/runtimes\win\lib\net6.0\System.Runtime.Caching.dll": Invalid argument (22)
+2026-07-04T19:40:32    Total transferred file size: 0 bytes
+2026-07-04T19:40:32    rsync error: some files/attrs were not transferred (see previous errors) (code 23) at main.c(1338) [sender=3.2.7]
+2026-07-04T19:40:32    Literal data: 0 bytes
+2026-07-04T19:40:32    rsync: [generator] recv_generator: failed to stat "/home/site/wwwroot/runtimes\linux-musl-arm64\native\libe_sqlite3.so": Invalid argument (22)
+2026-07-04T19:40:32    Matched data: 0 bytes
+2026-07-04T19:40:32    rsync: [generator] recv_generator: failed to stat "/home/site/wwwroot/runtimes\win\lib\net6.0\System.Security.Cryptography.ProtectedData.dll": Invalid argument (22)
+2026-07-04T19:40:32    File list size: 0
+2026-07-04T19:40:32    rsync: [generator] recv_generator: failed to stat "/home/site/wwwroot/runtimes\browser\lib\net8.0\System.Text.Encodings.Web.dll": Invalid argument (22)
+2026-07-04T19:40:32    File list generation time: 0.001 seconds
+2026-07-04T19:40:32    rsync: [generator] recv_generator: failed to stat "/home/site/wwwroot/runtimes\win\lib\net6.0\Microsoft.Win32.SystemEvents.dll": Invalid argument (22)
+2026-07-04T19:40:32    File list transfer time: 0.000 seconds
+2026-07-04T19:40:32    rsync: [generator] recv_generator: failed to stat "/home/site/wwwroot/runtimes\win\lib\net6.0\System.Drawing.Common.dll": Invalid argument (22)
+2026-07-04T19:40:32    Total bytes sent: 893
+2026-07-04T19:40:32    rsync: [generator] recv_generator: failed to stat "/home/site/wwwroot/runtimes\win\lib\net6.0\System.Windows.Extensions.dll": Invalid argument (22)
+2026-07-04T19:40:32    Total bytes received: 52
+2026-07-04T19:40:32    rsync: [generator] recv_generator: failed to stat "/home/site/wwwroot/runtimes\win\lib\net8.0\System.Diagnostics.EventLog.Messages.dll": Invalid argument (22)
+2026-07-04T19:40:32    
+2026-07-04T19:40:32    rsync: [generator] recv_generator: failed to stat "/home/site/wwwroot/runtimes\linux-musl-arm\native\libe_sqlite3.so": Invalid argument (22)
+2026-07-04T19:40:32    sent 893 bytes  received 52 bytes  1.89K bytes/sec
+2026-07-04T19:40:32    rsync: [generator] recv_generator: failed to stat "/home/site/wwwroot/runtimes\maccatalyst-arm64\native\libe_sqlite3.dylib": Invalid argument (22)
+2026-07-04T19:40:32    total size is 7.28M  speedup is 7,700.90
+2026-07-04T19:40:32    rsync: [generator] recv_generator: failed to stat "/home/site/wwwroot/runtimes\win-x86\native\Microsoft.Data.SqlClient.SNI.dll": Invalid argument (22)
+2026-07-04T19:40:32    Attempt 1: Rsync for filelist /tmp//splits/split.ac completed with exit code 23
+2026-07-04T19:40:32    rsync: [generator] recv_generator: failed to stat "/home/site/wwwroot/runtimes\win-x86\native\e_sqlite3.dll": Invalid argument (22)
+2026-07-04T19:40:32    
+2026-07-04T19:40:32    rsync: [generator] recv_generator: failed to stat "/home/site/wwwroot/runtimes\win\lib\net6.0\Microsoft.Data.SqlClient.dll": Invalid argument (22)
+2026-07-04T19:40:32    Number of files: 17 (reg: 17)
+2026-07-04T19:40:32    rsync: [generator] recv_generator: failed to stat "/home/site/wwwroot/runtimes\linux-arm64\native\libe_sqlite3.so": Invalid argument (22)
+2026-07-04T19:40:32    Number of created files: 0
+2026-07-04T19:40:32    rsync: [generator] recv_generator: failed to stat "/home/site/wwwroot/runtimes\linux-ppc64le\native\libe_sqlite3.so": Invalid argument (22)
+2026-07-04T19:40:32    Number of deleted files: 0
+2026-07-04T19:40:32    rsync: [generator] recv_generator: failed to stat "/home/site/wwwroot/runtimes\unix\lib\net6.0\System.Drawing.Common.dll": Invalid argument (22)
+2026-07-04T19:40:32    Number of regular files transferred: 0
+2026-07-04T19:40:32    rsync: [generator] recv_generator: failed to stat "/home/site/wwwroot/runtimes\win-arm64\native\Microsoft.Data.SqlClient.SNI.dll": Invalid argument (22)
+2026-07-04T19:40:32    Total file size: 4.20M bytes
+2026-07-04T19:40:32    rsync: [generator] recv_generator: failed to stat "/home/site/wwwroot/runtimes\win-arm\native\Microsoft.Data.SqlClient.SNI.dll": Invalid argument (22)
+2026-07-04T19:40:32    Total transferred file size: 0 bytes
+2026-07-04T19:40:32    rsync: [generator] recv_generator: failed to stat "/home/site/wwwroot/runtimes\linux-musl-x64\native\libe_sqlite3.so": Invalid argument (22)
+2026-07-04T19:40:32    Literal data: 0 bytes
+2026-07-04T19:40:32    rsync: [generator] recv_generator: failed to stat "/home/site/wwwroot/runtimes\linux-x86\native\libe_sqlite3.so": Invalid argument (22)
+2026-07-04T19:40:32    Matched data: 0 bytes
+2026-07-04T19:40:32    rsync error: some files/attrs were not transferred (see previous errors) (code 23) at main.c(1338) [sender=3.2.7]
+2026-07-04T19:40:32    File list size: 0
+2026-07-04T19:40:32    rsync error: some files/attrs were not transferred (see previous errors) (code 23) at main.c(1338) [sender=3.2.7]
+2026-07-04T19:40:32    File list generation time: 0.012 seconds
+2026-07-04T19:40:32    rsync: [generator] recv_generator: failed to stat "/home/site/wwwroot/runtimes\linux-x64\native\libe_sqlite3.so": Invalid argument (22)
+2026-07-04T19:40:32    File list transfer time: 0.000 seconds
+2026-07-04T19:40:32    rsync error: some files/attrs were not transferred (see previous errors) (code 23) at main.c(1338) [sender=3.2.7]
+2026-07-04T19:40:32    Total bytes sent: 790
+2026-07-04T19:40:32    rsync error: some files/attrs were not transferred (see previous errors) (code 23) at main.c(1338) [sender=3.2.7]
+2026-07-04T19:40:32    Total bytes received: 61
+2026-07-04T19:40:32    rsync: [generator] recv_generator: failed to stat "/home/site/wwwroot/runtimes\maccatalyst-x64\native\libe_sqlite3.dylib": Invalid argument (22)
+2026-07-04T19:40:32    
+2026-07-04T19:40:32    rsync: [generator] recv_generator: failed to stat "/home/site/wwwroot/runtimes\unix\lib\net6.0\Microsoft.Data.SqlClient.dll": Invalid argument (22)
+2026-07-04T19:40:32    sent 790 bytes  received 61 bytes  1.70K bytes/sec
+2026-07-04T19:40:32    rsync: [generator] recv_generator: failed to stat "/home/site/wwwroot/runtimes\win-x64\native\Microsoft.Data.SqlClient.SNI.dll": Invalid argument (22)
+2026-07-04T19:40:32    total size is 4.20M  speedup is 4,940.57
+2026-07-04T19:40:32    rsync: [generator] recv_generator: failed to stat "/home/site/wwwroot/runtimes\win\lib\net8.0\System.Diagnostics.EventLog.dll": Invalid argument (22)
+2026-07-04T19:40:32    Attempt 1: Rsync for filelist /tmp//splits/split.aa completed with exit code 23
+2026-07-04T19:40:32    rsync error: some files/attrs were not transferred (see previous errors) (code 23) at main.c(1338) [sender=3.2.7]
+2026-07-04T19:40:32    
+2026-07-04T19:40:32    rsync error: some files/attrs were not transferred (see previous errors) (code 23) at main.c(1338) [sender=3.2.7]
+2026-07-04T19:40:32    Number of files: 17 (reg: 17)
+2026-07-04T19:40:32    rsync: [generator] recv_generator: failed to stat "/home/site/wwwroot/runtimes\linux-armel\native\libe_sqlite3.so": Invalid argument (22)
+2026-07-04T19:40:32    Number of created files: 0
+2026-07-04T19:40:32    rsync: [generator] recv_generator: failed to stat "/home/site/wwwroot/runtimes\linux-mips64\native\libe_sqlite3.so": Invalid argument (22)
+2026-07-04T19:40:32    Number of deleted files: 0
+2026-07-04T19:40:32    rsync: [generator] recv_generator: failed to stat "/home/site/wwwroot/runtimes\linux-s390x\native\libe_sqlite3.so": Invalid argument (22)
+2026-07-04T19:40:32    Number of regular files transferred: 0
+2026-07-04T19:40:32    rsync: [generator] recv_generator: failed to stat "/home/site/wwwroot/runtimes\osx-arm64\native\libe_sqlite3.dylib": Invalid argument (22)
+2026-07-04T19:40:32    Total file size: 7.14M bytes
+2026-07-04T19:40:32    rsync: [generator] recv_generator: failed to stat "/home/site/wwwroot/runtimes\osx-x64\native\libe_sqlite3.dylib": Invalid argument (22)
+2026-07-04T19:40:32    Total transferred file size: 0 bytes
+2026-07-04T19:40:33    rsync: [generator] recv_generator: failed to stat "/home/site/wwwroot/runtimes\win-arm\native\e_sqlite3.dll": Invalid argument (22)
+2026-07-04T19:40:33    Literal data: 0 bytes
+2026-07-04T19:40:33    rsync error: some files/attrs were not transferred (see previous errors) (code 23) at main.c(1338) [sender=3.2.7]
+2026-07-04T19:40:33    Matched data: 0 bytes
+2026-07-04T19:40:33    rsync: [generator] recv_generator: failed to stat "/home/site/wwwroot/runtimes\linux-musl-arm\native\libe_sqlite3.so": Invalid argument (22)
+2026-07-04T19:40:33    File list size: 0
+2026-07-04T19:40:33    rsync: [generator] recv_generator: failed to stat "/home/site/wwwroot/runtimes\maccatalyst-arm64\native\libe_sqlite3.dylib": Invalid argument (22)
+2026-07-04T19:40:33    File list generation time: 0.001 seconds
+2026-07-04T19:40:33    rsync: [generator] recv_generator: failed to stat "/home/site/wwwroot/runtimes\win-x86\native\Microsoft.Data.SqlClient.SNI.dll": Invalid argument (22)
+2026-07-04T19:40:33    File list transfer time: 0.000 seconds
+2026-07-04T19:40:33    rsync: [generator] recv_generator: failed to stat "/home/site/wwwroot/runtimes\win-x86\native\e_sqlite3.dll": Invalid argument (22)
+2026-07-04T19:40:33    Total bytes sent: 849
+2026-07-04T19:40:33    rsync: [generator] recv_generator: failed to stat "/home/site/wwwroot/runtimes\win\lib\net6.0\Microsoft.Data.SqlClient.dll": Invalid argument (22)
+2026-07-04T19:40:33    Total bytes received: 52
+2026-07-04T19:40:33    rsync error: some files/attrs were not transferred (see previous errors) (code 23) at main.c(1338) [sender=3.2.7]
+2026-07-04T19:40:33    
+2026-07-04T19:40:33    rsync: [generator] recv_generator: failed to stat "/home/site/wwwroot/runtimes\browser-wasm\nativeassets\net8.0\e_sqlite3.a": Invalid argument (22)
+2026-07-04T19:40:33    sent 849 bytes  received 52 bytes  1.80K bytes/sec
+2026-07-04T19:40:33    rsync: [generator] recv_generator: failed to stat "/home/site/wwwroot/runtimes\linux-arm\native\libe_sqlite3.so": Invalid argument (22)
+2026-07-04T19:40:33    total size is 7.14M  speedup is 7,919.22
+2026-07-04T19:40:33    rsync: [generator] recv_generator: failed to stat "/home/site/wwwroot/runtimes\win-arm64\native\e_sqlite3.dll": Invalid argument (22)
+2026-07-04T19:40:33    Attempt 1: Rsync for filelist /tmp//splits/split.af completed with exit code 23
+2026-07-04T19:40:33    rsync: [generator] recv_generator: failed to stat "/home/site/wwwroot/runtimes\win-x64\native\e_sqlite3.dll": Invalid argument (22)
+2026-07-04T19:40:33    
+2026-07-04T19:40:33    rsync: [generator] recv_generator: failed to stat "/home/site/wwwroot/runtimes\win\lib\net6.0\System.Runtime.Caching.dll": Invalid argument (22)
+2026-07-04T19:40:33    Number of files: 17 (reg: 17)
+2026-07-04T19:40:33    rsync: [generator] recv_generator: failed to stat "/home/site/wwwroot/runtimes\browser\lib\net8.0\System.Text.Encodings.Web.dll": Invalid argument (22)
+2026-07-04T19:40:33    Number of created files: 0
+2026-07-04T19:40:33    rsync: [generator] recv_generator: failed to stat "/home/site/wwwroot/runtimes\win\lib\net6.0\Microsoft.Win32.SystemEvents.dll": Invalid argument (22)
+2026-07-04T19:40:33    Number of deleted files: 0
+2026-07-04T19:40:33    rsync: [generator] recv_generator: failed to stat "/home/site/wwwroot/runtimes\win\lib\net6.0\System.Drawing.Common.dll": Invalid argument (22)
+2026-07-04T19:40:33    Number of regular files transferred: 0
+2026-07-04T19:40:33    rsync: [generator] recv_generator: failed to stat "/home/site/wwwroot/runtimes\win\lib\net6.0\System.Windows.Extensions.dll": Invalid argument (22)
+2026-07-04T19:40:33    Total file size: 6.85M bytes
+2026-07-04T19:40:33    rsync: [generator] recv_generator: failed to stat "/home/site/wwwroot/runtimes\win\lib\net8.0\System.Diagnostics.EventLog.Messages.dll": Invalid argument (22)
+2026-07-04T19:40:33    Total transferred file size: 0 bytes
+2026-07-04T19:40:33    rsync error: some files/attrs were not transferred (see previous errors) (code 23) at main.c(1338) [sender=3.2.7]
+2026-07-04T19:40:33    Literal data: 0 bytes
+2026-07-04T19:40:33    rsync: [generator] recv_generator: failed to stat "/home/site/wwwroot/runtimes\linux-musl-arm64\native\libe_sqlite3.so": Invalid argument (22)
+2026-07-04T19:40:33    Matched data: 0 bytes
+2026-07-04T19:40:33    rsync: [generator] recv_generator: failed to stat "/home/site/wwwroot/runtimes\win\lib\net6.0\System.Security.Cryptography.ProtectedData.dll": Invalid argument (22)
+2026-07-04T19:40:33    File list size: 0
+2026-07-04T19:40:33    rsync error: some files/attrs were not transferred (see previous errors) (code 23) at main.c(1338) [sender=3.2.7]
+2026-07-04T19:40:33    File list generation time: 0.039 seconds
+2026-07-04T19:40:33    rsync error: some files/attrs were not transferred (see previous errors) (code 23) at main.c(1338) [sender=3.2.7]
+2026-07-04T19:40:33    File list transfer time: 0.000 seconds
+2026-07-04T19:40:33    rsync error: some files/attrs were not transferred (see previous errors) (code 23) at main.c(1338) [sender=3.2.7]
+2026-07-04T19:40:33    Total bytes sent: 821
+2026-07-04T19:40:33    rsync error: some files/attrs were not transferred (see previous errors) (code 23) at main.c(1338) [sender=3.2.7]
+2026-07-04T19:40:33    Total bytes received: 52
+2026-07-04T19:40:33    rsync error: some files/attrs were not transferred (see previous errors) (code 23) at main.c(1338) [sender=3.2.7]
+2026-07-04T19:40:33    
+2026-07-04T19:40:33    sent 821 bytes  received 52 bytes  1.75K bytes/sec
+2026-07-04T19:40:33    total size is 6.85M  speedup is 7,845.56
+2026-07-04T19:40:33    Attempt 1: Rsync for filelist /tmp//splits/split.ad completed with exit code 23
+2026-07-04T19:40:33    
+2026-07-04T19:40:33    Number of files: 17 (reg: 17)
+2026-07-04T19:40:33    Number of created files: 0
+2026-07-04T19:40:33    Number of deleted files: 0
+2026-07-04T19:40:33    Number of regular files transferred: 0
+2026-07-04T19:40:33    Total file size: 7.86M bytes
+2026-07-04T19:40:33    Total transferred file size: 0 bytes
+2026-07-04T19:40:33    Literal data: 0 bytes
+2026-07-04T19:40:33    Matched data: 0 bytes
+2026-07-04T19:40:33    File list size: 0
+2026-07-04T19:40:33    File list generation time: 0.050 seconds
+2026-07-04T19:40:33    File list transfer time: 0.000 seconds
+2026-07-04T19:40:33    Total bytes sent: 889
+2026-07-04T19:40:33    Total bytes received: 49
+2026-07-04T19:40:33    
+2026-07-04T19:40:33    sent 889 bytes  received 49 bytes  1.88K bytes/sec
+2026-07-04T19:40:33    total size is 7.86M  speedup is 8,382.30
+2026-07-04T19:40:33    
+2026-07-04T19:40:33    Number of files: 17 (reg: 17)
+2026-07-04T19:40:33    Number of created files: 0
+2026-07-04T19:40:33    Number of deleted files: 0
+2026-07-04T19:40:33    Number of regular files transferred: 0
+2026-07-04T19:40:33    Total file size: 2.41M bytes
+2026-07-04T19:40:33    Total transferred file size: 0 bytes
+2026-07-04T19:40:33    Literal data: 0 bytes
+2026-07-04T19:40:33    Matched data: 0 bytes
+2026-07-04T19:40:33    File list size: 0
+2026-07-04T19:40:33    File list generation time: 0.001 seconds
+2026-07-04T19:40:33    File list transfer time: 0.000 seconds
+2026-07-04T19:40:33    Total bytes sent: 963
+2026-07-04T19:40:33    Total bytes received: 52
+2026-07-04T19:40:33    
+2026-07-04T19:40:33    sent 963 bytes  received 52 bytes  676.67 bytes/sec
+2026-07-04T19:40:33    total size is 2.41M  speedup is 2,378.66
+2026-07-04T19:40:33    Attempt 1: Rsync for filelist /tmp//splits/split.ae completed with exit code 23
+2026-07-04T19:40:33    Attempt 1: Rsync for filelist /tmp//splits/split.ab completed with exit code 23
+2026-07-04T19:40:33    
+2026-07-04T19:40:33    Number of files: 17 (reg: 17)
+2026-07-04T19:40:33    Number of created files: 0
+2026-07-04T19:40:33    Number of deleted files: 0
+2026-07-04T19:40:33    Number of regular files transferred: 0
+2026-07-04T19:40:33    Total file size: 7.28M bytes
+2026-07-04T19:40:33    Total transferred file size: 0 bytes
+2026-07-04T19:40:33    Literal data: 0 bytes
+2026-07-04T19:40:33    Matched data: 0 bytes
+2026-07-04T19:40:33    File list size: 0
+2026-07-04T19:40:33    File list generation time: 0.001 seconds
+2026-07-04T19:40:33    File list transfer time: 0.000 seconds
+2026-07-04T19:40:33    Total bytes sent: 889
+2026-07-04T19:40:33    Total bytes received: 52
+2026-07-04T19:40:33    
+2026-07-04T19:40:33    sent 889 bytes  received 52 bytes  627.33 bytes/sec
+2026-07-04T19:40:33    total size is 7.28M  speedup is 7,733.63
+2026-07-04T19:40:33    Attempt 2: Rsync for filelist /tmp//splits/split.ac completed with exit code 23
+2026-07-04T19:40:33    
+2026-07-04T19:40:33    Number of files: 10 (reg: 10)
+2026-07-04T19:40:33    Number of created files: 0
+2026-07-04T19:40:33    Number of deleted files: 0
+2026-07-04T19:40:33    Number of regular files transferred: 0
+2026-07-04T19:40:33    Total file size: 4.37M bytes
+2026-07-04T19:40:33    Total transferred file size: 0 bytes
+2026-07-04T19:40:33    Literal data: 0 bytes
+2026-07-04T19:40:33    Matched data: 0 bytes
+2026-07-04T19:40:33    File list size: 0
+2026-07-04T19:40:33    File list generation time: 0.001 seconds
+2026-07-04T19:40:33    File list transfer time: 0.000 seconds
+2026-07-04T19:40:33    Total bytes sent: 574
+2026-07-04T19:40:33    Total bytes received: 40
+2026-07-04T19:40:33    
+2026-07-04T19:40:33    sent 574 bytes  received 40 bytes  409.33 bytes/sec
+2026-07-04T19:40:33    total size is 4.37M  speedup is 7,117.60
+2026-07-04T19:40:33    Attempt 1: Rsync for filelist /tmp//splits/split.ah completed with exit code 23
+2026-07-04T19:40:33    
+2026-07-04T19:40:33    Number of files: 17 (reg: 17)
+2026-07-04T19:40:33    Number of created files: 0
+2026-07-04T19:40:33    Number of deleted files: 0
+2026-07-04T19:40:33    Number of regular files transferred: 0
+2026-07-04T19:40:33    Total file size: 9.95M bytes
+2026-07-04T19:40:33    Total transferred file size: 0 bytes
+2026-07-04T19:40:33    Literal data: 0 bytes
+2026-07-04T19:40:33    Matched data: 0 bytes
+2026-07-04T19:40:33    File list size: 0
+2026-07-04T19:40:33    File list generation time: 0.039 seconds
+2026-07-04T19:40:33    File list transfer time: 0.000 seconds
+2026-07-04T19:40:33    Total bytes sent: 894
+2026-07-04T19:40:33    Total bytes received: 52
+2026-07-04T19:40:33    
+2026-07-04T19:40:33    sent 894 bytes  received 52 bytes  630.67 bytes/sec
+2026-07-04T19:40:34    total size is 9.95M  speedup is 10,514.67
+2026-07-04T19:40:34    Attempt 1: Rsync for filelist /tmp//splits/split.ag completed with exit code 23
+2026-07-04T19:40:34    
+2026-07-04T19:40:34    Number of files: 17 (reg: 17)
+2026-07-04T19:40:34    Number of created files: 0
+2026-07-04T19:40:34    Number of deleted files: 0
+2026-07-04T19:40:34    Number of regular files transferred: 0
+2026-07-04T19:40:34    Total file size: 4.20M bytes
+2026-07-04T19:40:34    Total transferred file size: 0 bytes
+2026-07-04T19:40:34    Literal data: 0 bytes
+2026-07-04T19:40:34    Matched data: 0 bytes
+2026-07-04T19:40:34    File list size: 0
+2026-07-04T19:40:34    File list generation time: 0.001 seconds
+2026-07-04T19:40:34    File list transfer time: 0.000 seconds
+2026-07-04T19:40:34    Total bytes sent: 786
+2026-07-04T19:40:34    Total bytes received: 61
+2026-07-04T19:40:34    
+2026-07-04T19:40:34    sent 786 bytes  received 61 bytes  564.67 bytes/sec
+2026-07-04T19:40:34    total size is 4.20M  speedup is 4,963.90
+2026-07-04T19:40:34    Attempt 2: Rsync for filelist /tmp//splits/split.aa completed with exit code 23
+2026-07-04T19:40:34    
+2026-07-04T19:40:34    Number of files: 17 (reg: 17)
+2026-07-04T19:40:34    Number of created files: 0
+2026-07-04T19:40:34    Number of deleted files: 0
+2026-07-04T19:40:34    Number of regular files transferred: 0
+2026-07-04T19:40:34    Total file size: 7.14M bytes
+2026-07-04T19:40:34    Total transferred file size: 0 bytes
+2026-07-04T19:40:34    Literal data: 0 bytes
+2026-07-04T19:40:34    Matched data: 0 bytes
+2026-07-04T19:40:34    File list size: 0
+2026-07-04T19:40:34    File list generation time: 0.001 seconds
+2026-07-04T19:40:34    File list transfer time: 0.000 seconds
+2026-07-04T19:40:34    Total bytes sent: 845
+2026-07-04T19:40:34    Total bytes received: 52
+2026-07-04T19:40:34    
+2026-07-04T19:40:34    sent 845 bytes  received 52 bytes  1.79K bytes/sec
+2026-07-04T19:40:34    total size is 7.14M  speedup is 7,954.53
+2026-07-04T19:40:34    Attempt 2: Rsync for filelist /tmp//splits/split.af completed with exit code 23
+2026-07-04T19:40:34    
+2026-07-04T19:40:34    Number of files: 17 (reg: 17)
+2026-07-04T19:40:34    Number of created files: 0
+2026-07-04T19:40:34    Number of deleted files: 0
+2026-07-04T19:40:34    Number of regular files transferred: 0
+2026-07-04T19:40:34    Total file size: 9.95M bytes
+2026-07-04T19:40:34    Total transferred file size: 0 bytes
+2026-07-04T19:40:34    Literal data: 0 bytes
+2026-07-04T19:40:34    Matched data: 0 bytes
+2026-07-04T19:40:34    File list size: 0
+2026-07-04T19:40:34    File list generation time: 0.001 seconds
+2026-07-04T19:40:34    File list transfer time: 0.000 seconds
+2026-07-04T19:40:34    Total bytes sent: 890
+2026-07-04T19:40:34    Total bytes received: 52
+2026-07-04T19:40:34    
+2026-07-04T19:40:34    sent 890 bytes  received 52 bytes  1.88K bytes/sec
+2026-07-04T19:40:34    total size is 9.95M  speedup is 10,559.32
+2026-07-04T19:40:34    Attempt 2: Rsync for filelist /tmp//splits/split.ag completed with exit code 23
+2026-07-04T19:40:34    
+2026-07-04T19:40:34    Number of files: 17 (reg: 17)
+2026-07-04T19:40:34    Number of created files: 0
+2026-07-04T19:40:34    Number of deleted files: 0
+2026-07-04T19:40:34    Number of regular files transferred: 0
+2026-07-04T19:40:34    Total file size: 7.86M bytes
+2026-07-04T19:40:34    Total transferred file size: 0 bytes
+2026-07-04T19:40:34    Literal data: 0 bytes
+2026-07-04T19:40:34    Matched data: 0 bytes
+2026-07-04T19:40:34    File list size: 0
+2026-07-04T19:40:34    File list generation time: 0.001 seconds
+2026-07-04T19:40:34    File list transfer time: 0.000 seconds
+2026-07-04T19:40:34    Total bytes sent: 885
+2026-07-04T19:40:34    Total bytes received: 49
+2026-07-04T19:40:34    
+2026-07-04T19:40:34    sent 885 bytes  received 49 bytes  1.87K bytes/sec
+2026-07-04T19:40:34    total size is 7.86M  speedup is 8,418.19
+2026-07-04T19:40:34    Attempt 2: Rsync for filelist /tmp//splits/split.ab completed with exit code 23
+2026-07-04T19:40:34    
+2026-07-04T19:40:34    Number of files: 17 (reg: 17)
+2026-07-04T19:40:34    Number of created files: 0
+2026-07-04T19:40:34    Number of deleted files: 0
+2026-07-04T19:40:34    Number of regular files transferred: 0
+2026-07-04T19:40:34    Total file size: 6.85M bytes
+2026-07-04T19:40:34    Total transferred file size: 0 bytes
+2026-07-04T19:40:34    Literal data: 0 bytes
+2026-07-04T19:40:34    Matched data: 0 bytes
+2026-07-04T19:40:34    File list size: 0
+2026-07-04T19:40:34    File list generation time: 0.001 seconds
+2026-07-04T19:40:34    File list transfer time: 0.000 seconds
+2026-07-04T19:40:34    Total bytes sent: 817
+2026-07-04T19:40:34    Total bytes received: 52
+2026-07-04T19:40:34    
+2026-07-04T19:40:34    sent 817 bytes  received 52 bytes  1.74K bytes/sec
+2026-07-04T19:40:34    total size is 6.85M  speedup is 7,881.68
+2026-07-04T19:40:34    Attempt 2: Rsync for filelist /tmp//splits/split.ad completed with exit code 23
+2026-07-04T19:40:34    
+2026-07-04T19:40:34    Number of files: 17 (reg: 17)
+2026-07-04T19:40:34    Number of created files: 0
+2026-07-04T19:40:35    Number of deleted files: 0
+2026-07-04T19:40:35    Number of regular files transferred: 0
+2026-07-04T19:40:35    Total file size: 2.41M bytes
+2026-07-04T19:40:35    Total transferred file size: 0 bytes
+2026-07-04T19:40:35    Literal data: 0 bytes
+2026-07-04T19:40:35    Matched data: 0 bytes
+2026-07-04T19:40:35    File list size: 0
+2026-07-04T19:40:35    File list generation time: 0.028 seconds
+2026-07-04T19:40:35    File list transfer time: 0.000 seconds
+2026-07-04T19:40:35    Total bytes sent: 959
+2026-07-04T19:40:35    Total bytes received: 52
+2026-07-04T19:40:35    
+2026-07-04T19:40:35    sent 959 bytes  received 52 bytes  2.02K bytes/sec
+2026-07-04T19:40:35    total size is 2.41M  speedup is 2,388.07
+2026-07-04T19:40:35    Attempt 2: Rsync for filelist /tmp//splits/split.ae completed with exit code 23
+2026-07-04T19:40:35    
+2026-07-04T19:40:35    Number of files: 10 (reg: 10)
+2026-07-04T19:40:35    Number of created files: 0
+2026-07-04T19:40:35    Number of deleted files: 0
+2026-07-04T19:40:35    Number of regular files transferred: 0
+2026-07-04T19:40:35    Total file size: 4.37M bytes
+2026-07-04T19:40:35    Total transferred file size: 0 bytes
+2026-07-04T19:40:35    Literal data: 0 bytes
+2026-07-04T19:40:35    Matched data: 0 bytes
+2026-07-04T19:40:35    File list size: 0
+2026-07-04T19:40:35    File list generation time: 0.007 seconds
+2026-07-04T19:40:35    File list transfer time: 0.000 seconds
+2026-07-04T19:40:35    Total bytes sent: 574
+2026-07-04T19:40:35    Total bytes received: 40
+2026-07-04T19:40:35    
+2026-07-04T19:40:35    sent 574 bytes  received 40 bytes  1.23K bytes/sec
+2026-07-04T19:40:35    total size is 4.37M  speedup is 7,117.60
+2026-07-04T19:40:35    Attempt 2: Rsync for filelist /tmp//splits/split.ah completed with exit code 23
+2026-07-04T19:40:35    An error has occurred during web site deployment.
+2026-07-04T19:40:35    Rsync failed in 1 seconds
+2026-07-04T19:40:35    rsync: [generator] recv_generator: failed to stat "/home/site/wwwroot/runtimes\linux-arm64\native\libe_sqlite3.so": Invalid argument (22)
+rsync: [generator] recv_generator: failed to stat "/home/site/wwwroot/runtimes\linux-ppc64le\native\libe_sqlite3.so": Invalid argument (22)
+rsync: [generator] recv_generator: failed to stat "/home/site/wwwroot/runtimes\unix\lib\net6.0\System.Drawing.Common.dll": Invalid argument (22)
+rsync: [generator] recv_generator: failed to stat "/home/site/wwwroot/runtimes\win-arm64\native\Microsoft.Data.SqlClient.SNI.dll": Invalid argument (22)
+rsync: [generator] recv_generator: failed to stat "/home/site/wwwroot/runtimes\win-arm\native\Microsoft.Data.SqlClient.SNI.dll": Invalid argument (22)
+rsync: [generator] recv_generator: failed to stat "/home/site/wwwroot/runtimes\linux-musl-x64\native\libe_sqlite3.so": Invalid argument (22)
+rsync: [generator] recv_generator: failed to stat "/home/site/wwwroot/runtimes\linux-x86\native\libe_sqlite3.so": Invalid argument (22)
+rsync error: some files/attrs were not transferred (see previous errors) (code 23) at main.c(1338) [sender=3.2.7]
+rsync: [generator] recv_generator: failed to stat "/home/site/wwwroot/runtimes\linux-x64\native\libe_sqlite3.so": Invalid argument (22)
+rsync: [generator] recv_generator: failed to stat "/home/site/wwwroot/runtimes\maccatalyst-x64\native\libe_sqlite3.dylib": Invalid argument (22)
+rsync: [generator] recv_generator: failed to stat "/home/site/wwwroot/runtimes\unix\lib\net6.0\Microsoft.Data.SqlClient.dll": Invalid argument (22)
+rsync: [generator] recv_generator: failed to stat "/home/site/wwwroot/runtimes\win-x64\native\Microsoft.Data.SqlClient.SNI.dll": Invalid argument (22)
+rsync: [generator] recv_generator: failed to stat "/home/site/wwwroot/runtimes\win\lib\net8.0\System.Diagnostics.EventLog.dll": Invalid argument (22)
+rsync: [generator] recv_generator: failed to stat "/home/site/wwwroot/runtimes\linux-armel\native\libe_sqlite3.so": Invalid argument (22)
+rsync: [generator] recv_generator: failed to stat "/home/site/wwwroot/runtimes\linux-mips64\native\libe_sqlite3.so": Invalid argument (22)
+rsync: [generator] recv_generator: failed to stat "/home/site/wwwroot/runtimes\linux-s390x\native\libe_sqlite3.so": Invalid argument (22)
+rsync: [generator] recv_generator: failed to stat "/home/site/wwwroot/runtimes\osx-arm64\native\libe_sqlite3.dylib": Invalid argument (22)
+rsync: [generator] recv_generator: failed to stat "/home/site/wwwroot/runtimes\osx-x64\native\libe_sqlite3.dylib": Invalid argument (22)
+rsync: [generator] recv_generator: failed to stat "/home/site/wwwroot/runtimes\win-arm\native\e_sqlite3.dll": Invalid argument (22)
+rsync: [generator] recv_generator: failed to stat "/home/site/wwwroot/runtimes\browser-wasm\nativeassets\net8.0\e_sqlite3.a": Invalid argument (22)
+rsync: [generator] recv_generator: failed to stat "/home/site/wwwroot/runtimes\linux-arm\native\libe_sqlite3.so": Invalid argument (22)
+rsync: [generator] recv_generator: failed to stat "/home/site/wwwroot/runtimes\win-arm64\native\e_sqlite3.dll": Invalid argument (22)
+rsync: [generator] recv_generator: failed to stat "/home/site/wwwroot/runtimes\win-x64\native\e_sqlite3.dll": Invalid argument (22)
+rsync: [generator] recv_generator: failed to stat "/home/site/wwwroot/runtimes\win\lib\net6.0\System.Runtime.Caching.dll": Invalid argument (22)
+rsync error: some files/attrs were not transferred (see previous errors) (code 23) at main.c(1338) [sender=3.2.7]
+rsync: [generator] recv_generator: failed to stat "/home/site/wwwroot/runtimes\linux-musl-arm64\native\libe_sqlite3.so": Invalid argument (22)
+rsync: [generator] recv_generator: failed to stat "/home/site/wwwroot/runtimes\win\lib\net6.0\System.Security.Cryptography.ProtectedData.dll": Invalid argument (22)
+rsync: [generator] recv_generator: failed to stat "/home/site/wwwroot/runtimes\browser\lib\net8.0\System.Text.Encodings.Web.dll": Invalid argument (22)
+rsync: [generator] recv_generator: failed to stat "/home/site/wwwroot/runtimes\win\lib\net6.0\Microsoft.Win32.SystemEvents.dll": Invalid argument (22)
+rsync: [generator] recv_generator: failed to stat "/home/site/wwwroot/runtimes\win\lib\net6.0\System.Drawing.Common.dll": Invalid argument (22)
+rsync: [generator] recv_generator: failed to stat "/home/site/wwwroot/runtimes\win\lib\net6.0\System.Windows.Extensions.dll": Invalid argument (22)
+rsync: [generator] recv_generator: failed to stat "/home/site/wwwroot/runtimes\win\lib\net8.0\System.Diagnostics.EventLog.Messages.dll": Invalid argument (22)
+rsync: [generator] recv_generator: failed to stat "/home/site/wwwroot/runtimes\linux-musl-arm\native\libe_sqlite3.so": Invalid argument (22)
+rsync: [generator] recv_generator: failed to stat "/home/site/wwwroot/runtimes\maccatalyst-arm64\native\libe_sqlite3.dylib": Invalid argument (22)
+rsync: [generator] recv_generator: failed to stat "/home/site/wwwroot/runtimes\win-x86\native\Microsoft.Data.SqlClient.SNI.dll": Invalid argument (22)
+rsync: [generator] recv_generator: failed to stat "/home/site/wwwroot/runtimes\win-x86\native\e_sqlite3.dll": Invalid argument (22)
+rsync: [generator] recv_generator: failed to stat "/home/site/wwwroot/runtimes\win\lib\net6.0\Microsoft.Data.SqlClient.dll": Invalid argument (22)
+rsync: [generator] recv_generator: failed to stat "/home/site/wwwroot/runtimes\linux-arm64\native\libe_sqlite3.so": Invalid argument (22)
+rsync: [generator] recv_generator: failed to stat "/home/site/wwwroot/runtimes\linux-ppc64le\native\libe_sqlite3.so": Invalid argument (22)
+rsync: [generator] recv_generator: failed to stat "/home/site/wwwroot/runtimes\unix\lib\net6.0\System.Drawing.Common.dll": Invalid argument (22)
+rsync: [generator] recv_generator: failed to stat "/home/site/wwwroot/runtimes\win-arm64\native\Microsoft.Data.SqlClient.SNI.dll": Invalid argument (22)
+rsync: [generator] recv_generator: failed to stat "/home/site/wwwroot/runtimes\win-arm\native\Microsoft.Data.SqlClient.SNI.dll": Invalid argument (22)
+rsync: [generator] recv_generator: failed to stat "/home/site/wwwroot/runtimes\linux-musl-x64\native\libe_sqlite3.so": Invalid argument (22)
+rsync: [generator] recv_generator: failed to stat "/home/site/wwwroot/runtimes\linux-x86\native\libe_sqlite3.so": Invalid argument (22)
+rsync error: some files/attrs were not transferred (see previous errors) (code 23) at main.c(1338) [sender=3.2.7]
+rsync error: some files/attrs were not transferred (see previous errors) (code 23) at main.c(1338) [sender=3.2.7]
+rsync: [generator] recv_generator: failed to stat "/home/site/wwwroot/runtimes\linux-x64\native\libe_sqlite3.so": Invalid argument (22)
+rsync error: some files/attrs were not transferred (see previous errors) (code 23) at main.c(1338) [sender=3.2.7]
+rsync error: some files/attrs were not transferred (see previous errors) (code 23) at main.c(1338) [sender=3.2.7]
+rsync: [generator] recv_generator: failed to stat "/home/site/wwwroot/runtimes\maccatalyst-x64\native\libe_sqlite3.dylib": Invalid argument (22)
+rsync: [generator] recv_generator: failed to stat "/home/site/wwwroot/runtimes\unix\lib\net6.0\Microsoft.Data.SqlClient.dll": Invalid argument (22)
+rsync: [generator] recv_generator: failed to stat "/home/site/wwwroot/runtimes\win-x64\native\Microsoft.Data.SqlClient.SNI.dll": Invalid argument (22)
+rsync: [generator] recv_generator: failed to stat "/home/site/wwwroot/runtimes\win\lib\net8.0\System.Diagnostics.EventLog.dll": Invalid argument (22)
+rsync error: some files/attrs were not transferred (see previous errors) (code 23) at main.c(1338) [sender=3.2.7]
+rsync error: some files/attrs were not transferred (see previous errors) (code 23) at main.c(1338) [sender=3.2.7]
+rsync: [generator] recv_generator: failed to stat "/home/site/wwwroot/runtimes\linux-armel\native\libe_sqlite3.so": Invalid argument (22)
+rsync: [generator] recv_generator: failed to stat "/home/site/wwwroot/runtimes\linux-mips64\native\libe_sqlite3.so": Invalid argument (22)
+rsync: [generator] recv_generator: failed to stat "/home/site/wwwroot/runtimes\linux-s390x\native\libe_sqlite3.so": Invalid argument (22)
+rsync: [generator] recv_generator: failed to stat "/home/site/wwwroot/runtimes\osx-arm64\native\libe_sqlite3.dylib": Invalid argument (22)
+rsync: [generator] recv_generator: failed to stat "/home/site/wwwroot/runtimes\osx-x64\native\libe_sqlite3.dylib": Invalid argument (22)
+rsync: [generator] recv_generator: failed to stat "/home/site/wwwroot/runtimes\win-arm\native\e_sqlite3.dll": Invalid argument (22)
+rsync error: some files/attrs were not transferred (see previous errors) (code 23) at main.c(1338) [sender=3.2.7]
+rsync: [generator] recv_generator: failed to stat "/home/site/wwwroot/runtimes\linux-musl-arm\native\libe_sqlite3.so": Invalid argument (22)
+rsync: [generator] recv_generator: failed to stat "/home/site/wwwroot/runtimes\maccatalyst-arm64\native\libe_sqlite3.dylib": Invalid argument (22)
+rsync: [generator] recv_generator: failed to stat "/home/site/wwwroot/runtimes\win-x86\native\Microsoft.Data.SqlClient.SNI.dll": Invalid argument (22)
+rsync: [generator] recv_generator: failed to stat "/home/site/wwwroot/runtimes\win-x86\native\e_sqlite3.dll": Invalid argument (22)
+rsync: [generator] recv_generator: failed to stat "/home/site/wwwroot/runtimes\win\lib\net6.0\Microsoft.Data.SqlClient.dll": Invalid argument (22)
+rsync error: some files/attrs were not transferred (see previous errors) (code 23) at main.c(1338) [sender=3.2.7]
+rsync: [generator] recv_generator: failed to stat "/home/site/wwwroot/runtimes\browser-wasm\nativeassets\net8.0\e_sqlite3.a": Invalid argument (22)
+rsync: [generator] recv_generator: failed to stat "/home/site/wwwroot/runtimes\linux-arm\native\libe_sqlite3.so": Invalid argument (22)
+rsync: [generator] recv_generator: failed to stat "/home/site/wwwroot/runtimes\win-arm64\native\e_sqlite3.dll": Invalid argument (22)
+rsync: [generator] recv_generator: failed to stat "/home/site/wwwroot/runtimes\win-x64\native\e_sqlite3.dll": Invalid argument (22)
+rsync: [generator] recv_generator: failed to stat "/home/site/wwwroot/runtimes\win\lib\net6.0\System.Runtime.Caching.dll": Invalid argument (22)
+rsync: [generator] recv_generator: failed to stat "/home/site/wwwroot/runtimes\browser\lib\net8.0\System.Text.Encodings.Web.dll": Invalid argument (22)
+rsync: [generator] recv_generator: failed to stat "/home/site/wwwroot/runtimes\win\lib\net6.0\Microsoft.Win32.SystemEvents.dll": Invalid argument (22)
+rsync: [generator] recv_generator: failed to stat "/home/site/wwwroot/runtimes\win\lib\net6.0\System.Drawing.Common.dll": Invalid argument (22)
+rsync: [generator] recv_generator: failed to stat "/home/site/wwwroot/runtimes\win\lib\net6.0\System.Windows.Extensions.dll": Invalid argument (22)
+rsync: [generator] recv_generator: failed to stat "/home/site/wwwroot/runtimes\win\lib\net8.0\System.Diagnostics.EventLog.Messages.dll": Invalid argument (22)
+rsync error: some files/attrs were not transferred (see previous errors) (code 23) at main.c(1338) [sender=3.2.7]
+rsync: [generator] recv_generator: failed to stat "/home/site/wwwroot/runtimes\linux-musl-arm64\native\libe_sqlite3.so": Invalid argument (22)
+rsync: [generator] recv_generator: failed to stat "/home/site/wwwroot/runtimes\win\lib\net6.0\System.Security.Cryptography.ProtectedData.dll": Invalid argument (22)
+rsync error: some files/attrs were not transferred (see previous errors) (code 23) at main.c(1338) [sender=3.2.7]
+rsync error: some files/attrs were not transferred (see previous errors) (code 23) at main.c(1338) [sender=3.2.7]
+rsync error: some files/attrs were not transferred (see previous errors) (code 23) at main.c(1338) [sender=3.2.7]
+rsync error: some files/attrs were not transferred (see previous errors) (code 23) at main.c(1338) [sender=3.2.7]
+rsync error: some files/attrs were not transferred (see previous errors) (code 23) at main.c(1338) [sender=3.2.7]
+/opt/Kudu/Scripts/starter.sh /opt/Kudu/Scripts/parallel_rsync.sh /tmp/zipdeploy/extracted /home/site/wwwroot 8 /tmp/ False False  
+2026-07-04T19:40:35  
+2026-07-04T19:40:35  WARNING!! Exception in parallel rsync: ExitCode: 123  Output: Run rsync from: /tmp/zipdeploy/extracted/ to: /home/site/wwwroot/ in 8 parallel threads
+Delete options: clean=False  use manifest=False  directory to ignore=
+Prev manifest = /opt/Kudu/Scripts/firstDeploymentManifest and next /home/site/deployments/3017135a-edac-43b4-aa16-9ef63c85168d/manifest
+Cleaning up /tmp//filelist.txt and /tmp//splits
+Creating a list of all files at /tmp//filelist.txt
+No directory to exclude.
+Created /tmp//filelist.txt. Total number of files to be synced = 129.
+Created batches from the list of files. Processing 17 files in each thread
+Running rsync for filelist /tmp//splits/split.aa from /tmp/zipdeploy/extracted/ to /home/site/wwwroot/
+Running rsync for filelist /tmp//splits/split.ab from /tmp/zipdeploy/extracted/ to /home/site/wwwroot/
+Running rsync for filelist /tmp//splits/split.ac from /tmp/zipdeploy/extracted/ to /home/site/wwwroot/
+Running rsync for filelist /tmp//splits/split.ad from /tmp/zipdeploy/extracted/ to /home/site/wwwroot/
+Running rsync for filelist /tmp//splits/split.af from /tmp/zipdeploy/extracted/ to /home/site/wwwroot/
+Running rsync for filelist /tmp//splits/split.ag from /tmp/zipdeploy/extracted/ to /home/site/wwwroot/
+Running rsync for filelist /tmp//splits/split.ae from /tmp/zipdeploy/extracted/ to /home/site/wwwroot/
+Running rsync for filelist /tmp//splits/split.ah from /tmp/zipdeploy/extracted/ to /home/site/wwwroot/
+
+Number of files: 17 (reg: 17)
+Number of created files: 0
+Number of deleted files: 0
+Number of regular files transferred: 0
+Total file size: 7.28M bytes
+Total transferred file size: 0 bytes
+Literal data: 0 bytes
+Matched data: 0 bytes
+File list size: 0
+File list generation time: 0.001 seconds
+File list transfer time: 0.000 seconds
+Total bytes sent: 893
+Total bytes received: 52
+
+sent 893 bytes  received 52 bytes  1.89K bytes/sec
+total size is 7.28M  speedup is 7 700.90
+Attempt 1: Rsync for filelist /tmp//splits/split.ac completed with exit code 23
+
+Number of files: 17 (reg: 17)
+Number of created files: 0
+Number of deleted files: 0
+Number of regular files transferred: 0
+Total file size: 4.20M bytes
+Total transferred file size: 0 bytes
+Literal data: 0 bytes
+Matched data: 0 bytes
+File list size: 0
+File list generation time: 0.012 seconds
+File list transfer time: 0.000 seconds
+Total bytes sent: 790
+Total bytes received: 61
+
+sent 790 bytes  received 61 bytes  1.70K bytes/sec
+total size is 4.20M  speedup is 4 940.57
+Attempt 1: Rsync for filelist /tmp//splits/split.aa completed with exit code 23
+
+Number of files: 17 (reg: 17)
+Number of created files: 0
+Number of deleted files: 0
+Number of regular files transferred: 0
+Total file size: 7.14M bytes
+Total transferred file size: 0 bytes
+Literal data: 0 bytes
+Matched data: 0 bytes
+File list size: 0
+File list generation time: 0.001 seconds
+File list transfer time: 0.000 seconds
+Total bytes sent: 849
+Total bytes received: 52
+
+sent 849 bytes  received 52 bytes  1.80K bytes/sec
+total size is 7.14M  speedup is 7 919.22
+Attempt 1: Rsync for filelist /tmp//splits/split.af completed with exit code 23
+
+Number of files: 17 (reg: 17)
+Number of created files: 0
+Number of deleted files: 0
+Number of regular files transferred: 0
+Total file size: 6.85M bytes
+Total transferred file size: 0 bytes
+Literal data: 0 bytes
+Matched data: 0 bytes
+File list size: 0
+File list generation time: 0.039 seconds
+File list transfer time: 0.000 seconds
+Total bytes sent: 821
+Total bytes received: 52
+
+sent 821 bytes  received 52 bytes  1.75K bytes/sec
+total size is 6.85M  speedup is 7 845.56
+Attempt 1: Rsync for filelist /tmp//splits/split.ad completed with exit code 23
+
+Number of files: 17 (reg: 17)
+Number of created files: 0
+Number of deleted files: 0
+Number of regular files transferred: 0
+Total file size: 7.86M bytes
+Total transferred file size: 0 bytes
+Literal data: 0 bytes
+Matched data: 0 bytes
+File list size: 0
+File list generation time: 0.050 seconds
+File list transfer time: 0.000 seconds
+Total bytes sent: 889
+Total bytes received: 49
+
+sent 889 bytes  received 49 bytes  1.88K bytes/sec
+total size is 7.86M  speedup is 8 382.30
+
+Number of files: 17 (reg: 17)
+Number of created files: 0
+Number of deleted files: 0
+Number of regular files transferred: 0
+Total file size: 2.41M bytes
+Total transferred file size: 0 bytes
+Literal data: 0 bytes
+Matched data: 0 bytes
+File list size: 0
+File list generation time: 0.001 seconds
+File list transfer time: 0.000 seconds
+Total bytes sent: 963
+Total bytes received: 52
+
+sent 963 bytes  received 52 bytes  676.67 bytes/sec
+total size is 2.41M  speedup is 2 378.66
+Attempt 1: Rsync for filelist /tmp//splits/split.ae completed with exit code 23
+Attempt 1: Rsync for filelist /tmp//splits/split.ab completed with exit code 23
+
+Number of files: 17 (reg: 17)
+Number of created files: 0
+Number of deleted files: 0
+Number of regular files transferred: 0
+Total file size: 7.28M bytes
+Total transferred file size: 0 bytes
+Literal data: 0 bytes
+Matched data: 0 bytes
+File list size: 0
+File list generation time: 0.001 seconds
+File list transfer time: 0.000 seconds
+Total bytes sent: 889
+Total bytes received: 52
+
+sent 889 bytes  received 52 bytes  627.33 bytes/sec
+total size is 7.28M  speedup is 7 733.63
+Attempt 2: Rsync for filelist /tmp//splits/split.ac completed with exit code 23
+
+Number of files: 10 (reg: 10)
+Number of created files: 0
+Number of deleted files: 0
+Number of regular files transferred: 0
+Total file size: 4.37M bytes
+Total transferred file size: 0 bytes
+Literal data: 0 bytes
+Matched data: 0 bytes
+File list size: 0
+File list generation time: 0.001 seconds
+File list transfer time: 0.000 seconds
+Total bytes sent: 574
+Total bytes received: 40
+
+sent 574 bytes  received 40 bytes  409.33 bytes/sec
+total size is 4.37M  speedup is 7 117.60
+Attempt 1: Rsync for filelist /tmp//splits/split.ah completed with exit code 23
+
+Number of files: 17 (reg: 17)
+Number of created files: 0
+Number of deleted files: 0
+Number of regular files transferred: 0
+Total file size: 9.95M bytes
+Total transferred file size: 0 bytes
+Literal data: 0 bytes
+Matched data: 0 bytes
+File list size: 0
+File list generation time: 0.039 seconds
+File list transfer time: 0.000 seconds
+Total bytes sent: 894
+Total bytes received: 52
+
+sent 894 bytes  received 52 bytes  630.67 bytes/sec
+total size is 9.95M  speedup is 10 514.67
+Attempt 1: Rsync for filelist /tmp//splits/split.ag completed with exit code 23
+
+Number of files: 17 (reg: 17)
+Number of created files: 0
+Number of deleted files: 0
+Number of regular files transferred: 0
+Total file size: 4.20M bytes
+Total transferred file size: 0 bytes
+Literal data: 0 bytes
+Matched data: 0 bytes
+File list size: 0
+File list generation time: 0.001 seconds
+File list transfer time: 0.000 seconds
+Total bytes sent: 786
+Total bytes received: 61
+
+sent 786 bytes  received 61 bytes  564.67 bytes/sec
+total size is 4.20M  speedup is 4 963.90
+Attempt 2: Rsync for filelist /tmp//splits/split.aa completed with exit code 23
+
+Number of files: 17 (reg: 17)
+Number of created files: 0
+Number of deleted files: 0
+Number of regular files transferred: 0
+Total file size: 7.14M bytes
+Total transferred file size: 0 bytes
+Literal data: 0 bytes
+Matched data: 0 bytes
+File list size: 0
+File list generation time: 0.001 seconds
+File list transfer time: 0.000 seconds
+Total bytes sent: 845
+Total bytes received: 52
+
+sent 845 bytes  received 52 bytes  1.79K bytes/sec
+total size is 7.14M  speedup is 7 954.53
+Attempt 2: Rsync for filelist /tmp//splits/split.af completed with exit code 23
+
+Number of files: 17 (reg: 17)
+Number of created files: 0
+Number of deleted files: 0
+Number of regular files transferred: 0
+Total file size: 9.95M bytes
+Total transferred file size: 0 bytes
+Literal data: 0 bytes
+Matched data: 0 bytes
+File list size: 0
+File list generation time: 0.001 seconds
+File list transfer time: 0.000 seconds
+Total bytes sent: 890
+Total bytes received: 52
+
+sent 890 bytes  received 52 bytes  1.88K bytes/sec
+total size is 9.95M  speedup is 10 559.32
+Attempt 2: Rsync for filelist /tmp//splits/split.ag completed with exit code 23
+
+Number of files: 17 (reg: 17)
+Number of created files: 0
+Number of deleted files: 0
+Number of regular files transferred: 0
+Total file size: 7.86M bytes
+Total transferred file size: 0 bytes
+Literal data: 0 bytes
+Matched data: 0 bytes
+File list size: 0
+File list generation time: 0.001 seconds
+File list transfer time: 0.000 seconds
+Total bytes sent: 885
+Total bytes received: 49
+
+sent 885 bytes  received 49 bytes  1.87K bytes/sec
+total size is 7.86M  speedup is 8 418.19
+Attempt 2: Rsync for filelist /tmp//splits/split.ab completed with exit code 23
+
+Number of files: 17 (reg: 17)
+Number of created files: 0
+Number of deleted files: 0
+Number of regular files transferred: 0
+Total file size: 6.85M bytes
+Total transferred file size: 0 bytes
+Literal data: 0 bytes
+Matched data: 0 bytes
+File list size: 0
+File list generation time: 0.001 seconds
+File list transfer time: 0.000 seconds
+Total bytes sent: 817
+Total bytes received: 52
+
+sent 817 bytes  received 52 bytes  1.74K bytes/sec
+total size is 6.85M  speedup is 7 881.68
+Attempt 2: Rsync for filelist /tmp//splits/split.ad completed with exit code 23
+
+Number of files: 17 (reg: 17)
+Number of created files: 0
+Number of deleted files: 0
+Number of regular files transferred: 0
+Total file size: 2.41M bytes
+Total transferred file size: 0 bytes
+Literal data: 0 bytes
+Matched data: 0 bytes
+File list size: 0
+File list generation time: 0.028 seconds
+File list transfer time: 0.000 seconds
+Total bytes sent: 959
+Total bytes received: 52
+
+sent 959 bytes  received 52 bytes  2.02K bytes/sec
+total size is 2.41M  speedup is 2 388.07
+Attempt 2: Rsync for filelist /tmp//splits/split.ae completed with exit code 23
+
+Number of files: 10 (reg: 10)
+Number of created files: 0
+Number of deleted files: 0
+Number of regular files transferred: 0
+Total file size: 4.37M bytes
+Total transferred file size: 0 bytes
+Literal data: 0 bytes
+Matched data: 0 bytes
+File list size: 0
+File list generation time: 0.007 seconds
+File list transfer time: 0.000 seconds
+Total bytes sent: 574
+Total bytes received: 40
+
+sent 574 bytes  received 40 bytes  1.23K bytes/sec
+total size is 4.37M  speedup is 7 117.60
+Attempt 2: Rsync for filelist /tmp//splits/split.ah completed with exit code 23
+An error has occurred during web site deployment.
+Rsync failed in 1 seconds  Error: rsync: [generator] recv_generator: failed to stat "/home/site/wwwroot/runtimes\linux-arm64\native\libe_sqlite3.so": Invalid argument (22)
+rsync: [generator] recv_generator: failed to stat "/home/site/wwwroot/runtimes\linux-ppc64le\native\libe_sqlite3.so": Invalid argument (22)
+rsync: [generator] recv_generator: failed to stat "/home/site/wwwroot/runtimes\unix\lib\net6.0\System.Drawing.Common.dll": Invalid argument (22)
+rsync: [generator] recv_generator: failed to stat "/home/site/wwwroot/runtimes\win-arm64\native\Microsoft.Data.SqlClient.SNI.dll": Invalid argument (22)
+rsync: [generator] recv_generator: failed to stat "/home/site/wwwroot/runtimes\win-arm\native\Microsoft.Data.SqlClient.SNI.dll": Invalid argument (22)
+rsync: [generator] recv_generator: failed to stat "/home/site/wwwroot/runtimes\linux-musl-x64\native\libe_sqlite3.so": Invalid argument (22)
+rsync: [generator] recv_generator: failed to stat "/home/site/wwwroot/runtimes\linux-x86\native\libe_sqlite3.so": Invalid argument (22)
+rsync error: some files/attrs were not transferred (see previous errors) (code 23) at main.c(1338) [sender=3.2.7]
+rsync: [generator] recv_generator: failed to stat "/home/site/wwwroot/runtimes\linux-x64\native\libe_sqlite3.so": Invalid argument (22)
+rsync: [generator] recv_generator: failed to stat "/home/site/wwwroot/runtimes\maccatalyst-x64\native\libe_sqlite3.dylib": Invalid argument (22)
+rsync: [generator] recv_generator: failed to stat "/home/site/wwwroot/runtimes\unix\lib\net6.0\Microsoft.Data.SqlClient.dll": Invalid argument (22)
+rsync: [generator] recv_generator: failed to stat "/home/site/wwwroot/runtimes\win-x64\native\Microsoft.Data.SqlClient.SNI.dll": Invalid argument (22)
+rsync: [generator] recv_generator: failed to stat "/home/site/wwwroot/runtimes\win\lib\net8.0\System.Diagnostics.EventLog.dll": Invalid argument (22)
+rsync: [generator] recv_generator: failed to stat "/home/site/wwwroot/runtimes\linux-armel\native\libe_sqlite3.so": Invalid argument (22)
+rsync: [generator] recv_generator: failed to stat "/home/site/wwwroot/runtimes\linux-mips64\native\libe_sqlite3.so": Invalid argument (22)
+rsync: [generator] recv_generator: failed to stat "/home/site/wwwroot/runtimes\linux-s390x\native\libe_sqlite3.so": Invalid argument (22)
+rsync: [generator] recv_generator: failed to stat "/home/site/wwwroot/runtimes\osx-arm64\native\libe_sqlite3.dylib": Invalid argument (22)
+rsync: [generator] recv_generator: failed to stat "/home/site/wwwroot/runtimes\osx-x64\native\libe_sqlite3.dylib": Invalid argument (22)
+rsync: [generator] recv_generator: failed to stat "/home/site/wwwroot/runtimes\win-arm\native\e_sqlite3.dll": Invalid argument (22)
+rsync: [generator] recv_generator: failed to stat "/home/site/wwwroot/runtimes\browser-wasm\nativeassets\net8.0\e_sqlite3.a": Invalid argument (22)
+rsync: [generator] recv_generator: failed to stat "/home/site/wwwroot/runtimes\linux-arm\native\libe_sqlite3.so": Invalid argument (22)
+rsync: [generator] recv_generator: failed to stat "/home/site/wwwroot/runtimes\win-arm64\native\e_sqlite3.dll": Invalid argument (22)
+rsync: [generator] recv_generator: failed to stat "/home/site/wwwroot/runtimes\win-x64\native\e_sqlite3.dll": Invalid argument (22)
+rsync: [generator] recv_generator: failed to stat "/home/site/wwwroot/runtimes\win\lib\net6.0\System.Runtime.Caching.dll": Invalid argument (22)
+rsync error: some files/attrs were not transferred (see previous errors) (code 23) at main.c(1338) [sender=3.2.7]
+rsync: [generator] recv_generator: failed to stat "/home/site/wwwroot/runtimes\linux-musl-arm64\native\libe_sqlite3.so": Invalid argument (22)
+rsync: [generator] recv_generator: failed to stat "/home/site/wwwroot/runtimes\win\lib\net6.0\System.Security.Cryptography.ProtectedData.dll": Invalid argument (22)
+rsync: [generator] recv_generator: failed to stat "/home/site/wwwroot/runtimes\browser\lib\net8.0\System.Text.Encodings.Web.dll": Invalid argument (22)
+rsync: [generator] recv_generator: failed to stat "/home/site/wwwroot/runtimes\win\lib\net6.0\Microsoft.Win32.SystemEvents.dll": Invalid argument (22)
+rsync: [generator] recv_generator: failed to stat "/home/site/wwwroot/runtimes\win\lib\net6.0\System.Drawing.Common.dll": Invalid argument (22)
+rsync: [generator] recv_generator: failed to stat "/home/site/wwwroot/runtimes\win\lib\net6.0\System.Windows.Extensions.dll": Invalid argument (22)
+rsync: [generator] recv_generator: failed to stat "/home/site/wwwroot/runtimes\win\lib\net8.0\System.Diagnostics.EventLog.Messages.dll": Invalid argument (22)
+rsync: [generator] recv_generator: failed to stat "/home/site/wwwroot/runtimes\linux-musl-arm\native\libe_sqlite3.so": Invalid argument (22)
+rsync: [generator] recv_generator: failed to stat "/home/site/wwwroot/runtimes\maccatalyst-arm64\native\libe_sqlite3.dylib": Invalid argument (22)
+rsync: [generator] recv_generator: failed to stat "/home/site/wwwroot/runtimes\win-x86\native\Microsoft.Data.SqlClient.SNI.dll": Invalid argument (22)
+rsync: [generator] recv_generator: failed to stat "/home/site/wwwroot/runtimes\win-x86\native\e_sqlite3.dll": Invalid argument (22)
+rsync: [generator] recv_generator: failed to stat "/home/site/wwwroot/runtimes\win\lib\net6.0\Microsoft.Data.SqlClient.dll": Invalid argument (22)
+rsync: [generator] recv_generator: failed to stat "/home/site/wwwroot/runtimes\linux-arm64\native\libe_sqlite3.so": Invalid argument (22)
+rsync: [generator] recv_generator: failed to stat "/home/site/wwwroot/runtimes\linux-ppc64le\native\libe_sqlite3.so": Invalid argument (22)
+rsync: [generator] recv_generator: failed to stat "/home/site/wwwroot/runtimes\unix\lib\net6.0\System.Drawing.Common.dll": Invalid argument (22)
+rsync: [generator] recv_generator: failed to stat "/home/site/wwwroot/runtimes\win-arm64\native\Microsoft.Data.SqlClient.SNI.dll": Invalid argument (22)
+rsync: [generator] recv_generator: failed to stat "/home/site/wwwroot/runtimes\win-arm\native\Microsoft.Data.SqlClient.SNI.dll": Invalid argument (22)
+rsync: [generator] recv_generator: failed to stat "/home/site/wwwroot/runtimes\linux-musl-x64\native\libe_sqlite3.so": Invalid argument (22)
+rsync: [generator] recv_generator: failed to stat "/home/site/wwwroot/runtimes\linux-x86\native\libe_sqlite3.so": Invalid argument (22)
+rsync error: some files/attrs were not transferred (see previous errors) (code 23) at main.c(1338) [sender=3.2.7]
+rsync error: some files/attrs were not transferred (see previous errors) (code 23) at main.c(1338) [sender=3.2.7]
+rsync: [generator] recv_generator: failed to stat "/home/site/wwwroot/runtimes\linux-x64\native\libe_sqlite3.so": Invalid argument (22)
+rsync error: some files/attrs were not transferred (see previous errors) (code 23) at main.c(1338) [sender=3.2.7]
+rsync error: some files/attrs were not transferred (see previous errors) (code 23) at main.c(1338) [sender=3.2.7]
+rsync: [generator] recv_generator: failed to stat "/home/site/wwwroot/runtimes\maccatalyst-x64\native\libe_sqlite3.dylib": Invalid argument (22)
+rsync: [generator] recv_generator: failed to stat "/home/site/wwwroot/runtimes\unix\lib\net6.0\Microsoft.Data.SqlClient.dll": Invalid argument (22)
+rsync: [generator] recv_generator: failed to stat "/home/site/wwwroot/runtimes\win-x64\native\Microsoft.Data.SqlClient.SNI.dll": Invalid argument (22)
+rsync: [generator] recv_generator: failed to stat "/home/site/wwwroot/runtimes\win\lib\net8.0\System.Diagnostics.EventLog.dll": Invalid argument (22)
+rsync error: some files/attrs were not transferred (see previous errors) (code 23) at main.c(1338) [sender=3.2.7]
+rsync error: some files/attrs were not transferred (see previous errors) (code 23) at main.c(1338) [sender=3.2.7]
+rsync: [generator] recv_generator: failed to stat "/home/site/wwwroot/runtimes\linux-armel\native\libe_sqlite3.so": Invalid argument (22)
+rsync: [generator] recv_generator: failed to stat "/home/site/wwwroot/runtimes\linux-mips64\native\libe_sqlite3.so": Invalid argument (22)
+rsync: [generator] recv_generator: failed to stat "/home/site/wwwroot/runtimes\linux-s390x\native\libe_sqlite3.so": Invalid argument (22)
+rsync: [generator] recv_generator: failed to stat "/home/site/wwwroot/runtimes\osx-arm64\native\libe_sqlite3.dylib": Invalid argument (22)
+rsync: [generator] recv_generator: failed to stat "/home/site/wwwroot/runtimes\osx-x64\native\libe_sqlite3.dylib": Invalid argument (22)
+rsync: [generator] recv_generator: failed to stat "/home/site/wwwroot/runtimes\win-arm\native\e_sqlite3.dll": Invalid argument (22)
+rsync error: some files/attrs were not transferred (see previous errors) (code 23) at main.c(1338) [sender=3.2.7]
+rsync: [generator] recv_generator: failed to stat "/home/site/wwwroot/runtimes\linux-musl-arm\native\libe_sqlite3.so": Invalid argument (22)
+rsync: [generator] recv_generator: failed to stat "/home/site/wwwroot/runtimes\maccatalyst-arm64\native\libe_sqlite3.dylib": Invalid argument (22)
+rsync: [generator] recv_generator: failed to stat "/home/site/wwwroot/runtimes\win-x86\native\Microsoft.Data.SqlClient.SNI.dll": Invalid argument (22)
+rsync: [generator] recv_generator: failed to stat "/home/site/wwwroot/runtimes\win-x86\native\e_sqlite3.dll": Invalid argument (22)
+rsync: [generator] recv_generator: failed to stat "/home/site/wwwroot/runtimes\win\lib\net6.0\Microsoft.Data.SqlClient.dll": Invalid argument (22)
+rsync error: some files/attrs were not transferred (see previous errors) (code 23) at main.c(1338) [sender=3.2.7]
+rsync: [generator] recv_generator: failed to stat "/home/site/wwwroot/runtimes\browser-wasm\nativeassets\net8.0\e_sqlite3.a": Invalid argument (22)
+rsync: [generator] recv_generator: failed to stat "/home/site/wwwroot/runtimes\linux-arm\native\libe_sqlite3.so": Invalid argument (22)
+rsync: [generator] recv_generator: failed to stat "/home/site/wwwroot/runtimes\win-arm64\native\e_sqlite3.dll": Invalid argument (22)
+rsync: [generator] recv_generator: failed to stat "/home/site/wwwroot/runtimes\win-x64\native\e_sqlite3.dll": Invalid argument (22)
+rsync: [generator] recv_generator: failed to stat "/home/site/wwwroot/runtimes\win\lib\net6.0\System.Runtime.Caching.dll": Invalid argument (22)
+rsync: [generator] recv_generator: failed to stat "/home/site/wwwroot/runtimes\browser\lib\net8.0\System.Text.Encodings.Web.dll": Invalid argument (22)
+rsync: [generator] recv_generator: failed to stat "/home/site/wwwroot/runtimes\win\lib\net6.0\Microsoft.Win32.SystemEvents.dll": Invalid argument (22)
+rsync: [generator] recv_generator: failed to stat "/home/site/wwwroot/runtimes\win\lib\net6.0\System.Drawing.Common.dll": Invalid argument (22)
+rsync: [generator] recv_generator: failed to stat "/home/site/wwwroot/runtimes\win\lib\net6.0\System.Windows.Extensions.dll": Invalid argument (22)
+rsync: [generator] recv_generator: failed to stat "/home/site/wwwroot/runtimes\win\lib\net8.0\System.Diagnostics.EventLog.Messages.dll": Invalid argument (22)
+rsync error: some files/attrs were not transferred (see previous errors) (code 23) at main.c(1338) [sender=3.2.7]
+rsync: [generator] recv_generator: failed to stat "/home/site/wwwroot/runtimes\linux-musl-arm64\native\libe_sqlite3.so": Invalid argument (22)
+rsync: [generator] recv_generator: failed to stat "/home/site/wwwroot/runtimes\win\lib\net6.0\System.Security.Cryptography.ProtectedData.dll": Invalid argument (22)
+rsync error: some files/attrs were not transferred (see previous errors) (code 23) at main.c(1338) [sender=3.2.7]
+rsync error: some files/attrs were not transferred (see previous errors) (code 23) at main.c(1338) [sender=3.2.7]
+rsync error: some files/attrs were not transferred (see previous errors) (code 23) at main.c(1338) [sender=3.2.7]
+rsync error: some files/attrs were not transferred (see previous errors) (code 23) at main.c(1338) [sender=3.2.7]
+rsync error: some files/attrs were not transferred (see previous errors) (code 23) at main.c(1338) [sender=3.2.7]  Kudu.Core.Infrastructure.CommandLineException: rsync: [generator] recv_generator: failed to stat "/home/site/wwwroot/runtimes\linux-arm64\native\libe_sqlite3.so": Invalid argument (22)
+rsync: [generator] recv_generator: failed to stat "/home/site/wwwroot/runtimes\linux-ppc64le\native\libe_sqlite3.so": Invalid argument (22)
+rsync: [generator] recv_generator: failed to stat "/home/site/wwwroot/runtimes\unix\lib\net6.0\System.Drawing.Common.dll": Invalid argument (22)
+rsync: [generator] recv_generator: failed to stat "/home/site/wwwroot/runtimes\win-arm64\native\Microsoft.Data.SqlClient.SNI.dll": Invalid argument (22)
+rsync: [generator] recv_generator: failed to stat "/home/site/wwwroot/runtimes\win-arm\native\Microsoft.Data.SqlClient.SNI.dll": Invalid argument (22)
+rsync: [generator] recv_generator: failed to stat "/home/site/wwwroot/runtimes\linux-musl-x64\native\libe_sqlite3.so": Invalid argument (22)
+rsync: [generator] recv_generator: failed to stat "/home/site/wwwroot/runtimes\linux-x86\native\libe_sqlite3.so": Invalid argument (22)
+rsync error: some files/attrs were not transferred (see previous errors) (code 23) at main.c(1338) [sender=3.2.7]
+rsync: [generator] recv_generator: failed to stat "/home/site/wwwroot/runtimes\linux-x64\native\libe_sqlite3.so": Invalid argument (22)
+rsync: [generator] recv_generator: failed to stat "/home/site/wwwroot/runtimes\maccatalyst-x64\native\libe_sqlite3.dylib": Invalid argument (22)
+rsync: [generator] recv_generator: failed to stat "/home/site/wwwroot/runtimes\unix\lib\net6.0\Microsoft.Data.SqlClient.dll": Invalid argument (22)
+rsync: [generator] recv_generator: failed to stat "/home/site/wwwroot/runtimes\win-x64\native\Microsoft.Data.SqlClient.SNI.dll": Invalid argument (22)
+rsync: [generator] recv_generator: failed to stat "/home/site/wwwroot/runtimes\win\lib\net8.0\System.Diagnostics.EventLog.dll": Invalid argument (22)
+rsync: [generator] recv_generator: failed to stat "/home/site/wwwroot/runtimes\linux-armel\native\libe_sqlite3.so": Invalid argument (22)
+rsync: [generator] recv_generator: failed to stat "/home/site/wwwroot/runtimes\linux-mips64\native\libe_sqlite3.so": Invalid argument (22)
+rsync: [generator] recv_generator: failed to stat "/home/site/wwwroot/runtimes\linux-s390x\native\libe_sqlite3.so": Invalid argument (22)
+rsync: [generator] recv_generator: failed to stat "/home/site/wwwroot/runtimes\osx-arm64\native\libe_sqlite3.dylib": Invalid argument (22)
+rsync: [generator] recv_generator: failed to stat "/home/site/wwwroot/runtimes\osx-x64\native\libe_sqlite3.dylib": Invalid argument (22)
+rsync: [generator] recv_generator: failed to stat "/home/site/wwwroot/runtimes\win-arm\native\e_sqlite3.dll": Invalid argument (22)
+rsync: [generator] recv_generator: failed to stat "/home/site/wwwroot/runtimes\browser-wasm\nativeassets\net8.0\e_sqlite3.a": Invalid argument (22)
+rsync: [generator] recv_generator: failed to stat "/home/site/wwwroot/runtimes\linux-arm\native\libe_sqlite3.so": Invalid argument (22)
+rsync: [generator] recv_generator: failed to stat "/home/site/wwwroot/runtimes\win-arm64\native\e_sqlite3.dll": Invalid argument (22)
+rsync: [generator] recv_generator: failed to stat "/home/site/wwwroot/runtimes\win-x64\native\e_sqlite3.dll": Invalid argument (22)
+rsync: [generator] recv_generator: failed to stat "/home/site/wwwroot/runtimes\win\lib\net6.0\System.Runtime.Caching.dll": Invalid argument (22)
+rsync error: some files/attrs were not transferred (see previous errors) (code 23) at main.c(1338) [sender=3.2.7]
+rsync: [generator] recv_generator: failed to stat "/home/site/wwwroot/runtimes\linux-musl-arm64\native\libe_sqlite3.so": Invalid argument (22)
+rsync: [generator] recv_generator: failed to stat "/home/site/wwwroot/runtimes\win\lib\net6.0\System.Security.Cryptography.ProtectedData.dll": Invalid argument (22)
+rsync: [generator] recv_generator: failed to stat "/home/site/wwwroot/runtimes\browser\lib\net8.0\System.Text.Encodings.Web.dll": Invalid argument (22)
+rsync: [generator] recv_generator: failed to stat "/home/site/wwwroot/runtimes\win\lib\net6.0\Microsoft.Win32.SystemEvents.dll": Invalid argument (22)
+rsync: [generator] recv_generator: failed to stat "/home/site/wwwroot/runtimes\win\lib\net6.0\System.Drawing.Common.dll": Invalid argument (22)
+rsync: [generator] recv_generator: failed to stat "/home/site/wwwroot/runtimes\win\lib\net6.0\System.Windows.Extensions.dll": Invalid argument (22)
+rsync: [generator] recv_generator: failed to stat "/home/site/wwwroot/runtimes\win\lib\net8.0\System.Diagnostics.EventLog.Messages.dll": Invalid argument (22)
+rsync: [generator] recv_generator: failed to stat "/home/site/wwwroot/runtimes\linux-musl-arm\native\libe_sqlite3.so": Invalid argument (22)
+rsync: [generator] recv_generator: failed to stat "/home/site/wwwroot/runtimes\maccatalyst-arm64\native\libe_sqlite3.dylib": Invalid argument (22)
+rsync: [generator] recv_generator: failed to stat "/home/site/wwwroot/runtimes\win-x86\native\Microsoft.Data.SqlClient.SNI.dll": Invalid argument (22)
+rsync: [generator] recv_generator: failed to stat "/home/site/wwwroot/runtimes\win-x86\native\e_sqlite3.dll": Invalid argument (22)
+rsync: [generator] recv_generator: failed to stat "/home/site/wwwroot/runtimes\win\lib\net6.0\Microsoft.Data.SqlClient.dll": Invalid argument (22)
+rsync: [generator] recv_generator: failed to stat "/home/site/wwwroot/runtimes\linux-arm64\native\libe_sqlite3.so": Invalid argument (22)
+rsync: [generator] recv_generator: failed to stat "/home/site/wwwroot/runtimes\linux-ppc64le\native\libe_sqlite3.so": Invalid argument (22)
+rsync: [generator] recv_generator: failed to stat "/home/site/wwwroot/runtimes\unix\lib\net6.0\System.Drawing.Common.dll": Invalid argument (22)
+rsync: [generator] recv_generator: failed to stat "/home/site/wwwroot/runtimes\win-arm64\native\Microsoft.Data.SqlClient.SNI.dll": Invalid argument (22)
+rsync: [generator] recv_generator: failed to stat "/home/site/wwwroot/runtimes\win-arm\native\Microsoft.Data.SqlClient.SNI.dll": Invalid argument (22)
+rsync: [generator] recv_generator: failed to stat "/home/site/wwwroot/runtimes\linux-musl-x64\native\libe_sqlite3.so": Invalid argument (22)
+rsync: [generator] recv_generator: failed to stat "/home/site/wwwroot/runtimes\linux-x86\native\libe_sqlite3.so": Invalid argument (22)
+rsync error: some files/attrs were not transferred (see previous errors) (code 23) at main.c(1338) [sender=3.2.7]
+rsync error: some files/attrs were not transferred (see previous errors) (code 23) at main.c(1338) [sender=3.2.7]
+rsync: [generator] recv_generator: failed to stat "/home/site/wwwroot/runtimes\linux-x64\native\libe_sqlite3.so": Invalid argument (22)
+rsync error: some files/attrs were not transferred (see previous errors) (code 23) at main.c(1338) [sender=3.2.7]
+rsync error: some files/attrs were not transferred (see previous errors) (code 23) at main.c(1338) [sender=3.2.7]
+rsync: [generator] recv_generator: failed to stat "/home/site/wwwroot/runtimes\maccatalyst-x64\native\libe_sqlite3.dylib": Invalid argument (22)
+rsync: [generator] recv_generator: failed to stat "/home/site/wwwroot/runtimes\unix\lib\net6.0\Microsoft.Data.SqlClient.dll": Invalid argument (22)
+rsync: [generator] recv_generator: failed to stat "/home/site/wwwroot/runtimes\win-x64\native\Microsoft.Data.SqlClient.SNI.dll": Invalid argument (22)
+rsync: [generator] recv_generator: failed to stat "/home/site/wwwroot/runtimes\win\lib\net8.0\System.Diagnostics.EventLog.dll": Invalid argument (22)
+rsync error: some files/attrs were not transferred (see previous errors) (code 23) at main.c(1338) [sender=3.2.7]
+rsync error: some files/attrs were not transferred (see previous errors) (code 23) at main.c(1338) [sender=3.2.7]
+rsync: [generator] recv_generator: failed to stat "/home/site/wwwroot/runtimes\linux-armel\native\libe_sqlite3.so": Invalid argument (22)
+rsync: [generator] recv_generator: failed to stat "/home/site/wwwroot/runtimes\linux-mips64\native\libe_sqlite3.so": Invalid argument (22)
+rsync: [generator] recv_generator: failed to stat "/home/site/wwwroot/runtimes\linux-s390x\native\libe_sqlite3.so": Invalid argument (22)
+rsync: [generator] recv_generator: failed to stat "/home/site/wwwroot/runtimes\osx-arm64\native\libe_sqlite3.dylib": Invalid argument (22)
+rsync: [generator] recv_generator: failed to stat "/home/site/wwwroot/runtimes\osx-x64\native\libe_sqlite3.dylib": Invalid argument (22)
+rsync: [generator] recv_generator: failed to stat "/home/site/wwwroot/runtimes\win-arm\native\e_sqlite3.dll": Invalid argument (22)
+rsync error: some files/attrs were not transferred (see previous errors) (code 23) at main.c(1338) [sender=3.2.7]
+rsync: [generator] recv_generator: failed to stat "/home/site/wwwroot/runtimes\linux-musl-arm\native\libe_sqlite3.so": Invalid argument (22)
+rsync: [generator] recv_generator: failed to stat "/home/site/wwwroot/runtimes\maccatalyst-arm64\native\libe_sqlite3.dylib": Invalid argument (22)
+rsync: [generator] recv_generator: failed to stat "/home/site/wwwroot/runtimes\win-x86\native\Microsoft.Data.SqlClient.SNI.dll": Invalid argument (22)
+rsync: [generator] recv_generator: failed to stat "/home/site/wwwroot/runtimes\win-x86\native\e_sqlite3.dll": Invalid argument (22)
+rsync: [generator] recv_generator: failed to stat "/home/site/wwwroot/runtimes\win\lib\net6.0\Microsoft.Data.SqlClient.dll": Invalid argument (22)
+rsync error: some files/attrs were not transferred (see previous errors) (code 23) at main.c(1338) [sender=3.2.7]
+rsync: [generator] recv_generator: failed to stat "/home/site/wwwroot/runtimes\browser-wasm\nativeassets\net8.0\e_sqlite3.a": Invalid argument (22)
+rsync: [generator] recv_generator: failed to stat "/home/site/wwwroot/runtimes\linux-arm\native\libe_sqlite3.so": Invalid argument (22)
+rsync: [generator] recv_generator: failed to stat "/home/site/wwwroot/runtimes\win-arm64\native\e_sqlite3.dll": Invalid argument (22)
+rsync: [generator] recv_generator: failed to stat "/home/site/wwwroot/runtimes\win-x64\native\e_sqlite3.dll": Invalid argument (22)
+rsync: [generator] recv_generator: failed to stat "/home/site/wwwroot/runtimes\win\lib\net6.0\System.Runtime.Caching.dll": Invalid argument (22)
+rsync: [generator] recv_generator: failed to stat "/home/site/wwwroot/runtimes\browser\lib\net8.0\System.Text.Encodings.Web.dll": Invalid argument (22)
+rsync: [generator] recv_generator: failed to stat "/home/site/wwwroot/runtimes\win\lib\net6.0\Microsoft.Win32.SystemEvents.dll": Invalid argument (22)
+rsync: [generator] recv_generator: failed to stat "/home/site/wwwroot/runtimes\win\lib\net6.0\System.Drawing.Common.dll": Invalid argument (22)
+rsync: [generator] recv_generator: failed to stat "/home/site/wwwroot/runtimes\win\lib\net6.0\System.Windows.Extensions.dll": Invalid argument (22)
+rsync: [generator] recv_generator: failed to stat "/home/site/wwwroot/runtimes\win\lib\net8.0\System.Diagnostics.EventLog.Messages.dll": Invalid argument (22)
+rsync error: some files/attrs were not transferred (see previous errors) (code 23) at main.c(1338) [sender=3.2.7]
+rsync: [generator] recv_generator: failed to stat "/home/site/wwwroot/runtimes\linux-musl-arm64\native\libe_sqlite3.so": Invalid argument (22)
+rsync: [generator] recv_generator: failed to stat "/home/site/wwwroot/runtimes\win\lib\net6.0\System.Security.Cryptography.ProtectedData.dll": Invalid argument (22)
+rsync error: some files/attrs were not transferred (see previous errors) (code 23) at main.c(1338) [sender=3.2.7]
+rsync error: some files/attrs were not transferred (see previous errors) (code 23) at main.c(1338) [sender=3.2.7]
+rsync error: some files/attrs were not transferred (see previous errors) (code 23) at main.c(1338) [sender=3.2.7]
+rsync error: some files/attrs were not transferred (see previous errors) (code 23) at main.c(1338) [sender=3.2.7]
+rsync error: some files/attrs were not transferred (see previous errors) (code 23) at main.c(1338) [sender=3.2.7]
+/opt/Kudu/Scripts/starter.sh /opt/Kudu/Scripts/parallel_rsync.sh /tmp/zipdeploy/extracted /home/site/wwwroot 8 /tmp/ False False  
+   at Kudu.Core.Infrastructure.Executable.ExecuteInternal(ITracer tracer  Func`2 onWriteOutput  Func`2 onWriteError  CancellationToken token  Encoding encoding  String arguments  Object[] args) in /tmp/KuduLite/Kudu.Core/Infrastructure/Executable.cs:line 239
+   at Kudu.Core.Infrastructure.Executable.ExecuteWithProgressWriter(ILogger logger  ITracer tracer  CancellationToken token  String arguments  Object[] args) in /tmp/KuduLite/Kudu.Core/Infrastructure/Executable.cs:line 118
+   at Kudu.Core.Deployment.Generator.ExternalCommandBuilder.RunCommand(DeploymentContext context  String command  Boolean ignoreManifest  CancellationToken token  String message  ILogger internalLogger) in /tmp/KuduLite/Kudu.Core/Deployment/Generator/ExternalCommandBuilder.cs:line 145
+   at Kudu.Core.Deployment.Generator.OneDeployBuilder.Build(DeploymentContext context  CancellationToken token) in /tmp/KuduLite/Kudu.Core/Deployment/Generator/OneDeployBuilder.cs:line 97
+2026-07-04T19:40:35  Incrementally deploying to /home/site/wwwroot
+2026-07-04T19:40:35  Deployment Failed. deployer = OneDeploy deploymentPath = OneDeploy

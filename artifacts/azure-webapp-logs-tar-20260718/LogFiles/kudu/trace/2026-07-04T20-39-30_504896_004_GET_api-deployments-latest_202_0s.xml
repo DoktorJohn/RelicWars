@@ -1,0 +1,8 @@
+<step title="Incoming Request" date="2026-07-04T20:39:30.925" instance="504896" url="/api/deployments/latest?deployer=Push-Deployer&amp;time=2026-07-04_20-39-29Z" method="GET" type="request" pid="831,1,15" Host="reignofrelicswebapp-cdbgc5eyhvd2g0ah.scm.belgiumcentral-01.azurewebsites.net" User-Agent="websdk/WebSdk_VisualStudio_17.0 websdk/WebSdk_VisualStudio_17.0" Authorization="Bea..." Cookie="ARRAffinity=504896c031d2fcb93e96c5b802e958a974f760ea45aef3813e22443ccf4d3a0c; ARRAffinitySameSite=504896c031d2fcb93e96c5b802e958a974f760ea45aef3813e22443ccf4d3a0c" X-ARR-LOG-ID="a087a893-4b4e-461d-b3b7-19af36d89a29" CLIENT-IP="185.136.116.89:49499" X-SITE-DEPLOYMENT-ID="reignofrelicswebapp" WAS-DEFAULT-HOSTNAME="reignofrelicswebapp-cdbgc5eyhvd2g0ah.scm.belgiumcentral-01.azurewebsites.net" X-Forwarded-Proto="https" X-AppService-Proto="https" X-Forwarded-TlsVersion="1.3" X-WAWS-Unencoded-URL="/api/deployments/latest?deployer=Push-Deployer&amp;time=2026-07-04_20-39-29Z" X-Client-IP="185.136.116.89" X-Client-Port="49499" >
+  <step title="DeploymentService.GetResult" date="2026-07-04T20:39:31.022" >
+    <step title="DeploymentService.GetLatestDeployment" date="2026-07-04T20:39:31.024" >
+      <step title="DeploymentManager.GetResults" date="2026-07-04T20:39:31.026" /><!-- duration: 177ms -->
+    </step><!-- duration: 183ms -->
+  </step><!-- duration: 189ms -->
+  <step title="Outgoing response" date="2026-07-04T20:39:31.213" type="response" statusCode="202" statusText="Accepted" /><!-- duration: 2ms -->
+</step><!-- duration: 292ms -->

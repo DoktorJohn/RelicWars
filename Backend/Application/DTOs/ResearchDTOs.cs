@@ -11,7 +11,9 @@ namespace Application.DTOs
     public record ResearchTreeDTO(
         List<ResearchNodeDTO> Nodes,
         ActiveResearchJobDTO? ActiveJob,
-        double CurrentResearchPoints
+        double CurrentResearchPoints,
+        bool CanStartResearch,
+        List<string> UnmetRequirements
     );
 
     public record ResearchNodeDTO(

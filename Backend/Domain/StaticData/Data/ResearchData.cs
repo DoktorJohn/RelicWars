@@ -31,7 +31,7 @@ namespace Domain.StaticData.Data
         // Lænken: Hvilken research skal være færdig før denne kan startes?
         public string? ParentId { get; set; }
 
-        // Krav til bygninger (typisk University level)
+        // Global cost paid from the WorldPlayer's research-point balance.
         public double ResearchPointCost { get; set; }
 
         public int ResearchTimeInSeconds { get; set; }

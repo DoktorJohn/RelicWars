@@ -1,0 +1,688 @@
+[
+  {
+    "Id": "ECON_PROD_1",
+    "Name": "Better yield I",
+    "Description": "Wood, stone and metal production increased by 1%",
+    "ResearchType": "Economy",
+    "ParentId": null,
+    "ResearchPointCost": 10,
+    "ResearchTimeInSeconds": 300,
+    "ModifiersInternal": [
+      {
+        "Tag": "ResourceProduction",
+        "Type": "Increased",
+        "Value": 0.01,
+        "Source": "Research: Better yield I"
+      }
+    ],
+    "ModifiersThatAffectsThis": []
+  },
+  {
+    "Id": "ECON_PROD_2",
+    "Name": "Better yield II",
+    "Description": "Wood, stone and metal production increased by 1%",
+    "ResearchType": "Economy",
+    "ParentId": "ECON_PROD_1",
+    "ResearchPointCost": 10,
+    "ResearchTimeInSeconds": 300,
+    "ModifiersInternal": [
+      {
+        "Tag": "ResourceProduction",
+        "Type": "Increased",
+        "Value": 0.01,
+        "Source": "Research: Better yield II"
+      }
+    ],
+    "ModifiersThatAffectsThis": []
+  },
+  {
+    "Id": "ECON_PROD_3",
+    "Name": "Better yield III",
+    "Description": "Wood, stone and metal production increased by 2%",
+    "ResearchType": "Economy",
+    "ParentId": "ECON_PROD_2",
+    "ResearchPointCost": 10,
+    "ResearchTimeInSeconds": 300,
+    "ModifiersInternal": [
+      {
+        "Tag": "ResourceProduction",
+        "Type": "Increased",
+        "Value": 0.02,
+        "Source": "Research: Better yield III"
+      }
+    ],
+    "ModifiersThatAffectsThis": []
+  },
+  {
+    "Id": "MARKET_COINS_1",
+    "Name": "Art of the deal",
+    "Description": "\u002B3% bonus to marketplaces coins generation",
+    "ResearchType": "Economy",
+    "ParentId": "ECON_PROD_1",
+    "ResearchPointCost": 25,
+    "ResearchTimeInSeconds": 1200,
+    "ModifiersInternal": [
+      {
+        "Tag": "Market",
+        "Type": "Increased",
+        "Value": 0.03,
+        "Source": "Research: Art of the deal"
+      }
+    ],
+    "ModifiersThatAffectsThis": []
+  },
+  {
+    "Id": "MARKET_MERCHANT_1",
+    "Name": "Phoenican Inspiration",
+    "Description": "\u002B1 to available merchants",
+    "ResearchType": "Economy",
+    "ParentId": "MARKET_COINS_1",
+    "ResearchPointCost": 30,
+    "ResearchTimeInSeconds": 900,
+    "ModifiersInternal": [
+      {
+        "Tag": "Placeholder",
+        "Type": "Flat",
+        "Value": 1,
+        "Source": "Research: Phoenican Inspiration"
+      }
+    ],
+    "ModifiersThatAffectsThis": []
+  },
+  {
+    "Id": "COINS_PROD_1",
+    "Name": "Tax Solidarity",
+    "Description": "\u002B3% increased global coins income",
+    "ResearchType": "Economy",
+    "ParentId": "MARKET_MERCHANT_1",
+    "ResearchPointCost": 35,
+    "ResearchTimeInSeconds": 900,
+    "ModifiersInternal": [
+      {
+        "Tag": "Coins",
+        "Type": "Increased",
+        "Value": 0.03,
+        "Source": "Research: Tax Solidarity"
+      }
+    ],
+    "ModifiersThatAffectsThis": []
+  },
+  {
+    "Id": "SIEGE_UPKEEP_1",
+    "Name": "Cheaper sieges",
+    "Description": "Upkeep of siege units is decreased by 5%",
+    "ResearchType": "War",
+    "ParentId": null,
+    "ResearchPointCost": 25,
+    "ResearchTimeInSeconds": 600,
+    "ModifiersInternal": [
+      {
+        "Tag": "SiegeUpkeep",
+        "Type": "Increased",
+        "Value": 0.05,
+        "Source": "Research: Cheaper sieges"
+      }
+    ],
+    "ModifiersThatAffectsThis": []
+  },
+  {
+    "Id": "UNIT_UPKEEP_1",
+    "Name": "Cheaper units",
+    "Description": "Upkeep of all units is decreased by 2%",
+    "ResearchType": "War",
+    "ParentId": null,
+    "ResearchPointCost": 35,
+    "ResearchTimeInSeconds": 900,
+    "ModifiersInternal": [
+      {
+        "Tag": "Upkeep",
+        "Type": "Increased",
+        "Value": 0.02,
+        "Source": "Research: Cheaper units"
+      }
+    ],
+    "ModifiersThatAffectsThis": []
+  },
+  {
+    "Id": "SIEGE_DMG_1",
+    "Name": "Sieging Power",
+    "Description": "Siege weapons deal 5% more damage",
+    "ResearchType": "War",
+    "ParentId": "SIEGE_UPKEEP_1",
+    "ResearchPointCost": 40,
+    "ResearchTimeInSeconds": 3600,
+    "ModifiersInternal": [
+      {
+        "Tag": "SiegeStats",
+        "Type": "Increased",
+        "Value": 0.05,
+        "Source": "Research: Sieging Power"
+      }
+    ],
+    "ModifiersThatAffectsThis": []
+  },
+  {
+    "Id": "UNIT_UPKEEP_2",
+    "Name": "Cheaper units",
+    "Description": "Upkeep of all units is decreased by 2%",
+    "ResearchType": "War",
+    "ParentId": "MUNIT_UPKEEP_1",
+    "ResearchPointCost": 45,
+    "ResearchTimeInSeconds": 900,
+    "ModifiersInternal": [
+      {
+        "Tag": "Upkeep",
+        "Type": "Increased",
+        "Value": 0.02,
+        "Source": "Research: Cheaper units"
+      }
+    ],
+    "ModifiersThatAffectsThis": []
+  },
+  {
+    "Id": "SIEGE_TT_1",
+    "Name": "Faster ramming",
+    "Description": "Siege weapons move 2% faster",
+    "ResearchType": "War",
+    "ParentId": "SIEGE_DMG_1",
+    "ResearchPointCost": 55,
+    "ResearchTimeInSeconds": 900,
+    "ModifiersInternal": [
+      {
+        "Tag": "Placeholder",
+        "Type": "Increased",
+        "Value": 0.02,
+        "Source": "Research: Faster ramming"
+      }
+    ],
+    "ModifiersThatAffectsThis": []
+  },
+  {
+    "Id": "UTIL_SUBJ_1",
+    "Name": "City Administration I",
+    "Description": "Subjugation of your cities takes 2.5% more time",
+    "ResearchType": "Utility",
+    "ParentId": null,
+    "ResearchPointCost": 20,
+    "ResearchTimeInSeconds": 600,
+    "ModifiersInternal": [
+      {
+        "Tag": "Placeholder",
+        "Type": "Increased",
+        "Value": 0.025,
+        "Source": "Research: City Administration I"
+      }
+    ],
+    "ModifiersThatAffectsThis": []
+  },
+  {
+    "Id": "UTIL_RESIST_1",
+    "Name": "Civil Resistance",
+    "Description": "Base resistance after conquering a new city is at 60% instead of 50%",
+    "ResearchType": "Utility",
+    "ParentId": "UTIL_SUBJ_1",
+    "ResearchPointCost": 30,
+    "ResearchTimeInSeconds": 1200,
+    "ModifiersInternal": [
+      {
+        "Tag": "Placeholder",
+        "Type": "Flat",
+        "Value": 0.1,
+        "Source": "Research: Civil Resistance"
+      }
+    ],
+    "ModifiersThatAffectsThis": []
+  },
+  {
+    "Id": "UTIL_BUILD_1",
+    "Name": "Efficient Planning",
+    "Description": "Building takes 5% less time",
+    "ResearchType": "Utility",
+    "ParentId": "UTIL_RESIST_1",
+    "ResearchPointCost": 40,
+    "ResearchTimeInSeconds": 1800,
+    "ModifiersInternal": [
+      {
+        "Tag": "Construction",
+        "Type": "Increased",
+        "Value": 0.05,
+        "Source": "Research: Efficient Planning"
+      }
+    ],
+    "ModifiersThatAffectsThis": []
+  },
+  {
+    "Id": "UTIL_SUBJ_2",
+    "Name": "City Administration II",
+    "Description": "Subjugation of your cities takes 2.5% more time",
+    "ResearchType": "Utility",
+    "ParentId": "UTIL_BUILD_1",
+    "ResearchPointCost": 50,
+    "ResearchTimeInSeconds": 2400,
+    "ModifiersInternal": [
+      {
+        "Tag": "Placeholder",
+        "Type": "Increased",
+        "Value": 0.025,
+        "Source": "Research: City Administration II"
+      }
+    ],
+    "ModifiersThatAffectsThis": []
+  },
+  {
+    "Id": "UTIL_COINS_1",
+    "Name": "Efficient Bureaucracy",
+    "Description": "1% increased coins income",
+    "ResearchType": "Utility",
+    "ParentId": "UTIL_SUBJ_2",
+    "ResearchPointCost": 60,
+    "ResearchTimeInSeconds": 3000,
+    "ModifiersInternal": [
+      {
+        "Tag": "Coins",
+        "Type": "Increased",
+        "Value": 0.01,
+        "Source": "Research: Efficient Bureaucracy"
+      }
+    ],
+    "ModifiersThatAffectsThis": []
+  },
+  {
+    "Id": "UTIL_POP_1",
+    "Name": "Urban Expansion",
+    "Description": "\u002B3% population in all cities",
+    "ResearchType": "Utility",
+    "ParentId": "UTIL_COINS_1",
+    "ResearchPointCost": 75,
+    "ResearchTimeInSeconds": 3600,
+    "ModifiersInternal": [
+      {
+        "Tag": "Population",
+        "Type": "Increased",
+        "Value": 0.03,
+        "Source": "Research: Urban Expansion"
+      }
+    ],
+    "ModifiersThatAffectsThis": []
+  },
+  {
+    "Id": "UTIL_ROAD_1",
+    "Name": "Road Maintenance I",
+    "Description": "Building and repairing roads is 10% faster",
+    "ResearchType": "Utility",
+    "ParentId": null,
+    "ResearchPointCost": 20,
+    "ResearchTimeInSeconds": 600,
+    "ModifiersInternal": [
+      {
+        "Tag": "Placeholder",
+        "Type": "Increased",
+        "Value": 0.1,
+        "Source": "Research: Road Maintenance I"
+      }
+    ],
+    "ModifiersThatAffectsThis": []
+  },
+  {
+    "Id": "UTIL_WATCH_1",
+    "Name": "Intelligence Network",
+    "Description": "Watchtowers now list seen units (without exact numbers)",
+    "ResearchType": "Utility",
+    "ParentId": "UTIL_ROAD_1",
+    "ResearchPointCost": 35,
+    "ResearchTimeInSeconds": 1200,
+    "ModifiersInternal": [
+      {
+        "Tag": "Placeholder",
+        "Type": "Flat",
+        "Value": 1,
+        "Source": "Research: Intelligence Network"
+      }
+    ],
+    "ModifiersThatAffectsThis": []
+  },
+  {
+    "Id": "UTIL_ROAD_2",
+    "Name": "Road Maintenance II",
+    "Description": "Building and repairing roads is 10% faster",
+    "ResearchType": "Utility",
+    "ParentId": "UTIL_WATCH_1",
+    "ResearchPointCost": 45,
+    "ResearchTimeInSeconds": 1800,
+    "ModifiersInternal": [
+      {
+        "Tag": "Placeholder",
+        "Type": "Increased",
+        "Value": 0.1,
+        "Source": "Research: Road Maintenance II"
+      }
+    ],
+    "ModifiersThatAffectsThis": []
+  },
+  {
+    "Id": "UTIL_ROAD_COST",
+    "Name": "Paved Foundations",
+    "Description": "Cost of roads is reduced by 5%",
+    "ResearchType": "Utility",
+    "ParentId": "UTIL_ROAD_2",
+    "ResearchPointCost": 55,
+    "ResearchTimeInSeconds": 2400,
+    "ModifiersInternal": [
+      {
+        "Tag": "Placeholder",
+        "Type": "Increased",
+        "Value": 0.05,
+        "Source": "Research: Paved Foundations"
+      }
+    ],
+    "ModifiersThatAffectsThis": []
+  },
+  {
+    "Id": "UTIL_WATCH_RANGE",
+    "Name": "Eagle Eye",
+    "Description": "Watchtowers gain 10% additional vision range",
+    "ResearchType": "Utility",
+    "ParentId": "UTIL_ROAD_COST",
+    "ResearchPointCost": 65,
+    "ResearchTimeInSeconds": 3000,
+    "ModifiersInternal": [
+      {
+        "Tag": "Placeholder",
+        "Type": "Increased",
+        "Value": 0.1,
+        "Source": "Research: Eagle Eye"
+      }
+    ],
+    "ModifiersThatAffectsThis": []
+  },
+  {
+    "Id": "UTIL_ALLIED_SPEED",
+    "Name": "Imperial Messengers",
+    "Description": "Armies are 10% faster from and to allied cities",
+    "ResearchType": "Utility",
+    "ParentId": "UTIL_WATCH_RANGE",
+    "ResearchPointCost": 80,
+    "ResearchTimeInSeconds": 3600,
+    "ModifiersInternal": [
+      {
+        "Tag": "TravelSpeed",
+        "Type": "Increased",
+        "Value": 0.1,
+        "Source": "Research: Imperial Messengers"
+      }
+    ],
+    "ModifiersThatAffectsThis": []
+  },
+  {
+    "Id": "UNLOCK_UNIT_BOWMEN",
+    "Name": "Bowmen",
+    "Description": "Unlocks Bowmen recruitment.",
+    "ResearchType": "Unlocks",
+    "ParentId": null,
+    "ResearchPointCost": 10,
+    "ResearchTimeInSeconds": 300,
+    "Effects": [
+      {
+        "Type": "UnitRecruitment",
+        "UnitType": "Bowmen"
+      }
+    ],
+    "ModifiersInternal": [],
+    "ModifiersThatAffectsThis": []
+  },
+  {
+    "Id": "UNLOCK_UNIT_SPEARMEN",
+    "Name": "Spearmen",
+    "Description": "Unlocks Spearmen recruitment.",
+    "ResearchType": "Unlocks",
+    "ParentId": "UNLOCK_UNIT_BOWMEN",
+    "ResearchPointCost": 10,
+    "ResearchTimeInSeconds": 300,
+    "Effects": [
+      {
+        "Type": "UnitRecruitment",
+        "UnitType": "Spearmen"
+      }
+    ],
+    "ModifiersInternal": [],
+    "ModifiersThatAffectsThis": []
+  },
+  {
+    "Id": "UNLOCK_UNIT_AXEMEN",
+    "Name": "Axemen",
+    "Description": "Unlocks Axemen recruitment.",
+    "ResearchType": "Unlocks",
+    "ParentId": "UNLOCK_UNIT_SPEARMEN",
+    "ResearchPointCost": 25,
+    "ResearchTimeInSeconds": 900,
+    "Effects": [
+      {
+        "Type": "UnitRecruitment",
+        "UnitType": "Axemen"
+      }
+    ],
+    "ModifiersInternal": [],
+    "ModifiersThatAffectsThis": []
+  },
+  {
+    "Id": "UNLOCK_UNIT_SWORDSMEN",
+    "Name": "Swordsmen",
+    "Description": "Unlocks Swordsmen recruitment.",
+    "ResearchType": "Unlocks",
+    "ParentId": "UNLOCK_UNIT_AXEMEN",
+    "ResearchPointCost": 25,
+    "ResearchTimeInSeconds": 900,
+    "Effects": [
+      {
+        "Type": "UnitRecruitment",
+        "UnitType": "Swordsmen"
+      }
+    ],
+    "ModifiersInternal": [],
+    "ModifiersThatAffectsThis": []
+  },
+  {
+    "Id": "UNLOCK_UNIT_CROSSBOWMEN",
+    "Name": "Crossbowmen",
+    "Description": "Unlocks Crossbowmen recruitment.",
+    "ResearchType": "Unlocks",
+    "ParentId": "UNLOCK_UNIT_SWORDSMEN",
+    "ResearchPointCost": 40,
+    "ResearchTimeInSeconds": 1800,
+    "Effects": [
+      {
+        "Type": "UnitRecruitment",
+        "UnitType": "Crossbowmen"
+      }
+    ],
+    "ModifiersInternal": [],
+    "ModifiersThatAffectsThis": []
+  },
+  {
+    "Id": "UNLOCK_UNIT_MEN_AT_ARMS",
+    "Name": "Men At Arms",
+    "Description": "Unlocks Men At Arms recruitment.",
+    "ResearchType": "Unlocks",
+    "ParentId": "UNLOCK_UNIT_CROSSBOWMEN",
+    "ResearchPointCost": 40,
+    "ResearchTimeInSeconds": 1800,
+    "Effects": [
+      {
+        "Type": "UnitRecruitment",
+        "UnitType": "MenAtArms"
+      }
+    ],
+    "ModifiersInternal": [],
+    "ModifiersThatAffectsThis": []
+  },
+  {
+    "Id": "UNLOCK_UNIT_KNIGHTS",
+    "Name": "Knights",
+    "Description": "Unlocks Knights recruitment.",
+    "ResearchType": "Unlocks",
+    "ParentId": null,
+    "ResearchPointCost": 40,
+    "ResearchTimeInSeconds": 1800,
+    "Effects": [
+      {
+        "Type": "UnitRecruitment",
+        "UnitType": "Knights"
+      }
+    ],
+    "ModifiersInternal": [],
+    "ModifiersThatAffectsThis": []
+  },
+  {
+    "Id": "UNLOCK_UNIT_CATAPHRACTS",
+    "Name": "Cataphracts",
+    "Description": "Unlocks Cataphracts recruitment.",
+    "ResearchType": "Unlocks",
+    "ParentId": "UNLOCK_UNIT_KNIGHTS",
+    "ResearchPointCost": 60,
+    "ResearchTimeInSeconds": 2700,
+    "Effects": [
+      {
+        "Type": "UnitRecruitment",
+        "UnitType": "Cataphracts"
+      }
+    ],
+    "ModifiersInternal": [],
+    "ModifiersThatAffectsThis": []
+  },
+  {
+    "Id": "UNLOCK_UNIT_CATAPULT",
+    "Name": "Catapult",
+    "Description": "Unlocks Catapult recruitment.",
+    "ResearchType": "Unlocks",
+    "ParentId": null,
+    "ResearchPointCost": 25,
+    "ResearchTimeInSeconds": 900,
+    "Effects": [
+      {
+        "Type": "UnitRecruitment",
+        "UnitType": "Catapult"
+      }
+    ],
+    "ModifiersInternal": [],
+    "ModifiersThatAffectsThis": []
+  },
+  {
+    "Id": "UNLOCK_UNIT_TREBUCHET",
+    "Name": "Trebuchet",
+    "Description": "Unlocks Trebuchet recruitment.",
+    "ResearchType": "Unlocks",
+    "ParentId": "UNLOCK_UNIT_CATAPULT",
+    "ResearchPointCost": 40,
+    "ResearchTimeInSeconds": 1800,
+    "Effects": [
+      {
+        "Type": "UnitRecruitment",
+        "UnitType": "Trebuchet"
+      }
+    ],
+    "ModifiersInternal": [],
+    "ModifiersThatAffectsThis": []
+  },
+  {
+    "Id": "UNLOCK_UNIT_ENGINEERS",
+    "Name": "Engineers",
+    "Description": "Unlocks Engineers recruitment.",
+    "ResearchType": "Unlocks",
+    "ParentId": "UNLOCK_UNIT_TREBUCHET",
+    "ResearchPointCost": 60,
+    "ResearchTimeInSeconds": 2700,
+    "Effects": [
+      {
+        "Type": "UnitRecruitment",
+        "UnitType": "Engineers"
+      }
+    ],
+    "ModifiersInternal": [],
+    "ModifiersThatAffectsThis": []
+  },
+  {
+    "Id": "UNLOCK_UNIT_CANNON",
+    "Name": "Cannon",
+    "Description": "Unlocks Cannon recruitment.",
+    "ResearchType": "Unlocks",
+    "ParentId": "UNLOCK_UNIT_ENGINEERS",
+    "ResearchPointCost": 80,
+    "ResearchTimeInSeconds": 3600,
+    "Effects": [
+      {
+        "Type": "UnitRecruitment",
+        "UnitType": "Cannon"
+      }
+    ],
+    "ModifiersInternal": [],
+    "ModifiersThatAffectsThis": []
+  },
+  {
+    "Id": "UNLOCK_UNIT_TRANSPORT",
+    "Name": "Transport",
+    "Description": "Unlocks Transport recruitment.",
+    "ResearchType": "Unlocks",
+    "ParentId": null,
+    "ResearchPointCost": 10,
+    "ResearchTimeInSeconds": 300,
+    "Effects": [
+      {
+        "Type": "UnitRecruitment",
+        "UnitType": "Transport"
+      }
+    ],
+    "ModifiersInternal": [],
+    "ModifiersThatAffectsThis": []
+  },
+  {
+    "Id": "UNLOCK_UNIT_WAR_GALLEY",
+    "Name": "War Galley",
+    "Description": "Unlocks War Galley recruitment.",
+    "ResearchType": "Unlocks",
+    "ParentId": "UNLOCK_UNIT_TRANSPORT",
+    "ResearchPointCost": 10,
+    "ResearchTimeInSeconds": 300,
+    "Effects": [
+      {
+        "Type": "UnitRecruitment",
+        "UnitType": "WarGalley"
+      }
+    ],
+    "ModifiersInternal": [],
+    "ModifiersThatAffectsThis": []
+  },
+  {
+    "Id": "UNLOCK_UNIT_GRAND_TRANSPORT",
+    "Name": "Grand Transport",
+    "Description": "Unlocks Grand Transport recruitment.",
+    "ResearchType": "Unlocks",
+    "ParentId": "UNLOCK_UNIT_WAR_GALLEY",
+    "ResearchPointCost": 40,
+    "ResearchTimeInSeconds": 1800,
+    "Effects": [
+      {
+        "Type": "UnitRecruitment",
+        "UnitType": "GrandTransport"
+      }
+    ],
+    "ModifiersInternal": [],
+    "ModifiersThatAffectsThis": []
+  },
+  {
+    "Id": "UNLOCK_SUBJUGATION",
+    "Name": "Right of Subjugation",
+    "Description": "Unlocks the authority required to subjugate conquered cities.",
+    "ResearchType": "Unlocks",
+    "ParentId": null,
+    "ResearchPointCost": 100,
+    "ResearchTimeInSeconds": 7200,
+    "Effects": [
+      {
+        "Type": "Subjugation",
+        "UnitType": null
+      }
+    ],
+    "ModifiersInternal": [],
+    "ModifiersThatAffectsThis": []
+  }
+]

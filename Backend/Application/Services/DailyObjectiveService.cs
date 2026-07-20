@@ -6,13 +6,12 @@ using Domain.Entities;
 using Domain.Enums;
 using Domain.StaticData.Data;
 using Domain.StaticData.Readers;
-using System.Collections.Concurrent;
+using Microsoft.EntityFrameworkCore;
 
 namespace Application.Services
 {
     public sealed class DailyObjectiveService : IDailyObjectiveService
     {
-        private static readonly ConcurrentDictionary<Guid, SemaphoreSlim> PlayerLocks = new();
         private readonly IDailyObjectiveRepository _repository;
         private readonly IPlayerAccessService _playerAccessService;
         private readonly DailyObjectiveDataReader _reader;
@@ -49,32 +48,37 @@ namespace Application.Services
         public async Task ApplyProgressAsync(Guid worldPlayerId, DailyObjectiveProgressEvent progressEvent)
         {
             if (progressEvent.Amount <= 0) return;
-            var gate = PlayerLocks.GetOrAdd(worldPlayerId, _ => new SemaphoreSlim(1, 1));
-            await gate.WaitAsync();
-            try
+            bool saveWithinOperation = !_transactionManager.HasActiveTransaction;
+            int maximumAttempts = saveWithinOperation ? 2 : 1;
+
+            for (int attempt = 1; attempt <= maximumAttempts; attempt++)
             {
-                bool saveWithinOperation = !_transactionManager.HasActiveTransaction;
-                await _transactionManager.ExecuteAsync(async () =>
+                try
                 {
-                    var set = await EnsureTodayInCurrentTransactionAsync(worldPlayerId);
-                    DateTime occurredAt = AsUtc(progressEvent.OccurredAtUtc);
-                    if (occurredAt < set.DayStartUtc || occurredAt >= set.DayStartUtc.AddDays(1)) return;
-
-                    foreach (var assignment in set.Assignments)
+                    await _transactionManager.ExecuteAsync(async () =>
                     {
-                        var definition = _reader.GetDefinition(assignment.DefinitionId);
-                        if (!definition.IsImplemented || assignment.IsComplete || !Matches(definition, progressEvent)) continue;
-                        assignment.Progress = Math.Min(assignment.Target, assignment.Progress + progressEvent.Amount);
-                        assignment.IsComplete = assignment.Progress >= assignment.Target;
-                        assignment.DateLastModified = _timeProvider.GetUtcNow().UtcDateTime;
-                    }
+                        var set = await EnsureTodayInCurrentTransactionAsync(worldPlayerId);
+                        DateTime occurredAt = AsUtc(progressEvent.OccurredAtUtc);
+                        if (occurredAt < set.DayStartUtc || occurredAt >= set.DayStartUtc.AddDays(1)) return;
 
-                    if (saveWithinOperation) await _transactionManager.SaveChangesAsync();
-                });
-            }
-            finally
-            {
-                gate.Release();
+                        foreach (var assignment in set.Assignments)
+                        {
+                            var definition = _reader.GetDefinition(assignment.DefinitionId);
+                            if (!definition.IsImplemented || assignment.IsComplete || !Matches(definition, progressEvent)) continue;
+                            assignment.Progress = Math.Min(assignment.Target, assignment.Progress + progressEvent.Amount);
+                            assignment.IsComplete = assignment.Progress >= assignment.Target;
+                            assignment.DateLastModified = _timeProvider.GetUtcNow().UtcDateTime;
+                        }
+
+                        if (saveWithinOperation) await _transactionManager.SaveChangesAsync();
+                    });
+                    return;
+                }
+                catch (DbUpdateConcurrencyException exception) when (
+                    attempt < maximumAttempts && IsDailyObjectiveConcurrency(exception))
+                {
+                    // The next attempt detaches daily state after reacquiring the player lock.
+                }
             }
         }
 
@@ -133,26 +137,34 @@ namespace Application.Services
 
         private async Task<DailyObjectiveSet> GetOrCreateTodayAsync(Guid worldPlayerId)
         {
-            var gate = PlayerLocks.GetOrAdd(worldPlayerId, _ => new SemaphoreSlim(1, 1));
-            await gate.WaitAsync();
-            try
+            bool saveWithinOperation = !_transactionManager.HasActiveTransaction;
+            int maximumAttempts = saveWithinOperation ? 2 : 1;
+
+            for (int attempt = 1; attempt <= maximumAttempts; attempt++)
             {
-                bool saveWithinOperation = !_transactionManager.HasActiveTransaction;
-                return await _transactionManager.ExecuteAsync(async () =>
+                try
                 {
-                    var set = await EnsureTodayInCurrentTransactionAsync(worldPlayerId);
-                    if (saveWithinOperation) await _transactionManager.SaveChangesAsync();
-                    return set;
-                });
+                    return await _transactionManager.ExecuteAsync(async () =>
+                    {
+                        var set = await EnsureTodayInCurrentTransactionAsync(worldPlayerId);
+                        if (saveWithinOperation) await _transactionManager.SaveChangesAsync();
+                        return set;
+                    });
+                }
+                catch (DbUpdateConcurrencyException exception) when (
+                    attempt < maximumAttempts && IsDailyObjectiveConcurrency(exception))
+                {
+                    // The next attempt detaches daily state after reacquiring the player lock.
+                }
             }
-            finally
-            {
-                gate.Release();
-            }
+
+            throw new InvalidOperationException("Daily objective retry loop completed without a result.");
         }
 
         private async Task<DailyObjectiveSet> EnsureTodayInCurrentTransactionAsync(Guid worldPlayerId)
         {
+            await _repository.AcquirePlayerLockAsync(worldPlayerId);
+            _repository.ResetTrackedState(worldPlayerId);
             DateTime dayStart = _timeProvider.GetUtcNow().UtcDateTime.Date;
             var existing = await _repository.GetByWorldPlayerIdAsync(worldPlayerId);
             if (existing?.DayStartUtc == dayStart) return existing;
@@ -228,5 +240,9 @@ namespace Application.Services
             DateTimeKind.Local => value.ToUniversalTime(),
             _ => DateTime.SpecifyKind(value, DateTimeKind.Utc)
         };
+
+        private static bool IsDailyObjectiveConcurrency(DbUpdateConcurrencyException exception) =>
+            exception.Entries.Count > 0 && exception.Entries.All(entry =>
+                entry.Entity is DailyObjectiveSet or DailyObjectiveAssignment);
     }
 }

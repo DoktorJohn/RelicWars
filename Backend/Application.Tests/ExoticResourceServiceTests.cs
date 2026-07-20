@@ -75,6 +75,8 @@ public class ExoticResourceServiceTests
             () => fixture.Service.SyncCityExoticResourcesAsync(fixture.City, TestData.Now));
 
         Assert.Contains("ufuldstændig exotic resource-beholdning", exception.Message);
+        Assert.Contains("Aktuelt antal rækker: 0/10", exception.Message);
+        Assert.Contains("Manglende typer: Cloth, Coal, Copper, Cotton, Diamond, Gold, Ivory, Sand, Silver, Sulphur", exception.Message);
         Assert.Empty(fixture.City.ExoticResources);
     }
 
@@ -279,7 +281,6 @@ public class ExoticResourceServiceTests
             TestData.BuildingReader(),
             TestData.ResearchReader(),
             TestData.IdeologyReader(),
-            TestData.UnitReader(),
             new LargeCapacityCityStatService(),
             modifierService,
             NullLogger<ResourceService>.Instance);

@@ -19,6 +19,7 @@ public class ResearchServiceTests
         {
             Id = playerId,
             ResearchPoints = 100,
+            Cities = [CityWithUniversity()],
             CompletedResearches = new List<Research>
             {
                 new() { ResearchId = "ECON_PROD_1", CompletedAt = DateTime.UtcNow.AddHours(-1) }
@@ -45,6 +46,8 @@ public class ResearchServiceTests
         Assert.NotNull(tree.ActiveJob);
         Assert.Equal(job.Id, tree.ActiveJob!.JobId);
         Assert.Equal(activeResearchId, tree.ActiveJob.ResearchId);
+        Assert.True(tree.CanStartResearch);
+        Assert.Empty(tree.UnmetRequirements);
 
         var activeNode = tree.Nodes.Single(n => n.Id == activeResearchId);
         Assert.True(activeNode.IsResearching);
@@ -59,7 +62,12 @@ public class ResearchServiceTests
         var player = new WorldPlayer
         {
             Id = Guid.NewGuid(),
-            ResearchPoints = researchNode.ResearchPointCost + 25
+            ResearchPoints = researchNode.ResearchPointCost + 25,
+            Cities =
+            [
+                new City { Id = Guid.NewGuid() },
+                CityWithUniversity()
+            ]
         };
         var jobRepository = new MemoryResearchJobRepository();
         var service = new ResearchService(
@@ -79,6 +87,63 @@ public class ResearchServiceTests
         Assert.Equal(player.Id, researchJob.WorldPlayerId);
         Assert.Equal(researchNode.Id, researchJob.ResearchId);
         Assert.False(researchJob.IsCompleted);
+    }
+
+    [Fact]
+    public async Task QueueResearchAsync_RejectsWithoutUniversityAndPreservesPoints()
+    {
+        var researchReader = TestData.ResearchReader();
+        var researchNode = researchReader.GetAll().First(node => string.IsNullOrEmpty(node.ParentId));
+        var player = new WorldPlayer
+        {
+            Id = Guid.NewGuid(),
+            ResearchPoints = researchNode.ResearchPointCost + 25,
+            Cities =
+            [
+                new City { Id = Guid.NewGuid() },
+                new City
+                {
+                    Id = Guid.NewGuid(),
+                    Buildings = [new Building { Type = Domain.Enums.BuildingTypeEnum.Barracks, Level = 1 }]
+                }
+            ]
+        };
+        var jobRepository = new MemoryResearchJobRepository();
+        var service = new ResearchService(
+            jobRepository,
+            new MemoryWorldPlayerRepository(player),
+            new TestPlayerAccessService([player]),
+            researchReader,
+            new ImmediateTransactionManager());
+
+        var result = await service.QueueResearchAsync(player.Id, researchNode.Id);
+
+        Assert.False(result.Success);
+        Assert.Equal("Build a University in one of your cities to begin research.", result.Message);
+        Assert.Equal(researchNode.ResearchPointCost + 25, player.ResearchPoints, 3);
+        Assert.Empty(jobRepository.AddedJobs);
+    }
+
+    [Fact]
+    public async Task GetResearchTreeAsync_ReportsUniversityRequirementWhenNoCityHasOne()
+    {
+        var player = new WorldPlayer
+        {
+            Id = Guid.NewGuid(),
+            ResearchPoints = 100,
+            Cities = [new City { Id = Guid.NewGuid() }]
+        };
+        var service = new ResearchService(
+            new MemoryResearchJobRepository(),
+            new MemoryWorldPlayerRepository(player),
+            new TestPlayerAccessService([player]),
+            TestData.ResearchReader(),
+            new ImmediateTransactionManager());
+
+        var tree = await service.GetResearchTreeAsync(player.Id);
+
+        Assert.False(tree.CanStartResearch);
+        Assert.Equal("Build a University in one of your cities to begin research.", Assert.Single(tree.UnmetRequirements));
     }
 
     [Fact]
@@ -113,6 +178,12 @@ public class ResearchServiceTests
         Assert.Equal(researchNode.ResearchPointCost, player.ResearchPoints, 3);
         Assert.Contains(job.Id, jobRepository.DeletedJobIds);
     }
+
+    private static City CityWithUniversity() => new()
+    {
+        Id = Guid.NewGuid(),
+        Buildings = [new Building { Type = Domain.Enums.BuildingTypeEnum.University, Level = 1 }]
+    };
 }
 
 internal sealed class MemoryWorldPlayerRepository : IWorldPlayerRepository

@@ -96,6 +96,15 @@ namespace Project.Modules.UI
         {
             if (_citySelectorDropdownContainer != null)
                 _citySelectorDropdownContainer.style.display = DisplayStyle.None;
+
+            if (city == null || city.Id == Guid.Empty || NetworkManager.Instance == null)
+            {
+                return;
+            }
+
+            NetworkManager.Instance.SelectActiveCity(city.Id);
+            CityStateManager.Instance?.StartPollingForCity(city.Id);
+            UpdateCitySelectorLabel(city.CityName);
         }
 
         private void EnableRenameMode()
@@ -204,7 +213,7 @@ namespace Project.Modules.UI
         {
             if (_playerCities == null || _playerCities.Count <= 1) return;
 
-            var currentCityId = CityStateManager.Instance.CityId;
+            var currentCityId = NetworkManager.Instance?.ActiveCityId ?? Guid.Empty;
             var currentIndex = _playerCities.FindIndex(c => c.Id == currentCityId);
 
             if (currentIndex == -1) currentIndex = 0;
@@ -214,14 +223,13 @@ namespace Project.Modules.UI
 
             var newCity = _playerCities[newIndex];
             OnCityDropdownItemClicked(newCity);
-            UpdateCitySelectorLabel(newCity.CityName);
         }
 
         private void OnNextCityClicked()
         {
             if (_playerCities == null || _playerCities.Count <= 1) return;
 
-            var currentCityId = CityStateManager.Instance.CityId;
+            var currentCityId = NetworkManager.Instance?.ActiveCityId ?? Guid.Empty;
             var currentIndex = _playerCities.FindIndex(c => c.Id == currentCityId);
 
             if (currentIndex == -1) currentIndex = 0;
@@ -231,7 +239,6 @@ namespace Project.Modules.UI
 
             var newCity = _playerCities[newIndex];
             OnCityDropdownItemClicked(newCity);
-            UpdateCitySelectorLabel(newCity.CityName);
         }
 
         private void UpdateNavigationButtonsState()
