@@ -17,12 +17,26 @@ namespace WebApi.Controllers
         private readonly ICityService _cityService;
         private readonly IExoticResourceService _exoticResourceService;
         private readonly ILogger<CityController> _logger;
+        private readonly IEdictService _edictService;
 
-        public CityController(ICityService cityService, IExoticResourceService exoticResourceService, ILogger<CityController> logger)
+        public CityController(ICityService cityService, IExoticResourceService exoticResourceService, ILogger<CityController> logger, IEdictService edictService)
         {
             _cityService = cityService;
             _exoticResourceService = exoticResourceService;
             _logger = logger;
+            _edictService = edictService;
+        }
+
+        [HttpGet("{cityIdentifier}/edicts")]
+        public async Task<ActionResult<EdictOverviewDTO>> GetEdicts(Guid cityIdentifier) =>
+            Ok(await _edictService.GetOverviewAsync(cityIdentifier));
+
+        [HttpPost("{cityIdentifier}/edicts/enact")]
+        public async Task<ActionResult<EdictOverviewDTO>> EnactEdict(Guid cityIdentifier, [FromBody] EnactEdictRequestDTO request)
+        {
+            if (!Enum.IsDefined(request.EdictType)) return BadRequest(new ApiError("edict.invalid_type", "The edict type is invalid."));
+            try { return Ok(await _edictService.EnactAsync(cityIdentifier, request.EdictType)); }
+            catch (Application.Exceptions.EdictConflictException exception) { return Conflict(new ApiError(exception.Code, exception.Message)); }
         }
 
         [HttpGet("GetDetailedCityInformation/{cityIdentifier}")]

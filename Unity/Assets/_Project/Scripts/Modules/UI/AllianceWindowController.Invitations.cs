@@ -47,6 +47,79 @@ namespace Project.Modules.UI.Windows.Implementations
             return row;
         }
 
+        private void LoadInvitedPlayers(int version)
+        {
+            if (version != _requestVersion || _isForeignView) return;
+            WindowAsyncStateHelper.ShowLoading(_invitedPlayersList, "Loading invited players...");
+            StartCoroutine(NetworkManager.Instance.Alliance.GetInvitedPlayers(_worldPlayerId, Token, invitedPlayers =>
+            {
+                if (version != _requestVersion || !isActiveAndEnabled || _isForeignView)
+                {
+                    return;
+                }
+
+                if (invitedPlayers == null)
+                {
+                    WindowAsyncStateHelper.ShowError(
+                        _invitedPlayersList,
+                        "Could not load invited players.",
+                        () => LoadInvitedPlayers(version));
+                    return;
+                }
+
+                if (invitedPlayers.Count == 0)
+                {
+                    WindowAsyncStateHelper.ShowEmpty(_invitedPlayersList, "No currently invited players.");
+                    return;
+                }
+
+                _invitedPlayersList.Clear();
+                foreach (var invitedPlayer in invitedPlayers)
+                {
+                    _invitedPlayersList.Add(CreateInvitedPlayerRow(invitedPlayer));
+                }
+            }));
+        }
+
+        private VisualElement CreateInvitedPlayerRow(AllianceInvitedPlayerDTO invitedPlayer)
+        {
+            var row = CreateRow("invited-player-row");
+            row.Add(CreatePlayerLinkButton(invitedPlayer.UserName, invitedPlayer.WorldPlayerId, "invited-player-name"));
+
+            var inviter = new Label($"by {invitedPlayer.InvitedByUserName}");
+            inviter.AddToClassList("invited-player-inviter");
+            row.Add(inviter);
+
+            var expires = new Label($"Expires {invitedPlayer.ExpiresAt.ToUniversalTime():yyyy-MM-dd HH:mm} UTC");
+            expires.AddToClassList("invited-player-expiry");
+            row.Add(expires);
+            if (_currentRole == AllianceRoleDTO.Founder)
+            {
+                Button cancelButton = null;
+                cancelButton = SmallButton("CANCEL", () => CancelInvitation(invitedPlayer.InvitationId, cancelButton));
+                row.Add(cancelButton);
+            }
+            return row;
+        }
+
+        private void CancelInvitation(Guid invitationId, Button button)
+        {
+            if (_currentRole != AllianceRoleDTO.Founder || button == null || !button.enabledSelf) return;
+            button.SetEnabled(false);
+            var version = _requestVersion;
+            var dto = new CancelAllianceInvitationDTO { WorldPlayerId = _worldPlayerId, InvitationId = invitationId };
+            StartCoroutine(NetworkManager.Instance.Alliance.CancelInvitation(dto, Token, success =>
+            {
+                if (!isActiveAndEnabled || version != _requestVersion) return;
+                if (success) LoadInvitedPlayers(version);
+                else
+                {
+                    button.SetEnabled(true);
+                    SetStatus("Could not cancel invitation.");
+                }
+            }));
+        }
+
         private void Respond(Guid invitationId, bool accept)
         {
             var dto = new RespondToAllianceInvitationDTO { WorldPlayerId = _worldPlayerId, InvitationId = invitationId };

@@ -129,6 +129,7 @@ namespace Application.Services
                 ?? throw new InvalidOperationException("Byens ejer blev ikke fundet.");
             var cityProduction = _resourceService.CalculateCityProduction(playerEntity, cityEntity);
             var population = CreatePopulationBreakdown(cityEntity, activeRecruitmentJobs);
+            var coinsBreakdown = CreateCoinsProductionBreakdown(cityEntity);
 
             return new CityControllerGetDetailedCityInformationDTO
             {
@@ -151,6 +152,8 @@ namespace Application.Services
                 StoneProductionPerHour = currentCitySnapshot.StoneProductionPerHour,
                 MetalProductionPerHour = currentCitySnapshot.MetalProductionPerHour,
                 CoinsProductionPerHour = cityProduction.CoinsProductionPerHour,
+                UnitUpkeepPerHour = coinsBreakdown.UnitUpkeepPerHour,
+                BuildingUpkeepPerHour = coinsBreakdown.BuildingUpkeepPerHour,
                 ResearchPointsPerHour = cityProduction.ResearchPointsPerHour,
                 IdeologyFocusPointsPerHour = cityProduction.IdeologyFocusPointsPerHour,
 
@@ -344,17 +347,32 @@ namespace Application.Services
             int buildingUpkeepCost = cityEntity.Buildings
                 .Sum(building => _buildingDataReader.GetConfig<BuildingLevelData>(building.Type, building.Level).UpkeepCost);
 
-            double baseExpenditure = (unitPopulation * 7) + buildingUpkeepCost;
-
-            var expenditureResult = _modifierService.CalculateCityValue(cityEntity, baseExpenditure, ModifierTagEnum.Upkeep, ModifierTagEnum.BuildingUpkeep, ModifierTagEnum.UnitUpkeep);
+            double baseUnitUpkeep = unitPopulation * 7;
+            var unitUpkeepResult = _modifierService.CalculateCityValue(
+                cityEntity,
+                baseUnitUpkeep,
+                ModifierTagEnum.Upkeep,
+                ModifierTagEnum.UnitUpkeep);
+            var buildingUpkeepResult = _modifierService.CalculateCityValue(
+                cityEntity,
+                buildingUpkeepCost,
+                ModifierTagEnum.Upkeep,
+                ModifierTagEnum.BuildingUpkeep);
+            double totalBaseUpkeep = baseUnitUpkeep + buildingUpkeepCost;
+            double totalUpkeep = unitUpkeepResult.FinalValue + buildingUpkeepResult.FinalValue;
+            double effectiveUpkeepModifier = totalBaseUpkeep > 0
+                ? (totalUpkeep / totalBaseUpkeep) - 1.0
+                : 0.0;
 
             return new CoinsBreakdownDTO(
                 incomeResult.BaseValue,
                 incomeResult.FlatBonus,
                 incomeResult.PercentageBonus,
                 incomeResult.FinalValue,
-                expenditureResult.FinalValue,
-                expenditureResult.PercentageBonus
+                totalUpkeep,
+                effectiveUpkeepModifier,
+                unitUpkeepResult.FinalValue,
+                buildingUpkeepResult.FinalValue
             );
         }
 

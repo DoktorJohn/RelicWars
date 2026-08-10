@@ -1,5 +1,7 @@
 using System;
 using System.Collections.Generic;
+using Assets.Scripts.Domain.Enums;
+using Project.Network.Models;
 
 namespace Project.Scripts.Domain.DTOs
 {
@@ -33,5 +35,25 @@ namespace Project.Scripts.Domain.DTOs
         public string SenderAllianceName { get; set; }
         public DateTime SentAt { get; set; }
         public bool IsRead { get; set; }
+        public ReportAttachmentDTO ReportAttachment { get; set; }
+    }
+
+    public class ReportAttachmentDTO
+    {
+        public bool IsAvailable { get; set; }
+        public SharedBattleReportDTO Report { get; set; }
+    }
+
+    public class SharedBattleReportDTO
+    {
+        public Guid Id { get; set; }
+        public ReportTypeEnum ReportType { get; set; }
+        public string Title { get; set; }
+        public string Body { get; set; }
+        public DateTime OccurredAt { get; set; }
+        public List<UnitStackDTO> AttackerLosses { get; set; }
+        public List<UnitStackDTO> DefenderLosses { get; set; }
+        public List<UnitStackDTO> RevivedUnits { get; set; }
+        public List<string> AppliedModifiers { get; set; }
     }
 }

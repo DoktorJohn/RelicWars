@@ -86,6 +86,13 @@ namespace Project.Modules.UI
                 subjectLabel.AddToClassList("conversation-subject-name");
                 item.Add(subjectLabel);
 
+                if (!string.IsNullOrWhiteSpace(conv.LastMessageContent))
+                {
+                    var preview = new Label(conv.LastMessageContent);
+                    preview.AddToClassList("conversation-last-msg");
+                    item.Add(preview);
+                }
+
                 if (conv.UnreadCount > 0)
                 {
                     var unread = new Label(conv.UnreadCount > 99 ? "99+" : conv.UnreadCount.ToString());
@@ -144,6 +151,7 @@ namespace Project.Modules.UI
         {
             if (conversation == null) return;
             _state.SelectConversation(conversation);
+            RemoveSelectedReport();
             ResetDeleteConfirmation();
             if (_newMessageHeader != null) _newMessageHeader.style.display = DisplayStyle.None;
             if (_deleteConversationButton != null) _deleteConversationButton.style.display = DisplayStyle.Flex;
@@ -353,9 +361,17 @@ namespace Project.Modules.UI
                 metaRow.Add(time);
                 bubble.Add(metaRow);
 
-                var content = new Label(msg.Content);
-                content.AddToClassList("message-content-label");
-                bubble.Add(content);
+                if (!string.IsNullOrWhiteSpace(msg.Content))
+                {
+                    var content = new Label(msg.Content);
+                    content.AddToClassList("message-content-label");
+                    bubble.Add(content);
+                }
+
+                if (msg.ReportAttachment != null)
+                {
+                    bubble.Add(CreateReportAttachmentCard(msg.ReportAttachment));
+                }
 
                 _messageList.Add(bubble);
             }
@@ -372,6 +388,49 @@ namespace Project.Modules.UI
                     _messageList.scrollOffset = new Vector2(0, Mathf.Max(0f, previousScrollY.Value + heightDelta));
                 });
             }
+        }
+
+        private static VisualElement CreateReportAttachmentCard(ReportAttachmentDTO attachment)
+        {
+            var card = new VisualElement();
+            card.AddToClassList("message-report-card");
+
+            if (!attachment.IsAvailable || attachment.Report == null)
+            {
+                var unavailable = new Label("Report unavailable");
+                unavailable.AddToClassList("message-report-unavailable");
+                card.Add(unavailable);
+                return card;
+            }
+
+            var report = attachment.Report;
+            AddReportCardLabel(card, report.Title, "message-report-title");
+            AddReportCardLabel(card, $"{report.ReportType} · {report.OccurredAt.ToUniversalTime():MMM d, yyyy HH:mm} UTC", "message-report-meta");
+            AddReportCardLabel(card, report.Body, "message-report-body");
+            AddReportCardLabel(card, "Attacker losses: " + FormatReportStacks(report.AttackerLosses), "message-report-detail");
+            AddReportCardLabel(card, "Defender losses: " + FormatReportStacks(report.DefenderLosses), "message-report-detail");
+            AddReportCardLabel(card, "Revived units: " + FormatReportStacks(report.RevivedUnits), "message-report-detail");
+            AddReportCardLabel(card, "Modifiers: " + FormatReportValues(report.AppliedModifiers), "message-report-detail");
+            return card;
+        }
+
+        private static void AddReportCardLabel(VisualElement card, string text, string className)
+        {
+            var label = new Label(text ?? string.Empty);
+            label.AddToClassList(className);
+            card.Add(label);
+        }
+
+        private static string FormatReportStacks(IEnumerable<Project.Network.Models.UnitStackDTO> stacks)
+        {
+            var values = stacks?.Select(stack => $"{stack.Type} x{stack.Quantity}").ToList();
+            return values == null || values.Count == 0 ? "None" : string.Join(", ", values);
+        }
+
+        private static string FormatReportValues(IEnumerable<string> values)
+        {
+            var filtered = values?.Where(value => !string.IsNullOrWhiteSpace(value)).ToList();
+            return filtered == null || filtered.Count == 0 ? "None" : string.Join(", ", filtered);
         }
 
         private void SetActiveConversationTitle(ConversationDTO conversation)

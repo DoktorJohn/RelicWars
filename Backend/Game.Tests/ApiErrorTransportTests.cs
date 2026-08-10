@@ -1,10 +1,16 @@
 using System.Text.Json;
 using Game.Contracts;
 using Game.Middleware;
+using Domain.Entities;
+using Infrastructure.Context;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Abstractions;
 using Microsoft.AspNetCore.Mvc.Filters;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Update;
+using Microsoft.Extensions.Logging;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.Logging.Abstractions;
 using Xunit;
@@ -79,6 +85,37 @@ public class ApiErrorTransportTests
         Assert.DoesNotContain("invariant", error.Message, StringComparison.OrdinalIgnoreCase);
     }
 
+    [Fact]
+    public async Task ExceptionMiddleware_LogsConcurrencyEntityTypeKeyAndState()
+    {
+        Guid assignmentId = Guid.NewGuid();
+        var options = new DbContextOptionsBuilder<GameContext>()
+            .UseSqlite("Data Source=:memory:")
+            .Options;
+        await using var databaseContext = new GameContext(options);
+        var assignment = new DailyObjectiveAssignment { Id = assignmentId };
+        databaseContext.Attach(assignment);
+        databaseContext.Entry(assignment).State = EntityState.Modified;
+#pragma warning disable EF1001
+        var exception = new DbUpdateConcurrencyException(
+            "daily conflict",
+            null,
+            [databaseContext.Entry(assignment).GetInfrastructure()]);
+#pragma warning restore EF1001
+        var logger = new RecordingLogger<ApiExceptionMiddleware>();
+        var middleware = new ApiExceptionMiddleware(_ => throw exception, logger);
+        var context = new DefaultHttpContext();
+        context.Response.Body = new MemoryStream();
+
+        await middleware.InvokeAsync(context);
+
+        string log = Assert.Single(logger.Messages);
+        Assert.Contains(nameof(DailyObjectiveAssignment), log);
+        Assert.Contains($"Id={assignmentId}", log);
+        Assert.Contains("State=Modified", log);
+        Assert.Equal(StatusCodes.Status409Conflict, context.Response.StatusCode);
+    }
+
     private static async Task<IActionResult> ExecuteFilterAsync(IActionResult result)
     {
         var actionContext = new ActionContext(new DefaultHttpContext(), new RouteData(), new ActionDescriptor());
@@ -90,5 +127,20 @@ public class ApiErrorTransportTests
             new ResultExecutedContext(actionContext, filters, executingContext.Result, new object())));
 
         return executingContext.Result;
+    }
+
+    private sealed class RecordingLogger<T> : ILogger<T>
+    {
+        public List<string> Messages { get; } = [];
+
+        public IDisposable? BeginScope<TState>(TState state) where TState : notnull => null;
+        public bool IsEnabled(LogLevel logLevel) => true;
+
+        public void Log<TState>(
+            LogLevel logLevel,
+            EventId eventId,
+            TState state,
+            Exception? exception,
+            Func<TState, Exception?, string> formatter) => Messages.Add(formatter(state, exception));
     }
 }

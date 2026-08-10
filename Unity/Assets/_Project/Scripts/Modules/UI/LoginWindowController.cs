@@ -1,55 +1,58 @@
-using UnityEngine;
-using UnityEngine.SceneManagement;
-using UnityEngine.UIElements;
-using Project.Modules.UI;
+using System.Collections;
 using Project.Network.Manager;
+using Sunvale.AncientRomeUI.Buttons;
+using TMPro;
+using UnityEngine;
+using UnityEngine.EventSystems;
+using UnityEngine.InputSystem.UI;
+using UnityEngine.SceneManagement;
+using UnityEngine.UI;
 
 namespace Project.Modules.Auth
 {
-    [RequireComponent(typeof(UIDocument))]
     public class LoginWindowController : MonoBehaviour
     {
         private const string DefaultLoginButtonText = "ENTER WORLD";
         private const string LoadingLoginButtonText = "ENTERING...";
         private const string GenericFailureMessage = "Unable to reach the realm. Please try again.";
 
-        private VisualElement _rootVisualElement;
-        private VisualElement _safeAreaElement;
-        private TextField _emailTextField;
-        private TextField _passwordTextField;
-        private Label _emailErrorLabel;
-        private Label _passwordErrorLabel;
-        private Label _statusFeedbackLabel;
-        private Toggle _rememberLoginToggle;
-        private Button _loginExecutionButton;
-        private Button _navigateToRegisterButton;
+        [Header("Scene Configuration")]
+        [SerializeField] private string _worldSelectionSceneName = "WorldSelectionScene";
+        [SerializeField] private string _registrationSceneName = "RegisterScene";
+
+        [Header("Scene-authored Login View")]
+        [SerializeField] private TMP_InputField _emailInput;
+        [SerializeField] private TMP_InputField _passwordInput;
+        [SerializeField] private Toggle _rememberLoginToggle;
+        [SerializeField] private CarvedPressButton _loginButton;
+        [SerializeField] private CarvedPressButton _registerButton;
+        [SerializeField] private TMP_Text _statusText;
 
         private bool _isUiActive;
         private bool _isRequestInFlight;
         private int _lifecycleVersion;
 
-        [Header("Scene Configuration")]
-        [SerializeField] private string _worldSelectionSceneName = "WorldSelectionScene";
-        [SerializeField] private string _registrationSceneName = "RegisterScene";
-
         private void OnEnable()
         {
-            var uiDocument = GetComponent<UIDocument>();
-            if (uiDocument == null)
+            EnsureEventSystem();
+
+            if (!HasCompleteViewBinding())
             {
+                Debug.LogError("[LoginWindow] Login Menu view references are incomplete.", this);
+                enabled = false;
                 return;
             }
 
-            _rootVisualElement = uiDocument.rootVisualElement;
             _isUiActive = true;
             _isRequestInFlight = false;
             _lifecycleVersion++;
 
-            ResponsiveUiStateManager.RegisterRoot(_rootVisualElement);
-            InitializeUserInterfaceElements();
+            ConfigureInputFields();
             RegisterUserInteractionCallbacks();
-            ResponsiveUiStateManager.LayoutChanged += ApplyResponsiveLayout;
-            ApplyResponsiveLayout(ResponsiveUiStateManager.CurrentSnapshot);
+            ClearValidationFeedback();
+            SetStatusFeedback(string.Empty, false);
+            SetLoginButtonText(DefaultLoginButtonText);
+            SetInteractionState(true);
 
             if (NetworkManager.Instance == null)
             {
@@ -63,60 +66,47 @@ namespace Project.Modules.Auth
             _isUiActive = false;
             _isRequestInFlight = false;
             _lifecycleVersion++;
-
-            ResponsiveUiStateManager.LayoutChanged -= ApplyResponsiveLayout;
-            ResponsiveUiStateManager.UnregisterRoot(_rootVisualElement);
             UnregisterUserInteractionCallbacks();
         }
 
-        private void InitializeUserInterfaceElements()
+        private bool HasCompleteViewBinding()
         {
-            _safeAreaElement = _rootVisualElement.Q<VisualElement>("Auth-SafeArea");
-            _emailTextField = _rootVisualElement.Q<TextField>("Input-Email");
-            _passwordTextField = _rootVisualElement.Q<TextField>("Input-Password");
-            _emailErrorLabel = _rootVisualElement.Q<Label>("Error-Email");
-            _passwordErrorLabel = _rootVisualElement.Q<Label>("Error-Password");
-            _statusFeedbackLabel = _rootVisualElement.Q<Label>("Label-Status-Feedback");
-            _rememberLoginToggle = _rootVisualElement.Q<Toggle>("Toggle-Remember-Login");
-            _loginExecutionButton = _rootVisualElement.Q<Button>("Button-Execute-Login");
-            _navigateToRegisterButton = _rootVisualElement.Q<Button>("Button-Navigate-Register");
+            return _emailInput != null
+                && _passwordInput != null
+                && _rememberLoginToggle != null
+                && _loginButton != null
+                && _registerButton != null
+                && _statusText != null;
+        }
 
-            _emailTextField.tabIndex = 0;
-            _passwordTextField.tabIndex = 1;
-            _rememberLoginToggle.tabIndex = 2;
-            _loginExecutionButton.tabIndex = 3;
-            _navigateToRegisterButton.tabIndex = 4;
+        private void ConfigureInputFields()
+        {
+            _emailInput.contentType = TMP_InputField.ContentType.EmailAddress;
+            _emailInput.lineType = TMP_InputField.LineType.SingleLine;
+            _emailInput.characterLimit = 256;
 
-            _passwordTextField.isPasswordField = true;
-            _loginExecutionButton.text = DefaultLoginButtonText;
-            ClearValidationFeedback();
-            SetStatusFeedback(string.Empty, false);
+            _passwordInput.contentType = TMP_InputField.ContentType.Password;
+            _passwordInput.lineType = TMP_InputField.LineType.SingleLine;
+            _passwordInput.asteriskChar = '\u2022';
+            _passwordInput.ForceLabelUpdate();
         }
 
         private void RegisterUserInteractionCallbacks()
         {
-            _loginExecutionButton.clicked += HandleLoginAttemptRequest;
-            _navigateToRegisterButton.clicked += HandleNavigateToRegistrationRequest;
-            _emailTextField.RegisterValueChangedCallback(HandleEmailChanged);
-            _passwordTextField.RegisterValueChangedCallback(HandlePasswordChanged);
-            _passwordTextField.RegisterCallback<KeyDownEvent>(HandlePasswordKeyDown);
+            _loginButton.buttonActivatedClicked.AddListener(HandleLoginAttemptRequest);
+            _registerButton.buttonActivatedClicked.AddListener(HandleNavigateToRegistrationRequest);
+            _emailInput.onValueChanged.AddListener(HandleEmailChanged);
+            _passwordInput.onValueChanged.AddListener(HandlePasswordChanged);
+            _passwordInput.onSubmit.AddListener(HandlePasswordSubmitted);
         }
 
         private void UnregisterUserInteractionCallbacks()
         {
-            if (_loginExecutionButton != null)
-            {
-                _loginExecutionButton.clicked -= HandleLoginAttemptRequest;
-            }
-
-            if (_navigateToRegisterButton != null)
-            {
-                _navigateToRegisterButton.clicked -= HandleNavigateToRegistrationRequest;
-            }
-
-            _emailTextField?.UnregisterValueChangedCallback(HandleEmailChanged);
-            _passwordTextField?.UnregisterValueChangedCallback(HandlePasswordChanged);
-            _passwordTextField?.UnregisterCallback<KeyDownEvent>(HandlePasswordKeyDown);
+            _loginButton?.buttonActivatedClicked.RemoveListener(HandleLoginAttemptRequest);
+            _registerButton?.buttonActivatedClicked.RemoveListener(HandleNavigateToRegistrationRequest);
+            _emailInput?.onValueChanged.RemoveListener(HandleEmailChanged);
+            _passwordInput?.onValueChanged.RemoveListener(HandlePasswordChanged);
+            _passwordInput?.onSubmit.RemoveListener(HandlePasswordSubmitted);
         }
 
         private void HandleLoginAttemptRequest()
@@ -126,12 +116,11 @@ namespace Project.Modules.Auth
                 return;
             }
 
-            string email = (_emailTextField.value ?? string.Empty).Trim();
-            string password = _passwordTextField.value ?? string.Empty;
+            string email = (_emailInput.text ?? string.Empty).Trim();
+            string password = _passwordInput.text ?? string.Empty;
 
             if (!ValidateForm(email, password))
             {
-                SetStatusFeedback("Please correct the highlighted fields.", true);
                 return;
             }
 
@@ -142,15 +131,14 @@ namespace Project.Modules.Auth
                 return;
             }
 
-            _emailTextField.SetValueWithoutNotify(email);
+            _emailInput.SetTextWithoutNotify(email);
             _isRequestInFlight = true;
             SetInteractionState(false);
-            _loginExecutionButton.text = LoadingLoginButtonText;
+            SetLoginButtonText(LoadingLoginButtonText);
             SetStatusFeedback("Authenticating your profile...", false);
 
             int requestVersion = _lifecycleVersion;
-            bool rememberLogin = _rememberLoginToggle.value;
-            NetworkManager.Instance.AuthenticateUser(email, password, rememberLogin, response =>
+            NetworkManager.Instance.AuthenticateUser(email, password, _rememberLoginToggle.isOn, response =>
             {
                 if (!_isUiActive || requestVersion != _lifecycleVersion)
                 {
@@ -158,15 +146,14 @@ namespace Project.Modules.Auth
                 }
 
                 _isRequestInFlight = false;
-
                 if (response != null && response.IsAuthenticated)
                 {
                     Debug.Log("[LoginWindow] Authentication successful. Transitioning to World Selection.");
-                    SceneManager.LoadScene(_worldSelectionSceneName);
+                    StartCoroutine(LoadWorldSelectionSeamlessly());
                     return;
                 }
 
-                _loginExecutionButton.text = DefaultLoginButtonText;
+                SetLoginButtonText(DefaultLoginButtonText);
                 SetInteractionState(true);
                 SetStatusFeedback(GetFailureMessage(response), true);
             });
@@ -180,62 +167,50 @@ namespace Project.Modules.Auth
             }
         }
 
-        private void HandleEmailChanged(ChangeEvent<string> changeEvent)
+        private void HandleEmailChanged(string value)
         {
-            ClearFieldError(_emailTextField, _emailErrorLabel);
+            ClearFieldError(_emailInput);
         }
 
-        private void HandlePasswordChanged(ChangeEvent<string> changeEvent)
+        private void HandlePasswordChanged(string value)
         {
-            ClearFieldError(_passwordTextField, _passwordErrorLabel);
+            ClearFieldError(_passwordInput);
         }
 
-        private void HandlePasswordKeyDown(KeyDownEvent keyDownEvent)
+        private void HandlePasswordSubmitted(string value)
         {
-            if (keyDownEvent.keyCode != KeyCode.Return && keyDownEvent.keyCode != KeyCode.KeypadEnter)
-            {
-                return;
-            }
-
-            keyDownEvent.StopPropagation();
             HandleLoginAttemptRequest();
         }
 
         private bool ValidateForm(string email, string password)
         {
             ClearValidationFeedback();
-            bool isValid = true;
 
             if (string.IsNullOrWhiteSpace(email))
             {
-                ShowFieldError(_emailTextField, _emailErrorLabel, "Email is required.");
-                isValid = false;
+                ShowFieldError(_emailInput);
+                SetStatusFeedback("Email is required.", true);
+                FocusField(_emailInput);
+                return false;
             }
-            else if (!HasValidEmailFormat(email))
+
+            if (!HasValidEmailFormat(email))
             {
-                ShowFieldError(_emailTextField, _emailErrorLabel, "Enter a valid email address.");
-                isValid = false;
+                ShowFieldError(_emailInput);
+                SetStatusFeedback("Enter a valid email address.", true);
+                FocusField(_emailInput);
+                return false;
             }
 
             if (string.IsNullOrEmpty(password))
             {
-                ShowFieldError(_passwordTextField, _passwordErrorLabel, "Password is required.");
-                isValid = false;
+                ShowFieldError(_passwordInput);
+                SetStatusFeedback("Password is required.", true);
+                FocusField(_passwordInput);
+                return false;
             }
 
-            if (!isValid)
-            {
-                if (!string.IsNullOrEmpty(_emailErrorLabel.text))
-                {
-                    _emailTextField.Focus();
-                }
-                else
-                {
-                    _passwordTextField.Focus();
-                }
-            }
-
-            return isValid;
+            return true;
         }
 
         private static bool HasValidEmailFormat(string email)
@@ -260,57 +235,98 @@ namespace Project.Modules.Auth
 
         private void ClearValidationFeedback()
         {
-            ClearFieldError(_emailTextField, _emailErrorLabel);
-            ClearFieldError(_passwordTextField, _passwordErrorLabel);
+            ClearFieldError(_emailInput);
+            ClearFieldError(_passwordInput);
         }
 
-        private static void ShowFieldError(TextField field, Label errorLabel, string message)
+        private static void ShowFieldError(TMP_InputField field)
         {
-            field.AddToClassList("auth-field-invalid");
-            errorLabel.text = message;
-        }
-
-        private static void ClearFieldError(TextField field, Label errorLabel)
-        {
-            field?.RemoveFromClassList("auth-field-invalid");
-            if (errorLabel != null)
+            if (field?.image != null)
             {
-                errorLabel.text = string.Empty;
+                field.image.color = new Color(0.72f, 0.34f, 0.27f, 1f);
             }
+        }
+
+        private static void ClearFieldError(TMP_InputField field)
+        {
+            if (field?.image != null)
+            {
+                field.image.color = Color.white;
+            }
+        }
+
+        private static void FocusField(TMP_InputField field)
+        {
+            field.Select();
+            field.ActivateInputField();
         }
 
         private void SetInteractionState(bool isInteractable)
         {
-            _emailTextField?.SetEnabled(isInteractable);
-            _passwordTextField?.SetEnabled(isInteractable);
-            _rememberLoginToggle?.SetEnabled(isInteractable);
-            _loginExecutionButton?.SetEnabled(isInteractable);
-            _navigateToRegisterButton?.SetEnabled(isInteractable);
+            _emailInput.interactable = isInteractable;
+            _passwordInput.interactable = isInteractable;
+            _rememberLoginToggle.interactable = isInteractable;
+            SetButtonInteraction(_loginButton, isInteractable);
+            SetButtonInteraction(_registerButton, isInteractable);
+        }
+
+        private static void SetButtonInteraction(CarvedPressButton button, bool isInteractable)
+        {
+            button.enabled = isInteractable;
+            if (button.coreImage != null)
+            {
+                button.coreImage.raycastTarget = isInteractable;
+            }
         }
 
         private void SetStatusFeedback(string message, bool isError)
         {
-            if (_statusFeedbackLabel == null)
-            {
-                return;
-            }
-
-            _statusFeedbackLabel.text = message;
-            _statusFeedbackLabel.EnableInClassList("auth-status-error", isError);
+            _statusText.text = message;
+            _statusText.color = isError
+                ? new Color(0.62f, 0.10f, 0.07f, 1f)
+                : new Color(0.33f, 0.25f, 0.19f, 0.9f);
         }
 
-        private void ApplyResponsiveLayout(FrontendLayoutSnapshot snapshot)
+        private void SetLoginButtonText(string value)
         {
-            if (_safeAreaElement == null)
+            _loginButton.SetTextOnLabel(value);
+        }
+
+        private IEnumerator LoadWorldSelectionSeamlessly()
+        {
+            SetStatusFeedback("Opening your worlds...", false);
+
+            AsyncOperation sceneLoadOperation = SceneManager.LoadSceneAsync(_worldSelectionSceneName);
+            if (sceneLoadOperation == null)
+            {
+                _isRequestInFlight = false;
+                SetLoginButtonText(DefaultLoginButtonText);
+                SetInteractionState(true);
+                SetStatusFeedback("Unable to open world selection. Please try again.", true);
+                yield break;
+            }
+
+            sceneLoadOperation.allowSceneActivation = false;
+            while (sceneLoadOperation.progress < 0.9f)
+            {
+                yield return null;
+            }
+
+            // Keep the completed login composition visible until World Selection is ready to render.
+            yield return null;
+            sceneLoadOperation.allowSceneActivation = true;
+        }
+
+        private static void EnsureEventSystem()
+        {
+            if (EventSystem.current != null)
             {
                 return;
             }
 
-            Vector4 safeAreaInsets = ResponsiveUiStateManager.GetSafeAreaInsets();
-            _safeAreaElement.style.paddingLeft = safeAreaInsets.x;
-            _safeAreaElement.style.paddingTop = safeAreaInsets.y;
-            _safeAreaElement.style.paddingRight = safeAreaInsets.z;
-            _safeAreaElement.style.paddingBottom = safeAreaInsets.w;
+            GameObject eventSystemObject = new GameObject("EventSystem");
+            eventSystemObject.AddComponent<EventSystem>();
+            eventSystemObject.AddComponent<InputSystemUIInputModule>();
         }
     }
 }

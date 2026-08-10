@@ -43,8 +43,9 @@ namespace Infrastructure.Repositories
 
         public async Task<bool> NameExistsAsync(Guid worldId, string name)
         {
+            string normalizedName = name.Trim().ToUpperInvariant();
             return await _context.Alliances
-                .AnyAsync(a => a.WorldId == worldId && a.Name.ToLower() == name.ToLower());
+                .AnyAsync(alliance => alliance.WorldId == worldId && alliance.NormalizedName == normalizedName);
         }
 
         public async Task<Alliance?> GetByIdWithMembersAsync(Guid id)
@@ -59,6 +60,15 @@ namespace Infrastructure.Repositories
                 .Include(i => i.Alliance)
                 .Include(i => i.InvitedByWorldPlayer).ThenInclude(p => p.PlayerProfile)
                 .Where(i => i.InvitedWorldPlayerId == worldPlayerId && i.ExpiresAt > now)
+                .OrderByDescending(i => i.DateCreated)
+                .ToListAsync();
+
+        public Task<List<AllianceInvitation>> GetInvitationsForAllianceAsync(Guid allianceId, DateTime now) =>
+            _context.AllianceInvitations
+                .AsNoTracking()
+                .Include(i => i.InvitedWorldPlayer).ThenInclude(p => p.PlayerProfile)
+                .Include(i => i.InvitedByWorldPlayer).ThenInclude(p => p.PlayerProfile)
+                .Where(i => i.AllianceId == allianceId && i.ExpiresAt > now)
                 .OrderByDescending(i => i.DateCreated)
                 .ToListAsync();
 

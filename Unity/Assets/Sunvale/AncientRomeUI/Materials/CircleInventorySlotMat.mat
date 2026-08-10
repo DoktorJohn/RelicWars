@@ -1,0 +1,82 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!21 &2100000
+Material:
+  serializedVersion: 8
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_Name: CircleInventorySlotMat
+  m_Shader: {fileID: 4800000, guid: a95ac5c8180c4387bfdf02ada176f4e3, type: 3}
+  m_Parent: {fileID: 0}
+  m_ModifiedSerializedProperties: 0
+  m_ValidKeywords: []
+  m_InvalidKeywords: []
+  m_LightmapFlags: 4
+  m_EnableInstancingVariants: 0
+  m_DoubleSidedGI: 0
+  m_CustomRenderQueue: -1
+  stringTagMap: {}
+  disabledShaderPasses: []
+  m_LockedProperties: 
+  m_SavedProperties:
+    serializedVersion: 3
+    m_TexEnvs:
+    - _FrameTex:
+        m_Texture: {fileID: 2800000, guid: 54caa3917cfe15c42990cfe7ef2db7fd, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _MainTex:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    m_Ints: []
+    m_Floats:
+    - _AmbientShadowRadius: 0.335
+    - _AmbientShadowSoftness: 0.051
+    - _AmbientShadowStrength: 0.832
+    - _BgBrightness: 1
+    - _BgContrast: 1
+    - _BgNoiseScale: 19.7
+    - _BgNoiseStrength: 0.027
+    - _BgSaturation: 1
+    - _CenterGlow: 1
+    - _ColorMask: 15
+    - _EdgeSoftness: 0.0001
+    - _FrameBrightness: 1
+    - _FrameContrast: 1
+    - _FrameOpacity: 1
+    - _FrameSaturation: 1
+    - _FrameScale: 0.719
+    - _InnerShadowStrength: 0.55
+    - _InnerShadowWidth: 0.13
+    - _ItemBrightness: 1
+    - _ItemContrast: 1
+    - _ItemLowerCircleMaskSoftness: 0.045
+    - _ItemLowerCircleMaskY: 0.58
+    - _ItemMaskInset: 0.015
+    - _ItemOpacity: 0
+    - _ItemSaturation: 1
+    - _ItemScale: 1
+    - _NoiseSeed: 0
+    - _SlotRadius: 0.334
+    - _Stencil: 0
+    - _StencilComp: 8
+    - _StencilOp: 0
+    - _StencilReadMask: 255
+    - _StencilWriteMask: 255
+    - _UseUIAlphaClip: 0
+    - _VignetteStrength: 1
+    m_Colors:
+    - _AmbientShadowColor: {r: 0, g: 0, b: 0, a: 1}
+    - _AmbientShadowOffset: {r: 0.01, g: -0.035, b: 0, a: 0}
+    - _BgCenterColor: {r: 0.37647063, g: 0.2901961, b: 0.23529413, a: 1}
+    - _BgEdgeColor: {r: 0.035, g: 0.02, b: 0.014, a: 1}
+    - _Color: {r: 1, g: 1, b: 1, a: 1}
+    - _FrameOffset: {r: 0, g: 0, b: 0, a: 0}
+    - _ItemAspectScale: {r: 1, g: 1, b: 0, a: 0}
+    - _ItemAtlasRect: {r: 0, g: 0, b: 1, a: 1}
+    - _ItemOffset: {r: 0, g: 0, b: 0, a: 0}
+  m_BuildTextureStacks: []
+  m_AllowLocking: 1

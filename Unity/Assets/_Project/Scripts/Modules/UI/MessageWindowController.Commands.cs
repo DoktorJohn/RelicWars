@@ -21,9 +21,9 @@ namespace Project.Modules.UI
             }
 
             var content = _messageInput.value;
-            if (string.IsNullOrWhiteSpace(content)) 
+            if (string.IsNullOrWhiteSpace(content) && !_selectedReportId.HasValue)
             {
-                SetMessageState("Message content is empty");
+                SetMessageState("Write a message or attach a report");
                 return;
             }
             
@@ -60,7 +60,7 @@ namespace Project.Modules.UI
             var version = _requestVersion;
             SetSendingState(true);
 
-            StartCoroutine(NetworkManager.Instance.Messaging.ReplyToConversation(senderId, conversationId, content, NetworkManager.Instance.JwtToken, (response) =>
+            StartCoroutine(NetworkManager.Instance.Messaging.ReplyToConversation(senderId, conversationId, content, _selectedReportId, NetworkManager.Instance.JwtToken, (response) =>
             {
                 if (!isActiveAndEnabled || version != _requestVersion)
                 {
@@ -71,6 +71,7 @@ namespace Project.Modules.UI
                 if (response != null)
                 {
                     _messageInput.value = "";
+                    RemoveSelectedReport();
                     MessagingStateEvents.RaiseUnreadStateChanged();
                     LoadMessages(conversationId, _requestVersion);
                     LoadConversations(_requestVersion);
@@ -96,7 +97,7 @@ namespace Project.Modules.UI
             var version = _requestVersion;
             SetSendingState(true);
 
-            StartCoroutine(NetworkManager.Instance.Messaging.StartConversation(senderId, recipientIds, subject, content, NetworkManager.Instance.JwtToken, (conversation) =>
+            StartCoroutine(NetworkManager.Instance.Messaging.StartConversation(senderId, recipientIds, subject, content, _selectedReportId, NetworkManager.Instance.JwtToken, (conversation) =>
             {
                 if (!isActiveAndEnabled || version != _requestVersion)
                 {
@@ -107,6 +108,7 @@ namespace Project.Modules.UI
                 if (conversation != null)
                 {
                     _messageInput.value = "";
+                    RemoveSelectedReport();
                     if (_recipientInput != null) _recipientInput.value = "";
                     if (_subjectInput != null) _subjectInput.value = "";
                     _state.ClearRecipients();

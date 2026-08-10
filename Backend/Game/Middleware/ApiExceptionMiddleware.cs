@@ -39,7 +39,14 @@ namespace Game.Middleware
                 _ => ((int)HttpStatusCode.InternalServerError, "server.error", "En intern serverfejl opstod.")
             };
 
-            if (statusCode == StatusCodes.Status500InternalServerError)
+            if (exception is DbUpdateConcurrencyException concurrencyException)
+            {
+                _logger.LogWarning(
+                    exception,
+                    "Handled EF concurrency exception. Entries: {ConcurrencyEntries}",
+                    DescribeConcurrencyEntries(concurrencyException));
+            }
+            else if (statusCode == StatusCodes.Status500InternalServerError)
             {
                 _logger.LogError(exception, "Unhandled API exception");
             }
@@ -51,6 +58,24 @@ namespace Game.Middleware
             context.Response.StatusCode = statusCode;
             context.Response.ContentType = "application/json";
             await context.Response.WriteAsJsonAsync(new ApiError(code, message));
+        }
+
+        private static string DescribeConcurrencyEntries(DbUpdateConcurrencyException exception)
+        {
+            if (exception.Entries.Count == 0)
+            {
+                return "none";
+            }
+
+            return string.Join("; ", exception.Entries.Select(entry =>
+            {
+                var primaryKey = entry.Metadata.FindPrimaryKey();
+                string key = primaryKey == null
+                    ? "<no key>"
+                    : string.Join(", ", primaryKey.Properties.Select(property =>
+                        $"{property.Name}={entry.Property(property.Name).CurrentValue ?? "<null>"}"));
+                return $"{entry.Metadata.DisplayName()} [{key}] State={entry.State}";
+            }));
         }
     }
 }

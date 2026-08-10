@@ -1,4 +1,5 @@
 /* Assets/UI/Windows/MessageWindow/MessageWindow.uss */
+.message-window-size { width: 1000px; height: 700px; }
 
 .message-content {
     flex-direction: row;
@@ -31,22 +32,99 @@
 
 .input-area {
     flex-direction: row;
-    min-height: 112px;
+    height: 146px;
+    min-height: 146px;
     align-items: flex-end;
     flex-shrink: 0;
 }
 
-.message-input {
+.message-composer {
+    min-width: 0;
+    height: 146px;
     flex-grow: 1;
     flex-shrink: 1;
     margin-right: 10px;
+    position: relative;
+}
+
+.report-picker-bar {
+    height: 30px;
+    flex-direction: row;
+    align-items: center;
+    margin-bottom: 4px;
+    min-width: 0;
+}
+
+.report-picker-button, .report-picker-remove {
+    height: 28px;
+    min-height: 28px;
+    margin: 0 6px 0 0;
+    padding: 2px 8px;
+    font-size: 10px;
+}
+
+.report-picker-remove {
+    display: none;
+    color: var(--c-value-negative);
+    background-color: transparent;
+    border-width: 1px;
+    border-color: var(--c-value-negative);
+}
+
+.selected-report-label {
+    min-width: 0;
+    flex-grow: 1;
+    color: var(--c-text-body);
+    font-size: 11px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.report-picker-list {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 116px;
+    max-height: 190px;
+    padding: 5px;
+    background-color: var(--c-window-bg);
+    border-width: 2px;
+    border-color: var(--c-border);
+    border-radius: 4px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.35);
+}
+
+.report-picker-item {
+    min-height: 34px;
+    padding: 7px;
+    margin-bottom: 3px;
+    color: var(--c-text-body);
+    background-color: rgba(165, 125, 50, 0.10);
+    border-width: 1px;
+    border-color: rgba(165, 125, 50, 0.35);
+    white-space: normal;
+    -unity-font-definition: var(--font-body);
+    font-size: 12px;
+    -unity-text-align: middle-left;
+}
+
+.report-picker-item:hover { background-color: rgba(165, 125, 50, 0.20); border-color: rgba(165, 125, 50, 0.75); }
+.report-picker-list .message-window-state-label { margin: 8px; color: var(--c-text-muted); }
+
+.message-input {
+    width: 100%;
+    min-width: 0;
+    flex-grow: 1;
+    flex-shrink: 1;
+    margin-right: 0;
     margin-left: 0;
     margin-top: 0;
     margin-bottom: 0;
     height: 112px;
     min-height: 112px;
     white-space: normal;
-    align-self: flex-end;
+    align-self: stretch;
     padding-left: 0;
     padding-right: 0;
     border-left-width: 0;
@@ -55,6 +133,20 @@
     border-bottom-width: 1px;
     border-radius: 6px;
 }
+
+.message-report-card {
+    margin-top: 8px;
+    padding: 8px;
+    border-width: 1px;
+    border-color: rgba(165, 125, 50, 0.65);
+    border-radius: 5px;
+    background-color: rgba(165, 125, 50, 0.10);
+}
+
+.message-report-title { color: var(--c-text-header); -unity-font-style: bold; font-size: 13px; white-space: normal; }
+.message-report-meta { color: var(--c-text-muted); font-size: 10px; margin-bottom: 5px; }
+.message-report-body, .message-report-detail { color: var(--c-text-body); font-size: 11px; white-space: normal; margin-top: 3px; }
+.message-report-unavailable { color: var(--c-value-negative); -unity-font-style: bold; font-size: 12px; }
 
 .message-input .unity-text-input {
     height: 100%;

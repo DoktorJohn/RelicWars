@@ -13,6 +13,7 @@ namespace Project.Network.Models
         public string Body { get; set; } = string.Empty;
         public DateTime OccurredAt { get; set; }
         public bool IsRead { get; set; }
+        public bool IsPublic { get; set; }
         public List<UnitStackDTO> AttackerLosses { get; set; } = new();
         public List<UnitStackDTO> DefenderLosses { get; set; } = new();
         public List<UnitStackDTO> RevivedUnits { get; set; } = new();

@@ -18,6 +18,7 @@ namespace Application.Interfaces.IRepositories
         Task<bool> NameExistsAsync(Guid worldId, string name);
         Task<Alliance?> GetByIdWithMembersAsync(Guid id);
         Task<List<AllianceInvitation>> GetInvitationsForPlayerAsync(Guid worldPlayerId, DateTime now);
+        Task<List<AllianceInvitation>> GetInvitationsForAllianceAsync(Guid allianceId, DateTime now);
         Task<AllianceInvitation?> GetInvitationByIdAsync(Guid invitationId);
         Task<bool> PendingInvitationExistsAsync(Guid allianceId, Guid worldPlayerId, DateTime now);
         Task AddInvitationAsync(AllianceInvitation invitation);

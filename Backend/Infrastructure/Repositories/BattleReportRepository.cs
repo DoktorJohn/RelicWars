@@ -68,5 +68,15 @@ namespace Infrastructure.Repositories
                 await _context.SaveChangesAsync();
             }
         }
+
+        public async Task SetPublicStatusAsync(Guid reportId, bool isPublic)
+        {
+            var report = await _context.BattleReports.FindAsync(reportId);
+            if (report != null)
+            {
+                report.IsPublic = isPublic;
+                await _context.SaveChangesAsync();
+            }
+        }
     }
 }

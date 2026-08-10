@@ -33,6 +33,7 @@ namespace Application.Services
         private readonly TimeProvider _timeProvider;
         private readonly InstantFocusGrantService _instantGrantService;
         private readonly FocusEnactmentPolicy _enactmentPolicy;
+        private readonly IBattleReportRepository _battleReportRepository;
         private readonly IDailyObjectiveService? _dailyObjectiveService;
 
         public IdeologyFocusService(
@@ -52,6 +53,7 @@ namespace Application.Services
             TimeProvider timeProvider,
             InstantFocusGrantService instantGrantService,
             FocusEnactmentPolicy enactmentPolicy,
+            IBattleReportRepository battleReportRepository,
             IDailyObjectiveService? dailyObjectiveService = null)
         {
             _worldPlayerRepo = worldPlayerRepo;
@@ -70,6 +72,7 @@ namespace Application.Services
             _timeProvider = timeProvider;
             _instantGrantService = instantGrantService;
             _enactmentPolicy = enactmentPolicy;
+            _battleReportRepository = battleReportRepository;
             _dailyObjectiveService = dailyObjectiveService;
         }
 
@@ -136,6 +139,15 @@ namespace Application.Services
 
             await _cityRepo.UpdateAsync(city);
 
+            await _battleReportRepository.AddAsync(CreateEnactmentReport(
+                ideologyFocusData.Name,
+                ideologyFocusData.IdeologyFocusPointCost,
+                city,
+                worldPlayer.Id,
+                now,
+                ideologyFocusData.TimeActive,
+                effectResult));
+
             if (_dailyObjectiveService != null)
             {
                 await _dailyObjectiveService.ApplyProgressAsync(worldPlayer.Id,
@@ -152,6 +164,40 @@ namespace Application.Services
                 ? effectResult!.Summary
                 : $"{ideologyFocusData.Name} enacted successfully";
             return new IdeologyFocusAnswerDTO(ideologyFocusData.Name, city.Id, successMessage, true, effectResult);
+        }
+
+        private static BattleReport CreateEnactmentReport(
+            IdeologyFocusNameEnum focusName,
+            double pointCost,
+            City city,
+            Guid worldPlayerId,
+            DateTime enactedAt,
+            TimeSpan? activeTime,
+            IdeologyFocusEffectResultDTO? effectResult)
+        {
+            var displayName = string.Concat(focusName.ToString().Select((character, index) =>
+                index > 0 && char.IsUpper(character) ? $" {character}" : character.ToString()));
+            var body = $"{displayName} was enacted in {city.Name} for {pointCost:0.##} ideology points.";
+
+            if (effectResult != null)
+            {
+                body += $" {effectResult.Summary}";
+            }
+            else if (activeTime.HasValue)
+            {
+                body += $" Active until {enactedAt.Add(activeTime.Value):yyyy-MM-dd HH:mm} UTC.";
+            }
+
+            return new BattleReport
+            {
+                Id = Guid.NewGuid(),
+                WorldPlayerId = worldPlayerId,
+                ReportType = ReportTypeEnum.FocusEnacted,
+                Title = $"Focus enacted: {displayName}",
+                Body = body,
+                OccurredAt = enactedAt,
+                IsRead = false
+            };
         }
 
 

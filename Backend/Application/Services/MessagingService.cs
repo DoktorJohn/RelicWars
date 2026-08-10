@@ -6,6 +6,7 @@ using Domain.User;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.Json;
 using System.Threading.Tasks;
 
 namespace Application.Services
@@ -22,20 +23,23 @@ namespace Application.Services
         private readonly IMessagingRepository _messagingRepository;
         private readonly IWorldPlayerRepository _worldPlayerRepository;
         private readonly IPlayerAccessService _playerAccessService;
+        private readonly IBattleReportRepository _battleReportRepository;
 
-        public MessagingService(IMessagingRepository messagingRepository, IWorldPlayerRepository worldPlayerRepository, IPlayerAccessService playerAccessService)
+        public MessagingService(IMessagingRepository messagingRepository, IWorldPlayerRepository worldPlayerRepository, IPlayerAccessService playerAccessService, IBattleReportRepository battleReportRepository)
         {
             _messagingRepository = messagingRepository;
             _worldPlayerRepository = worldPlayerRepository;
             _playerAccessService = playerAccessService;
+            _battleReportRepository = battleReportRepository;
         }
 
-        public async Task<ConversationDTO> StartConversationAsync(Guid senderId, IEnumerable<Guid> participantIds, string subject, string content)
+        public async Task<ConversationDTO> StartConversationAsync(Guid senderId, IEnumerable<Guid> participantIds, string subject, string content, Guid? battleReportId = null)
         {
-            var sanitizedContent = ValidateMessageContent(content);
+            var sanitizedContent = ValidateMessageContent(content, battleReportId);
             var sanitizedSubject = ValidateSubject(subject);
 
             var sender = await _playerAccessService.RequireOwnedWorldPlayerAsync(senderId);
+            var report = await RequireShareableReportAsync(senderId, battleReportId);
 
             if (participantIds == null)
                 throw new ArgumentException("You must add at least one recipient.", nameof(participantIds));
@@ -89,20 +93,30 @@ namespace Application.Services
                 IsRead = false
             };
 
+            if (battleReportId.HasValue)
+            {
+                message.ReportAttachment = CreateAttachment(message.Id, report!);
+            }
+
             conversation.Messages.Add(message);
             await _messagingRepository.AddConversationAsync(conversation);
+            if (message.ReportAttachment != null)
+            {
+                message.ReportAttachment.BattleReport = report;
+            }
 
             return BuildConversationDto(conversation, senderId);
         }
 
-        public async Task<MessageDTO> ReplyToConversationAsync(Guid requestorId, Guid conversationId, string content)
+        public async Task<MessageDTO> ReplyToConversationAsync(Guid requestorId, Guid conversationId, string content, Guid? battleReportId = null)
         {
-            var sanitizedContent = ValidateMessageContent(content);
+            var sanitizedContent = ValidateMessageContent(content, battleReportId);
             await _playerAccessService.RequireOwnedWorldPlayerAsync(requestorId);
 
             var conversation = await _messagingRepository.GetConversationByIdAsync(conversationId);
             if (conversation == null) throw new KeyNotFoundException("Conversation not found");
             EnsureActiveParticipant(conversation, requestorId);
+            var report = await RequireShareableReportAsync(requestorId, battleReportId);
 
             var participant = conversation.Participants.FirstOrDefault(p => p.WorldPlayerId == requestorId);
             if (participant == null) throw new UnauthorizedAccessException("User is not a participant in this conversation");
@@ -118,6 +132,11 @@ namespace Application.Services
                 IsRead = false
             };
 
+            if (battleReportId.HasValue)
+            {
+                message.ReportAttachment = CreateAttachment(message.Id, report!);
+            }
+
             await _messagingRepository.AddMessageAsync(message);
 
             conversation.LastMessageDate = sentAt;
@@ -125,6 +144,10 @@ namespace Application.Services
 
             participant.LastReadAt = sentAt;
             await _messagingRepository.UpdateConversationParticipantAsync(participant);
+            if (message.ReportAttachment != null)
+            {
+                message.ReportAttachment.BattleReport = report;
+            }
 
             return new MessageDTO
             {
@@ -135,7 +158,8 @@ namespace Application.Services
                 SenderName = GetParticipantName(conversation, requestorId),
                 SenderAllianceName = GetParticipantAllianceName(conversation, requestorId),
                 SentAt = message.SentAt,
-                IsRead = true
+                IsRead = true,
+                ReportAttachment = MapAttachment(message.ReportAttachment)
             };
         }
 
@@ -167,7 +191,8 @@ namespace Application.Services
                 SenderName = m.Sender.PlayerProfile?.UserName ?? "Unknown",
                 SenderAllianceName = m.Sender.Alliance?.Name ?? string.Empty,
                 SentAt = m.SentAt,
-                IsRead = m.SenderId == requestorId || (lastReadAt.HasValue && m.SentAt <= lastReadAt.Value)
+                IsRead = m.SenderId == requestorId || (lastReadAt.HasValue && m.SentAt <= lastReadAt.Value),
+                ReportAttachment = MapAttachment(m.ReportAttachment)
             }).ToList();
 
             return dtos;
@@ -267,7 +292,7 @@ namespace Application.Services
                 Participants = participantDtos,
                 IsGroupConversation = conversation.Participants.Count > 2,
                 Subject = conversation.Subject,
-                LastMessageContent = conversation.Messages.OrderByDescending(m => m.SentAt).FirstOrDefault()?.Content ?? string.Empty,
+                LastMessageContent = GetMessagePreview(conversation.Messages.OrderByDescending(m => m.SentAt).FirstOrDefault()),
                 LastMessageDate = conversation.LastMessageDate,
                 UnreadCount = viewerParticipant == null
                     ? 0
@@ -275,12 +300,105 @@ namespace Application.Services
             };
         }
 
-        private static string ValidateMessageContent(string content)
+        private static string ValidateMessageContent(string content, Guid? battleReportId)
         {
             var sanitizedContent = content?.Trim() ?? string.Empty;
-            if (string.IsNullOrWhiteSpace(sanitizedContent)) throw new ArgumentException("Message content cannot be empty.");
+            if (string.IsNullOrWhiteSpace(sanitizedContent) && !battleReportId.HasValue) throw new ArgumentException("Either message content or a report is required.");
             if (sanitizedContent.Length > MaxMessageContentLength) throw new ArgumentException($"Message content cannot exceed {MaxMessageContentLength} characters.");
             return sanitizedContent;
+        }
+
+        private async Task<BattleReport?> RequireShareableReportAsync(Guid senderId, Guid? battleReportId)
+        {
+            if (!battleReportId.HasValue)
+            {
+                return null;
+            }
+
+            var report = await _battleReportRepository.GetByIdAsync(battleReportId.Value);
+            if (report == null)
+            {
+                throw new KeyNotFoundException("Battle report not found.");
+            }
+
+            if (report.WorldPlayerId != senderId)
+            {
+                throw new UnauthorizedAccessException("Battle report does not belong to the sender.");
+            }
+
+            if (!report.IsPublic)
+            {
+                throw new InvalidOperationException("Battle report is private.");
+            }
+
+            return report;
+        }
+
+        private static MessageReportAttachment CreateAttachment(Guid messageId, BattleReport report) => new()
+        {
+            Id = Guid.NewGuid(),
+            MessageId = messageId,
+            BattleReportId = report.Id
+        };
+
+        private static ReportAttachmentDTO? MapAttachment(MessageReportAttachment? attachment)
+        {
+            if (attachment == null)
+            {
+                return null;
+            }
+
+            var report = attachment.BattleReport;
+            if (report == null || !report.IsPublic)
+            {
+                return new ReportAttachmentDTO { IsAvailable = false };
+            }
+
+            return new ReportAttachmentDTO
+            {
+                IsAvailable = true,
+                Report = new SharedBattleReportDTO
+                {
+                    Id = report.Id,
+                    ReportType = report.ReportType,
+                    Title = report.Title,
+                    Body = report.Body,
+                    OccurredAt = report.OccurredAt,
+                    AttackerLosses = ParseJson<List<UnitStackDTO>>(report.AttackerLossesJson) ?? new(),
+                    DefenderLosses = ParseJson<List<UnitStackDTO>>(report.DefenderLossesJson) ?? new(),
+                    RevivedUnits = ParseJson<List<UnitStackDTO>>(report.RevivedUnitsJson) ?? new(),
+                    AppliedModifiers = ParseJson<List<string>>(report.AppliedModifiersJson) ?? new()
+                }
+            };
+        }
+
+        private static string GetMessagePreview(Message? message)
+        {
+            if (message == null)
+            {
+                return string.Empty;
+            }
+
+            if (!string.IsNullOrWhiteSpace(message.Content))
+            {
+                return message.Content;
+            }
+
+            return message.ReportAttachment?.BattleReport is { IsPublic: true } report
+                ? report.Title
+                : "Report unavailable";
+        }
+
+        private static T? ParseJson<T>(string json)
+        {
+            try
+            {
+                return string.IsNullOrWhiteSpace(json) ? default : JsonSerializer.Deserialize<T>(json);
+            }
+            catch (JsonException)
+            {
+                return default;
+            }
         }
 
         private static string ValidateSubject(string subject)

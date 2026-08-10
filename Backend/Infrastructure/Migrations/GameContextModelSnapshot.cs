@@ -65,7 +65,13 @@ namespace Infrastructure.Migrations
 
                     b.Property<string>("Name")
                         .IsRequired()
-                        .HasColumnType("nvarchar(450)");
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<string>("NormalizedName")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
 
                     b.Property<string>("Tag")
                         .IsRequired()
@@ -76,7 +82,9 @@ namespace Infrastructure.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("WorldId", "Name");
+                    b.HasIndex("WorldId", "NormalizedName")
+                        .IsUnique()
+                        .HasDatabaseName("UX_Alliances_World_NormalizedName");
 
                     b.ToTable("Alliances");
                 });
@@ -203,6 +211,9 @@ namespace Infrastructure.Migrations
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("bit");
 
+                    b.Property<bool>("IsPublic")
+                        .HasColumnType("bit");
+
                     b.Property<bool>("IsRead")
                         .HasColumnType("bit");
 
@@ -304,10 +315,16 @@ namespace Infrastructure.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<int?>("ActiveEdict")
+                        .HasColumnType("int");
+
                     b.Property<DateTime>("DateCreated")
                         .HasColumnType("datetime2");
 
                     b.Property<DateTime>("DateLastModified")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("EdictEnactedAtUtc")
                         .HasColumnType("datetime2");
 
                     b.Property<bool>("IsDeleted")
@@ -368,7 +385,8 @@ namespace Infrastructure.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("WorldPlayerId");
+                    b.HasIndex("WorldPlayerId", "ActiveEdict")
+                        .HasDatabaseName("IX_Cities_WorldPlayer_ActiveEdict");
 
                     b.HasIndex("WorldId", "X", "Y")
                         .IsUnique()
@@ -634,6 +652,37 @@ namespace Infrastructure.Migrations
                     b.HasIndex("SenderId");
 
                     b.ToTable("Messages");
+                });
+
+            modelBuilder.Entity("Domain.Entities.MessageReportAttachment", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid?>("BattleReportId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("DateCreated")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime>("DateLastModified")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<Guid>("MessageId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("BattleReportId");
+
+                    b.HasIndex("MessageId")
+                        .IsUnique();
+
+                    b.ToTable("MessageReportAttachments");
                 });
 
             modelBuilder.Entity("Domain.Entities.Research", b =>
@@ -1009,6 +1058,7 @@ namespace Infrastructure.Migrations
                         .HasColumnType("int");
 
                     b.Property<string>("ConcurrencyStamp")
+                        .IsConcurrencyToken()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<DateTime>("CreatedAt")
@@ -1019,7 +1069,8 @@ namespace Infrastructure.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Email")
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(256)
+                        .HasColumnType("nvarchar(256)");
 
                     b.Property<bool>("EmailConfirmed")
                         .HasColumnType("bit");
@@ -1034,10 +1085,12 @@ namespace Infrastructure.Migrations
                         .HasColumnType("datetime2");
 
                     b.Property<string>("NormalizedEmail")
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(256)
+                        .HasColumnType("nvarchar(256)");
 
                     b.Property<string>("NormalizedUserName")
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(256)
+                        .HasColumnType("nvarchar(256)");
 
                     b.Property<string>("PasswordHash")
                         .HasColumnType("nvarchar(max)");
@@ -1055,11 +1108,22 @@ namespace Infrastructure.Migrations
                         .HasColumnType("bit");
 
                     b.Property<string>("UserName")
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(256)
+                        .HasColumnType("nvarchar(256)");
 
                     b.HasKey("Id");
 
-                    b.ToTable("PlayerProfiles");
+                    b.HasIndex("NormalizedEmail")
+                        .IsUnique()
+                        .HasDatabaseName("UX_PlayerProfiles_NormalizedEmail")
+                        .HasFilter("[NormalizedEmail] IS NOT NULL");
+
+                    b.HasIndex("NormalizedUserName")
+                        .IsUnique()
+                        .HasDatabaseName("UX_PlayerProfiles_NormalizedUserName")
+                        .HasFilter("[NormalizedUserName] IS NOT NULL");
+
+                    b.ToTable("PlayerProfiles", (string)null);
                 });
 
             modelBuilder.Entity("Domain.User.WorldPlayer", b =>
@@ -1160,6 +1224,70 @@ namespace Infrastructure.Migrations
                     b.HasDiscriminator<string>("JobType").HasValue("BaseJob");
 
                     b.UseTphMappingStrategy();
+                });
+
+            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserClaim<System.Guid>", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("ClaimType")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("ClaimValue")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("AspNetUserClaims", (string)null);
+                });
+
+            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserLogin<System.Guid>", b =>
+                {
+                    b.Property<string>("LoginProvider")
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<string>("ProviderKey")
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<string>("ProviderDisplayName")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("LoginProvider", "ProviderKey");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("AspNetUserLogins", (string)null);
+                });
+
+            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserToken<System.Guid>", b =>
+                {
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("LoginProvider")
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<string>("Name")
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<string>("Value")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("UserId", "LoginProvider", "Name");
+
+                    b.ToTable("AspNetUserTokens", (string)null);
                 });
 
             modelBuilder.Entity("Domain.Workers.BuildingJob", b =>
@@ -1507,6 +1635,24 @@ namespace Infrastructure.Migrations
                     b.Navigation("Sender");
                 });
 
+            modelBuilder.Entity("Domain.Entities.MessageReportAttachment", b =>
+                {
+                    b.HasOne("Domain.Entities.BattleReport", "BattleReport")
+                        .WithMany()
+                        .HasForeignKey("BattleReportId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.HasOne("Domain.Entities.Message", "Message")
+                        .WithOne("ReportAttachment")
+                        .HasForeignKey("Domain.Entities.MessageReportAttachment", "MessageId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("BattleReport");
+
+                    b.Navigation("Message");
+                });
+
             modelBuilder.Entity("Domain.Entities.Research", b =>
                 {
                     b.HasOne("Domain.User.WorldPlayer", "WorldPlayer")
@@ -1804,6 +1950,33 @@ namespace Infrastructure.Migrations
                     b.Navigation("World");
                 });
 
+            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserClaim<System.Guid>", b =>
+                {
+                    b.HasOne("Domain.User.PlayerProfile", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserLogin<System.Guid>", b =>
+                {
+                    b.HasOne("Domain.User.PlayerProfile", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserToken<System.Guid>", b =>
+                {
+                    b.HasOne("Domain.User.PlayerProfile", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("Domain.Workers.BuildingJob", b =>
                 {
                     b.HasOne("Domain.Entities.City", null)
@@ -1849,6 +2022,11 @@ namespace Infrastructure.Migrations
             modelBuilder.Entity("Domain.Entities.DailyObjectiveSet", b =>
                 {
                     b.Navigation("Assignments");
+                });
+
+            modelBuilder.Entity("Domain.Entities.Message", b =>
+                {
+                    b.Navigation("ReportAttachment");
                 });
 
             modelBuilder.Entity("Domain.Entities.UnitDeployment", b =>

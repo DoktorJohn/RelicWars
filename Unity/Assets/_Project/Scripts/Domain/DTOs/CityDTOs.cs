@@ -121,6 +121,8 @@ namespace Project.Network.Models
         public double FinalValuePerHour;
         public double Expenditure;
         public double GlobalUpkeepMultiplier;
+        public double UnitUpkeepPerHour;
+        public double BuildingUpkeepPerHour;
     }
 
     [Serializable]
@@ -175,6 +177,8 @@ namespace Project.Network.Models
         public double StoneProductionPerHour;
         public double MetalProductionPerHour;
         public double CoinsProductionPerHour;
+        public double UnitUpkeepPerHour;
+        public double BuildingUpkeepPerHour;
         public double ResearchPointsPerHour;
         public double IdeologyFocusPointsPerHour;
 

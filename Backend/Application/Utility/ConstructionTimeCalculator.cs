@@ -13,7 +13,9 @@ namespace Application.Utility
         public int CalculateSeconds(City city, double baseSeconds)
         {
             double speed = _modifierService.CalculateCityValue(city, 1, ModifierTagEnum.Construction).FinalValue;
-            return (int)Math.Max(1, Math.Floor(baseSeconds / Math.Max(0.1, speed)));
+            double speedAdjustedSeconds = baseSeconds / Math.Max(0.1, speed);
+            double finalSeconds = _modifierService.CalculateCityValue(city, speedAdjustedSeconds, ModifierTagEnum.ConstructionTime).FinalValue;
+            return (int)Math.Max(1, Math.Floor(finalSeconds));
         }
     }
 }

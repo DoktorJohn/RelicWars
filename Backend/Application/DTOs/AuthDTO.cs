@@ -1,8 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using System.ComponentModel.DataAnnotations;
 
 namespace Application.DTOs
 {
@@ -15,6 +12,17 @@ namespace Application.DTOs
         PlayerProfileDTO? Profile
     );
 
-    public record RegisterRequest(string UserName, string Email, string Password);
-    public record LoginRequest(string Email, string Password);
+    public record RegisterRequest(
+        [Required, StringLength(20, MinimumLength = 3), RegularExpression("^[A-Za-z0-9_-]+$")]
+        string UserName,
+        [Required, EmailAddress, StringLength(256)]
+        string Email,
+        [Required, StringLength(128, MinimumLength = 8)]
+        string Password);
+
+    public record LoginRequest(
+        [Required, EmailAddress, StringLength(256)]
+        string Email,
+        [Required]
+        string Password);
 }

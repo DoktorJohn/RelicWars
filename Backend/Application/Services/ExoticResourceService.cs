@@ -31,6 +31,7 @@ namespace Application.Services
         private readonly ILogger<ExoticResourceService> _logger;
         private readonly ITransactionManager _transactionManager;
         private readonly IDailyObjectiveService? _dailyObjectiveService;
+        private readonly IModifierService? _modifierService;
 
         public ExoticResourceService(
             ICityRepository cityRepository,
@@ -43,7 +44,8 @@ namespace Application.Services
             ExoticResourceDataReader exoticResourceDataReader,
             ILogger<ExoticResourceService> logger,
             ITransactionManager transactionManager,
-            IDailyObjectiveService? dailyObjectiveService = null)
+            IDailyObjectiveService? dailyObjectiveService = null,
+            IModifierService? modifierService = null)
         {
             _cityRepository = cityRepository;
             _worldIslandRepository = worldIslandRepository;
@@ -56,6 +58,7 @@ namespace Application.Services
             _logger = logger;
             _transactionManager = transactionManager;
             _dailyObjectiveService = dailyObjectiveService;
+            _modifierService = modifierService;
         }
 
         public async Task<List<CityExoticResourceDTO>> SyncCityExoticResourcesAsync(City city, DateTime currentDateTime)
@@ -64,7 +67,7 @@ namespace Application.Services
             ValidateCityExoticResources(city);
 
             DateTime intervalStart = city.LastExoticResourceUpdate;
-            double totalRate = island.ExoticResources.Sum(resource => CalculateProductionBreakdown(resource).FinalValuePerHour);
+            double totalRate = island.ExoticResources.Sum(resource => CalculateProductionBreakdown(city, resource).FinalValuePerHour);
             SyncCityExoticResourcesInternal(city, island, currentDateTime);
             if (_dailyObjectiveService != null && city.WorldPlayerId.HasValue)
                 await _dailyObjectiveService.ApplyProductionAsync(
@@ -102,7 +105,7 @@ namespace Application.Services
                 .Select(resource => new CityExoticResourceProductionDTO(
                     resource.SlotIndex,
                     resource.ResourceType,
-                    CalculateProductionBreakdown(resource)))
+                    CalculateProductionBreakdown(city, resource)))
                 .ToList();
         }
 
@@ -254,22 +257,19 @@ namespace Application.Services
                 if (islandResource == null)
                     continue;
 
-                var productionBreakdown = CalculateProductionBreakdown(islandResource);
+                var productionBreakdown = CalculateProductionBreakdown(city, islandResource);
                 cityResource.Amount += productionBreakdown.FinalValuePerHour * hoursPassed;
             }
 
             city.LastExoticResourceUpdate = currentDateTime;
         }
 
-        private ProductionBreakdownDTO CalculateProductionBreakdown(WorldIslandExoticResource resource)
+        private ProductionBreakdownDTO CalculateProductionBreakdown(City city, WorldIslandExoticResource resource)
         {
             var tierData = _exoticResourceDataReader.GetTierData(resource.ResourceType, resource.Tier);
 
-            return new ProductionBreakdownDTO(
-                tierData.OutputPerHour,
-                0,
-                0,
-                tierData.OutputPerHour);
+            var result = _modifierService?.CalculateCityValue(city, tierData.OutputPerHour, ModifierTagEnum.ExoticProduction);
+            return new ProductionBreakdownDTO(tierData.OutputPerHour, result?.FlatBonus ?? 0, result?.PercentageBonus ?? 0, result?.FinalValue ?? tierData.OutputPerHour);
         }
 
         private static void ValidateCityExoticResources(City city)

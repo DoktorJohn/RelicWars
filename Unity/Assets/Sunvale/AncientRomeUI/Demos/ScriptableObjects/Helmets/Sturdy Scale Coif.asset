@@ -1,0 +1,51 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 969fde779dc7483db0b040327faba29b, type: 3}
+  m_Name: Sturdy Scale Coif
+  m_EditorClassIdentifier: 
+  itemCategoryType: 1
+  itemTypeSlot: 1
+  itemType: 7
+  itemTier: 2
+  itemName: Sturdy Scale Coif
+  itemSprite: {fileID: 21300000, guid: 8dae2622b5acddf44b0407713700d826, type: 3}
+  inventoryBeginDragActionSoundConfig:
+    playSound: 1
+    soundClip: {fileID: 8300000, guid: b362a14e0a8427d40b22eae7eaee9bc5, type: 3}
+    randomizePitch: 1
+    baseVolume: 0.192
+    basePitch: 1.06
+  inventoryEndDragActionSoundConfig:
+    playSound: 1
+    soundClip: {fileID: 8300000, guid: 3cb8f8bb784a1774b83df16ae4e20f16, type: 3}
+    randomizePitch: 1
+    baseVolume: 0.087
+    basePitch: 1.22
+  itemBuffs:
+  - statType: 24
+    modifierType: 0
+    value: 25
+  - statType: 26
+    modifierType: 0
+    value: 14
+  - statType: 27
+    modifierType: 0
+    value: 12
+  - statType: 28
+    modifierType: 0
+    value: 8
+  - statType: 29
+    modifierType: 0
+    value: 6
+  itemIconSlotScale: 0.84
+  itemIconXOffset: 0
+  itemIconYOffset: 0

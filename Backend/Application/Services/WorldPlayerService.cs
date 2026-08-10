@@ -156,6 +156,7 @@ namespace Application.Services
                 worldPlayer.Alliance?.Name ?? "Ingen Alliance",
                 worldPlayer.Ideology,
                 worldPlayer.Alliance?.Id ?? Guid.Empty,
+                worldPlayer.AllianceRole,
                 worldPlayer.WorldId,
                 (worldPlayer.Cities ?? new List<City>())
                     .OrderByDescending(city => city.Points)

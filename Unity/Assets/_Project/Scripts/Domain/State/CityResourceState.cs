@@ -15,6 +15,8 @@ namespace Assets.Scripts.Domain.State
         public double MetalProductionPerHour;
 
         public double CoinsProductionPerHour;
+        public double UnitUpkeepPerHour;
+        public double BuildingUpkeepPerHour;
         public double ResearchPointsPerHour;
         public double IdeologyFocusPointsPerHour;
 

@@ -29,6 +29,8 @@ namespace Infrastructure.Repositories
                     .ThenInclude(m => m.Sender).ThenInclude(p => p.PlayerProfile)
                 .Include(c => c.Messages.OrderBy(m => m.SentAt))
                     .ThenInclude(m => m.Sender).ThenInclude(p => p.Alliance)
+                .Include(c => c.Messages.OrderBy(m => m.SentAt))
+                    .ThenInclude(m => m.ReportAttachment).ThenInclude(attachment => attachment!.BattleReport)
                 .FirstOrDefaultAsync(c => c.Id == conversationId);
         }
 
@@ -46,6 +48,7 @@ namespace Infrastructure.Repositories
                 .AsNoTracking()
                 .Include(m => m.Sender).ThenInclude(p => p.PlayerProfile)
                 .Include(m => m.Sender).ThenInclude(p => p.Alliance)
+                .Include(m => m.ReportAttachment).ThenInclude(attachment => attachment!.BattleReport)
                 .Where(m => m.ConversationId == conversationId);
 
             if (before.HasValue)
@@ -66,7 +69,7 @@ namespace Infrastructure.Repositories
                 .AsNoTracking()
                 .AsSplitQuery()
                 .Include(c => c.Participants).ThenInclude(p => p.WorldPlayer).ThenInclude(wp => wp.PlayerProfile)
-                .Include(c => c.Messages)
+                .Include(c => c.Messages).ThenInclude(m => m.ReportAttachment).ThenInclude(attachment => attachment!.BattleReport)
                 .Where(c => c.Participants.Any(p => p.WorldPlayerId == worldPlayerId && p.DeletedAt == null))
                 .OrderByDescending(c => c.LastMessageDate)
                 .ToListAsync();
@@ -103,16 +106,30 @@ namespace Infrastructure.Repositories
                     Participants = participantDtos,
                     IsGroupConversation = c.Participants.Count > 2,
                     Subject = c.Subject,
-                    LastMessageContent = c.Messages
-                        .OrderByDescending(m => m.SentAt)
-                        .Select(m => m.Content)
-                        .FirstOrDefault() ?? string.Empty,
+                    LastMessageContent = GetMessagePreview(c.Messages.OrderByDescending(m => m.SentAt).FirstOrDefault()),
                     LastMessageDate = c.LastMessageDate,
                     UnreadCount = viewerParticipant == null
                         ? 0
                         : c.Messages.Count(m => m.SenderId != worldPlayerId && m.SentAt > (viewerParticipant.LastReadAt ?? DateTime.MinValue))
                 };
             }).ToList();
+        }
+
+        private static string GetMessagePreview(Message? message)
+        {
+            if (message == null)
+            {
+                return string.Empty;
+            }
+
+            if (!string.IsNullOrWhiteSpace(message.Content))
+            {
+                return message.Content;
+            }
+
+            return message.ReportAttachment?.BattleReport is { IsPublic: true } report
+                ? report.Title
+                : "Report unavailable";
         }
 
         public async Task AddConversationAsync(Conversation conversation)

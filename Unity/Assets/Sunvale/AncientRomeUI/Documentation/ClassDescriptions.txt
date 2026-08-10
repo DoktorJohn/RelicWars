@@ -1,0 +1,107 @@
+AncientRomeUI C# Class Overview
+
+This file lists the C# scripts included with AncientRomeUI and explains what they do in plain terms. 
+
+Internal tools, custom inspector scripts, low-level tween helpers, and most demo-only data/enums are intentionally left out to simplify the file.
+
+Core UI Utilities
+
+CircularRaycastFilter - Makes a UI element receive clicks only inside a circular area. Useful for round buttons, medallions, and icon frames.
+HorizontalRawImageTiler - Keeps a RawImage texture tiled horizontally as the element changes size.
+VerticalRawImageTiler - Keeps a RawImage texture tiled vertically as the element changes size.
+UIGlobalTextureTiling - Adds canvas-space tiling data to UI meshes so marble/noise textures can stay visually aligned across different UI elements.
+ColumnPixelDensityScaler - Keeps column artwork at a consistent pixel density when a UI column is stretched wider.
+SafeZonePanelScaler - Scales a panel so it fits inside a chosen safe-zone RectTransform.
+SimpleButton - General-purpose animated UI button with hover, press, scale, sound, material tweening, UnityEvents, and C# events.
+ToggleSoundCompanion - Adds hover and click sounds to a standard Unity Toggle.
+TMPDropdownSoundCompanion - Adds hover, click, and value-change sounds to a TextMeshPro dropdown.
+UISoundConfig - Reusable sound settings for UI interactions, including clip, volume, pitch, and pitch randomization.
+SimpleSoundManager - Small shared audio helper used by the UI sound components.
+
+Buttons and Tabs
+
+LargeBuildingButton - Large building/action button with icon, frame, labels, animated hover/press feedback, and click events.
+BuildingSlotButton - Compact building slot button with icon, empty-slot state, level label, radial progress fill, sounds, and click events.
+CircularIconTabButton - Circular icon tab that swaps between normal and selected visuals.
+RowHighlightButton - Simple row selection button with hover and selected-style color feedback.
+OptionsTabButton - Horizontal tab button used by the options demo.
+CarvedPressButton - Prominent text button with a pressed-in carved effect.
+RPGSkillButton - RPG skill or hotbar button with icon shader controls, cooldown display, disabled/selected states, hover feedback, and ready highlights.
+IconTextSidebarButton - Sidebar button with text, icon, animated side bars, and interaction feedback.
+TextColorTabButton - Text tab button with animated frame color, text color, spacing, and selected indicators.
+SkillTreeButton - Skill tree node button with locked, available, and unlocked visual states.
+TableHeaderButton - Sortable table header that can report clicks on the header, up arrow, or down arrow.
+FramedSpriteTabButton - Framed sprite tab with background swaps, label color, icon HSV changes, scale feedback, and selected state.
+
+Graphics, Charts, and Visual Tools
+
+DrapeGraphic - Custom UI graphic for drapes and banners with deformable mesh shape and wind animation.
+SimpleFillBar - Simple material-driven fill bar for progress, meters, and decorative fills.
+AnimatedHealthBarFill - Health/resource bar with main fill, ghost fill, damage/heal animation, flash effects, and optional number tweening.
+GraphGridGraphic - Draws graph grid lines, outer edges, and axis notches as UI geometry.
+GraphLineGraphic - Draws one or more graph lines with thick segments and point markers.
+GraphAxisLabels - Creates and positions TextMeshPro labels around a graph grid.
+GraphLineSeries - Data container for one line in a graph, including values, color, thickness, and scale bounds.
+PieChartGenerator - Builds a pie chart from category values and colors.
+PieChartCategoryLabel - Label view for a pie chart category, including name, count, percentage, and color.
+PieChartSliceGraphic - Generated graphic used by PieChartGenerator for individual pie slices.
+EllipticalHalfDonutChart - Builds an elliptical half-donut chart from category values.
+EllipticalDonutSliceGraphic - Generated graphic used for individual half-donut slices.
+EllipticalDonutBorderGraphic - Generated graphic used for half-donut chart borders.
+SkillTreeConnectionBuilder - Builds the visual connection lines between SkillTreeNode objects.
+SkillTreeNode - Stores skill tree node requirements, connection ports, layout insets, runtime state, and its linked SkillTreeButton.
+SkillTreeConnectionGraphic - Draws a skill tree connection line, including Bezier or orthogonal paths, arrows, rounded corners, and dashed variants.
+
+Demo and Example Scripts
+
+The demo scripts show how the UI pieces can be wired together in complete scenes. Study them as examples, copy parts of them, or delete them/ignore them.
+
+
+DemoHubController - Switches between the included demo panels and menu screens.
+OptionsDemoController - Example controller for tabbed option panels, dropdown sample values, and tab switch sounds.
+DemoSliderValueView - Small example view that displays a slider value as a number.
+
+TooltipController - Demo tooltip system controller that chooses, positions, shows, and hides tooltip windows.
+TooltipTrigger - Hover source for opening a tooltip near a UI element.
+TooltipWindow - Tooltip window component that manages visibility and pointer hover state.
+
+StrategyTopDownDemoController - Main controller for the province-management demo scene.
+DemoProvincePanelController - Example province detail panel for governor, trade, order, infrastructure, garrison, buildings, and construction queue.
+DemoConstructionPanelController - Example construction selection panel.
+DemoUnitCardView - Small garrison unit view.
+DemoTradeRouteRowView - Small trade route row view.
+
+StrategyLedgerDemoController - Main controller and data source for the strategy ledger demo.
+DemoEmpireOverviewCategoryView - Initializes empire overview panels from the ledger demo data.
+DemoGovernmentSectionController - Displays government portraits and senate faction chart data.
+DemoDemographicsTableController - Sortable demographics table controller.
+DemoDemographicsOverviewSectionController - Displays aggregate population and strata values.
+DemoDemographicsPieChartController - Switches a demographics pie chart between strata and age modes.
+DemoDemographicsProvinceRowView - Table row view for one city/province.
+DemoDemographicsGraphController - Graph controller for the demographics panel.
+DemoLedgerBottomNavigationController - Bottom navigation controller for the ledger demo.
+DemoCharacterPortraitTagView - Small portrait view with name and role/status tag.
+DemoMilitaryOverviewSectionController - Displays generated military overview values.
+DemoTreasurySectionController - Displays treasury income and expense values.
+DemoProductionOverviewSectionController - Displays production overview values.
+DemoProductionItemView - Small production item view.
+DemoPopulationStrataStatView - Small population strata stat view.
+
+RPGItemDefinitionSO - Demo ScriptableObject for an RPG item, including type, tier, icon, sounds, and stat buffs.
+RPGItemLibrarySO - Demo ScriptableObject that collects and sorts RPG item definitions.
+RPGCharacterData - Demo RPG character model with identity, stats, equipment buffs, inventory binding, and resource clamping.
+RPGCharacterInventory - Demo equipment model for equipping, unequipping, and swapping items.
+RPGSharedInventory - Demo shared inventory model with add, remove, move, swap, and replace behavior.
+RPGEquipmentSlotView - Equipment slot view for the RPG inventory demo.
+RPGInventorySlotView - Inventory slot view with item display, hover/press/drop/delete/drag visuals, and item binding.
+RPGDraggedItemView - Floating drag visual used while moving RPG inventory items.
+DemoRPGInventorySectionController - Example RPG inventory/equipment controller with tabs, pooling, drag-and-drop, auto-equip, unequip, and stat refreshes.
+DemoRPGCharacterDetailsWindowController - Example character details window with inventory, skills, items, and traits tabs.
+DemoRPGCharacterStatSheetView - Displays RPG character identity, stats, HP/stamina bars, level, experience, combat stats, and defenses.
+DemoRPGCharacterSideCardView - Selectable party member side card with portrait, bars, hover/click feedback, and buff icons.
+RPGDemoController - Main controller for the RPG demo scene.
+DemoRPGSkillsTraitsSectionController - Example skill/trait tree controller for per-character versions and unlock-state visuals.
+DemoRPGSkillHotbarController - Example hotbar controller for skill buttons, cooldowns, ready highlights, target arrow, and hotbar switching.
+DemoRPGBuffIconView - Small timed buff icon copied from an RPGSkillButton.
+SkillTargetingArrowGraphic - Full-canvas targeting arrow graphic for the RPG skill demo.
+InventoryPointerLineGraphic - UI graphic for inventory callout lines.

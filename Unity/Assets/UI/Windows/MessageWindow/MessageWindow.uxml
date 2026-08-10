@@ -4,7 +4,7 @@
     <ui:Style src="MessageWindow.uss" />
     
     <ui:VisualElement name="Overlay" class="screen-overlay" picking-mode="Ignore">
-        <ui:VisualElement name="WindowFrame" class="window-frame size-large">
+        <ui:VisualElement name="WindowFrame" class="window-frame message-window-size">
             <!-- Header -->
             <ui:VisualElement name="Header" class="window-header">
                 <ui:Label text="INBOX" class="window-header-label" />
@@ -46,7 +46,15 @@
                     <ui:ScrollView name="MessageList" class="message-scroll-view" />
                     
                     <ui:VisualElement name="InputArea" class="input-area">
-                        <ui:TextField name="MessageInput" class="game-input message-input" />
+                        <ui:VisualElement class="message-composer">
+                            <ui:VisualElement name="ReportPickerBar" class="report-picker-bar">
+                                <ui:Button name="ReportPickerButton" text="ATTACH REPORT" class="btn-global-base btn-imperial-primary report-picker-button" />
+                                <ui:Label name="SelectedReportLabel" text="" class="selected-report-label" />
+                                <ui:Button name="RemoveReportButton" text="REMOVE" class="report-picker-remove" />
+                            </ui:VisualElement>
+                            <ui:ScrollView name="ReportPickerList" class="report-picker-list" style="display: none;" />
+                            <ui:TextField name="MessageInput" class="game-input message-input" />
+                        </ui:VisualElement>
                         <ui:Button name="SendButton" text="SEND" class="btn-global-base btn-imperial-success send-button" />
                     </ui:VisualElement>
                 </ui:VisualElement>

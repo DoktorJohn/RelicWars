@@ -17,6 +17,7 @@ namespace Domain.Enums
         Upkeep, BuildingUpkeep, UnitUpkeep, TravelSpeed, Power, Armor, Discipline, Casualties, Wall, LootCapacity,
         Ideology, IdeologyFocus,
 
-        Placeholder, ResistanceRecovery, Revival, RepairCost, MerchantDefense
+        Placeholder, ResistanceRecovery, Revival, RepairCost, MerchantDefense,
+        RecruitmentTime, ConstructionTime, UnitCost, WallUpkeep, ExoticProduction
     }
 }

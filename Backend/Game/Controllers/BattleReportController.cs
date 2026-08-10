@@ -116,6 +116,28 @@ namespace Game.Controllers
             }
         }
 
+        [HttpPut("{worldPlayerId}/reports/{battleReportId}/public-status")]
+        public async Task<IActionResult> SetPublicStatus(Guid worldPlayerId, Guid battleReportId, [FromBody] SetBattleReportPublicStatusRequest request)
+        {
+            try
+            {
+                await _battleReportService.SetBattleReportPublicStatusAsync(worldPlayerId, battleReportId, request.IsPublic);
+                return NoContent();
+            }
+            catch (UnauthorizedAccessException)
+            {
+                return Forbid();
+            }
+            catch (KeyNotFoundException)
+            {
+                return NotFound();
+            }
+            catch (Exception exception)
+            {
+                return HandleException(exception, "Fejl ved ændring af report public status");
+            }
+        }
+
         private IActionResult HandleException(Exception exception, string logMessage)
         {
             _logger.LogError(exception, logMessage);
@@ -128,5 +150,10 @@ namespace Game.Controllers
                 _ => StatusCode(StatusCodes.Status500InternalServerError, new ApiError("server.error", "En intern serverfejl opstod."))
             };
         }
+    }
+
+    public sealed class SetBattleReportPublicStatusRequest
+    {
+        public bool IsPublic { get; set; }
     }
 }

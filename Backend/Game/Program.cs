@@ -23,6 +23,8 @@ using Application.Interfaces;
 using Infrastructure.Persistence;
 using Game.Contracts;
 using Microsoft.AspNetCore.Mvc;
+using Domain.User;
+using Microsoft.AspNetCore.Identity;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -73,6 +75,25 @@ builder.Services.AddDbContext<GameContext>(options =>
     });
 });
 
+builder.Services
+    .AddIdentityCore<PlayerProfile>(options =>
+    {
+        options.User.RequireUniqueEmail = true;
+        options.User.AllowedUserNameCharacters = null!;
+
+        options.Password.RequiredLength = 8;
+        options.Password.RequireDigit = false;
+        options.Password.RequireLowercase = false;
+        options.Password.RequireUppercase = false;
+        options.Password.RequireNonAlphanumeric = false;
+
+        options.Lockout.AllowedForNewUsers = true;
+        options.Lockout.MaxFailedAccessAttempts = 5;
+        options.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(15);
+    })
+    .AddEntityFrameworkStores<GameContext>();
+builder.Services.AddScoped<IPasswordHasher<PlayerProfile>, LegacyCompatiblePasswordHasher>();
+
 string buildingPath = "buildings.json";
 string unitPath = "units.json";
 string researchPath = "research.json";
@@ -81,6 +102,7 @@ string ideologyPath = "ideologies.json";
 string ideologyFocusPath = "ideologyFocus.json";
 string exoticResourcePath = "exotic-resources.json";
 string dailyObjectivePath = "daily-objectives-complete.json";
+string edictPath = "edicts.json";
 
 if (!File.Exists(buildingPath)) BuildingDataGenerator.GenerateDefaultJson(buildingPath);
 if (!File.Exists(unitPath)) UnitDataGenerator.GenerateDefaultJson(unitPath);
@@ -106,6 +128,8 @@ var exoticResourceReader = new ExoticResourceDataReader();
 exoticResourceReader.Load(exoticResourcePath);
 var dailyObjectiveReader = new DailyObjectiveDataReader();
 dailyObjectiveReader.Load(dailyObjectivePath);
+var edictReader = new EdictDataReader();
+edictReader.Load(edictPath);
 
 builder.Services.AddSingleton(buildingReader);
 builder.Services.AddSingleton(unitReader);
@@ -117,6 +141,7 @@ builder.Services.AddSingleton(ideologyReader);
 builder.Services.AddSingleton(ideologyFocusReader);
 builder.Services.AddSingleton(exoticResourceReader);
 builder.Services.AddSingleton(dailyObjectiveReader);
+builder.Services.AddSingleton(edictReader);
 
 
 builder.Services.AddScoped<ICityRepository, CityRepository>();
@@ -142,6 +167,7 @@ builder.Services.AddScoped<IMarketPlaceService, MarketPlaceService>();
 builder.Services.AddScoped<IResearchService, ResearchService>();
 builder.Services.AddScoped<ITownHallService, TownHallService>();
 builder.Services.AddScoped<ICityService, CityService>();
+builder.Services.AddScoped<IEdictService, EdictService>();
 builder.Services.AddScoped<NPCSpawnerService>();
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IWorldService, WorldService>();

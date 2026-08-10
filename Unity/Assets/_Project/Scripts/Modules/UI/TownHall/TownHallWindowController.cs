@@ -146,6 +146,7 @@ namespace Project.Scripts.Modules.UI
             _buildingGridScrollView = Root.Q<ScrollView>("TownHall-Building-List");
             _constructionQueueContainer = Root.Q<VisualElement>("Building-Queue-List");
             _queueHeaderLabel = Root.Q<Label>("Queue-Header-Label");
+            InitializeEdictInterface();
         }
 
         private void RequestTownHallAvailableBuildingsRefresh(Guid cityIdentifier, int version, bool showLoadingState)

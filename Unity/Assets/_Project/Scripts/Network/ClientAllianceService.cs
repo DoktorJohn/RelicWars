@@ -90,6 +90,14 @@ namespace Project.Network
             }
         }
 
+        public IEnumerator GetInvitedPlayers(Guid worldPlayerId, string jwtToken, Action<List<AllianceInvitedPlayerDTO>> callback)
+        {
+            using (var request = BackendRequestHelper.CreateGetRequest($"{_baseUrl}/{worldPlayerId}/invited-players", jwtToken))
+            {
+                yield return BackendRequestHelper.SendJson(request, callback, "Alliance", _ => new List<AllianceInvitedPlayerDTO>());
+            }
+        }
+
         public IEnumerator AcceptInvitation(RespondToAllianceInvitationDTO dto, string jwtToken, Action<AllianceDTO> callback)
         {
             using (var request = BackendRequestHelper.CreatePostRequest($"{_baseUrl}/invitations/accept", dto, jwtToken))
@@ -101,6 +109,11 @@ namespace Project.Network
         public IEnumerator DeclineInvitation(RespondToAllianceInvitationDTO dto, string jwtToken, Action<bool> callback)
         {
             yield return SendBooleanCommand("invitations/decline", dto, jwtToken, callback);
+        }
+
+        public IEnumerator CancelInvitation(CancelAllianceInvitationDTO dto, string jwtToken, Action<bool> callback)
+        {
+            yield return SendBooleanCommand("invitations/cancel", dto, jwtToken, callback);
         }
 
         public IEnumerator LeaveAlliance(LeaveAllianceDTO dto, string jwtToken, Action<bool> callback)

@@ -2,6 +2,7 @@ using Assets.Scripts.Domain.Enums;
 using Project.Modules.Messaging;
 using Project.Network.Manager;
 using Project.Scripts.Domain.DTOs;
+using Project.Network.Models;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -30,6 +31,10 @@ namespace Project.Modules.UI
         private VisualElement _suggestionList;
         private Label _conversationTitle;
         private VisualElement _inputArea;
+        private Button _reportPickerButton;
+        private Button _removeReportButton;
+        private Label _selectedReportLabel;
+        private ScrollView _reportPickerList;
 
         private const int SearchMinimumLength = 2;
         private const float SearchDebounceSeconds = 0.3f;
@@ -43,6 +48,9 @@ namespace Project.Modules.UI
         private bool _hasOlderMessages;
         private bool _isLoadingOlderMessages;
         private DateTime? _oldestLoadedMessageCursor;
+        private readonly List<BattleReportDTO> _shareableReports = new();
+        private Guid? _selectedReportId;
+        private bool _reportsLoaded;
 
         public override void OnOpen(object dataPayload)
         {
@@ -50,6 +58,7 @@ namespace Project.Modules.UI
             _requestVersion = version;
             InitializeUI();
             UpdateInputAreaState();
+            LoadShareableReports(version);
             
             LoadConversations(version, () =>
             {
@@ -100,6 +109,10 @@ namespace Project.Modules.UI
             _suggestionList = Root.Q<VisualElement>("SuggestionList");
             _conversationTitle = Root.Q<Label>("ConversationTitle");
             _inputArea = Root.Q<VisualElement>("InputArea");
+            _reportPickerButton = Root.Q<Button>("ReportPickerButton");
+            _removeReportButton = Root.Q<Button>("RemoveReportButton");
+            _selectedReportLabel = Root.Q<Label>("SelectedReportLabel");
+            _reportPickerList = Root.Q<ScrollView>("ReportPickerList");
 
             if (_recipientInput != null)
             {
@@ -127,6 +140,16 @@ namespace Project.Modules.UI
             {
                 _deleteConversationButton.clicked -= OnDeleteConversationClicked;
                 _deleteConversationButton.clicked += OnDeleteConversationClicked;
+            }
+            if (_reportPickerButton != null)
+            {
+                _reportPickerButton.clicked -= ToggleReportPicker;
+                _reportPickerButton.clicked += ToggleReportPicker;
+            }
+            if (_removeReportButton != null)
+            {
+                _removeReportButton.clicked -= RemoveSelectedReport;
+                _removeReportButton.clicked += RemoveSelectedReport;
             }
 
             _isInitialized = true;
@@ -243,6 +266,99 @@ namespace Project.Modules.UI
             return Guid.TryParse(NetworkManager.Instance.WorldPlayerId, out var worldPlayerId)
                 ? worldPlayerId
                 : Guid.Empty;
+        }
+
+        private void LoadShareableReports(int version)
+        {
+            var worldPlayerId = ResolveCurrentWorldPlayerId();
+            if (worldPlayerId == Guid.Empty || NetworkManager.Instance == null)
+            {
+                return;
+            }
+
+            _reportsLoaded = false;
+            StartCoroutine(NetworkManager.Instance.BattleReports.GetBattleReports(worldPlayerId, NetworkManager.Instance.JwtToken, reports =>
+            {
+                if (!isActiveAndEnabled || version != _requestVersion)
+                {
+                    return;
+                }
+
+                _shareableReports.Clear();
+                if (reports != null)
+                {
+                    _shareableReports.AddRange(reports.Where(report => report.IsPublic).OrderByDescending(report => report.OccurredAt));
+                }
+                _reportsLoaded = true;
+                RenderReportPicker();
+            }));
+        }
+
+        private void ToggleReportPicker()
+        {
+            if (_reportPickerList == null)
+            {
+                return;
+            }
+            RenderReportPicker();
+            _reportPickerList.style.display = _reportPickerList.style.display == DisplayStyle.Flex
+                ? DisplayStyle.None
+                : DisplayStyle.Flex;
+        }
+
+        private void RenderReportPicker()
+        {
+            if (_reportPickerList == null)
+            {
+                return;
+            }
+
+            _reportPickerList.Clear();
+            if (!_reportsLoaded)
+            {
+                _reportPickerList.Add(new Label("Loading public reports..."));
+                return;
+            }
+
+            if (_shareableReports.Count == 0)
+            {
+                var empty = new Label("No public reports. Mark a report public in Reports first.");
+                empty.AddToClassList("message-window-state-label");
+                _reportPickerList.Add(empty);
+                return;
+            }
+
+            foreach (var report in _shareableReports)
+            {
+                var reportId = report.Id;
+                var button = new Button(() => SelectReportAttachment(reportId))
+                {
+                    text = $"{report.Title} — {report.OccurredAt.ToUniversalTime():MMM d, HH:mm} UTC"
+                };
+                button.AddToClassList("report-picker-item");
+                _reportPickerList.Add(button);
+            }
+        }
+
+        private void SelectReportAttachment(Guid reportId)
+        {
+            var report = _shareableReports.FirstOrDefault(entry => entry.Id == reportId);
+            if (report == null)
+            {
+                return;
+            }
+            _selectedReportId = report.Id;
+            if (_selectedReportLabel != null) _selectedReportLabel.text = report.Title;
+            if (_removeReportButton != null) _removeReportButton.style.display = DisplayStyle.Flex;
+            if (_reportPickerList != null) _reportPickerList.style.display = DisplayStyle.None;
+        }
+
+        private void RemoveSelectedReport()
+        {
+            _selectedReportId = null;
+            if (_selectedReportLabel != null) _selectedReportLabel.text = string.Empty;
+            if (_removeReportButton != null) _removeReportButton.style.display = DisplayStyle.None;
+            if (_reportPickerList != null) _reportPickerList.style.display = DisplayStyle.None;
         }
     }
 }

@@ -15,5 +15,7 @@ namespace Domain.Entities
 
         public Guid ConversationId { get; set; }
         public Conversation Conversation { get; set; } = null!;
+
+        public MessageReportAttachment? ReportAttachment { get; set; }
     }
 }

@@ -11,5 +11,6 @@ namespace Application.Interfaces.IServices
         Task<BattleReportUnreadStatusDTO> GetUnreadStatusAsync(Guid worldPlayerId);
         Task MarkBattleReportAsReadAsync(Guid worldPlayerId, Guid battleReportId);
         Task DeleteBattleReportAsync(Guid worldPlayerId, Guid battleReportId);
+        Task SetBattleReportPublicStatusAsync(Guid worldPlayerId, Guid battleReportId, bool isPublic);
     }
 }

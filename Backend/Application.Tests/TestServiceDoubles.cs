@@ -62,6 +62,7 @@ internal sealed class TestAllianceRepository(
     public Task<bool> NameExistsAsync(Guid worldId, string name) => throw new NotSupportedException();
     public Task<Alliance?> GetByIdWithMembersAsync(Guid id) => throw new NotSupportedException();
     public Task<List<AllianceInvitation>> GetInvitationsForPlayerAsync(Guid worldPlayerId, DateTime now) => throw new NotSupportedException();
+    public Task<List<AllianceInvitation>> GetInvitationsForAllianceAsync(Guid allianceId, DateTime now) => throw new NotSupportedException();
     public Task<AllianceInvitation?> GetInvitationByIdAsync(Guid invitationId) => throw new NotSupportedException();
     public Task<bool> PendingInvitationExistsAsync(Guid allianceId, Guid worldPlayerId, DateTime now) => throw new NotSupportedException();
     public Task AddInvitationAsync(AllianceInvitation invitation) => throw new NotSupportedException();

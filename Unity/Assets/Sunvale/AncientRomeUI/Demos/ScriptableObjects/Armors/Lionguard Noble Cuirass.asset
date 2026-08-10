@@ -1,0 +1,54 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 969fde779dc7483db0b040327faba29b, type: 3}
+  m_Name: Lionguard Noble Cuirass
+  m_EditorClassIdentifier: 
+  itemCategoryType: 1
+  itemTypeSlot: 7
+  itemType: 1
+  itemTier: 3
+  itemName: Lionguard Noble Cuirass
+  itemSprite: {fileID: 21300000, guid: 4c629aa3d0724074d9fad030e004c1d3, type: 3}
+  inventoryBeginDragActionSoundConfig:
+    playSound: 1
+    soundClip: {fileID: 8300000, guid: b362a14e0a8427d40b22eae7eaee9bc5, type: 3}
+    randomizePitch: 1
+    baseVolume: 0.23
+    basePitch: 1
+  inventoryEndDragActionSoundConfig:
+    playSound: 1
+    soundClip: {fileID: 8300000, guid: 3cb8f8bb784a1774b83df16ae4e20f16, type: 3}
+    randomizePitch: 1
+    baseVolume: 0.092
+    basePitch: 0.92
+  itemBuffs:
+  - statType: 24
+    modifierType: 0
+    value: 72
+  - statType: 26
+    modifierType: 0
+    value: 21
+  - statType: 27
+    modifierType: 0
+    value: 17
+  - statType: 28
+    modifierType: 0
+    value: 20
+  - statType: 1
+    modifierType: 0
+    value: 4
+  - statType: 20
+    modifierType: 0
+    value: 5
+  itemIconSlotScale: 0.82
+  itemIconXOffset: 0
+  itemIconYOffset: 0

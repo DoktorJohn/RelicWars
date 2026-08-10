@@ -3,6 +3,7 @@ using Domain.Enums;
 using Domain.User;
 using Domain.Workers;
 using Domain.Workers.Abstraction;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.ChangeTracking;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
@@ -13,7 +14,7 @@ using System.Linq;
 
 namespace Infrastructure.Context
 {
-    public class GameContext : DbContext
+    public class GameContext : IdentityUserContext<PlayerProfile, Guid>
     {
         public GameContext(DbContextOptions<GameContext> options) : base(options)
         {
@@ -42,12 +43,15 @@ namespace Infrastructure.Context
         public DbSet<Conversation> Conversations { get; set; }
         public DbSet<ConversationParticipant> ConversationParticipants { get; set; }
         public DbSet<Message> Messages { get; set; }
+        public DbSet<MessageReportAttachment> MessageReportAttachments { get; set; }
         public DbSet<BugReport> BugReports { get; set; }
         public DbSet<DailyObjectiveSet> DailyObjectiveSets { get; set; }
         public DbSet<DailyObjectiveAssignment> DailyObjectiveAssignments { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
+            base.OnModelCreating(modelBuilder);
+
             var enumListConverter = new EnumListConverter<ModifierTagEnum>();
 
             // Definerer en Comparer, så EF Core kan se ændringer i dine lister
@@ -158,6 +162,13 @@ namespace Infrastructure.Context
                 .IsUnique()
                 .HasDatabaseName("UX_Cities_World_Coordinates");
 
+            modelBuilder.Entity<City>(entity =>
+            {
+                entity.Property(c => c.ActiveEdict).HasConversion<int?>();
+                entity.HasIndex(c => new { c.WorldPlayerId, c.ActiveEdict })
+                    .HasDatabaseName("IX_Cities_WorldPlayer_ActiveEdict");
+            });
+
             modelBuilder.Entity<CityExoticResource>(entity =>
             {
                 entity.HasIndex(resource => new { resource.CityId, resource.ResourceType })
@@ -176,6 +187,25 @@ namespace Infrastructure.Context
                 .HasIndex(player => new { player.PlayerProfileId, player.WorldId })
                 .IsUnique()
                 .HasDatabaseName("UX_WorldPlayers_Profile_World");
+
+            modelBuilder.Entity<PlayerProfile>(entity =>
+            {
+                entity.ToTable("PlayerProfiles");
+                entity.Property(profile => profile.UserName).HasMaxLength(256);
+                entity.Property(profile => profile.NormalizedUserName).HasMaxLength(256);
+                entity.Property(profile => profile.Email).HasMaxLength(256);
+                entity.Property(profile => profile.NormalizedEmail).HasMaxLength(256);
+
+                entity.HasIndex(profile => profile.NormalizedUserName)
+                    .IsUnique()
+                    .HasDatabaseName("UX_PlayerProfiles_NormalizedUserName")
+                    .HasFilter("[NormalizedUserName] IS NOT NULL");
+
+                entity.HasIndex(profile => profile.NormalizedEmail)
+                    .IsUnique()
+                    .HasDatabaseName("UX_PlayerProfiles_NormalizedEmail")
+                    .HasFilter("[NormalizedEmail] IS NOT NULL");
+            });
 
             modelBuilder.Entity<DailyObjectiveSet>(entity =>
             {
@@ -285,7 +315,24 @@ namespace Infrastructure.Context
             modelBuilder.Entity<Alliance>(entity =>
             {
                 entity.HasOne(a => a.World).WithMany().HasForeignKey(a => a.WorldId).OnDelete(DeleteBehavior.Restrict);
-                entity.HasIndex(a => new { a.WorldId, a.Name });
+                entity.Property(a => a.Name).HasMaxLength(20);
+                entity.Property(a => a.NormalizedName).HasMaxLength(20).IsRequired();
+                entity.HasIndex(a => new { a.WorldId, a.NormalizedName })
+                    .IsUnique()
+                    .HasDatabaseName("UX_Alliances_World_NormalizedName");
+            });
+
+            modelBuilder.Entity<MessageReportAttachment>(entity =>
+            {
+                entity.HasIndex(attachment => attachment.MessageId).IsUnique();
+                entity.HasOne(attachment => attachment.Message)
+                    .WithOne(message => message.ReportAttachment)
+                    .HasForeignKey<MessageReportAttachment>(attachment => attachment.MessageId)
+                    .OnDelete(DeleteBehavior.Cascade);
+                entity.HasOne(attachment => attachment.BattleReport)
+                    .WithMany()
+                    .HasForeignKey(attachment => attachment.BattleReportId)
+                    .OnDelete(DeleteBehavior.SetNull);
             });
 
             modelBuilder.Entity<AllianceRelation>(entity =>
@@ -299,7 +346,6 @@ namespace Infrastructure.Context
                 entity.HasCheckConstraint("CK_AllianceRelations_DifferentAlliances", "[AllianceIdA] <> [AllianceIdB]");
             });
 
-            base.OnModelCreating(modelBuilder);
         }
 
         private void ConfigureEnumListProperty<T>(

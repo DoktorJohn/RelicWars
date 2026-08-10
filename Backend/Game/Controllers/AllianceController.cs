@@ -56,6 +56,14 @@ namespace Game.Controllers
             {
                 return Forbid();
             }
+            catch (ArgumentException exception)
+            {
+                return BadRequest(new ApiError("request.invalid", exception.Message));
+            }
+            catch (InvalidOperationException exception)
+            {
+                return Conflict(new ApiError("alliance.conflict", exception.Message));
+            }
             catch (Exception exception)
             {
                 _logger.LogError(exception, "Fejl ved oprettelse af alliance");
@@ -135,6 +143,14 @@ namespace Game.Controllers
         [HttpGet("{worldPlayerId}/invitations")]
         public async Task<ActionResult<List<AllianceInvitationDTO>>> GetInvitations(Guid worldPlayerId) =>
             Ok(await _allianceService.GetInvitations(worldPlayerId));
+
+        [HttpGet("{worldPlayerId}/invited-players")]
+        public async Task<ActionResult<List<AllianceInvitedPlayerDTO>>> GetInvitedPlayers(Guid worldPlayerId) =>
+            Ok(await _allianceService.GetInvitedPlayers(worldPlayerId));
+
+        [HttpPost("invitations/cancel")]
+        public async Task<ActionResult<bool>> CancelInvitation([FromBody] CancelAllianceInvitationDTO dto) =>
+            Ok(await _allianceService.CancelInvitation(dto));
 
         [HttpPost("invitations/accept")]
         public async Task<ActionResult<AllianceDTO>> AcceptInvitation([FromBody] RespondToAllianceInvitationDTO dto) =>

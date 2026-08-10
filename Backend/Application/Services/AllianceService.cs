@@ -5,6 +5,7 @@ using Application.Interfaces;
 using Domain.Entities;
 using Domain.Enums;
 using Domain.User;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
 namespace Application.Services
@@ -45,37 +46,48 @@ namespace Application.Services
         {
             var founder = await _playerAccessService.RequireOwnedWorldPlayerAsync(dto.WorldPlayerIdFounder);
 
-            // 2. Tjek om spilleren allerede er i en alliance
             if (founder.AllianceId.HasValue)
             {
-                throw new Exception("Player is already in an alliance.");
+                throw new InvalidOperationException("Player is already in an alliance.");
             }
 
-            // 3. Tjek om navnet er taget (kræver en metode i repo)
             var name = dto.Name.Trim();
+            var normalizedName = name.ToUpperInvariant();
             var tag = dto.Tag.Trim().ToUpperInvariant();
             if (name.Length is < 3 or > 20) throw new ArgumentException("Alliance name must be between 3 and 20 characters.");
             if (tag.Length is < 3 or > 4) throw new ArgumentException("Alliance tag must be between 3 and 4 characters.");
             bool nameExists = await _allianceRepo.NameExistsAsync(founder.WorldId, name);
-            if (nameExists) throw new Exception("Alliance name is taken.");
+            if (nameExists) throw new InvalidOperationException("Alliance name is already in use in this world.");
 
-            // 4. Opret Alliancen
             var newAlliance = new Alliance
             {
                 Name = name,
+                NormalizedName = normalizedName,
                 Tag = tag,
                 Description = string.Empty,
                 WorldId = founder.WorldId,
                 Members = new List<WorldPlayer> { founder }
             };
 
-            await _transactionManager.ExecuteAsync(async () =>
+            try
             {
-                await _allianceRepo.AddAsync(newAlliance);
-                founder.AllianceId = newAlliance.Id;
-                founder.AllianceRole = AllianceRoleEnum.Founder;
-                await _playerRepo.UpdateAsync(founder);
-            });
+                await _transactionManager.ExecuteAsync(async () =>
+                {
+                    await _allianceRepo.AddAsync(newAlliance);
+                    founder.AllianceId = newAlliance.Id;
+                    founder.AllianceRole = AllianceRoleEnum.Founder;
+                    await _playerRepo.UpdateAsync(founder);
+                });
+            }
+            catch (DbUpdateException exception)
+            {
+                if (await _allianceRepo.NameExistsAsync(founder.WorldId, normalizedName))
+                {
+                    throw new InvalidOperationException("Alliance name is already in use in this world.", exception);
+                }
+
+                throw;
+            }
 
             return await MapAllianceAsync(newAlliance);
         }
@@ -117,8 +129,8 @@ namespace Application.Services
             var inviter = await _playerAccessService.RequireOwnedWorldPlayerAsync(dto.WorldPlayerIdInviter);
             var invited = await _playerRepo.GetByIdAsync(dto.WorldPlayerIdInvited);
             if (invited == null) throw new KeyNotFoundException("Target player not found.");
-            if (!inviter.AllianceId.HasValue || !CanManageMembers(inviter.AllianceRole))
-                throw new UnauthorizedAccessException("You do not have permission to invite players.");
+            if (!inviter.AllianceId.HasValue || inviter.AllianceRole != AllianceRoleEnum.Founder)
+                throw new UnauthorizedAccessException("Only an alliance founder can invite players.");
             if (invited.WorldId != inviter.WorldId) throw new ArgumentException("Players must be in the same world.");
             if (invited.AllianceId.HasValue) throw new InvalidOperationException("Target player is already in an alliance.");
 
@@ -181,6 +193,39 @@ namespace Application.Services
             return invitations.Select(i => new AllianceInvitationDTO(
                 i.Id, i.AllianceId, i.Alliance.Name, i.Alliance.Tag, i.InvitedByWorldPlayerId,
                 i.InvitedByWorldPlayer.PlayerProfile.UserName ?? "Unknown", i.ExpiresAt)).ToList();
+        }
+
+        public async Task<List<AllianceInvitedPlayerDTO>> GetInvitedPlayers(Guid worldPlayerId)
+        {
+            var player = await _playerAccessService.RequireOwnedWorldPlayerAsync(worldPlayerId);
+            if (!player.AllianceId.HasValue)
+                throw new InvalidOperationException("Player is not in an alliance.");
+
+            var invitations = await _allianceRepo.GetInvitationsForAllianceAsync(
+                player.AllianceId.Value,
+                DateTime.UtcNow);
+            return invitations.Select(invitation => new AllianceInvitedPlayerDTO(
+                invitation.Id,
+                invitation.InvitedWorldPlayerId,
+                invitation.InvitedWorldPlayer.PlayerProfile.UserName ?? "Unknown",
+                invitation.InvitedByWorldPlayerId,
+                invitation.InvitedByWorldPlayer.PlayerProfile.UserName ?? "Unknown",
+                invitation.ExpiresAt)).ToList();
+        }
+
+        public async Task<bool> CancelInvitation(CancelAllianceInvitationDTO dto)
+        {
+            var founder = await _playerAccessService.RequireOwnedWorldPlayerAsync(dto.WorldPlayerId);
+            if (!founder.AllianceId.HasValue || founder.AllianceRole != AllianceRoleEnum.Founder)
+                throw new UnauthorizedAccessException("Only an alliance founder can cancel invitations.");
+
+            var invitation = await _allianceRepo.GetInvitationByIdAsync(dto.InvitationId)
+                ?? throw new KeyNotFoundException("Alliance invitation not found.");
+            if (invitation.AllianceId != founder.AllianceId.Value)
+                throw new UnauthorizedAccessException("Invitation does not belong to the founder's alliance.");
+
+            await _allianceRepo.DeleteInvitationAsync(invitation);
+            return true;
         }
 
         public async Task<AllianceDTO> AcceptInvitation(RespondToAllianceInvitationDTO dto)

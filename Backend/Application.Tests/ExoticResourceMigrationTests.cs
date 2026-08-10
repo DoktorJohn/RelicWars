@@ -12,7 +12,7 @@ public class ExoticResourceMigrationTests
 {
     private const string MigrationBeforeRepair = "20260717191714_AddDailyObjectives";
     private const string RepairMigration = "20260717195246_RepairCityExoticResourceBalances";
-    private const string LatestMigration = "20260719182549_RepairResearchLegacyUserIdColumn";
+    private const string LatestMigration = "20260720174555_AddCityEdicts";
 
     [Fact]
     public async Task RepairMigration_BackfillsMissingBalancesAndRepositoryLoadsAllTypes()

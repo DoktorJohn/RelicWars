@@ -67,6 +67,66 @@ public class MessagingServiceTests
     }
 
     [Fact]
+    public async Task PublicOwnedReportSupportsAttachmentOnlyAndTextWithAttachment()
+    {
+        var sender = Player("sender");
+        var receiver = Player("receiver");
+        var report = Report(sender.Id, true);
+        var messages = new MemoryMessagingRepository();
+        var service = ServiceWithReports(messages, [report], sender, receiver);
+
+        var started = await service.StartConversationAsync(sender.Id, [receiver.Id], "subject", "", report.Id);
+        var initial = Assert.Single(messages.Conversations[0].Messages);
+        Assert.Equal(report.Id, initial.ReportAttachment?.BattleReportId);
+        Assert.Equal(report.Title, started.LastMessageContent);
+
+        var reply = await service.ReplyToConversationAsync(sender.Id, started.Id, "details", report.Id);
+        Assert.Equal("details", reply.Content);
+        Assert.True(reply.ReportAttachment?.IsAvailable);
+        Assert.Equal(report.Title, reply.ReportAttachment?.Report?.Title);
+        Assert.Null(reply.ReportAttachment?.Report?.GetType().GetProperty("IsRead"));
+    }
+
+    [Fact]
+    public async Task AttachmentsRejectPrivateForeignAndMissingReports()
+    {
+        var sender = Player("sender");
+        var receiver = Player("receiver");
+        var privateReport = Report(sender.Id, false);
+        var foreignReport = Report(receiver.Id, true);
+        var service = ServiceWithReports(new(), [privateReport, foreignReport], sender, receiver);
+
+        await Assert.ThrowsAsync<InvalidOperationException>(() =>
+            service.StartConversationAsync(sender.Id, [receiver.Id], "s", "body", privateReport.Id));
+        await Assert.ThrowsAsync<UnauthorizedAccessException>(() =>
+            service.StartConversationAsync(sender.Id, [receiver.Id], "s", "body", foreignReport.Id));
+        await Assert.ThrowsAsync<KeyNotFoundException>(() =>
+            service.StartConversationAsync(sender.Id, [receiver.Id], "s", "body", Guid.NewGuid()));
+    }
+
+    [Fact]
+    public async Task PrivateOrDeletedLiveAttachmentBecomesUnavailable()
+    {
+        var sender = Player("sender");
+        var receiver = Player("receiver");
+        var report = Report(sender.Id, true);
+        var repository = new MemoryMessagingRepository();
+        var service = ServiceWithReports(repository, [report], sender, receiver);
+        var started = await service.StartConversationAsync(sender.Id, [receiver.Id], "s", "", report.Id);
+        var message = repository.Conversations[0].Messages[0];
+        repository.Messages.Add(message);
+
+        report.IsPublic = false;
+        var privateResult = Assert.Single(await service.GetMessagesAsync(started.Id, receiver.Id, null, 50));
+        Assert.False(privateResult.ReportAttachment?.IsAvailable);
+
+        message.ReportAttachment!.BattleReport = null;
+        message.ReportAttachment.BattleReportId = null;
+        var deletedResult = Assert.Single(await service.GetMessagesAsync(started.Id, receiver.Id, null, 50));
+        Assert.False(deletedResult.ReportAttachment?.IsAvailable);
+    }
+
+    [Fact]
     public async Task ReplyCreatesIdentityUpdatesConversationAndMarksSenderRead()
     {
         var sender = Player("sender");
@@ -170,7 +230,7 @@ public class MessagingServiceTests
     {
         var player = Player("Alice");
         var players = new MemoryWorldPlayerRepository([player]);
-        var service = new MessagingService(new MemoryMessagingRepository(), players, new TestPlayerAccessService([player]));
+        var service = new MessagingService(new MemoryMessagingRepository(), players, new TestPlayerAccessService([player]), new MemoryBattleReportRepository([]));
 
         Assert.Empty(await service.SearchPlayersAsync(WorldId, " a "));
         Assert.Null(players.LastSearch);
@@ -233,7 +293,16 @@ public class MessagingServiceTests
     }
 
     private static MessagingService Service(MemoryMessagingRepository messages, params WorldPlayer[] players) =>
-        new(messages, new MemoryWorldPlayerRepository(players), new TestPlayerAccessService(players));
+        new(messages, new MemoryWorldPlayerRepository(players), new TestPlayerAccessService(players), new MemoryBattleReportRepository([]));
+
+    private static MessagingService ServiceWithReports(MemoryMessagingRepository messages, IEnumerable<BattleReport> reports, params WorldPlayer[] players) =>
+        new(messages, new MemoryWorldPlayerRepository(players), new TestPlayerAccessService(players), new MemoryBattleReportRepository(reports));
+
+    private static BattleReport Report(Guid ownerId, bool isPublic) => new()
+    {
+        Id = Guid.NewGuid(), WorldPlayerId = ownerId, IsPublic = isPublic,
+        Title = "Battle at the gate", Body = "Full report", OccurredAt = DateTime.UtcNow
+    };
 
     private static WorldPlayer Player(string name, Guid? worldId = null) => new()
     {
@@ -330,5 +399,17 @@ public class MessagingServiceTests
                 message.Sender = sender;
             }
         }
+    }
+
+    private sealed class MemoryBattleReportRepository(IEnumerable<BattleReport> reports) : IBattleReportRepository
+    {
+        private readonly List<BattleReport> _reports = reports.ToList();
+        public Task AddAsync(BattleReport report) { _reports.Add(report); return Task.CompletedTask; }
+        public Task<BattleReport?> GetByIdAsync(Guid id) => Task.FromResult(_reports.SingleOrDefault(report => report.Id == id));
+        public Task<List<BattleReport>> GetByUserIdAsync(Guid id) => Task.FromResult(_reports.Where(report => report.WorldPlayerId == id).ToList());
+        public Task<int> GetUnreadCountAsync(Guid id) => Task.FromResult(0);
+        public Task MarkAsReadAsync(Guid id) => Task.CompletedTask;
+        public Task DeleteAsync(Guid id) { _reports.RemoveAll(report => report.Id == id); return Task.CompletedTask; }
+        public Task SetPublicStatusAsync(Guid id, bool isPublic) { _reports.Single(report => report.Id == id).IsPublic = isPublic; return Task.CompletedTask; }
     }
 }

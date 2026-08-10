@@ -14,6 +14,8 @@ namespace Application.Interfaces.IServices
         Task<bool> DisbandAlliance(DisbandAllianceDTO dto);
         Task<bool> InviteToAlliance(InviteToAllianceDTO dto);
         Task<List<AllianceInvitationDTO>> GetInvitations(Guid worldPlayerId);
+        Task<List<AllianceInvitedPlayerDTO>> GetInvitedPlayers(Guid worldPlayerId);
+        Task<bool> CancelInvitation(CancelAllianceInvitationDTO dto);
         Task<AllianceDTO> AcceptInvitation(RespondToAllianceInvitationDTO dto);
         Task<bool> DeclineInvitation(RespondToAllianceInvitationDTO dto);
         Task<bool> LeaveAlliance(LeaveAllianceDTO dto);

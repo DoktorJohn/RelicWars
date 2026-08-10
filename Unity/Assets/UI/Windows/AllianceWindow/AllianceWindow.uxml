@@ -68,13 +68,16 @@
 
                     <ui:VisualElement name="Panel-Members" class="tab-panel" style="display: none;">
                         <ui:ScrollView name="Alliance-MemberList" class="member-list" />
+                        <ui:VisualElement name="Invited-Players-Section" class="invited-players-section">
+                            <ui:Label text="INVITED PLAYERS" class="section-title" />
+                            <ui:ScrollView name="Invited-Players-List" class="invited-players-list" />
+                        </ui:VisualElement>
                         <ui:VisualElement name="Invite-Section" class="invite-section">
                             <ui:Label text="INVITE PLAYER" class="section-title" />
                             <ui:VisualElement class="invite-search-row">
                                 <ui:TextField name="Input-PlayerSearch" class="alliance-input-field invite-search-input" />
-                                <ui:Button name="Btn-SearchPlayer" text="SEARCH" class="btn-global-base" />
                             </ui:VisualElement>
-                            <ui:VisualElement name="Player-SearchResults" class="search-results" />
+                            <ui:ScrollView name="Player-SearchResults" class="search-results player-search-dropdown window-frame floating-window-frame" style="display: none;" />
                         </ui:VisualElement>
                     </ui:VisualElement>
 

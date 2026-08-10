@@ -28,6 +28,9 @@ namespace Domain.Entities
         public DateTime LastResourceUpdate { get; set; } = DateTime.UtcNow;
         public DateTime LastExoticResourceUpdate { get; set; } = DateTime.UtcNow;
 
+        public EdictTypeEnum? ActiveEdict { get; set; }
+        public DateTime? EdictEnactedAtUtc { get; set; }
+
         public bool IsNPC { get; set; }
 
         //Tile placering

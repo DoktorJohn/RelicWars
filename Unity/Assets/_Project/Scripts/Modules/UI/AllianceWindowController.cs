@@ -2,7 +2,10 @@ using Project.Modules.UI;
 using Project.Network.Manager;
 using Project.Scripts.Domain.DTOs;
 using System;
+using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
+using UnityEngine;
 using UnityEngine.UIElements;
 
 namespace Project.Modules.UI.Windows.Implementations
@@ -14,18 +17,23 @@ namespace Project.Modules.UI.Windows.Implementations
         protected override string HeaderName => "Alliance-Window-Header";
 
         private VisualElement _createView, _infoView, _memberList, _invitationList, _inviteSection, _searchResults;
+        private VisualElement _invitedPlayersSection, _invitedPlayersList;
         private VisualElement _overviewPanel, _membersPanel, _geopoliticsPanel, _descriptionEditor, _diplomacySection;
         private VisualElement _allianceSearchResults, _incomingPacts, _outgoingPacts, _activePacts, _activeWars;
         private TextField _nameInput, _tagInput, _playerSearchInput, _descriptionInput, _allianceSearchInput;
-        private Button _createButton, _leaveButton, _searchButton, _editDescriptionButton, _saveDescriptionButton, _cancelDescriptionButton, _searchAllianceButton;
+        private Button _createButton, _leaveButton, _editDescriptionButton, _saveDescriptionButton, _cancelDescriptionButton, _searchAllianceButton;
         private Button _overviewTab, _membersTab, _geopoliticsTab;
         private Label _name;
         private Label _error, _status, _loading, _tag, _description, _memberCount, _points, _currentRoleLabel;
-        private Guid _worldPlayerId, _allianceId, _requestedAllianceId;
+        private Guid _worldPlayerId, _worldId, _allianceId, _requestedAllianceId;
         private AllianceRoleDTO _currentRole = AllianceRoleDTO.None;
         private bool _isForeignView;
         private bool _canEditDescription;
+        private Coroutine _playerSearchCoroutine;
+        private readonly HashSet<Guid> _inviteRequests = new();
         private int _requestVersion;
+        private const int PlayerSearchMinimumLength = 2;
+        private const float PlayerSearchDebounceSeconds = 0.3f;
 
         public override void OnOpen(object dataPayload)
         {
@@ -42,6 +50,7 @@ namespace Project.Modules.UI.Windows.Implementations
             }
 
             _worldPlayerId = ResolveCurrentWorldPlayerId();
+            _worldId = Guid.Empty;
             if (_worldPlayerId == Guid.Empty)
             {
                 SetStatus("No active world player.");
@@ -55,6 +64,9 @@ namespace Project.Modules.UI.Windows.Implementations
 
         private void OnDisable()
         {
+            if (_playerSearchInput != null) _playerSearchInput.UnregisterValueChangedCallback(OnPlayerSearchChanged);
+            _playerSearchCoroutine = null;
+            _inviteRequests.Clear();
             InvalidateDeferredOpen();
             StopAllCoroutines();
         }
@@ -65,6 +77,7 @@ namespace Project.Modules.UI.Windows.Implementations
             _overviewPanel = Root.Q("Panel-Overview"); _membersPanel = Root.Q("Panel-Members"); _geopoliticsPanel = Root.Q("Panel-Geopolitics");
             _memberList = Root.Q("Alliance-MemberList"); _invitationList = Root.Q("Invitation-List");
             _inviteSection = Root.Q("Invite-Section"); _searchResults = Root.Q("Player-SearchResults");
+            _invitedPlayersSection = Root.Q("Invited-Players-Section"); _invitedPlayersList = Root.Q("Invited-Players-List");
             _descriptionEditor = Root.Q("Description-Editor"); _diplomacySection = Root.Q("Diplomacy-Section");
             _allianceSearchResults = Root.Q("Alliance-SearchResults"); _incomingPacts = Root.Q("Incoming-Pacts");
             _outgoingPacts = Root.Q("Outgoing-Pacts"); _activePacts = Root.Q("Active-Pacts"); _activeWars = Root.Q("Active-Wars");
@@ -72,7 +85,7 @@ namespace Project.Modules.UI.Windows.Implementations
             _playerSearchInput = Root.Q<TextField>("Input-PlayerSearch"); _descriptionInput = Root.Q<TextField>("Input-AllianceDescription");
             _allianceSearchInput = Root.Q<TextField>("Input-AllianceSearch");
             _createButton = Root.Q<Button>("Btn-CreateAlliance"); _leaveButton = Root.Q<Button>("Btn-LeaveAlliance");
-            _searchButton = Root.Q<Button>("Btn-SearchPlayer"); _editDescriptionButton = Root.Q<Button>("Btn-EditDescription");
+            _editDescriptionButton = Root.Q<Button>("Btn-EditDescription");
             _saveDescriptionButton = Root.Q<Button>("Btn-SaveDescription"); _cancelDescriptionButton = Root.Q<Button>("Btn-CancelDescription");
             _searchAllianceButton = Root.Q<Button>("Btn-SearchAlliance");
             _overviewTab = Root.Q<Button>("Tab-Overview"); _membersTab = Root.Q<Button>("Tab-Members"); _geopoliticsTab = Root.Q<Button>("Tab-Geopolitics");
@@ -93,7 +106,8 @@ namespace Project.Modules.UI.Windows.Implementations
             }
             Bind(_createButton, CreateAlliance);
             Bind(_leaveButton, LeaveAlliance);
-            Bind(_searchButton, SearchPlayers);
+            _playerSearchInput.UnregisterValueChangedCallback(OnPlayerSearchChanged);
+            _playerSearchInput.RegisterValueChangedCallback(OnPlayerSearchChanged);
             Bind(_editDescriptionButton, BeginEditingDescription);
             Bind(_saveDescriptionButton, SaveDescription);
             Bind(_cancelDescriptionButton, CancelEditingDescription);
@@ -126,7 +140,7 @@ namespace Project.Modules.UI.Windows.Implementations
         private void LoadInitialView(int version)
         {
             if (_loading != null) _loading.style.display = DisplayStyle.Flex;
-            WindowAsyncStateHelper.SetButtonsEnabled(new[] { _createButton, _leaveButton, _searchButton, _saveDescriptionButton, _searchAllianceButton }, false);
+            WindowAsyncStateHelper.SetButtonsEnabled(new[] { _createButton, _leaveButton, _saveDescriptionButton, _searchAllianceButton }, false);
 
             StartCoroutine(NetworkManager.Instance.WorldPlayer.GetPlayerProfile(_worldPlayerId, Token, profile =>
             {
@@ -136,7 +150,7 @@ namespace Project.Modules.UI.Windows.Implementations
                 }
 
                 if (_loading != null) _loading.style.display = DisplayStyle.None;
-                WindowAsyncStateHelper.SetButtonsEnabled(new[] { _createButton, _leaveButton, _searchButton, _saveDescriptionButton, _searchAllianceButton }, true);
+                WindowAsyncStateHelper.SetButtonsEnabled(new[] { _createButton, _leaveButton, _saveDescriptionButton, _searchAllianceButton }, true);
 
                 if (profile == null)
                 {
@@ -145,6 +159,10 @@ namespace Project.Modules.UI.Windows.Implementations
                     CompleteDeferredOpen(version);
                     return;
                 }
+
+                _worldId = profile.WorldId != Guid.Empty
+                    ? profile.WorldId
+                    : NetworkManager.Instance.ActiveWorldId;
 
                 if (_requestedAllianceId != Guid.Empty && profile.AllianceId != _requestedAllianceId)
                 {
@@ -240,7 +258,14 @@ namespace Project.Modules.UI.Windows.Implementations
 
             var canManage = !_isForeignView && CanManage(_currentRole);
             _canEditDescription = canManage;
-            _inviteSection.style.display = canManage ? DisplayStyle.Flex : DisplayStyle.None;
+            _inviteSection.style.display = !_isForeignView && _currentRole == AllianceRoleDTO.Founder
+                ? DisplayStyle.Flex
+                : DisplayStyle.None;
+            _invitedPlayersSection.style.display = _isForeignView ? DisplayStyle.None : DisplayStyle.Flex;
+            if (!_isForeignView)
+            {
+                LoadInvitedPlayers(version);
+            }
             SetDescriptionEditMode(false);
             _diplomacySection.style.display = canManage ? DisplayStyle.Flex : DisplayStyle.None;
             _leaveButton.style.display = _isForeignView ? DisplayStyle.None : DisplayStyle.Flex;
@@ -333,35 +358,76 @@ namespace Project.Modules.UI.Windows.Implementations
             _editDescriptionButton.style.display = _canEditDescription && !isEditing ? DisplayStyle.Flex : DisplayStyle.None;
         }
 
-        private void SearchPlayers()
+        private void OnPlayerSearchChanged(ChangeEvent<string> evt)
         {
-            if (_playerSearchInput.value.Trim().Length < 2) { SetStatus("Enter at least 2 characters."); return; }
-            var worldId = NetworkManager.Instance.ActiveWorldId;
-            StartCoroutine(NetworkManager.Instance.WorldPlayer.SearchPlayers(worldId, _playerSearchInput.value.Trim(), Token, results =>
+            var query = evt.newValue?.Trim() ?? string.Empty;
+            if (_playerSearchCoroutine != null) StopCoroutine(_playerSearchCoroutine);
+            HidePlayerSearchResults();
+            if (query.Length < PlayerSearchMinimumLength) return;
+            _playerSearchCoroutine = StartCoroutine(SearchPlayersDebounced(query, _requestVersion));
+        }
+
+        private IEnumerator SearchPlayersDebounced(string query, int version)
+        {
+            yield return new WaitForSeconds(PlayerSearchDebounceSeconds);
+            if (version != _requestVersion || query != (_playerSearchInput.value?.Trim() ?? string.Empty)) yield break;
+            var worldId = ResolveSearchWorldId();
+            if (worldId == Guid.Empty) { SetStatus("No active world."); yield break; }
+            StartCoroutine(NetworkManager.Instance.WorldPlayer.SearchPlayers(worldId, query, Token, results =>
             {
+                if (!isActiveAndEnabled || version != _requestVersion || query != (_playerSearchInput.value?.Trim() ?? string.Empty)) return;
                 _searchResults.Clear();
-                foreach (var player in results ?? new List<PlayerSearchResultDTO>())
+                foreach (var player in (results ?? new List<PlayerSearchResultDTO>()).Where(player =>
+                             player != null && player.WorldPlayerId != Guid.Empty && player.WorldPlayerId != _worldPlayerId))
                 {
-                    if (player.WorldPlayerId == _worldPlayerId) continue;
                     var row = CreateRow("search-result-row");
                     row.Add(CreatePlayerLinkButton(player.Username, player.WorldPlayerId, "member-name"));
                     row.Add(SmallButton("INVITE", () => InvitePlayer(player.WorldPlayerId)));
                     _searchResults.Add(row);
                 }
+                _searchResults.style.display = _searchResults.childCount > 0 ? DisplayStyle.Flex : DisplayStyle.None;
             }));
         }
 
         private void InvitePlayer(Guid playerId)
         {
+            if (!_inviteRequests.Add(playerId)) return;
+            SetSearchInviteButtonsEnabled(false);
             var dto = new InviteToAllianceDTO { WorldPlayerIdInviter = _worldPlayerId, WorldPlayerIdInvited = playerId };
-            StartCoroutine(NetworkManager.Instance.Alliance.InviteToAlliance(dto, Token, success => SetStatus(success ? "Invitation sent." : "Could not send invitation.")));
+            StartCoroutine(NetworkManager.Instance.Alliance.InviteToAlliance(dto, Token, success =>
+            {
+                _inviteRequests.Remove(playerId);
+                if (!isActiveAndEnabled) return;
+                SetStatus(success ? "Invitation sent." : "Could not send invitation.");
+                if (success)
+                {
+                    _playerSearchInput.SetValueWithoutNotify(string.Empty);
+                    HidePlayerSearchResults();
+                    LoadInvitedPlayers(_requestVersion);
+                }
+                else SetSearchInviteButtonsEnabled(true);
+            }));
+        }
+
+        private void HidePlayerSearchResults()
+        {
+            _searchResults?.Clear();
+            if (_searchResults != null) _searchResults.style.display = DisplayStyle.None;
+        }
+
+        private void SetSearchInviteButtonsEnabled(bool enabled)
+        {
+            if (_searchResults == null) return;
+            foreach (var button in _searchResults.Query<Button>().ToList()) button.SetEnabled(enabled);
         }
 
         private void SearchAlliances()
         {
             var query = _allianceSearchInput.value.Trim();
             if (query.Length < 2) { SetStatus("Enter at least 2 characters."); return; }
-            StartCoroutine(NetworkManager.Instance.Alliance.SearchAlliances(NetworkManager.Instance.ActiveWorldId, query, Token, results =>
+            var worldId = ResolveSearchWorldId();
+            if (worldId == Guid.Empty) { SetStatus("No active world."); return; }
+            StartCoroutine(NetworkManager.Instance.Alliance.SearchAlliances(worldId, query, Token, results =>
             {
                 _allianceSearchResults.Clear();
                 if (results == null) { SetStatus("Could not search alliances."); return; }
@@ -461,6 +527,8 @@ namespace Project.Modules.UI.Windows.Implementations
         }
 
         private Guid ResolveCurrentWorldPlayerId() => Guid.TryParse(NetworkManager.Instance.WorldPlayerId, out var id) ? id : Guid.Empty;
+
+        private Guid ResolveSearchWorldId() => _worldId != Guid.Empty ? _worldId : NetworkManager.Instance.ActiveWorldId;
 
         private Guid ResolveAllianceId(object payload)
         {

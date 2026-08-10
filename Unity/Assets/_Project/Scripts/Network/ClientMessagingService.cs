@@ -94,6 +94,11 @@ namespace Project.Network
 
         public IEnumerator StartConversation(Guid senderId, IEnumerable<Guid> receiverIds, string subject, string content, string jwtToken, Action<ConversationDTO> callback)
         {
+            return StartConversation(senderId, receiverIds, subject, content, null, jwtToken, callback);
+        }
+
+        public IEnumerator StartConversation(Guid senderId, IEnumerable<Guid> receiverIds, string subject, string content, Guid? battleReportId, string jwtToken, Action<ConversationDTO> callback)
+        {
             string url = $"{_baseUrl}/{senderId}/conversations";
             var recipientList = receiverIds?.Where(id => id != Guid.Empty).ToList() ?? new List<Guid>();
             var payload = new
@@ -101,7 +106,8 @@ namespace Project.Network
                 ReceiverWorldPlayerId = recipientList.FirstOrDefault(),
                 ParticipantWorldPlayerIds = recipientList,
                 Subject = subject,
-                Content = content
+                Content = content,
+                BattleReportId = battleReportId
             };
             
             using (var request = BackendRequestHelper.CreatePostRequest(url, payload, jwtToken))
@@ -127,8 +133,13 @@ namespace Project.Network
 
         public IEnumerator ReplyToConversation(Guid senderId, Guid conversationId, string content, string jwtToken, Action<MessageDTO> callback)
         {
+            return ReplyToConversation(senderId, conversationId, content, null, jwtToken, callback);
+        }
+
+        public IEnumerator ReplyToConversation(Guid senderId, Guid conversationId, string content, Guid? battleReportId, string jwtToken, Action<MessageDTO> callback)
+        {
             string url = $"{_baseUrl}/{senderId}/conversations/{conversationId}/messages";
-            var payload = new { Content = content };
+            var payload = new { Content = content, BattleReportId = battleReportId };
 
             using (var request = BackendRequestHelper.CreatePostRequest(url, payload, jwtToken))
             {

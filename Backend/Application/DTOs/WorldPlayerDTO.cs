@@ -50,6 +50,7 @@ namespace Application.DTOs
         string AllianceName,
         IdeologyTypeEnum Ideology,
         Guid AllianceId,
+        AllianceRoleEnum AllianceRole,
         Guid WorldId,
         List<CityDTO> Cities
     );

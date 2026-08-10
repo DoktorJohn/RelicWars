@@ -302,7 +302,59 @@ public class WorldPlayerServiceTests
 
             await Assert.ThrowsAsync<DbUpdateException>(() => context.SaveChangesAsync());
         }
+
+        await using (var context = await CreateSqliteContextAsync())
+        {
+            context.PlayerProfiles.AddRange(
+                CreateIdentity("Peter123", "PETER123", "first@example.test", "FIRST@EXAMPLE.TEST"),
+                CreateIdentity("peter123", "PETER123", "second@example.test", "SECOND@EXAMPLE.TEST"));
+
+            await Assert.ThrowsAsync<DbUpdateException>(() => context.SaveChangesAsync());
+        }
+
+        await using (var context = await CreateSqliteContextAsync())
+        {
+            context.PlayerProfiles.AddRange(
+                CreateIdentity("FirstPlayer", "FIRSTPLAYER", "same@example.test", "SAME@EXAMPLE.TEST"),
+                CreateIdentity("SecondPlayer", "SECONDPLAYER", "SAME@example.test", "SAME@EXAMPLE.TEST"));
+
+            await Assert.ThrowsAsync<DbUpdateException>(() => context.SaveChangesAsync());
+        }
+
+        await using (var context = await CreateSqliteContextAsync())
+        {
+            var world = new World { Id = Guid.NewGuid(), Name = "Alliance world" };
+            context.Add(world);
+            context.Alliances.AddRange(
+                new Alliance { WorldId = world.Id, Name = "Shared Alliance", Tag = "ONE" },
+                new Alliance { WorldId = world.Id, Name = "shared alliance", Tag = "TWO" });
+
+            await Assert.ThrowsAsync<DbUpdateException>(() => context.SaveChangesAsync());
+        }
+
+        await using (var context = await CreateSqliteContextAsync())
+        {
+            var firstWorld = new World { Id = Guid.NewGuid(), Name = "First alliance world" };
+            var secondWorld = new World { Id = Guid.NewGuid(), Name = "Second alliance world" };
+            context.AddRange(firstWorld, secondWorld);
+            context.Alliances.AddRange(
+                new Alliance { WorldId = firstWorld.Id, Name = "Shared Alliance", Tag = "ONE" },
+                new Alliance { WorldId = secondWorld.Id, Name = "shared alliance", Tag = "TWO" });
+
+            await context.SaveChangesAsync();
+            Assert.Equal(2, await context.Alliances.CountAsync());
+        }
     }
+
+    private static PlayerProfile CreateIdentity(string userName, string normalizedUserName, string email, string normalizedEmail) =>
+        new()
+        {
+            Id = Guid.NewGuid(),
+            UserName = userName,
+            NormalizedUserName = normalizedUserName,
+            Email = email,
+            NormalizedEmail = normalizedEmail
+        };
 
     private static async Task<GameContext> CreateSqliteContextAsync()
     {
@@ -482,6 +534,7 @@ public class WorldPlayerServiceTests
             WorldId = worldId,
             AllianceId = alliance.Id,
             Alliance = alliance,
+            AllianceRole = AllianceRoleEnum.Member,
             PlayerProfileId = Guid.NewGuid(),
             PlayerProfile = new PlayerProfile { Id = Guid.NewGuid(), UserName = "Target", Description = "Target description" },
             Cities = new List<City>
@@ -528,6 +581,7 @@ public class WorldPlayerServiceTests
         Assert.Equal(2, profile.CityCount);
         Assert.Equal("Target description", profile.Description);
         Assert.Equal(alliance.Id, profile.AllianceId);
+        Assert.Equal(AllianceRoleEnum.Member, profile.AllianceRole);
         Assert.Equal(worldId, profile.WorldId);
         Assert.Equal(2, profile.Cities.Count);
         Assert.Equal("Harbor", profile.Cities[0].CityName);
@@ -776,21 +830,15 @@ public class WorldPlayerServiceTests
 
     private sealed class NoOpPlayerProfileRepository : IPlayerProfileRepository
     {
-        public Task<PlayerProfile?> GetByEmailAsync(string email) => Task.FromResult<PlayerProfile?>(null);
         public Task<PlayerProfile?> GetByIdAsync(Guid id) => Task.FromResult<PlayerProfile?>(null);
-        public Task AddAsync(PlayerProfile playerProfile) => Task.CompletedTask;
         public Task UpdateAsync(PlayerProfile playerProfile) => Task.CompletedTask;
-        public Task<bool> ExistsByEmailAsync(string email) => Task.FromResult(false);
         public Task<string?> GetUserNameByIdAsync(Guid id) => Task.FromResult<string?>(null);
     }
 
     private sealed class FixedPlayerProfileRepository(Guid profileId, string userName) : IPlayerProfileRepository
     {
-        public Task<PlayerProfile?> GetByEmailAsync(string email) => Task.FromResult<PlayerProfile?>(null);
         public Task<PlayerProfile?> GetByIdAsync(Guid id) => Task.FromResult<PlayerProfile?>(null);
-        public Task AddAsync(PlayerProfile playerProfile) => Task.CompletedTask;
         public Task UpdateAsync(PlayerProfile playerProfile) => Task.CompletedTask;
-        public Task<bool> ExistsByEmailAsync(string email) => Task.FromResult(false);
         public Task<string?> GetUserNameByIdAsync(Guid id) =>
             Task.FromResult<string?>(id == profileId ? userName : null);
     }
@@ -801,20 +849,13 @@ public class WorldPlayerServiceTests
 
         public int UpdateCalls { get; private set; }
 
-        public Task<PlayerProfile?> GetByEmailAsync(string email) => Task.FromResult<PlayerProfile?>(null);
         public Task<PlayerProfile?> GetByIdAsync(Guid id) => Task.FromResult(_profiles.TryGetValue(id, out var profile) ? profile : null);
-        public Task AddAsync(PlayerProfile playerProfile)
-        {
-            _profiles[playerProfile.Id] = playerProfile;
-            return Task.CompletedTask;
-        }
         public Task UpdateAsync(PlayerProfile playerProfile)
         {
             _profiles[playerProfile.Id] = playerProfile;
             UpdateCalls++;
             return Task.CompletedTask;
         }
-        public Task<bool> ExistsByEmailAsync(string email) => Task.FromResult(false);
         public Task<string?> GetUserNameByIdAsync(Guid id) => Task.FromResult<string?>(null);
     }
 

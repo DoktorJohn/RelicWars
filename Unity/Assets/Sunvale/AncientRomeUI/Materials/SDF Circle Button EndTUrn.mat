@@ -1,0 +1,172 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!21 &2100000
+Material:
+  serializedVersion: 8
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_Name: SDF Circle Button EndTUrn
+  m_Shader: {fileID: 4800000, guid: a8df3b5b837d4504840a0b0d866d76c9, type: 3}
+  m_ValidKeywords: []
+  m_InvalidKeywords:
+  - _COOLDOWNCLOCKWISE_ON
+  m_LightmapFlags: 4
+  m_EnableInstancingVariants: 0
+  m_DoubleSidedGI: 0
+  m_CustomRenderQueue: -1
+  stringTagMap: {}
+  disabledShaderPasses: []
+  m_SavedProperties:
+    serializedVersion: 3
+    m_TexEnvs:
+    - _BgTex:
+        m_Texture: {fileID: 2800000, guid: 7d44f3f8222d10c4189eb0e7077c07cb, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _BumpMap:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _DetailAlbedoMap:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _DetailMask:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _DetailNormalMap:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _EmissionMap:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _MainTex:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _MetallicGlossMap:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _OcclusionMap:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _OverlayTex:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _ParallaxMap:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    m_Ints: []
+    m_Floats:
+    - _Ambient: 0.44
+    - _Aspect: 1
+    - _BgBrightness: 0
+    - _BgContrast: 1
+    - _BgOffsetX: 0
+    - _BgOffsetY: 0
+    - _BgScale: 1
+    - _BgTintStrength: 0
+    - _BulgeAmount: 0.677
+    - _BulgeUVWarp: 0.03
+    - _BumpScale: 1
+    - _CircleFeather: 0.006
+    - _CircleRadius: 0.5
+    - _ColorMask: 15
+    - _CooldownClockwise: 1
+    - _CooldownEnabled: 0
+    - _CooldownFeather: 0.006
+    - _CooldownOpacity: 0.65
+    - _CooldownProgress: 1
+    - _CooldownStartAngle: 90
+    - _Cutoff: 0.5
+    - _DetailNormalMapScale: 1
+    - _DiffuseStrength: 1.06
+    - _DstBlend: 0
+    - _EdgeDarkenPower: 2.32
+    - _EdgeDarkenStrength: 0.198
+    - _EdgeDarkness: 0.55
+    - _EdgePower: 2.2
+    - _EdgeSoftness: 0.002
+    - _EdgeWidth: 0.18
+    - _GlossMapScale: 1
+    - _Glossiness: 0.5
+    - _GlossyReflections: 1
+    - _GreyscaleDisabled: 0
+    - _GreyscaleDisabledDarkness: 0.45
+    - _IconBrightness: 1
+    - _IconOffsetX: 0
+    - _IconOffsetY: 0
+    - _IconOpacity: 1
+    - _IconSaturation: 1
+    - _IconScale: 1
+    - _IconShadowOffsetX: 1
+    - _IconShadowOffsetY: -1
+    - _IconShadowOpacity: 0.45
+    - _IconShadowSoftness: 1.25
+    - _IconStrokeOpacity: 1
+    - _IconStrokeSize: 1.5
+    - _Metallic: 0
+    - _Mode: 0
+    - _OcclusionStrength: 1
+    - _OverlayEnabled: 0
+    - _OverlayOffsetX: 0
+    - _OverlayOffsetY: 0
+    - _OverlayOpacity: 0
+    - _OverlayScale: 1
+    - _Parallax: 0.02
+    - _RimHighlightStrength: 0.205
+    - _RimHighlightWidth: 0.052
+    - _RimShadowStrength: 0.193
+    - _RimShadowWidth: 0.174
+    - _ShadowExpand: 0.0087
+    - _ShadowSoftness: 0.0158
+    - _SmoothnessTextureChannel: 0
+    - _SpecularGloss: 42.3
+    - _SpecularHighlights: 1
+    - _SpecularStrength: 0.143
+    - _SrcBlend: 1
+    - _Stencil: 0
+    - _StencilComp: 8
+    - _StencilOp: 0
+    - _StencilReadMask: 255
+    - _StencilWriteMask: 255
+    - _SweepHighlightAngle: 35
+    - _SweepHighlightEnabled: 0
+    - _SweepHighlightFeather: 0.12
+    - _SweepHighlightOpacity: 0
+    - _SweepHighlightPosition: -1.2
+    - _SweepHighlightWidth: 0.18
+    - _TextureRotation: 0
+    - _TopBevelBias: 2.5
+    - _TopBevelDarkness: 0.22
+    - _TopBevelHighlight: 0.12
+    - _TopBevelInset: 0.048
+    - _TopBevelSharpness: 0.0211
+    - _UVSec: 0
+    - _UseUIAlphaClip: 0
+    - _ZWrite: 1
+    m_Colors:
+    - _BgTint: {r: 1, g: 1, b: 1, a: 1}
+    - _Color: {r: 1, g: 1, b: 1, a: 1}
+    - _CooldownColor: {r: 0, g: 0, b: 0, a: 1}
+    - _EmissionColor: {r: 0, g: 0, b: 0, a: 1}
+    - _IconShadowColor: {r: 0, g: 0, b: 0, a: 1}
+    - _IconStrokeColor: {r: 0.17999998, g: 0.09999997, b: 0.03, a: 1}
+    - _IconTint: {r: 1, g: 1, b: 1, a: 1}
+    - _LightDir: {r: -0.6, g: 0.8, b: 0, a: 0}
+    - _OverlayTint: {r: 1, g: 1, b: 1, a: 1}
+    - _ShadowColor: {r: 0, g: 0, b: 0, a: 0.28}
+    - _ShadowOffset: {r: 0.015, g: -0.018, b: 0, a: 0}
+    - _SweepHighlightColor: {r: 1, g: 0.92, b: 0.75, a: 1}
+    - _TextureOffset: {r: 0, g: 0, b: 0, a: 0}
+    - _TextureScale: {r: 1, g: 1, b: 0, a: 0}
+  m_BuildTextureStacks: []

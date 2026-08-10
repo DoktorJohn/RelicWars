@@ -9,6 +9,7 @@ namespace Assets.Scripts.Domain.Enums
         CityAttacked = 4,
         SupportingUnitsAttacked = 5,
         SupportingUnitsRecalled = 6,
-        SupportingUnitsReturned = 7
+        SupportingUnitsReturned = 7,
+        FocusEnacted = 8
     }
 }

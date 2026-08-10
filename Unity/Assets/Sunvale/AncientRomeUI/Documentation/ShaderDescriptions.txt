@@ -1,0 +1,27 @@
+AncientRomeUI Shader Overview
+
+This file lists the custom shaders included with AncientRomeUI and explains what they do.
+
+BannerFlutter.shader - Adds a waving/fluttering animation to UI cloth and banners using vertex displacement, with adjustable speed and ripple frequency.
+CircleInventorySlotSDF.shader - Draws a circular inventory slot background using Signed Distance Fields (SDF), cleanly masking items inside the ring.
+ColorBurnFrame.shader - Applies a Photoshop-style Color Burn blend mode to sprite frames for richer contrast against backgrounds.
+HSV_With_TopShadow.shader - Allows Hue, Saturation, and Value adjustments on a sprite while rendering a procedural shadow from the top edge downwards.
+InventoryBeveledLineShader.shader - Renders a crisp procedural divider line with a gold bevel effect and perfect anti-aliasing.
+InventorySlotSDF.shader - Procedurally generates an inventory slot background using noise, SDF shapes, and distinct layer widths.
+Inverted Rect Fill SDF.shader - Fills a rectangle from the edges inward, designed to work with UIGlobalTextureTiling for seamless UI marble/stone textures.
+MarbleTabShader.shader - Draws tab buttons with a procedural Photoshop-style inner bevel while sampling a tiled marble background.
+PieChartMarble.shader - Renders individual pie chart slices, applying a seamless marble texture and smooth SDF edges.
+PieChartSoftEdgeDivider.shader - Draws the dividing lines between pie chart slices with soft, anti-aliased SDF edges.
+ProceduralGoldBevel.shader - Generates a high-quality metallic gold bevel effect for UI frames and buttons procedurally, saving texture space.
+ProceduralGoldDirectional.shader - Applies a directional metallic gold gradient mapped smoothly across UI elements.
+Roman Button Middle.shader - Specialized shader for rendering the middle stretchable segment of the Roman-style UI buttons.
+SDF Frame.shader - Draws procedural UI frames with dynamic slicing, including support for carved cooldown tracking.
+SDF Glowing Circle Outline.shader - Draws a glowing ring or outline that maintains a perfect circle regardless of the UI RectTransform's aspect ratio.
+SDF Health Bar Fill.shader - Renders a clean health or resource bar fill with crisp SDF edges and gray-neutralizing texture mapping.
+SDF Marble Panel.shader - Procedurally draws a concave marble panel background, perfect for UI windows and tooltips.
+SDF Portrait.shader - Renders character portraits with an SDF oval frame, including a feature that allows the character's head to pop out of the frame at the top.
+SDF Textured Circle.shader - Renders a textured circle with a procedural 3D bulged normal/lighting effect.
+SimpleFillBar.shader - A fast, basic shader for simple UI progress bars.
+TiledFillBar.shader - Renders a progress bar fill that tiles a texture seamlessly as the bar grows.
+UIGraphLine.shader - Renders thick, mathematically perfect anti-aliased graph lines for UI data charts.
+SimpleHSV.shader - A lightweight shader for easily adjusting the Hue, Saturation, and Value (lightness) of UI sprites.

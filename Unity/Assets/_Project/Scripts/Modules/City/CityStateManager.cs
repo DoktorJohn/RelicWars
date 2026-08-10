@@ -453,6 +453,8 @@ namespace Project.Modules.City
                 _currentResourceState.MetalProductionPerHour = detailedInformationDto.MetalProductionPerHour;
 
                 _currentResourceState.CoinsProductionPerHour = detailedInformationDto.CoinsProductionPerHour;
+                _currentResourceState.UnitUpkeepPerHour = detailedInformationDto.UnitUpkeepPerHour;
+                _currentResourceState.BuildingUpkeepPerHour = detailedInformationDto.BuildingUpkeepPerHour;
                 _currentResourceState.ResearchPointsPerHour = detailedInformationDto.ResearchPointsPerHour;
                 _currentResourceState.IdeologyFocusPointsPerHour = detailedInformationDto.IdeologyFocusPointsPerHour;
 

@@ -1,149 +1,197 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
-using UnityEngine;
-using UnityEngine.UIElements;
-using UnityEngine.SceneManagement;
 using Project.Network.Manager;
 using Project.Network.Models;
 using Project.Scripts.Domain.Enums;
+using Sunvale.AncientRomeUI.Buttons;
+using TMPro;
+using UnityEngine;
+using UnityEngine.EventSystems;
+using UnityEngine.InputSystem.UI;
+using UnityEngine.SceneManagement;
+using UnityEngine.UI;
 
 namespace Project.Modules.WorldSelection
 {
-    [RequireComponent(typeof(UIDocument))]
     public class WorldSelectionWindowController : MonoBehaviour
     {
-        private VisualElement _rootVisualElement;
-        private ScrollView _worldListScrollView;
-        private Label _playerNameLabel;
-        private Button _backToLoginButton;
-        private readonly List<Button> _enterButtons = new List<Button>();
-        private bool _isJoinInFlight;
-
-        [Header("Data Skabelon")]
-        [SerializeField] private VisualTreeAsset _worldEntryTemplate;
-
-        [Header("Scene Konfiguration")]
+        [Header("Scene Configuration")]
         [SerializeField] private string _nextGameplaySceneName = "CityViewScene";
         [SerializeField] private string _ideologySelectionSceneName = "IdeologySelectionScene";
         [SerializeField] private string _loginSceneName = "LoginScene";
 
+        [Header("Scene-authored World Selection View")]
+        [SerializeField] private TMP_Text _playerNameText;
+        [SerializeField] private TMP_Text _statusText;
+        [SerializeField] private ScrollRect _worldListScrollRect;
+        [SerializeField] private RectTransform _worldListContent;
+        [SerializeField] private GameObject _worldEntryPrefab;
+        [SerializeField] private CarvedPressButton _backToLoginButton;
+
+        private readonly List<GameObject> _worldEntries = new List<GameObject>();
+        private readonly List<CarvedPressButton> _enterRealmButtons = new List<CarvedPressButton>();
+        private bool _isUiActive;
+        private bool _isJoinInFlight;
+        private int _lifecycleVersion;
+
         private void OnEnable()
         {
-            var uiDocumentComponent = GetComponent<UIDocument>();
-            if (uiDocumentComponent == null) return;
+            EnsureEventSystem();
 
-            _rootVisualElement = uiDocumentComponent.rootVisualElement;
-            Project.Modules.UI.ResponsiveUiStateManager.RegisterRoot(_rootVisualElement);
+            if (!HasCompleteViewBinding())
+            {
+                Debug.LogError("[WorldSelection] World Selection Menu view references are incomplete.", this);
+                enabled = false;
+                return;
+            }
 
-            InitializeUserInterfaceElements();
+            _isUiActive = true;
+            _isJoinInFlight = false;
+            _lifecycleVersion++;
+            _backToLoginButton.buttonActivatedClicked.AddListener(HandleBackToLoginRequested);
             SynchronizePlayerIdentityDisplay();
+            ClearWorldEntries();
+
+            if (NetworkManager.Instance == null)
+            {
+                SetStatus("The realm service is unavailable. Return to login and try again.", true);
+                SetBackButtonEnabled(true);
+                return;
+            }
+
             StartAvailableWorldsLoadingProcess();
         }
 
         private void OnDisable()
         {
-            Project.Modules.UI.ResponsiveUiStateManager.UnregisterRoot(_rootVisualElement);
-            StopAllCoroutines();
+            _isUiActive = false;
             _isJoinInFlight = false;
-            _enterButtons.Clear();
-
-            if (_backToLoginButton != null)
-            {
-                _backToLoginButton.clicked -= HandleBackToLoginRequested;
-            }
+            _lifecycleVersion++;
+            StopAllCoroutines();
+            _backToLoginButton?.buttonActivatedClicked.RemoveListener(HandleBackToLoginRequested);
+            ClearWorldEntries();
         }
 
-        private void InitializeUserInterfaceElements()
+        private bool HasCompleteViewBinding()
         {
-            _worldListScrollView = _rootVisualElement.Q<ScrollView>("Scroll-World-List");
-            _playerNameLabel = _rootVisualElement.Q<Label>("Label-Player-Name");
-            _backToLoginButton = _rootVisualElement.Q<Button>("Button-Back-To-Login");
-
-            if (_backToLoginButton != null)
-            {
-                _backToLoginButton.clicked -= HandleBackToLoginRequested;
-                _backToLoginButton.clicked += HandleBackToLoginRequested;
-            }
-
-            if (NetworkManager.Instance == null)
-            {
-                Debug.LogError("[WorldSelection] NetworkManager session not found. Return to Bootstrap.");
-            }
+            return _playerNameText != null
+                && _statusText != null
+                && _worldListScrollRect != null
+                && _worldListContent != null
+                && _worldEntryPrefab != null
+                && _backToLoginButton != null;
         }
 
         private void HandleBackToLoginRequested()
         {
+            if (_isJoinInFlight)
+            {
+                return;
+            }
+
             NetworkManager.Instance?.ClearSession();
             SceneManager.LoadScene(_loginSceneName);
         }
 
         private void SynchronizePlayerIdentityDisplay()
         {
-            if (NetworkManager.Instance != null && _playerNameLabel != null)
-            {
-                _playerNameLabel.text = NetworkManager.Instance.PlayerName;
-            }
+            _playerNameText.text = NetworkManager.Instance != null
+                ? NetworkManager.Instance.PlayerName
+                : string.Empty;
         }
 
         private void StartAvailableWorldsLoadingProcess()
         {
-            if (NetworkManager.Instance == null) return;
+            SetStatus("Loading available worlds...", false);
+            SetBackButtonEnabled(true);
+            int requestVersion = _lifecycleVersion;
 
-            // Vi bruger coroutine her da GetAvailableWorlds returnerer IEnumerator i din arkitektur
-            StartCoroutine(NetworkManager.Instance.World.GetAvailableWorlds((receivedWorldsList) =>
+            StartCoroutine(NetworkManager.Instance.World.GetAvailableWorlds(receivedWorldsList =>
             {
-                if (!isActiveAndEnabled)
+                if (!_isUiActive || requestVersion != _lifecycleVersion)
                 {
                     return;
                 }
 
-                if (receivedWorldsList != null)
-                {
-                    PopulateWorldSelectionList(receivedWorldsList);
-                }
-                else
+                if (receivedWorldsList == null)
                 {
                     Debug.LogWarning("[WorldSelection] No worlds received from server.");
+                    SetStatus("Unable to load worlds. Please return to login and try again.", true);
+                    return;
                 }
+
+                PopulateWorldSelectionList(receivedWorldsList);
             }));
         }
 
         private void PopulateWorldSelectionList(List<WorldAvailableResponseDTO> activeWorlds)
         {
-            if (_worldListScrollView == null || _worldEntryTemplate == null)
+            ClearWorldEntries();
+
+            if (activeWorlds.Count == 0)
             {
+                SetStatus("No worlds are currently available.", false);
                 return;
             }
 
-            _worldListScrollView.Clear();
-            _enterButtons.Clear();
+            SetStatus("Choose a world to continue.", false);
 
-            foreach (var worldData in activeWorlds)
+            foreach (WorldAvailableResponseDTO worldData in activeWorlds)
             {
-                VisualElement worldEntryInstance = _worldEntryTemplate.CloneTree();
+                GameObject worldEntry = Instantiate(_worldEntryPrefab, _worldListContent);
+                worldEntry.SetActive(true);
+                _worldEntries.Add(worldEntry);
 
-                // Konfigurer Labels
-                Label nameLabel = worldEntryInstance.Q<Label>("World-Name");
-                Label statsLabel = worldEntryInstance.Q<Label>("World-Stats");
-                Button enterButton = worldEntryInstance.Q<Button>("Button-Enter");
-                _enterButtons.Add(enterButton);
-
-                nameLabel.text = worldData.WorldName;
-                statsLabel.text = $"Players: {worldData.CurrentPlayerCount}";
-
-                // Registrer Click Callback
-                if (Guid.TryParse(worldData.WorldId, out Guid worldIdentifier))
+                TMP_Text worldNameText = worldEntry.transform.Find("World Name")?.GetComponent<TMP_Text>();
+                TMP_Text playerCountText = worldEntry.transform.Find("Player Count")?.GetComponent<TMP_Text>();
+                CarvedPressButton enterRealmButton = worldEntry.GetComponentInChildren<CarvedPressButton>(true);
+                if (worldNameText == null || playerCountText == null || enterRealmButton == null)
                 {
-                    enterButton.clicked += () => HandleWorldSelectionRequest(worldIdentifier);
+                    Debug.LogError("[WorldSelection] World Entry prefab is missing a required binding.", worldEntry);
+                    Destroy(worldEntry);
+                    _worldEntries.Remove(worldEntry);
+                    continue;
                 }
 
-                _worldListScrollView.Add(worldEntryInstance);
+                worldNameText.text = string.IsNullOrWhiteSpace(worldData.WorldName)
+                    ? "Unnamed Realm"
+                    : worldData.WorldName.Trim();
+                playerCountText.text = $"Players: {worldData.CurrentPlayerCount}";
+                enterRealmButton.SetTextOnLabel("ENTER REALM");
+                _enterRealmButtons.Add(enterRealmButton);
+
+                if (!Guid.TryParse(worldData.WorldId, out Guid worldIdentifier))
+                {
+                    Debug.LogError($"[WorldSelection] Realm '{worldData.WorldName}' has an invalid identifier.");
+                    SetButtonEnabled(enterRealmButton, false);
+                    continue;
+                }
+
+                enterRealmButton.buttonActivatedClicked.AddListener(
+                    () => HandleWorldSelectionRequest(worldIdentifier));
             }
+
+            Canvas.ForceUpdateCanvases();
+            _worldListScrollRect.verticalNormalizedPosition = 1f;
+        }
+
+        private void ClearWorldEntries()
+        {
+            foreach (GameObject worldEntry in _worldEntries)
+            {
+                if (worldEntry != null)
+                {
+                    Destroy(worldEntry);
+                }
+            }
+
+            _worldEntries.Clear();
+            _enterRealmButtons.Clear();
         }
 
         private void HandleWorldSelectionRequest(Guid worldIdentifier)
         {
-            if (_isJoinInFlight)
+            if (_isJoinInFlight || !_isUiActive || NetworkManager.Instance == null)
             {
                 return;
             }
@@ -152,62 +200,80 @@ namespace Project.Modules.WorldSelection
             Debug.Log($"[WorldSelection] Attempting to join realm: {worldIdentifier}");
 #endif
 
-            if (NetworkManager.Instance == null)
-            {
-                return;
-            }
-
             _isJoinInFlight = true;
             SetEnterButtonsEnabled(false);
+            SetBackButtonEnabled(false);
+            SetStatus("Entering world...", false);
+            int requestVersion = _lifecycleVersion;
 
-            // Vi modtager nu både succes-status OG den valgte ideologi
             NetworkManager.Instance.JoinWorld(worldIdentifier, (isJoinSuccessful, selectedIdeology) =>
             {
-                if (!isActiveAndEnabled)
+                if (!_isUiActive || requestVersion != _lifecycleVersion)
                 {
                     return;
                 }
 
                 if (isJoinSuccessful)
                 {
-#if UNITY_EDITOR || DEVELOPMENT_BUILD
-                    Debug.Log($"[WorldSelection] Join successful. Ideology is: {selectedIdeology}");
-#endif
+                    SceneManager.LoadScene(selectedIdeology == IdeologyTypeEnum.None
+                        ? _ideologySelectionSceneName
+                        : _nextGameplaySceneName);
+                    return;
+                }
 
-                    // LOGIK: Hvis spilleren ikke har valgt en ideologi endnu, send dem til valg-scenen
-                    if (selectedIdeology == IdeologyTypeEnum.None)
-                    {
-#if UNITY_EDITOR || DEVELOPMENT_BUILD
-                        Debug.Log("[WorldSelection] New player detected. Redirecting to Ideology Selection.");
-#endif
-                        SceneManager.LoadScene(_ideologySelectionSceneName);
-                    }
-                    else
-                    {
-#if UNITY_EDITOR || DEVELOPMENT_BUILD
-                        Debug.Log("[WorldSelection] Returning player. Proceeding to City View.");
-#endif
-                        SceneManager.LoadScene(_nextGameplaySceneName);
-                    }
-                }
-                else
-                {
-                    Debug.LogError("[WorldSelection] Failed to join realm.");
-                    _isJoinInFlight = false;
-                    SetEnterButtonsEnabled(true);
-                }
+                Debug.LogError("[WorldSelection] Failed to join realm.");
+                _isJoinInFlight = false;
+                SetEnterButtonsEnabled(true);
+                SetBackButtonEnabled(true);
+                SetStatus("Unable to enter that world. Please try again.", true);
             });
         }
 
-        private void SetEnterButtonsEnabled(bool enabled)
+        private void SetStatus(string message, bool isError)
         {
-            foreach (var enterButton in _enterButtons)
+            _statusText.text = message;
+            _statusText.color = isError
+                ? new Color(0.62f, 0.10f, 0.07f, 1f)
+                : new Color(0.33f, 0.25f, 0.19f, 0.9f);
+        }
+
+        private void SetEnterButtonsEnabled(bool isInteractable)
+        {
+            foreach (CarvedPressButton enterRealmButton in _enterRealmButtons)
             {
-                if (enterButton != null)
-                {
-                    enterButton.SetEnabled(enabled);
-                }
+                SetButtonEnabled(enterRealmButton, isInteractable);
             }
+        }
+
+        private void SetBackButtonEnabled(bool isInteractable)
+        {
+            SetButtonEnabled(_backToLoginButton, isInteractable);
+        }
+
+        private static void SetButtonEnabled(CarvedPressButton button, bool isInteractable)
+        {
+            if (button == null)
+            {
+                return;
+            }
+
+            button.enabled = isInteractable;
+            if (button.coreImage != null)
+            {
+                button.coreImage.raycastTarget = isInteractable;
+            }
+        }
+
+        private static void EnsureEventSystem()
+        {
+            if (EventSystem.current != null)
+            {
+                return;
+            }
+
+            GameObject eventSystemObject = new GameObject("EventSystem");
+            eventSystemObject.AddComponent<EventSystem>();
+            eventSystemObject.AddComponent<InputSystemUIInputModule>();
         }
     }
 }

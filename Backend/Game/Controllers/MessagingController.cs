@@ -43,7 +43,8 @@ namespace Game.Controllers
                     validatedWorldPlayerId,
                     participantIds,
                     request.Subject,
-                    request.Content);
+                    request.Content,
+                    request.BattleReportId);
 
                 return Ok(result);
             }
@@ -63,7 +64,7 @@ namespace Game.Controllers
             try
             {
                 var validatedWorldPlayerId = await ValidateWorldPlayerOwnershipAsync(worldPlayerId);
-                var result = await _messagingService.ReplyToConversationAsync(validatedWorldPlayerId, conversationId, request.Content);
+                var result = await _messagingService.ReplyToConversationAsync(validatedWorldPlayerId, conversationId, request.Content, request.BattleReportId);
                 return Ok(result);
             }
             catch (UnauthorizedAccessException)

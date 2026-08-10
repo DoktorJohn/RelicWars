@@ -174,14 +174,22 @@
 
 .section-title { color: var(--c-text-highlight); font-size: 12px; -unity-font-style: bold; margin-top: 12px; margin-bottom: 6px; }
 .member-list { height: 150px; background-color: rgba(0,0,0,0.25); border-width: 1px; border-color: rgba(255,255,255,0.1); }
-.member-row, .invitation-row, .search-result-row { flex-direction: row; align-items: center; min-height: 34px; padding-left: 8px; padding-right: 8px; border-bottom-width: 1px; border-bottom-color: rgba(255,255,255,0.08); }
+.member-row, .invitation-row, .invited-player-row, .search-result-row { flex-direction: row; align-items: center; min-height: 34px; padding-left: 8px; padding-right: 8px; border-bottom-width: 1px; border-bottom-color: rgba(255,255,255,0.08); }
 .member-name, .invitation-name { flex-grow: 1; color: var(--c-text-body); }
 .member-role { width: 75px; color: var(--c-text-muted); }
 .member-points { width: 75px; color: var(--c-text-highlight); -unity-text-align: middle-right; }
 .invite-section { margin-top: 4px; }
+.invited-players-section { margin-top: 4px; }
+.invited-players-list { height: 112px; background-color: rgba(0,0,0,0.25); border-width: 1px; border-color: rgba(255,255,255,0.1); }
+.invited-player-name { flex-grow: 1; color: var(--c-text-body); }
+.invited-player-inviter { width: 120px; color: var(--c-text-muted); font-size: 11px; }
+.invited-player-expiry { width: 160px; color: var(--c-text-muted); font-size: 10px; -unity-text-align: middle-right; }
 .invite-search-row { flex-direction: row; }
-.invite-search-input { flex-grow: 1; margin-right: 6px; }
+.invite-search-input { flex-grow: 1; }
 .search-results, .invitation-list { max-height: 100px; }
+.player-search-dropdown { max-height: 160px; margin-top: 2px; padding-top: 2px; padding-bottom: 2px; background-color: var(--c-header-bg); }
+.player-search-dropdown .unity-scroll-view__content-container { flex-grow: 1; }
+.player-search-dropdown .small-action { min-width: 72px; }
 .status-text { color: var(--c-text-muted); font-size: 12px; margin-top: 5px; }
 .invitation-actions { flex-direction: row; }
 .small-action { height: 26px; margin-left: 4px; font-size: 10px; }
@@ -200,7 +208,7 @@
 .description-input > .unity-base-text-field__input { white-space: normal; -unity-text-align: upper-left; }
 .description-actions { flex-direction: row; justify-content: flex-end; }
 .description-actions .btn-global-base { margin-left: 6px; }
-.member-list { height: 300px; }
+.member-list { height: 210px; }
 .member-role-select { width: 105px; margin-right: 6px; }
 .member-role-select > .unity-base-field__input { min-height: 26px; background-color: rgba(0,0,0,0.35); color: var(--c-text-body); }
 .geopolitics-search { max-height: 120px; margin-bottom: 8px; }

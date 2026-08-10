@@ -16,5 +16,6 @@ namespace Application.Interfaces.IRepositories
         Task<int> GetUnreadCountAsync(Guid userId);
         Task MarkAsReadAsync(Guid reportId);
         Task DeleteAsync(Guid reportId);
+        Task SetPublicStatusAsync(Guid reportId, bool isPublic) => Task.CompletedTask;
     }
 }

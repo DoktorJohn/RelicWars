@@ -97,6 +97,23 @@ namespace Project.Network
             }
         }
 
+        public IEnumerator SetBattleReportPublicStatus(Guid worldPlayerId, Guid battleReportId, bool isPublic, string jwtToken, Action<bool> callback)
+        {
+            string url = $"{_baseUrl}/{worldPlayerId}/reports/{battleReportId}/public-status";
+            var payload = new { IsPublic = isPublic };
+
+            using (var request = BackendRequestHelper.CreatePutRequest(url, payload, jwtToken))
+            {
+                yield return request.SendWebRequest();
+                bool success = request.result == UnityWebRequest.Result.Success;
+                if (!success)
+                {
+                    Debug.LogError($"[BattleReports] Set public status failed: {BackendRequestHelper.GetErrorMessage(request)}");
+                }
+                callback?.Invoke(success);
+            }
+        }
+
         [Serializable]
         private class BattleReportUnreadStatusDTO
         {

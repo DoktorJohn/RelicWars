@@ -1,0 +1,121 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!21 &2100000
+Material:
+  serializedVersion: 8
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_Name: SDF Beveled rectangle Panel Greyscaled
+  m_Shader: {fileID: 4800000, guid: bd08a9ee6b46432ca47737e0db3be758, type: 3}
+  m_ValidKeywords: []
+  m_InvalidKeywords:
+  - _USEGLOBALTILING_ON
+  - _USEMARBLENOISE_ON
+  - _USEUV2RECTSIZE_ON
+  m_LightmapFlags: 4
+  m_EnableInstancingVariants: 0
+  m_DoubleSidedGI: 0
+  m_CustomRenderQueue: -1
+  stringTagMap: {}
+  disabledShaderPasses: []
+  m_SavedProperties:
+    serializedVersion: 3
+    m_TexEnvs:
+    - _MainTex:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    m_Ints: []
+    m_Floats:
+    - _AASoftnessPx: 1.25
+    - _BevelNoisePx: 0.32
+    - _BevelNoiseScale: 2
+    - _BottomDarkStrength: 0.238
+    - _BottomDarkWidthPx: 1
+    - _BottomNoiseStrength: 0.028
+    - _ColorMask: 15
+    - _ConcaveBL: 0
+    - _ConcaveBR: 0
+    - _ConcaveRadiusPx: 0
+    - _ConcaveTL: 0
+    - _ConcaveTR: 0
+    - _CreviceStrength: 0.05
+    - _EdgeChipBandPx: 0.25
+    - _EdgeChipScale: 8.1
+    - _EdgeChipStrengthPx: 0
+    - _EdgeSoftness: 1
+    - _EdgeWobblePx: 0.3
+    - _ForceRepeat: 0
+    - _GreyscaleAmount: 1
+    - _GreyscaleBrightness: 0
+    - _GreyscaleContrast: 1
+    - _GreyscaleTintStrength: 0
+    - _HsvBright: 1
+    - _HsvSaturation: 1
+    - _HsvShift: 1
+    - _InnerLineOffsetPx: 7
+    - _InnerLineStrength: 0
+    - _InnerLineWidthPx: 1
+    - _InnerShadowPower: 2.17
+    - _InnerShadowStrength: 0.922
+    - _InnerShadowWidthPx: 0
+    - _Inset: 1
+    - _LeftLightStrength: 0.05
+    - _LeftLightWidthPx: 1
+    - _MarbleFineGrainStrength: 0.0153
+    - _MarbleLightingNoise: 0.25
+    - _MarbleNoiseContrast: 0.88
+    - _MarbleNoiseScale: 31.2
+    - _MarbleNoiseSeed: 0
+    - _MarbleNoiseStrength: 0.0579
+    - _NoiseScale: 0.106
+    - _NoiseSeed: 0
+    - _OuterShadowSoftnessPx: 2
+    - _OuterShadowStrength: 0.389
+    - _Radius: 9.1
+    - _RadiusPx: 1
+    - _RightDarkStrength: 0.08
+    - _RightDarkWidthPx: 1
+    - _SideBottomNoiseWidthPx: 4
+    - _SideNoiseStrength: 0.014
+    - _Stencil: 0
+    - _StencilComp: 8
+    - _StencilOp: 0
+    - _StencilReadMask: 255
+    - _StencilWriteMask: 255
+    - _TextureBrightness: 0
+    - _TextureContrast: 1
+    - _TextureSaturation: 1
+    - _TopBevelNoiseStrength: 0.35
+    - _TopDamageBias: 0.05
+    - _TopDarkStrength: 0.169
+    - _TopDarkWidthPx: 2
+    - _TopHighlightNoiseStrength: 0.559
+    - _TopHighlightOffsetPx: 1
+    - _TopHighlightStrength: 0.255
+    - _TopHighlightWidthPx: 2
+    - _TopStripColorStrength: 0.177
+    - _TopStripNoiseContrast: 1.17
+    - _TopStripNoiseScaleX: 44
+    - _TopStripNoiseScaleY: 8
+    - _TopStripNoiseWidthPx: 6
+    - _TopStripShadowStrength: 0.327
+    - _UseBevelStripNoise: 0
+    - _UseGlobalTiling: 1
+    - _UseMarbleNoise: 1
+    - _UseUIAlphaClip: 0
+    - _UseUV2RectSize: 1
+    m_Colors:
+    - _Color: {r: 1, g: 1, b: 1, a: 1}
+    - _GreyscaleTint: {r: 0.54999995, g: 0.54999995, b: 0.54999995, a: 1}
+    - _HighlightColor: {r: 1, g: 0.88, b: 0.58, a: 1}
+    - _InnerLineColor: {r: 0.54999995, g: 0.37999994, b: 0.17999998, a: 1}
+    - _OuterShadowColor: {r: 0, g: 0, b: 0, a: 0.55}
+    - _OuterShadowOffsetPx: {r: 0, g: -2, b: 0, a: 0}
+    - _PanelInset: {r: 4, g: 4, b: 4, a: 4}
+    - _RectSize: {r: 0, g: 0, b: 0, a: 0}
+    - _TextureScaleOffset: {r: 1, g: 1, b: 0, a: 0}
+    - _TextureTiling: {r: 1, g: 1, b: 0, a: 0}
+  m_BuildTextureStacks: []

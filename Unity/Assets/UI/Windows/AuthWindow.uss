@@ -157,14 +157,25 @@
 }
 
 .auth-remember-toggle {
-    height: 30px;
+    width: auto;
+    min-height: 30px;
+    align-self: flex-start;
     margin: 0 0 4px 0;
+    padding: 0;
+    background-color: rgba(0, 0, 0, 0);
+    border-width: 0;
     color: var(--c-text-body);
     -unity-font-definition: var(--font-body);
     font-size: 13px;
 }
 
 .auth-remember-toggle > .unity-toggle__input {
+    width: auto;
+    background-color: rgba(0, 0, 0, 0);
+    border-width: 0;
+}
+
+.auth-remember-toggle .unity-toggle__checkmark {
     width: 20px;
     height: 20px;
     margin-right: 8px;
@@ -174,8 +185,9 @@
     border-radius: 3px;
 }
 
-.auth-remember-toggle:hover > .unity-toggle__input {
+.auth-remember-toggle:hover .unity-toggle__checkmark {
     border-color: var(--c-text-highlight);
+    background-color: rgba(70, 52, 39, 0.16);
 }
 
 .auth-remember-toggle:disabled {

@@ -29,6 +29,7 @@ namespace Project.Modules.UI
         private Label _revivedUnitsLabel;
         private Label _appliedModifiersLabel;
         private Button _deleteReportButton;
+        private Button _shareReportButton;
 
         private readonly List<BattleReportDTO> _reports = new();
         private Guid _worldPlayerId = Guid.Empty;
@@ -37,6 +38,8 @@ namespace Project.Modules.UI
         private bool _markReadRequestInFlight;
         private bool _deleteRequestInFlight;
         private bool _deleteReportConfirmationPending;
+        private bool _unshareConfirmationPending;
+        private bool _shareRequestInFlight;
         private int _requestVersion;
 
         public override void OnOpen(object dataPayload)
@@ -82,6 +85,7 @@ namespace Project.Modules.UI
             StopAllCoroutines();
             _markReadRequestInFlight = false;
             _deleteRequestInFlight = false;
+            _shareRequestInFlight = false;
             ResetDeleteReportButton();
         }
 
@@ -289,6 +293,15 @@ namespace Project.Modules.UI
             var actions = new VisualElement();
             actions.AddToClassList("report-detail-actions");
 
+            var selectedReport = _reports.FirstOrDefault(report => report.Id == _selectedReportId);
+            _shareReportButton = new Button(OnShareReportClicked)
+            {
+                text = selectedReport?.IsPublic == true ? "UNSHARE" : "SHARE"
+            };
+            _shareReportButton.AddToClassList("btn-global-base");
+            _shareReportButton.AddToClassList("btn-imperial-primary");
+            _shareReportButton.AddToClassList("report-detail-share-button");
+
             _deleteReportButton = new Button(OnDeleteReportClicked)
             {
                 text = "DELETE"
@@ -297,8 +310,70 @@ namespace Project.Modules.UI
             _deleteReportButton.AddToClassList("btn-imperial-danger");
             _deleteReportButton.AddToClassList("report-detail-delete-button");
 
+            actions.Add(_shareReportButton);
             actions.Add(_deleteReportButton);
             _reportDetailsPanel.Add(actions);
+        }
+
+        private void OnShareReportClicked()
+        {
+            if (_shareRequestInFlight || _selectedReportId == Guid.Empty || NetworkManager.Instance == null)
+            {
+                return;
+            }
+
+            var report = _reports.FirstOrDefault(entry => entry.Id == _selectedReportId);
+            if (report == null)
+            {
+                return;
+            }
+
+            if (report.IsPublic && !_unshareConfirmationPending)
+            {
+                _unshareConfirmationPending = true;
+                _shareReportButton.text = "CONFIRM UNSHARE";
+                return;
+            }
+
+            _shareRequestInFlight = true;
+            _shareReportButton.SetEnabled(false);
+            _shareReportButton.text = report.IsPublic ? "UNSHARING" : "SHARING";
+            var makePublic = !report.IsPublic;
+            var reportId = report.Id;
+
+            StartCoroutine(NetworkManager.Instance.BattleReports.SetBattleReportPublicStatus(
+                _worldPlayerId, reportId, makePublic, NetworkManager.Instance.JwtToken, success =>
+                {
+                    _shareRequestInFlight = false;
+                    if (!isActiveAndEnabled)
+                    {
+                        return;
+                    }
+
+                    if (success)
+                    {
+                        var storedReport = _reports.FirstOrDefault(entry => entry.Id == reportId);
+                        if (storedReport != null)
+                        {
+                            storedReport.IsPublic = makePublic;
+                            RenderReportDetails(storedReport);
+                        }
+                    }
+                    else
+                    {
+                        ResetShareReportButton(report);
+                    }
+                }));
+        }
+
+        private void ResetShareReportButton(BattleReportDTO report = null)
+        {
+            _unshareConfirmationPending = false;
+            if (_shareReportButton != null)
+            {
+                _shareReportButton.SetEnabled(true);
+                _shareReportButton.text = report?.IsPublic == true ? "UNSHARE" : "SHARE";
+            }
         }
 
         private void OnDeleteReportClicked()
@@ -377,6 +452,7 @@ namespace Project.Modules.UI
         private void ResetDeleteReportButton()
         {
             _deleteReportConfirmationPending = false;
+            _unshareConfirmationPending = false;
 
             if (_deleteReportButton != null)
             {
@@ -435,6 +511,7 @@ namespace Project.Modules.UI
                 ReportTypeEnum.SupportingUnitsAttacked => "SUPPORT DEFENSE",
                 ReportTypeEnum.SupportingUnitsRecalled => "SUPPORT RECALL",
                 ReportTypeEnum.SupportingUnitsReturned => "SUPPORT RETURN",
+                ReportTypeEnum.FocusEnacted => "FOCUS",
                 _ => "BATTLE"
             };
         }

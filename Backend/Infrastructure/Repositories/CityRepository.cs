@@ -4,6 +4,8 @@ using Domain.Enums;
 using Domain.Workers;
 using Infrastructure.Context;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Storage;
+using System.Data;
 
 namespace Infrastructure.Repositories
 {
@@ -242,6 +244,32 @@ namespace Infrastructure.Repositories
                 .Where(c => c.WorldPlayerId == worldPlayerId)
                 .AsNoTracking()
                 .ToListAsync();
+        }
+
+        public Task<City?> GetForEdictAsync(Guid cityId) => _context.Cities
+            .AsSplitQuery()
+            .Include(c => c.Buildings)
+            .Include(c => c.UnitStacks)
+            .Include(c => c.ExoticResources)
+            .Include(c => c.ActiveFocuses)
+            .Include(c => c.WorldPlayer).ThenInclude(p => p!.ModifiersInternal)
+            .Include(c => c.WorldPlayer).ThenInclude(p => p!.CompletedResearches)
+            .Include(c => c.WorldPlayer).ThenInclude(p => p!.Alliance)
+            .Include(c => c.WorldPlayer).ThenInclude(p => p!.Cities).ThenInclude(pc => pc.Buildings)
+            .Include(c => c.WorldPlayer).ThenInclude(p => p!.Cities).ThenInclude(pc => pc.UnitStacks)
+            .Include(c => c.WorldPlayer).ThenInclude(p => p!.Cities).ThenInclude(pc => pc.ActiveFocuses)
+            .Include(c => c.WorldPlayer).ThenInclude(p => p!.Cities).ThenInclude(pc => pc.OriginUnitDeployments).ThenInclude(d => d.UnitStacks)
+            .FirstOrDefaultAsync(c => c.Id == cityId);
+
+        public async Task AcquireEdictPlayerLockAsync(Guid worldPlayerId)
+        {
+            var transaction = _context.Database.CurrentTransaction ?? throw new InvalidOperationException("Edict lock requires an active transaction.");
+            var connection = _context.Database.GetDbConnection();
+            await using var command = connection.CreateCommand();
+            command.Transaction = transaction.GetDbTransaction();
+            command.CommandText = "DECLARE @result int; EXEC @result = sys.sp_getapplock @Resource=@resource, @LockMode='Exclusive', @LockOwner='Transaction', @LockTimeout=15000; SELECT @result;";
+            var resource = command.CreateParameter(); resource.ParameterName = "@resource"; resource.DbType = DbType.String; resource.Value = $"RelicWars:Edict:{worldPlayerId:D}"; command.Parameters.Add(resource);
+            if (Convert.ToInt32(await command.ExecuteScalarAsync()) < 0) throw new DbUpdateConcurrencyException("Could not acquire the player edict lock.");
         }
 
         public async Task<Guid?> GetWorldPlayerIdByCityIdAsync(Guid cityId)

@@ -1,4 +1,24 @@
 ﻿/* --- BUILDING GRID SECTION --- */
+.townhall-window-size { width: 1000px; height: 750px; }
+.townhall-content { padding: 8px 20px 14px 20px; flex-grow: 1; min-height: 0; }
+.townhall-tabs { flex-shrink: 0; margin-bottom: 3px; }
+.townhall-divider { margin-bottom: 5px; }
+.townhall-buildings-panel { flex-grow: 1; min-height: 0; }
+.edicts-panel { display: none; flex-grow: 1; }
+.edicts-list { flex-grow: 1; min-height: 0; }
+.edict-status { color: var(--c-text-highlight); margin-bottom: 6px; -unity-font-definition: var(--font-body); -unity-font-style: bold; font-size: 12px; }
+.edict-card { min-height: 76px; margin: 2px; padding: 7px 9px; background-color: rgba(255,255,255,.14); border-width: 1px; border-color: rgba(165,125,50,.28); border-radius: 5px; }
+.edict-card-active { background-color: rgba(165,125,50,.20); border-color: rgba(165,125,50,.78); }
+.edict-card-header { height: 28px; flex-direction: row; align-items: center; }
+.edict-name { flex-grow: 1; min-width: 0; color: var(--c-text-header); -unity-font-definition: var(--font-header); font-size: 13px; -unity-font-style: bold; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.edict-active { color: var(--c-value-positive); margin-left: 8px; -unity-font-style: bold; font-size: 10px; }
+.edict-meta { color: var(--c-text-muted); margin-left: 10px; font-size: 10px; white-space: nowrap; }
+.edict-effects { flex-direction: row; min-height: 30px; }
+.edict-benefit, .edict-downside { width: 50%; white-space: normal; -unity-font-definition: var(--font-body); font-size: 11px; }
+.edict-benefit { color: var(--c-value-positive); padding-right: 8px; }
+.edict-downside { color: var(--c-value-negative); padding-left: 8px; }
+.edict-action { width: 112px; min-width: 112px; height: 28px; min-height: 28px; margin: 0 0 0 10px; padding: 2px 8px; font-size: 10px; }
+
 .building-grid-view {
     flex-grow: 1;
     flex-basis: 0; 
@@ -99,40 +119,41 @@
 /* --- QUEUE SECTION --- */
 .queue-section {
     margin-top: 0;
-    min-height: 135px; 
+    height: 100px;
+    min-height: 100px;
     width: 100%;
     flex-shrink: 0; 
     border-top-width: 1px;
     border-top-color: rgba(165, 125, 50, 0.3);
-    padding-top: 8px;
+    padding-top: 5px;
 }
 
 .queue-header-label {
     -unity-font-definition: var(--font-header);
     color: var(--c-text-header);
-    font-size: 20px; 
+    font-size: 17px;
     -unity-font-style: bold;
     letter-spacing: 2px;
-    margin-bottom: 10px;
+    margin-bottom: 4px;
     -unity-text-outline-width: 0.4px;
     -unity-text-outline-color: var(--c-text-header);
 }
 
 .queue-scroll-view {
     flex-grow: 1;
-    height: 100px;
+    height: 68px;
 }
 
 /* --- QUEUE ITEM CARD --- */
 .queue-item-card {
     width: 182px; 
-    height: 95px; 
+    height: 64px;
     margin-right: 10px;
     background-color: rgba(0, 0, 0, 0.5);
     border-width: 2px;
     border-color: var(--c-border);
     border-radius: 6px;
-    padding: 8px;
+    padding: 5px 8px;
     justify-content: space-between;
 }
 

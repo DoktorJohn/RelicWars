@@ -3,23 +3,27 @@
     <ui:Style src="TownHallWindow.uss" />
     <ui:VisualElement name="TownHall-Window-Overlay" picking-mode="Ignore" class="screen-overlay">
         
-        <ui:VisualElement name="TownHall-Window-MainContainer" class="window-frame" style="width: 1000px; height: 750px;">
+            <ui:VisualElement name="TownHall-Window-MainContainer" class="window-frame townhall-window-size">
             
             <ui:VisualElement name="TownHall-Window-Header" class="window-header">
                 <ui:Label name="TownHall-Label-Title" class="window-header-label" text="THE TOWNHALL" />
                 <ui:Button name="Header-Close-Button" class="window-close-btn" text="x" />
             </ui:VisualElement>
             
-            <ui:VisualElement style="padding: 20px; flex-grow: 1;">
-                <ui:Label class="flavor-text text-flavor" text="The townhall is the epicenter of your empire; from here you construct your cities and increase the tax rate of your empire..." />
-                <ui:VisualElement class="divider" style="margin-bottom: 10px;" />
+            <ui:VisualElement class="townhall-content">
+                <ui:VisualElement class="window-tabs townhall-tabs">
+                    <ui:Button name="TownHall-Buildings-Tab" text="BUILDINGS" class="window-tab window-tab-active" />
+                    <ui:Button name="TownHall-Edicts-Tab" text="EDICTS" class="window-tab" />
+                </ui:VisualElement>
+                <ui:VisualElement class="divider townhall-divider" />
                 
-                <ui:ScrollView name="TownHall-Building-List" class="building-grid-view" style="flex-grow: 1;" />
+                <ui:VisualElement name="TownHall-Buildings-Panel" class="townhall-buildings-panel"><ui:ScrollView name="TownHall-Building-List" class="building-grid-view" />
                 
                 <ui:VisualElement name="Queue-Section" class="queue-section">
                     <ui:Label name="Queue-Header-Label" text="CONSTRUCTION QUEUE" class="queue-header-label" />
                     <ui:ScrollView name="Building-Queue-List" class="queue-scroll-view" mode="Horizontal" />
-                </ui:VisualElement>
+                </ui:VisualElement></ui:VisualElement>
+                <ui:VisualElement name="TownHall-Edicts-Panel" class="edicts-panel"><ui:Label name="TownHall-Edict-Status" class="edict-status" /><ui:ScrollView name="TownHall-Edict-List" class="edicts-list" /></ui:VisualElement>
             </ui:VisualElement>
         </ui:VisualElement>
 

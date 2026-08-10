@@ -18,7 +18,9 @@
 
                         <ui:VisualElement name="Profile-ActionRow" class="profile-action-row" style="display: none;">
                             <ui:Button name="Btn-MessagePlayer" class="btn-global-base btn-imperial-primary profile-action-button" text="MESSAGE PLAYER" />
+                            <ui:Button name="Btn-InviteToAlliance" class="btn-global-base btn-imperial-success profile-action-button profile-invite-button" text="INVITE TO ALLIANCE" style="display: none;" />
                         </ui:VisualElement>
+                        <ui:Label name="Lbl-ProfileActionStatus" class="profile-action-status" text="" style="display: none;" />
 
                         <ui:VisualElement class="divider profile-divider" />
 

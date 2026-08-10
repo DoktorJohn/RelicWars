@@ -18,6 +18,7 @@ namespace Application.Services
         private readonly ResearchDataReader _researchDataReader;
         private readonly IdeologyDataReader _ideologyDataReader;
         private readonly IdeologyFocusDataReader _ideologyFocusDataReader;
+        private readonly EdictDataReader? _edictDataReader;
         private readonly TimeProvider _timeProvider;
 
         public ModifierCollectorService(
@@ -25,12 +26,14 @@ namespace Application.Services
             ResearchDataReader researchDataReader,
             IdeologyDataReader ideologyDataReader,
             IdeologyFocusDataReader ideologyFocusDataReader,
-            TimeProvider timeProvider)
+            TimeProvider timeProvider,
+            EdictDataReader? edictDataReader = null)
         {
             _buildingDataReader = buildingDataReader;
             _researchDataReader = researchDataReader;
             _ideologyDataReader = ideologyDataReader;
             _ideologyFocusDataReader = ideologyFocusDataReader;
+            _edictDataReader = edictDataReader;
             _timeProvider = timeProvider;
         }
 
@@ -73,6 +76,9 @@ namespace Application.Services
             }
 
             providers.Add(cityEntity);
+
+            if (cityEntity.ActiveEdict.HasValue && _edictDataReader != null)
+                providers.Add(_edictDataReader.Get(cityEntity.ActiveEdict.Value));
 
             foreach (var cityBuilding in cityEntity.Buildings.Where(b => b.Level > 0))
             {

@@ -48,6 +48,7 @@ namespace Project.Scripts.Domain.DTOs
         public string AllianceName { get; set; }
         public IdeologyTypeEnum Ideology { get; set; }
         public Guid AllianceId { get; set; }
+        public AllianceRoleDTO AllianceRole { get; set; }
         public Guid WorldId { get; set; }
         public List<CityDTO> Cities { get; set; } = new();
     }

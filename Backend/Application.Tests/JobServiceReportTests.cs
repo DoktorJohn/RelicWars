@@ -183,8 +183,8 @@ public class JobServiceReportTests
     private sealed class NoOpWorldPlayerService : IWorldPlayerService
     {
         public Task<WorldPlayerJoinResponse> AssignPlayerToGameWorldAsync(Guid worldId) => Task.FromResult(new WorldPlayerJoinResponse(false, string.Empty, null, null, IdeologyTypeEnum.None));
-        public Task<WorldPlayerProfileDTO> GetWorldPlayerProfileAsync(Guid worldPlayerId) => Task.FromResult(new WorldPlayerProfileDTO(Guid.Empty, string.Empty, 0, 0, 0, string.Empty, string.Empty, IdeologyTypeEnum.None, Guid.Empty, Guid.Empty, new List<CityDTO>()));
-        public Task<WorldPlayerProfileDTO> UpdateWorldPlayerDescriptionAsync(Guid worldPlayerId, string description) => Task.FromResult(new WorldPlayerProfileDTO(Guid.Empty, string.Empty, 0, 0, 0, string.Empty, string.Empty, IdeologyTypeEnum.None, Guid.Empty, Guid.Empty, new List<CityDTO>()));
+        public Task<WorldPlayerProfileDTO> GetWorldPlayerProfileAsync(Guid worldPlayerId) => Task.FromResult(new WorldPlayerProfileDTO(Guid.Empty, string.Empty, 0, 0, 0, string.Empty, string.Empty, IdeologyTypeEnum.None, Guid.Empty, AllianceRoleEnum.None, Guid.Empty, new List<CityDTO>()));
+        public Task<WorldPlayerProfileDTO> UpdateWorldPlayerDescriptionAsync(Guid worldPlayerId, string description) => Task.FromResult(new WorldPlayerProfileDTO(Guid.Empty, string.Empty, 0, 0, 0, string.Empty, string.Empty, IdeologyTypeEnum.None, Guid.Empty, AllianceRoleEnum.None, Guid.Empty, new List<CityDTO>()));
         public Task<WorldPlayerEconomyDTO> GetWorldPlayerEconomyAsync(Guid worldPlayerId) => Task.FromResult(new WorldPlayerEconomyDTO());
         public Task<List<PlayerSearchResultDTO>> SearchPlayersAsync(Guid worldId, string query) => Task.FromResult(new List<PlayerSearchResultDTO>());
         public void SyncGlobalResources(WorldPlayer player, DateTime currentDateTime) { }

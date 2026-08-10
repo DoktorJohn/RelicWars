@@ -25,9 +25,9 @@ namespace Application.Utility
             };
 
             // Vi sender både det generelle UnitCost (hvis det findes) og det specifikke kategori-tag
-            double wood = modifierService.CalculateCityValue(city, unitStaticData.WoodCost, categoryCostTag).FinalValue;
-            double stone = modifierService.CalculateCityValue(city, unitStaticData.StoneCost, categoryCostTag).FinalValue;
-            double metal = modifierService.CalculateCityValue(city, unitStaticData.MetalCost, categoryCostTag).FinalValue;
+            double wood = modifierService.CalculateCityValue(city, unitStaticData.WoodCost, ModifierTagEnum.UnitCost, categoryCostTag).FinalValue;
+            double stone = modifierService.CalculateCityValue(city, unitStaticData.StoneCost, ModifierTagEnum.UnitCost, categoryCostTag).FinalValue;
+            double metal = modifierService.CalculateCityValue(city, unitStaticData.MetalCost, ModifierTagEnum.UnitCost, categoryCostTag).FinalValue;
 
             return ((int)Math.Floor(wood), (int)Math.Floor(stone), (int)Math.Floor(metal));
         }
@@ -84,7 +84,8 @@ namespace Application.Utility
             double multiplier = Math.Max(0.1, speedResult.FinalValue);
 
             // Formel: Tid / (1 + bonus)
-            double finalTime = unitStaticData.RecruitmentTimeInSeconds / multiplier;
+            double speedAdjustedTime = unitStaticData.RecruitmentTimeInSeconds / multiplier;
+            double finalTime = modifierService.CalculateCityValue(city, speedAdjustedTime, ModifierTagEnum.RecruitmentTime).FinalValue;
 
             // Returner resultatet, dog minimum 1 sekund
             return (int)Math.Max(1.0, Math.Floor(finalTime));

@@ -57,6 +57,37 @@ public class AllianceManagementTests
     }
 
     [Fact]
+    public async Task FounderCanInvitePlayerWithoutAlliance()
+    {
+        var setup = CreateSetup();
+        var target = AddPlayerWithoutAlliance(setup.Context, setup.World, "Target");
+        await setup.Context.SaveChangesAsync();
+
+        var result = await setup.Service.InviteToAlliance(
+            new InviteToAllianceDTO(setup.Founder.Id, target.Id));
+
+        Assert.True(result);
+        var invitation = Assert.Single(setup.Context.AllianceInvitations);
+        Assert.Equal(setup.Alliance.Id, invitation.AllianceId);
+        Assert.Equal(setup.Founder.Id, invitation.InvitedByWorldPlayerId);
+        Assert.Equal(target.Id, invitation.InvitedWorldPlayerId);
+    }
+
+    [Fact]
+    public async Task LeaderCannotInvitePlayer()
+    {
+        var setup = CreateSetup(memberRole: AllianceRoleEnum.Leader);
+        var target = AddPlayerWithoutAlliance(setup.Context, setup.World, "Target");
+        await setup.Context.SaveChangesAsync();
+
+        var exception = await Assert.ThrowsAsync<UnauthorizedAccessException>(() => setup.Service.InviteToAlliance(
+            new InviteToAllianceDTO(setup.Member.Id, target.Id)));
+
+        Assert.Equal("Only an alliance founder can invite players.", exception.Message);
+        Assert.Empty(setup.Context.AllianceInvitations);
+    }
+
+    [Fact]
     public async Task NewAllianceStartsWithoutDescription()
     {
         var setup = CreateSetup();
@@ -69,6 +100,40 @@ public class AllianceManagementTests
             new CreateAllianceDTO(setup.Founder.Id, "Fresh Alliance", "NEW"));
 
         Assert.Equal(string.Empty, result.Description);
+    }
+
+    [Fact]
+    public async Task AllianceNameIsUniqueWithinWorldIgnoringCaseAndWhitespace()
+    {
+        var setup = CreateSetup();
+        setup.Founder.AllianceId = null;
+        setup.Founder.Alliance = null;
+        setup.Founder.AllianceRole = AllianceRoleEnum.None;
+        await setup.Context.SaveChangesAsync();
+
+        var exception = await Assert.ThrowsAsync<InvalidOperationException>(() => setup.Service.CreateAlliance(
+            new CreateAllianceDTO(setup.Founder.Id, "  alliance  ", "NEW")));
+
+        Assert.Equal("Alliance name is already in use in this world.", exception.Message);
+    }
+
+    [Fact]
+    public async Task AllianceNameCanBeReusedInAnotherWorld()
+    {
+        var setup = CreateSetup();
+        setup.Alliance.Name = "Existing";
+        setup.Founder.AllianceId = null;
+        setup.Founder.Alliance = null;
+        setup.Founder.AllianceRole = AllianceRoleEnum.None;
+        var otherWorld = new World { Id = Guid.NewGuid(), Name = "Other World" };
+        AddAlliance(setup.Context, otherWorld, "Shared Name", "OTH");
+        await setup.Context.SaveChangesAsync();
+
+        var result = await setup.Service.CreateAlliance(
+            new CreateAllianceDTO(setup.Founder.Id, "Shared Name", "NEW"));
+
+        Assert.Equal("Shared Name", result.Name);
+        Assert.Equal("SHARED NAME", setup.Context.Alliances.Single(alliance => alliance.Id == result.Id).NormalizedName);
     }
 
     [Fact]
@@ -124,6 +189,18 @@ public class AllianceManagementTests
         {
             Id = Guid.NewGuid(), WorldId = world.Id, World = world, AllianceId = alliance.Id, Alliance = alliance,
             AllianceRole = role, PlayerProfileId = profile.Id, PlayerProfile = profile
+        };
+        context.WorldPlayers.Add(player);
+        return player;
+    }
+
+    private static WorldPlayer AddPlayerWithoutAlliance(GameContext context, World world, string name)
+    {
+        var profile = new PlayerProfile { Id = Guid.NewGuid(), UserName = name };
+        var player = new WorldPlayer
+        {
+            Id = Guid.NewGuid(), WorldId = world.Id, World = world, AllianceRole = AllianceRoleEnum.None,
+            PlayerProfileId = profile.Id, PlayerProfile = profile
         };
         context.WorldPlayers.Add(player);
         return player;

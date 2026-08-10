@@ -1,0 +1,176 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!21 &2100000
+Material:
+  serializedVersion: 8
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_Name: RPG_StaminaManaBar
+  m_Shader: {fileID: 4800000, guid: 2e157a7564274cdebeb1b6080b94d0a4, type: 3}
+  m_ValidKeywords: []
+  m_InvalidKeywords:
+  - _VERTICALFILL_ON
+  m_LightmapFlags: 4
+  m_EnableInstancingVariants: 0
+  m_DoubleSidedGI: 0
+  m_CustomRenderQueue: -1
+  stringTagMap: {}
+  disabledShaderPasses: []
+  m_SavedProperties:
+    serializedVersion: 3
+    m_TexEnvs:
+    - _BumpMap:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _DetailAlbedoMap:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _DetailMask:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _DetailNormalMap:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _EmissionMap:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _EmptyTex:
+        m_Texture: {fileID: 2800000, guid: 4a41367e87828c5469ff15a7a9e57240, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _FillTex:
+        m_Texture: {fileID: 2800000, guid: 182dbb781b76e1b4ab46f6a3f650156a, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _FullTex:
+        m_Texture: {fileID: 2800000, guid: 686454198e053784198dd5678160d436, type: 3}
+        m_Scale: {x: 1.1, y: 1.1}
+        m_Offset: {x: 0, y: 0}
+    - _GhostTex:
+        m_Texture: {fileID: 2800000, guid: 182dbb781b76e1b4ab46f6a3f650156a, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _MainTex:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _MetallicGlossMap:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _OcclusionMap:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _ParallaxMap:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    m_Ints: []
+    m_Floats:
+    - _BevelHeightPx: 16.2
+    - _BevelHighlightStrength: 0
+    - _BevelShadowStrength: 0.12
+    - _BevelSharpness: 7.97
+    - _BottomBevelHeightPx: 1.3
+    - _BottomBevelOffsetPx: 2.5
+    - _BottomBevelSoftnessPx: 0.62
+    - _BottomBevelStrength: 0.897
+    - _BottomShadowPower: 3.02
+    - _BottomShadowStrength: 0.154
+    - _BumpScale: 1
+    - _ColorMask: 15
+    - _Cutoff: 0.5
+    - _DetailNormalMapScale: 1
+    - _DropShadowSoftness: 1.79
+    - _DstBlend: 0
+    - _EdgeDarken: 0.534
+    - _EdgeSoftness: 0.1
+    - _EdgeWidthPx: 0
+    - _FXBrightness: 1
+    - _FXContrast: 1
+    - _FXSaturation: 1
+    - _Fill: 0.287
+    - _FillAmount: 0.84
+    - _FillOriginRight: 0
+    - _GhostFill: 0.633
+    - _GlossMapScale: 1
+    - _Glossiness: 0.5
+    - _GlossyReflections: 1
+    - _HighlightStrength: 0.387
+    - _IconCount: 5
+    - _IconHeight: 1.17
+    - _IconScale: 1
+    - _IconWidth: 0.9
+    - _InnerShadowWidthPx: 8
+    - _LeftRoundness: 0.784
+    - _MainFill: 0.75
+    - _Metallic: 0
+    - _Mode: 0
+    - _NoiseStrength: 0.071
+    - _OcclusionStrength: 1
+    - _Parallax: 0.02
+    - _PatternStrengthGhost: 0.2
+    - _PatternStrengthMain: 0.2
+    - _RadiusPx: 0.4
+    - _RightRoundness: 0.093
+    - _RightToLeft: 0
+    - _ShadowStrength: 1.034
+    - _SmoothnessTextureChannel: 0
+    - _Spacing: 0
+    - _SpecularHighlights: 1
+    - _SrcBlend: 1
+    - _Stencil: 0
+    - _StencilComp: 8
+    - _StencilOp: 0
+    - _StencilReadMask: 255
+    - _StencilWriteMask: 255
+    - _StrokeThickness: 0
+    - _TopBevelHeightPx: 1.1
+    - _TopBevelOffsetPx: 2.4
+    - _TopBevelSoftnessPx: 0.1
+    - _TopBevelStrength: 0.437
+    - _TopHighlightPower: 5.63
+    - _TopHighlightStrength: 0.076
+    - _TopLineStrength: 1.136
+    - _UVSec: 0
+    - _UseUIAlphaClip: 0
+    - _VerticalFill: 1
+    - _ZWrite: 1
+    m_Colors:
+    - _BottomBevelColor: {r: 0, g: 0, b: 0, a: 0.7019608}
+    - _BottomColor: {r: 0.254717, g: 0.002572899, b: 0, a: 1}
+    - _ClipRect: {r: -32767, g: -32767, b: 32767, a: 32767}
+    - _Color: {r: 1, g: 1, b: 1, a: 1}
+    - _DamageColor: {r: 0.7858306, g: 0.8679245, b: 0.19241722, a: 0.75}
+    - _DropShadowColor: {r: 0, g: 0, b: 0, a: 0.35}
+    - _DropShadowOffset: {r: 0, g: -3, b: 0, a: 0}
+    - _EdgeColor: {r: 1, g: 0, b: 0.028571606, a: 0.95}
+    - _EmissionColor: {r: 0, g: 0, b: 0, a: 1}
+    - _EmptyColor: {r: 1, g: 1, b: 1, a: 1}
+    - _EmptyTint: {r: 0.9607843, g: 0.94509804, b: 0.92156863, a: 1}
+    - _FillColor: {r: 1, g: 1, b: 1, a: 1}
+    - _FullTint: {r: 1, g: 1, b: 1, a: 1}
+    - _GhostBottomColor: {r: 0.11280705, g: 0.19657695, b: 0.3679245, a: 1}
+    - _GhostEdgeColor: {r: 0.47058827, g: 0.5294118, b: 0.6509804, a: 1}
+    - _GhostTopColor: {r: 0.33579564, g: 0.5284717, b: 0.9245283, a: 1}
+    - _HealColor: {r: 0.43040225, g: 0.57659376, b: 0.9811321, a: 0.65}
+    - _HighlightColor: {r: 1, g: 0.85, b: 0.65, a: 1}
+    - _InnerShadowColor: {r: 0, g: 0, b: 0, a: 0.45}
+    - _MainBottomColor: {r: 0.06697223, g: 0.15331836, b: 0.3301887, a: 1}
+    - _MainEdgeColor: {r: 0.46978462, g: 0.5293082, b: 0.6509434, a: 1}
+    - _MainTopColor: {r: 0.20630117, g: 0.37274498, b: 0.7169812, a: 1}
+    - _MidColor: {r: 0.6698113, g: 0.0070506455, b: 0, a: 1}
+    - _PixelsPerTile: {r: 275, g: 275, b: 0, a: 0}
+    - _RectSize: {r: 70, g: 20, b: 0, a: 0}
+    - _StrokeColor: {r: 0.1792453, g: 0.1658072, b: 0.13950695, a: 1}
+    - _TopBevelColor: {r: 0.9433962, g: 0.8866177, b: 0.88554645, a: 1}
+    - _TopColor: {r: 1, g: 0.21999997, b: 0.17999998, a: 1}
+  m_BuildTextureStacks: []

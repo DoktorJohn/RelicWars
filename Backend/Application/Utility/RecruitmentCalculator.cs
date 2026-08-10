@@ -35,10 +35,14 @@ namespace Application.Utility
                 city, 1.0, ModifierTagEnum.RecruitmentSpeed, categoryTag).FinalValue;
 
             // Sikr mod division med nul og beregn tid
-            double calculatedFinalRecruitmentTimeSeconds = unit.RecruitmentTimeInSeconds / Math.Max(0.1, finalRecruitmentSpeedMultiplier);
+            double speedAdjustedSeconds = unit.RecruitmentTimeInSeconds / Math.Max(0.1, finalRecruitmentSpeedMultiplier);
+            double calculatedFinalRecruitmentTimeSeconds = _modifierService.CalculateCityValue(city, speedAdjustedSeconds, ModifierTagEnum.RecruitmentTime).FinalValue;
 
             // En rekruttering kan aldrig tage mindre end 1 sekund (gameplay balance)
             return Math.Max(calculatedFinalRecruitmentTimeSeconds, 1.0);
         }
+
+        public (int wood, int stone, int metal) CalculateFinalResourceCosts(City city, UnitData unit) =>
+            MilitaryUnitModifierHelper.GetModifiedCosts(_modifierService, city, unit);
     }
 }

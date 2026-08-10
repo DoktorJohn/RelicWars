@@ -32,6 +32,13 @@ namespace Project.Scripts.Domain.DTOs
     }
 
     [Serializable]
+    public class AllianceInvitedPlayerDTO
+    {
+        public Guid InvitationId; public Guid WorldPlayerId; public string UserName;
+        public Guid InvitedByWorldPlayerId; public string InvitedByUserName; public DateTime ExpiresAt;
+    }
+
+    [Serializable]
     public class CreateAllianceDTO
     {
         public Guid WorldPlayerIdFounder;
@@ -62,6 +69,9 @@ namespace Project.Scripts.Domain.DTOs
 
     [Serializable]
     public class RespondToAllianceInvitationDTO { public Guid WorldPlayerId; public Guid InvitationId; }
+
+    [Serializable]
+    public class CancelAllianceInvitationDTO { public Guid WorldPlayerId; public Guid InvitationId; }
 
     [Serializable]
     public class LeaveAllianceDTO { public Guid WorldPlayerId; }

@@ -1,5 +1,7 @@
 using Application.Interfaces.IRepositories;
+using Application.Interfaces.IServices;
 using Application.Services;
+using Application.DTOs;
 using Domain.Entities;
 using Domain.Enums;
 using Application.Utility;
@@ -10,6 +12,55 @@ namespace Application.Tests;
 
 public class IdeologyFocusGameplayTests
 {
+    [Theory]
+    [InlineData(IdeologyFocusNameEnum.FeudalMuster)]
+    [InlineData(IdeologyFocusNameEnum.LordsLevy)]
+    public async Task SuccessfulFocusEnactmentCreatesUnreadPlayerReport(IdeologyFocusNameEnum focusName)
+    {
+        var city = TestData.CityWithFocus(focusName);
+        city.Name = "Ravenhold";
+        city.ActiveFocuses.Clear();
+        city.WorldPlayer!.IdeologyFocusPoints = 100;
+
+        var focusData = TestData.FocusReader().GetIdeology(focusName);
+        city.WorldPlayer.Ideology = focusData.RequiredIdeology;
+
+        var reports = new RecordingBattleReportRepository();
+        var service = CreateEnactmentService(city, reports);
+
+        var result = await service.EnactIdeologyFocus(new(focusName, city.Id));
+
+        Assert.NotNull(result);
+        Assert.True(result.Success);
+        var report = Assert.Single(reports.Reports);
+        Assert.Equal(city.WorldPlayer.Id, report.WorldPlayerId);
+        Assert.Equal(ReportTypeEnum.FocusEnacted, report.ReportType);
+        Assert.False(report.IsRead);
+        Assert.Equal(TestData.Now, report.OccurredAt);
+        Assert.Contains("Focus enacted:", report.Title);
+        Assert.Contains("Ravenhold", report.Body);
+        Assert.Contains($"{focusData.IdeologyFocusPointCost:0.##} ideology points", report.Body);
+    }
+
+    [Fact]
+    public async Task RejectedFocusEnactmentDoesNotCreateReport()
+    {
+        var city = TestData.CityWithFocus(IdeologyFocusNameEnum.FeudalMuster);
+        city.ActiveFocuses.Clear();
+        city.WorldPlayer!.IdeologyFocusPoints = 0;
+        city.WorldPlayer.Ideology = TestData.FocusReader()
+            .GetIdeology(IdeologyFocusNameEnum.FeudalMuster).RequiredIdeology;
+
+        var reports = new RecordingBattleReportRepository();
+        var service = CreateEnactmentService(city, reports);
+
+        var result = await service.EnactIdeologyFocus(new(IdeologyFocusNameEnum.FeudalMuster, city.Id));
+
+        Assert.NotNull(result);
+        Assert.False(result.Success);
+        Assert.Empty(reports.Reports);
+    }
+
     [Fact]
     public void NobleClemencyIncreasesElapsedResistanceRecovery()
     {
@@ -200,6 +251,89 @@ public class IdeologyFocusGameplayTests
         var ownerLosses = Fight(city.WorldPlayer!).DefenderLosses.Sum(x => x.Quantity);
         var enemyLosses = Fight(new WorldPlayer { Id = Guid.NewGuid(), CompletedResearches = new(), Cities = new() }).DefenderLosses.Sum(x => x.Quantity);
         Assert.True(ownerLosses < enemyLosses);
+    }
+
+    private static IdeologyFocusService CreateEnactmentService(
+        City city,
+        RecordingBattleReportRepository reports)
+    {
+        var cityRepository = new MemoryCityRepository(city);
+        var jobs = new EmptyJobRepository();
+        var stats = new FixedCityStatService { Available = 100 };
+        var units = TestData.UnitReader();
+        var instantUtility = new InstantUtility(cityRepository, jobs, stats, units);
+
+        return new IdeologyFocusService(
+            new NoOpWorldPlayerRepository(),
+            new NoOpWorldPlayerService(),
+            new TestPlayerAccessService([city.WorldPlayer!], [city]),
+            cityRepository,
+            TestData.FocusReader(),
+            TestData.IdeologyReader(),
+            instantUtility,
+            stats,
+            jobs,
+            new NoOpResourceService(),
+            new MemoryIdeologyFocusRepository(city),
+            units,
+            new FixedRandomService(),
+            new FixedTimeProvider(TestData.Now),
+            new InstantFocusGrantService(instantUtility, stats, jobs, units, new FixedRandomService()),
+            new FocusEnactmentPolicy(),
+            reports);
+    }
+
+    private sealed class RecordingBattleReportRepository : IBattleReportRepository
+    {
+        public List<BattleReport> Reports { get; } = [];
+        public Task AddAsync(BattleReport report) { Reports.Add(report); return Task.CompletedTask; }
+        public Task<BattleReport?> GetByIdAsync(Guid reportId) => throw new NotSupportedException();
+        public Task<List<BattleReport>> GetByUserIdAsync(Guid userId) => throw new NotSupportedException();
+        public Task<int> GetUnreadCountAsync(Guid userId) => throw new NotSupportedException();
+        public Task MarkAsReadAsync(Guid reportId) => throw new NotSupportedException();
+        public Task DeleteAsync(Guid reportId) => throw new NotSupportedException();
+    }
+
+    private sealed class MemoryIdeologyFocusRepository(City city) : IIdeologyFocusRepository
+    {
+        public Task<List<IdeologyFocus>?> GetAll() => Task.FromResult<List<IdeologyFocus>?>(city.ActiveFocuses);
+        public Task<List<IdeologyFocus>?> GetAllActive() => GetAll();
+        public Task<List<IdeologyFocus>?> GetAllByCityPlayer(Guid cityId) => GetAll();
+        public Task UpdateAsync(IdeologyFocus ideologyFocus) => Task.CompletedTask;
+        public Task AddAsync(IdeologyFocus ideologyFocus) { city.ActiveFocuses.Add(ideologyFocus); return Task.CompletedTask; }
+        public Task DeleteExpiredFocusesForCityAsync(Guid cityId) => Task.CompletedTask;
+        public Task DeleteAsync(IdeologyFocus ideologyFocus) { city.ActiveFocuses.Remove(ideologyFocus); return Task.CompletedTask; }
+    }
+
+    private sealed class NoOpWorldPlayerRepository : IWorldPlayerRepository
+    {
+        public Task<WorldPlayer?> GetByIdAsync(Guid id) => throw new NotSupportedException();
+        public Task<WorldPlayer?> GetByIdWithResearchAsync(Guid id) => throw new NotSupportedException();
+        public Task AddAsync(WorldPlayer user) => throw new NotSupportedException();
+        public Task UpdateAsync(WorldPlayer user) => Task.CompletedTask;
+        public Task DeleteAsync(Guid id) => throw new NotSupportedException();
+        public Task<List<WorldPlayer>>? GetAllAsync() => throw new NotSupportedException();
+        public Task<WorldPlayer?> GetByProfileAndWorldAsync(Guid profileId, Guid worldId) => throw new NotSupportedException();
+        public Task<List<WorldPlayer>> GetAllByAllianceIdAsync(Guid allianceId) => throw new NotSupportedException();
+        public Task<List<WorldPlayer>> SearchPlayersByUsernameAsync(Guid worldId, string usernameQuery) => throw new NotSupportedException();
+    }
+
+    private sealed class NoOpWorldPlayerService : IWorldPlayerService
+    {
+        public Task<WorldPlayerJoinResponse> AssignPlayerToGameWorldAsync(Guid worldId) => throw new NotSupportedException();
+        public Task<WorldPlayerProfileDTO> GetWorldPlayerProfileAsync(Guid worldPlayerId) => throw new NotSupportedException();
+        public Task<WorldPlayerProfileDTO> UpdateWorldPlayerDescriptionAsync(Guid worldPlayerId, string description) => throw new NotSupportedException();
+        public Task<WorldPlayerEconomyDTO> GetWorldPlayerEconomyAsync(Guid worldPlayerId) => throw new NotSupportedException();
+        public Task<List<PlayerSearchResultDTO>> SearchPlayersAsync(Guid worldId, string query) => throw new NotSupportedException();
+        public void SyncGlobalResources(WorldPlayer player, DateTime currentDateTime) { }
+        public Task<WorldPlayerSelectIdeologyResponse> SelectIdeology(SelectIdeologyRequest request) => throw new NotSupportedException();
+    }
+
+    private sealed class NoOpResourceService : IResourceService
+    {
+        public CityResourceSnapshot CalculateCityResources(City cityEntity, DateTime currentDateTime) => throw new NotSupportedException();
+        public CityProductionSnapshot CalculateCityProduction(WorldPlayer playerEntity, City cityEntity) => throw new NotSupportedException();
+        public GlobalResourceSnapshot CalculateGlobalResources(WorldPlayer playerEntity, DateTime currentDateTime) => throw new NotSupportedException();
     }
 
 }

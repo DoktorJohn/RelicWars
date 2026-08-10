@@ -100,9 +100,10 @@ namespace Application.Services
             var cityResourceSnapshot = _resourceService.CalculateCityResources(cityEntity, currentDateTime);
 
             // 5. Valider om byen har råd til rekrutteringen
-            double totalWoodCost = unitStaticData.WoodCost * quantity;
-            double totalStoneCost = unitStaticData.StoneCost * quantity;
-            double totalMetalCost = unitStaticData.MetalCost * quantity;
+            var modifiedUnitCosts = _recruitmentTimeCalculationService.CalculateFinalResourceCosts(cityEntity, unitStaticData);
+            double totalWoodCost = modifiedUnitCosts.wood * quantity;
+            double totalStoneCost = modifiedUnitCosts.stone * quantity;
+            double totalMetalCost = modifiedUnitCosts.metal * quantity;
 
             if (cityResourceSnapshot.Wood < totalWoodCost ||
                 cityResourceSnapshot.Stone < totalStoneCost ||

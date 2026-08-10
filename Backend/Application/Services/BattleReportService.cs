@@ -78,6 +78,27 @@ namespace Application.Services
             await _battleReportRepository.DeleteAsync(battleReportId);
         }
 
+        public async Task SetBattleReportPublicStatusAsync(Guid worldPlayerId, Guid battleReportId, bool isPublic)
+        {
+            await _playerAccessService.RequireOwnedWorldPlayerAsync(worldPlayerId);
+
+            var report = await _battleReportRepository.GetByIdAsync(battleReportId);
+            if (report == null)
+            {
+                throw new KeyNotFoundException($"Battle report med ID {battleReportId} blev ikke fundet.");
+            }
+
+            if (report.WorldPlayerId != worldPlayerId)
+            {
+                throw new UnauthorizedAccessException("Battle report tilhører ikke den autentificerede profil.");
+            }
+
+            if (report.IsPublic != isPublic)
+            {
+                await _battleReportRepository.SetPublicStatusAsync(battleReportId, isPublic);
+            }
+        }
+
         private static BattleReportDTO MapReport(BattleReport report)
         {
             return new BattleReportDTO
@@ -88,6 +109,7 @@ namespace Application.Services
                 Body = report.Body,
                 OccurredAt = report.OccurredAt,
                 IsRead = report.IsRead,
+                IsPublic = report.IsPublic,
                 AttackerLosses = ParseUnitStacks(report.AttackerLossesJson),
                 DefenderLosses = ParseUnitStacks(report.DefenderLossesJson),
                 RevivedUnits = ParseUnitStacks(report.RevivedUnitsJson),

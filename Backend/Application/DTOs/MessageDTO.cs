@@ -13,6 +13,7 @@ namespace Application.DTOs
         public string SenderAllianceName { get; set; } = string.Empty;
         public DateTime SentAt { get; set; }
         public bool IsRead { get; set; }
+        public ReportAttachmentDTO? ReportAttachment { get; set; }
     }
 
     public class StartConversationRequestDTO
@@ -21,10 +22,12 @@ namespace Application.DTOs
         public List<Guid> ParticipantWorldPlayerIds { get; set; } = new();
         public string Subject { get; set; } = string.Empty;
         public string Content { get; set; } = string.Empty;
+        public Guid? BattleReportId { get; set; }
     }
 
     public class ReplyMessageRequestDTO
     {
         public string Content { get; set; } = string.Empty;
+        public Guid? BattleReportId { get; set; }
     }
 }

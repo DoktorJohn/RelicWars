@@ -15,6 +15,59 @@ namespace Application.Tests;
 public class CityServiceTownHallTests
 {
     [Fact]
+    public async Task GetCityOverviewHUD_SeparatesModifiedUnitAndBuildingUpkeep()
+    {
+        var player = new WorldPlayer { Id = Guid.NewGuid(), Cities = new List<City>() };
+        var city = new City
+        {
+            Id = Guid.NewGuid(),
+            Name = "Capital",
+            WorldPlayer = player,
+            WorldPlayerId = player.Id,
+            Buildings = new List<Building>
+            {
+                new() { Type = BuildingTypeEnum.Housing, Level = 1 },
+                new() { Type = BuildingTypeEnum.Barracks, Level = 1 }
+            },
+            UnitStacks = new List<UnitStack> { new() { Type = UnitTypeEnum.Militia, Quantity = 2 } },
+            OriginUnitDeployments = new List<UnitDeployment>()
+        };
+        player.Cities.Add(city);
+        var modifierService = new UpkeepModifierService();
+        var cityStats = new CityStatService(TestData.BuildingReader(), TestData.UnitReader(), modifierService);
+        var service = new CityService(
+            new MemoryCityRepository(city),
+            new NoOpResourceService(),
+            new NoOpWorldPlayerService(),
+            new TestPlayerAccessService(cities: [city]),
+            modifierService,
+            cityStats,
+            new NoOpExoticResourceService(),
+            TestData.BuildingReader(),
+            new EmptyJobRepository(),
+            NullLogger<CityService>.Instance,
+            new ConstructionTimeCalculator(modifierService),
+            new NoOpResistanceService());
+
+        var result = await service.GetCityOverviewHUD(city.Id);
+
+        int militiaPopulation = TestData.UnitReader().GetUnit(UnitTypeEnum.Militia).PopulationCost;
+        int barracksUpkeep = TestData.BuildingReader()
+            .GetConfig<Domain.StaticData.Data.BuildingLevelData>(BuildingTypeEnum.Barracks, 1).UpkeepCost;
+        Assert.Equal(2 * militiaPopulation * 7 * 2, result.CoinsProduction.UnitUpkeepPerHour);
+        Assert.Equal(barracksUpkeep * 0.5, result.CoinsProduction.BuildingUpkeepPerHour);
+        Assert.Equal(
+            result.CoinsProduction.UnitUpkeepPerHour + result.CoinsProduction.BuildingUpkeepPerHour,
+            result.CoinsProduction.Expenditure);
+
+        var detailed = await service.GetDetailedCityInformationByCityIdentifierAsync(city.Id);
+
+        Assert.NotNull(detailed);
+        Assert.Equal(result.CoinsProduction.UnitUpkeepPerHour, detailed.UnitUpkeepPerHour);
+        Assert.Equal(result.CoinsProduction.BuildingUpkeepPerHour, detailed.BuildingUpkeepPerHour);
+    }
+
+    [Fact]
     public async Task GetDetailedCityInformation_MapsProductionAndPopulationBreakdown()
     {
         var player = new WorldPlayer { Id = Guid.NewGuid(), Cities = new List<City>() };
@@ -155,6 +208,31 @@ public class CityServiceTownHallTests
 
         public ModifierCalculationResult CalculateCityValue(City city, double baseValue, params ModifierTagEnum[] targetTags) =>
             new() { BaseValue = baseValue, FinalValue = baseValue };
+
+        public ModifierCalculationResult CalculatePlayerValue(WorldPlayer player, double baseValue, params ModifierTagEnum[] targetTags) =>
+            new() { BaseValue = baseValue, FinalValue = baseValue };
+
+        public ModifierCalculationResult CalculateCityUnitValue(City city, Domain.StaticData.Data.UnitData unit, double baseValue, params ModifierTagEnum[] targetTags) =>
+            new() { BaseValue = baseValue, FinalValue = baseValue };
+    }
+
+    private sealed class UpkeepModifierService : IModifierService
+    {
+        public ModifierCalculationResult CalculateEntityValueWithModifiers(double baseValue, IEnumerable<ModifierTagEnum> targetTags, IEnumerable<Domain.Abstraction.IModifierProvider> providers) =>
+            new() { BaseValue = baseValue, FinalValue = baseValue };
+
+        public ModifierCalculationResult CalculateCityValue(City city, double baseValue, params ModifierTagEnum[] targetTags)
+        {
+            double multiplier = targetTags.Contains(ModifierTagEnum.UnitUpkeep)
+                ? 2.0
+                : targetTags.Contains(ModifierTagEnum.BuildingUpkeep) ? 0.5 : 1.0;
+            return new ModifierCalculationResult
+            {
+                BaseValue = baseValue,
+                PercentageBonus = multiplier - 1.0,
+                FinalValue = baseValue * multiplier
+            };
+        }
 
         public ModifierCalculationResult CalculatePlayerValue(WorldPlayer player, double baseValue, params ModifierTagEnum[] targetTags) =>
             new() { BaseValue = baseValue, FinalValue = baseValue };

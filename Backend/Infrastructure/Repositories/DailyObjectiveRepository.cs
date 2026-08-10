@@ -52,15 +52,18 @@ namespace Infrastructure.Repositories
         {
             if (existingSet != null)
             {
-                _context.DailyObjectiveAssignments.RemoveRange(existingSet.Assignments);
+                var previousAssignments = existingSet.Assignments.ToList();
+                _context.DailyObjectiveAssignments.RemoveRange(previousAssignments);
                 existingSet.Assignments.Clear();
                 existingSet.DayStartUtc = replacement.DayStartUtc;
                 existingSet.DateLastModified = replacement.DateLastModified;
+
                 foreach (var assignment in replacement.Assignments)
                 {
                     assignment.DailyObjectiveSetId = existingSet.Id;
-                    existingSet.Assignments.Add(assignment);
                 }
+
+                await _context.DailyObjectiveAssignments.AddRangeAsync(replacement.Assignments);
                 return existingSet;
             }
             await _context.DailyObjectiveSets.AddAsync(replacement);

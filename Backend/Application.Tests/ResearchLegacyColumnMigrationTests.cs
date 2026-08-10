@@ -78,6 +78,7 @@ public class ResearchLegacyColumnMigrationTests
         {
             Id = Guid.NewGuid(),
             UserName = "research-migration-test",
+            Email = "research-migration@example.test",
             CreatedAt = DateTime.UtcNow,
             ModifiedAt = DateTime.UtcNow
         };

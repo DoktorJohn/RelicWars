@@ -27,15 +27,6 @@ namespace Infrastructure.Repositories
                 .FirstOrDefaultAsync();
         }
 
-        //GET for authentication.
-        public async Task<PlayerProfile?> GetByEmailAsync(string email)
-        {
-            return await _context.PlayerProfiles
-                .AsNoTracking()
-                .Include(profile => profile.WorldPlayers)
-                .FirstOrDefaultAsync(u => u.Email == email);
-        }
-
         //GET for getting entire PlayerProfile object with navigation properties.
         public async Task<PlayerProfile?> GetByIdAsync(Guid id)
         {
@@ -43,19 +34,6 @@ namespace Infrastructure.Repositories
                 .Include(profile => profile.WorldPlayers)
                     .ThenInclude(worldPlayer => worldPlayer.Cities)
                 .FirstOrDefaultAsync(profile => profile.Id == id);
-        }
-
-        //Used in authentication
-        public async Task<bool> ExistsByEmailAsync(string email)
-        {
-            return await _context.PlayerProfiles
-                .AnyAsync(u => u.Email == email);
-        }
-
-        public async Task AddAsync(PlayerProfile playerProfile)
-        {
-            await _context.PlayerProfiles.AddAsync(playerProfile);
-            await _context.SaveChangesAsync();
         }
 
         public async Task UpdateAsync(PlayerProfile playerProfile)

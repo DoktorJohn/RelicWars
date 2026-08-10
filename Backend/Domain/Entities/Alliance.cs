@@ -11,7 +11,18 @@ namespace Domain.Entities
 {
     public class Alliance : BaseEntity, IModifierProvider
     {
-        public string Name { get; set; } = string.Empty;
+        private string _name = string.Empty;
+
+        public string Name
+        {
+            get => _name;
+            set
+            {
+                _name = value ?? string.Empty;
+                NormalizedName = _name.Trim().ToUpperInvariant();
+            }
+        }
+        public string NormalizedName { get; set; } = string.Empty;
         public string Tag { get; set; } = string.Empty;
         public string Description { get; set; } = string.Empty;
         public string BannerImageUrl { get; set; } = string.Empty;

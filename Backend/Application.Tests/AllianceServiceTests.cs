@@ -121,6 +121,180 @@ public class AllianceServiceTests
         Assert.Equal(founder.Id, dto.InvitedByWorldPlayerId);
     }
 
+    [Fact]
+    public async Task GetInvitedPlayersReturnsActivePlayersForOwnedAlliance()
+    {
+        var founder = new WorldPlayer
+        {
+            Id = Guid.NewGuid(),
+            AllianceRole = AllianceRoleEnum.Founder,
+            PlayerProfile = new PlayerProfile { Id = Guid.NewGuid(), UserName = "Founder" }
+        };
+        var alliance = new Alliance
+        {
+            Id = Guid.NewGuid(),
+            Name = "Test Alliance",
+            Tag = "TST",
+            Members = new List<WorldPlayer> { founder }
+        };
+        founder.AllianceId = alliance.Id;
+        var member = new WorldPlayer
+        {
+            Id = Guid.NewGuid(),
+            AllianceId = alliance.Id,
+            AllianceRole = AllianceRoleEnum.Member,
+            PlayerProfile = new PlayerProfile { Id = Guid.NewGuid(), UserName = "Member" }
+        };
+        alliance.Members.Add(member);
+
+        var invited = new WorldPlayer
+        {
+            Id = Guid.NewGuid(),
+            PlayerProfile = new PlayerProfile { Id = Guid.NewGuid(), UserName = "Invited" }
+        };
+        var invitation = new AllianceInvitation
+        {
+            Id = Guid.NewGuid(),
+            AllianceId = alliance.Id,
+            Alliance = alliance,
+            InvitedWorldPlayerId = invited.Id,
+            InvitedWorldPlayer = invited,
+            InvitedByWorldPlayerId = founder.Id,
+            InvitedByWorldPlayer = founder,
+            ExpiresAt = DateTime.UtcNow.AddHours(1)
+        };
+        var expiredInvitation = new AllianceInvitation
+        {
+            Id = Guid.NewGuid(),
+            AllianceId = alliance.Id,
+            Alliance = alliance,
+            InvitedWorldPlayerId = invited.Id,
+            InvitedWorldPlayer = invited,
+            InvitedByWorldPlayerId = founder.Id,
+            InvitedByWorldPlayer = founder,
+            ExpiresAt = DateTime.UtcNow.AddMinutes(-1)
+        };
+
+        var service = new AllianceService(
+            new MemoryAllianceRepository(alliance, invitation, expiredInvitation),
+            new MemoryWorldPlayerRepository(invited, alliance),
+            new TestPlayerAccessService([member]),
+            NullLogger<AllianceService>.Instance,
+            new FixedRankingService(),
+            new ImmediateTransactionManager());
+
+        var result = await service.GetInvitedPlayers(member.Id);
+
+        var dto = Assert.Single(result);
+        Assert.Equal(invitation.Id, dto.InvitationId);
+        Assert.Equal(invited.Id, dto.WorldPlayerId);
+        Assert.Equal("Invited", dto.UserName);
+        Assert.Equal(founder.Id, dto.InvitedByWorldPlayerId);
+    }
+
+    [Fact]
+    public async Task FounderCanCancelInvitationFromOwnAlliance()
+    {
+        var setup = CreateCancellationSetup(AllianceRoleEnum.Founder);
+
+        var result = await setup.Service.CancelInvitation(
+            new CancelAllianceInvitationDTO(setup.Actor.Id, setup.Invitation.Id));
+
+        Assert.True(result);
+        Assert.Equal(0, setup.Repository.InvitationCount);
+    }
+
+    [Theory]
+    [InlineData(AllianceRoleEnum.Leader)]
+    [InlineData(AllianceRoleEnum.Member)]
+    public async Task NonFounderCannotCancelInvitation(AllianceRoleEnum role)
+    {
+        var setup = CreateCancellationSetup(role);
+
+        await Assert.ThrowsAsync<UnauthorizedAccessException>(() => setup.Service.CancelInvitation(
+            new CancelAllianceInvitationDTO(setup.Actor.Id, setup.Invitation.Id)));
+
+        Assert.Equal(1, setup.Repository.InvitationCount);
+    }
+
+    [Fact]
+    public async Task FounderCannotCancelInvitationFromAnotherAlliance()
+    {
+        var setup = CreateCancellationSetup(AllianceRoleEnum.Founder, invitationBelongsToActorAlliance: false);
+
+        await Assert.ThrowsAsync<UnauthorizedAccessException>(() => setup.Service.CancelInvitation(
+            new CancelAllianceInvitationDTO(setup.Actor.Id, setup.Invitation.Id)));
+
+        Assert.Equal(1, setup.Repository.InvitationCount);
+    }
+
+    [Fact]
+    public async Task MissingInvitationIsRejectedWithoutDeletion()
+    {
+        var setup = CreateCancellationSetup(AllianceRoleEnum.Founder);
+
+        await Assert.ThrowsAsync<KeyNotFoundException>(() => setup.Service.CancelInvitation(
+            new CancelAllianceInvitationDTO(setup.Actor.Id, Guid.NewGuid())));
+
+        Assert.Equal(1, setup.Repository.InvitationCount);
+    }
+
+    [Fact]
+    public async Task UnownedWorldPlayerCannotCancelInvitation()
+    {
+        var setup = CreateCancellationSetup(AllianceRoleEnum.Founder);
+
+        await Assert.ThrowsAsync<KeyNotFoundException>(() => setup.Service.CancelInvitation(
+            new CancelAllianceInvitationDTO(Guid.NewGuid(), setup.Invitation.Id)));
+
+        Assert.Equal(1, setup.Repository.InvitationCount);
+    }
+
+    private static CancellationSetup CreateCancellationSetup(
+        AllianceRoleEnum role,
+        bool invitationBelongsToActorAlliance = true)
+    {
+        var actor = new WorldPlayer
+        {
+            Id = Guid.NewGuid(),
+            AllianceId = Guid.NewGuid(),
+            AllianceRole = role,
+            PlayerProfile = new PlayerProfile { Id = Guid.NewGuid(), UserName = "Actor" }
+        };
+        var actorAlliance = new Alliance
+        {
+            Id = actor.AllianceId.Value,
+            Name = "Actor Alliance",
+            Tag = "ACT",
+            Members = new List<WorldPlayer> { actor }
+        };
+        var invitationAlliance = invitationBelongsToActorAlliance
+            ? actorAlliance
+            : new Alliance { Id = Guid.NewGuid(), Name = "Other Alliance", Tag = "OTH" };
+        var invitation = new AllianceInvitation
+        {
+            Id = Guid.NewGuid(),
+            AllianceId = invitationAlliance.Id,
+            Alliance = invitationAlliance,
+            ExpiresAt = DateTime.UtcNow.AddHours(1)
+        };
+        var repository = new MemoryAllianceRepository(actorAlliance, invitation);
+        var service = new AllianceService(
+            repository,
+            new MemoryWorldPlayerRepository(actor, actorAlliance),
+            new TestPlayerAccessService([actor]),
+            NullLogger<AllianceService>.Instance,
+            new FixedRankingService(),
+            new ImmediateTransactionManager());
+        return new CancellationSetup(service, repository, actor, invitation);
+    }
+
+    private sealed record CancellationSetup(
+        AllianceService Service,
+        MemoryAllianceRepository Repository,
+        WorldPlayer Actor,
+        AllianceInvitation Invitation);
+
     private sealed class FixedRankingService : IRankingService
     {
         public Task<List<RankingEntryData>> GetRankings() => Task.FromResult(new List<RankingEntryData>());
@@ -132,13 +306,14 @@ public class AllianceServiceTests
     private sealed class MemoryAllianceRepository : IAllianceRepository
     {
         public Alliance? Alliance { get; }
+        public int InvitationCount => _invitations.Count;
         private readonly List<AllianceInvitation> _invitations = new();
         private readonly List<AllianceRelation> _relations = new();
 
-        public MemoryAllianceRepository(Alliance alliance, AllianceInvitation invitation)
+        public MemoryAllianceRepository(Alliance alliance, params AllianceInvitation[] invitations)
         {
             Alliance = alliance;
-            _invitations.Add(invitation);
+            _invitations.AddRange(invitations);
         }
 
         public Task<Alliance?> GetByIdAsync(Guid id) => Task.FromResult<Alliance?>(Alliance?.Id == id ? Alliance : null);
@@ -149,6 +324,8 @@ public class AllianceServiceTests
         public Task<bool> NameExistsAsync(Guid worldId, string name) => Task.FromResult(false);
         public Task<List<AllianceInvitation>> GetInvitationsForPlayerAsync(Guid worldPlayerId, DateTime now) =>
             Task.FromResult(_invitations.Where(i => i.InvitedWorldPlayerId == worldPlayerId && i.ExpiresAt > now).ToList());
+        public Task<List<AllianceInvitation>> GetInvitationsForAllianceAsync(Guid allianceId, DateTime now) =>
+            Task.FromResult(_invitations.Where(i => i.AllianceId == allianceId && i.ExpiresAt > now).ToList());
         public Task<AllianceInvitation?> GetInvitationByIdAsync(Guid invitationId) =>
             Task.FromResult(_invitations.SingleOrDefault(i => i.Id == invitationId));
         public Task<bool> PendingInvitationExistsAsync(Guid allianceId, Guid worldPlayerId, DateTime now) =>

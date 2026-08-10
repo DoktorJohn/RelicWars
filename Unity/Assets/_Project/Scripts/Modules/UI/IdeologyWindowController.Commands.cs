@@ -2,6 +2,7 @@ using System;
 using Assets.Scripts.Domain.State;
 using Assets._Project.Scripts.Domain.Enums;
 using Project.Modules.City;
+using Project.Modules.Reports;
 using Project.Modules.WorldPlayer;
 using Project.Network.Manager;
 using Project.Scripts.Domain.DTOs;
@@ -34,6 +35,8 @@ namespace Assets._Project.Scripts.Modules.UI
             {
                 if (result != null && result.Success)
                 {
+                    BattleReportStateEvents.RaiseUnreadStateChanged();
+
                     if (result.EffectResult != null)
                     {
                         StartCoroutine(ShowEffectResultAndRefresh(result.EffectResult.Summary));

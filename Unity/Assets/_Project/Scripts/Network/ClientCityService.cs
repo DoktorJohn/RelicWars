@@ -67,6 +67,12 @@ namespace Project.Network
             }
         }
 
+        public IEnumerator GetEdicts(Guid cityId, string jwtToken, Action<EdictOverviewDTO> callback)
+        { using (var request = BackendRequestHelper.CreateGetRequest($"{_baseUrl}/{cityId}/edicts", jwtToken)) yield return BackendRequestHelper.SendJson(request, callback, "City"); }
+
+        public IEnumerator EnactEdict(Guid cityId, EnactEdictRequestDTO payload, string jwtToken, Action<EdictOverviewDTO> callback)
+        { using (var request = BackendRequestHelper.CreatePostRequest($"{_baseUrl}/{cityId}/edicts/enact", payload, jwtToken)) yield return BackendRequestHelper.SendJson(request, callback, "City"); }
+
         public IEnumerator ChangeCityName(Guid cityId, string newName, string authenticationToken, Action<ChangeCityNameResponseDTO> callback)
         {
             string url = $"{_baseUrl}/ChangeCityName/{cityId}/{newName}";

@@ -108,6 +108,25 @@ public class BattleReportServiceTests
             service.DeleteBattleReportAsync(owner.Id, foreignReport.Id));
     }
 
+    [Fact]
+    public async Task SetPublicStatusUpdatesOwnedReportAndRejectsMissingOrForeignReport()
+    {
+        var owner = Player("Owner");
+        var other = Player("Other");
+        var owned = Report(owner.Id, DateTime.UtcNow, false);
+        var foreign = Report(other.Id, DateTime.UtcNow, false);
+        var repository = new MemoryBattleReportRepository(owned, foreign);
+        var service = new BattleReportService(repository, new TestPlayerAccessService([owner, other]));
+
+        await service.SetBattleReportPublicStatusAsync(owner.Id, owned.Id, true);
+
+        Assert.True(owned.IsPublic);
+        await Assert.ThrowsAsync<KeyNotFoundException>(() =>
+            service.SetBattleReportPublicStatusAsync(owner.Id, Guid.NewGuid(), true));
+        await Assert.ThrowsAsync<UnauthorizedAccessException>(() =>
+            service.SetBattleReportPublicStatusAsync(owner.Id, foreign.Id, true));
+    }
+
     private static WorldPlayer Player(string name) => new()
     {
         Id = Guid.NewGuid(),
@@ -178,6 +197,13 @@ public class BattleReportServiceTests
                 DeleteCalls++;
             }
 
+            return Task.CompletedTask;
+        }
+
+        public Task SetPublicStatusAsync(Guid reportId, bool isPublic)
+        {
+            var report = _reports.Single(entry => entry.Id == reportId);
+            report.IsPublic = isPublic;
             return Task.CompletedTask;
         }
 

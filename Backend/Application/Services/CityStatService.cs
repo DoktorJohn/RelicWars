@@ -26,10 +26,10 @@ namespace Application.Services
         public double GetWarehouseCapacity(City city)
         {
             var warehouse = city.Buildings.FirstOrDefault(b => b.Type == BuildingTypeEnum.Warehouse);
-            if (warehouse == null || warehouse.Level == 0) return 500.0;
-
-            var config = _buildingData.GetConfig<WarehouseLevelData>(BuildingTypeEnum.Warehouse, warehouse.Level);
-            return config?.Capacity ?? 500.0;
+            double baseCapacity = 500.0;
+            if (warehouse != null && warehouse.Level > 0)
+                baseCapacity = _buildingData.GetConfig<WarehouseLevelData>(BuildingTypeEnum.Warehouse, warehouse.Level)?.Capacity ?? baseCapacity;
+            return _modifierService.CalculateCityValue(city, baseCapacity, ModifierTagEnum.WarehouseCapacity).FinalValue;
         }
 
         public int GetMaxPopulation(City cityEntity)

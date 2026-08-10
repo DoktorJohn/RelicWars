@@ -54,7 +54,7 @@ namespace Assets._Project.Scripts.Modules.UI
             AddEconomyResourceCard(nativeResourceRow, "WOOD", "icon-wood", productionDataModel.Wood.Production);
             AddEconomyResourceCard(nativeResourceRow, "STONE", "icon-stone", productionDataModel.Stone.Production);
             AddEconomyResourceCard(nativeResourceRow, "METAL", "icon-metal", productionDataModel.Metal.Production);
-            AddEconomyResourceCard(nativeResourceRow, "GOLD COINS", "icon-coins", CreateProductionBreakdown(productionDataModel.CoinsProduction));
+            AddGoldCoinsResourceCard(nativeResourceRow, productionDataModel.CoinsProduction);
             foreach (CityExoticResourceProductionDTO exoticResource in (productionDataModel.ExoticResourceProductions ?? new List<CityExoticResourceProductionDTO>())
                          .OrderBy(resource => resource.SlotIndex))
             {
@@ -146,20 +146,43 @@ namespace Assets._Project.Scripts.Modules.UI
             AddEconomyResourceCard(resourceRow, resourceTitle, iconCssClass, resource.Production);
         }
 
-        private static ProductionBreakdownDTO CreateProductionBreakdown(CoinsBreakdownDTO coinsBreakdown)
+        private void AddGoldCoinsResourceCard(VisualElement resourceRow, CoinsBreakdownDTO coinsBreakdown)
         {
-            if (coinsBreakdown == null)
-            {
-                return new ProductionBreakdownDTO();
-            }
+            coinsBreakdown ??= new CoinsBreakdownDTO();
 
-            return new ProductionBreakdownDTO
-            {
-                BaseValue = coinsBreakdown.BaseValue,
-                BuildingBonus = coinsBreakdown.BuildingBonus,
-                GlobalModifierMultiplier = coinsBreakdown.GlobalModifierMultiplier,
-                FinalValuePerHour = coinsBreakdown.FinalValuePerHour
-            };
+            VisualElement cardContainer = new VisualElement();
+            cardContainer.AddToClassList("economy-card");
+
+            VisualElement headerRow = new VisualElement();
+            headerRow.AddToClassList("economy-card-header");
+
+            VisualElement resourceIcon = new VisualElement();
+            resourceIcon.AddToClassList("economy-card-icon");
+            resourceIcon.AddToClassList("icon-coins");
+
+            Label resourceTitleLabel = new Label("GOLD COINS");
+            resourceTitleLabel.AddToClassList("economy-card-title");
+            resourceTitleLabel.style.color = _darkTextColor;
+            resourceTitleLabel.style.unityFontStyleAndWeight = FontStyle.Bold;
+            resourceTitleLabel.style.fontSize = 13;
+
+            headerRow.Add(resourceIcon);
+            headerRow.Add(resourceTitleLabel);
+            cardContainer.Add(headerRow);
+            cardContainer.Add(CreateStatisticalBreakdownRow("Base Production:", FormatDecimal(coinsBreakdown.BaseValue)));
+            cardContainer.Add(CreateStatisticalBreakdownRow("Flat Bonus:", FormatSignedDecimal(coinsBreakdown.BuildingBonus)));
+            cardContainer.Add(CreateStatisticalBreakdownRow(
+                "Income Multiplier:",
+                $"x{FormatDecimal(1.0 + coinsBreakdown.GlobalModifierMultiplier, 2)}"));
+            cardContainer.Add(CreateStatisticalBreakdownRow("Unit Upkeep:", FormatCostPerHour(coinsBreakdown.UnitUpkeepPerHour)));
+            cardContainer.Add(CreateStatisticalBreakdownRow("Building Upkeep:", FormatCostPerHour(coinsBreakdown.BuildingUpkeepPerHour)));
+
+            double netCoinsPerHour = coinsBreakdown.FinalValuePerHour - coinsBreakdown.Expenditure;
+            Label hourlyTotalLabel = new Label($"Net: {FormatSignedDecimal(netCoinsPerHour)} / h");
+            hourlyTotalLabel.AddToClassList("breakdown-total");
+            cardContainer.Add(hourlyTotalLabel);
+
+            resourceRow.Add(cardContainer);
         }
 
         private VisualElement CreateStatisticalBreakdownRow(string descriptionLabelText, string statisticValueText)
@@ -189,6 +212,11 @@ namespace Assets._Project.Scripts.Modules.UI
             return value >= 0
                 ? "+" + FormatDecimal(value, digits)
                 : FormatDecimal(value, digits);
+        }
+
+        private static string FormatCostPerHour(double value)
+        {
+            return $"-{FormatDecimal(System.Math.Abs(value))} / h";
         }
 
         private void ApplyStatusLabelConfiguration(Label targetStatusLabel, bool isQueueBusy, string activeItemName, int totalItemsInQueue)

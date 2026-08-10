@@ -22,8 +22,11 @@ namespace Application.DTOs
     public record AllianceMemberDTO(Guid WorldPlayerId, string UserName, AllianceRoleEnum Role, int TotalPoints);
     public record AllianceInvitationDTO(Guid Id, Guid AllianceId, string AllianceName, string AllianceTag,
         Guid InvitedByWorldPlayerId, string InvitedByUserName, DateTime ExpiresAt);
+    public record AllianceInvitedPlayerDTO(Guid InvitationId, Guid WorldPlayerId, string UserName,
+        Guid InvitedByWorldPlayerId, string InvitedByUserName, DateTime ExpiresAt);
     public record InviteToAllianceDTO(Guid WorldPlayerIdInviter, Guid WorldPlayerIdInvited);
     public record RespondToAllianceInvitationDTO(Guid WorldPlayerId, Guid InvitationId);
+    public record CancelAllianceInvitationDTO(Guid WorldPlayerId, Guid InvitationId);
     public record LeaveAllianceDTO(Guid WorldPlayerId);
     public record DisbandAllianceDTO(Guid WorldPlayerId, Guid AllianceId);
     public record CreateAllianceDTO(Guid WorldPlayerIdFounder, string Name, string Tag);

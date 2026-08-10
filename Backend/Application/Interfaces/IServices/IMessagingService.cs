@@ -7,8 +7,8 @@ namespace Application.Interfaces.IServices
 {
     public interface IMessagingService
     {
-        Task<ConversationDTO> StartConversationAsync(Guid senderId, IEnumerable<Guid> participantIds, string subject, string content);
-        Task<MessageDTO> ReplyToConversationAsync(Guid requestorId, Guid conversationId, string content);
+        Task<ConversationDTO> StartConversationAsync(Guid senderId, IEnumerable<Guid> participantIds, string subject, string content, Guid? battleReportId = null);
+        Task<MessageDTO> ReplyToConversationAsync(Guid requestorId, Guid conversationId, string content, Guid? battleReportId = null);
         Task<List<ConversationDTO>> GetConversationsAsync(Guid worldPlayerId);
         Task<List<MessageDTO>> GetMessagesAsync(Guid conversationId, Guid requestorId, DateTime? before, int take);
         Task MarkConversationAsReadAsync(Guid conversationId, Guid requestorId);

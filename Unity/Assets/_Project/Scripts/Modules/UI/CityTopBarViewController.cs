@@ -1,118 +1,75 @@
-using Project.Modules.WorldPlayer;
-using Assets.Scripts.Domain.State;
-using UnityEngine;
-using UnityEngine.UIElements;
-using Project.Modules.City;
-using UnityEngine.SceneManagement;
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
+using Assets.Scripts.Domain.State;
+using Project.Modules.City;
+using Project.Modules.WorldPlayer;
 using Project.Network.Manager;
 using Project.Network.Models;
 using Project.Scripts.Domain.DTOs;
+using Sunvale.AncientRomeUI.Buttons;
+using TMPro;
+using UnityEngine;
+using UnityEngine.SceneManagement;
+using UnityEngine.UI;
 
 namespace Project.Modules.UI
 {
-    [RequireComponent(typeof(UIDocument))]
     public partial class CityTopBarViewController : MonoBehaviour
     {
         private const string WorldMapSceneName = "WorldMapScene";
         private const string CityViewSceneName = "CityViewScene";
         private const string LoginSceneName = "LoginScene";
 
-        private VisualElement _rootVisualElement;
+        [Header("Canvas and responsive roots")]
+        [SerializeField] private Canvas canvas;
+        [SerializeField] private RectTransform safeAreaRoot;
+        [SerializeField] private RectTransform desktopRoot;
+        [SerializeField] private RectTransform phoneRoot;
+        [SerializeField] private RectTransform overlayRoot;
+        [SerializeField] private Button popupBackdrop;
+        [SerializeField] private RectTransform primaryRow;
+        [SerializeField] private RectTransform resourceStrip;
+        [SerializeField] private GameObject serverTimeSection;
 
-        private Label _woodResourceAmountLabel;
-        private Label _stoneResourceAmountLabel;
-        private Label _metalResourceAmountLabel;
-        private Label _coinsResourceAmountLabel;
-        private Label _populationAmountLabel;
-        private Label _researchAmountLabel;
-        private Label _ideologyFocusPointsAmountLabel;
-        private Label _exoticResourcesTotalLabel;
-        private VisualElement _exoticResourcesTrigger;
-        private VisualElement _exoticResourcesTooltip;
-        private VisualElement _exoticResourcesTooltipGrid;
-        private Label _exoticResourcesTooltipTitle;
-        private VisualElement _woodResourceTrigger;
-        private VisualElement _stoneResourceTrigger;
-        private VisualElement _metalResourceTrigger;
-        private VisualElement _populationResourceTrigger;
-        private VisualElement _coinsResourceTrigger;
-        private VisualElement _researchResourceTrigger;
-        private VisualElement _ideologyResourceTrigger;
-        private VisualElement _standardResourceTooltip;
-        private VisualElement _standardResourceTooltipIcon;
-        private Label _standardResourceTooltipTitle;
-        private Label _standardResourceCityAmountLabel;
-        private Label _standardResourceProductionLabel;
-        private Label _standardResourceTimeToCapacityLabel;
-        private Label _standardResourcePlayerTotalLabel;
-        private Label _standardResourceCityKeyLabel;
-        private Label _standardResourceProductionKeyLabel;
-        private VisualElement _standardResourceCityRow;
-        private VisualElement _standardResourceCapacityRow;
-        private VisualElement _populationTooltip;
-        private Label _populationHousingLabel;
-        private Label _populationModifierLabel;
-        private Label _populationTotalLabel;
-        private Label _populationInUseLabel;
-        private Label _populationRemainingLabel;
+        [Header("Actions")]
+        [SerializeField] private IconTextSidebarButton mapButton;
+        [SerializeField] private Button inventoryButton;
+        [SerializeField] private Button administrationButton;
+        [SerializeField] private IconTextSidebarButton logoutButton;
 
-        // Server Time Label
-        private Label _serverTimeLabel;
+        [Header("Status")]
+        [SerializeField] private TMP_Text serverTimeLabel;
+        [SerializeField] private CityTopBarResourceView[] resourceViews;
 
-        // City Selector Elements
-        private VisualElement _citySelectorSection;
-        private Label _citySelectorCurrentCityLabel;
-        private TextField _citySelectorRenameInput;
-        private VisualElement _citySelectorDropdownContainer;
-        private ScrollView _citySelectorDropdownScroll;
-
-        private Button _previousCityButton;
-        private Button _nextCityButton;
-
-        private Button _navigationButton;
-        private Button _administrationButton;
-        private Button _logoutButton;
-
-        private WarehouseCapacityProgressPainter _woodWarehousePainter;
-        private WarehouseCapacityProgressPainter _stoneWarehousePainter;
-        private WarehouseCapacityProgressPainter _metalWarehousePainter;
-        private WarehouseCapacityProgressPainter _populationUsagePainter;
-        private WarehouseCapacityProgressPainter _ideologyPainter;
-
-        // Coroutine reference
+        private readonly Dictionary<CityTopBarResourceType, CityTopBarResourceView> _resourceViewLookup = new();
         private Coroutine _timeUpdateCoroutine;
+        private List<CityDTO> _playerCities = new();
 
-        // Data
-        private List<CityDTO> _playerCities = new List<CityDTO>();
+        private void Awake()
+        {
+            BindAuthoredTopSection();
+        }
 
         private void OnEnable()
         {
-            var uiDocumentComponent = GetComponent<UIDocument>();
-            if (uiDocumentComponent == null) return;
-
-            _rootVisualElement = uiDocumentComponent.rootVisualElement;
-            ResponsiveUiStateManager.RegisterRoot(_rootVisualElement);
-
-            InitializeUserInterfaceResourceLabels();
+            CacheResourceViews();
+            BindViewEvents();
             InitializeCitySelector();
-            InitializeNavigationButtons();
-            InitializeAdministrationButton();
-            InitializeLogoutButton();
-            InitializeWarehouseCapacityPainters();
-            InitializeExoticResourcesSection();
-            InitializeStandardResourceTooltips();
-            
+            InitializeResourceTooltips();
+
+            ResponsiveUiStateManager.LayoutChanged += ApplyLayout;
+            SceneManager.activeSceneChanged += HandleActiveSceneChanged;
+            ApplyLayout(ResponsiveUiStateManager.CurrentSnapshot);
+
             if (CityStateManager.Instance != null)
             {
                 CityStateManager.Instance.OnResourceStateChanged += HandleCityResourceStateChanged;
                 CityStateManager.Instance.OnCityNameChanged += HandleCityNameChanged;
-
                 UpdateCityUserInterfaceLabels(CityStateManager.Instance.CurrentResources);
-                UpdateWarehouseVisuals(CityStateManager.Instance.CurrentResources);
-                
+                UpdateCapacityIndicators(CityStateManager.Instance.CurrentResources);
+
                 if (!string.IsNullOrEmpty(CityStateManager.Instance.CurrentCityName))
                 {
                     UpdateCitySelectorLabel(CityStateManager.Instance.CurrentCityName);
@@ -122,16 +79,9 @@ namespace Project.Modules.UI
             if (WorldPlayerStateManager.Instance != null)
             {
                 WorldPlayerStateManager.Instance.OnEconomyStateChanged += HandleWorldPlayerEconomyStateChanged;
-                
                 if (WorldPlayerStateManager.Instance.CurrentEconomy != null)
                 {
-                    UpdateWorldPlayerUserInterfaceLabels(WorldPlayerStateManager.Instance.CurrentEconomy);
-                    if (WorldPlayerStateManager.Instance.CurrentEconomy.PlayerCities != null)
-                    {
-                        _playerCities = WorldPlayerStateManager.Instance.CurrentEconomy.PlayerCities;
-                        PopulateCityDropdown();
-                        UpdateNavigationButtonsState();
-                    }
+                    HandleWorldPlayerEconomyStateChanged(WorldPlayerStateManager.Instance.CurrentEconomy);
                 }
             }
 
@@ -139,9 +89,77 @@ namespace Project.Modules.UI
             _timeUpdateCoroutine = StartCoroutine(UpdateServerTimeRoutine());
         }
 
+        private void BindAuthoredTopSection()
+        {
+            canvas ??= GetComponentInParent<Canvas>();
+            if (canvas == null)
+            {
+                canvas = gameObject.scene.GetRootGameObjects()
+                    .SelectMany(root => root.GetComponentsInChildren<Canvas>(true))
+                    .FirstOrDefault();
+            }
+
+            if (canvas == null) return;
+
+            RectTransform[] rects = canvas.GetComponentsInChildren<RectTransform>(true);
+            desktopRoot ??= rects.FirstOrDefault(rect => rect.name == "Top Section");
+            safeAreaRoot ??= canvas != null ? canvas.transform as RectTransform : null;
+            primaryRow ??= desktopRoot;
+            resourceStrip ??= rects.FirstOrDefault(rect => rect.name == "Horizontal Box");
+            mapButton ??= canvas.GetComponentsInChildren<IconTextSidebarButton>(true)
+                .FirstOrDefault(button => button.name == "Worldmap");
+            logoutButton ??= canvas.GetComponentsInChildren<IconTextSidebarButton>(true)
+                .FirstOrDefault(button => button.name == "Logout");
+
+            if (serverTimeLabel == null)
+            {
+                serverTimeLabel = GetComponentsInChildren<TMP_Text>(true)
+                    .FirstOrDefault(label => label.name == "Turn TMP");
+            }
+
+            if (resourceViews == null || resourceViews.Length == 0)
+            {
+                BindAuthoredResourceViews(rects);
+            }
+        }
+
+        private void BindAuthoredResourceViews(IEnumerable<RectTransform> rects)
+        {
+            Dictionary<string, CityTopBarResourceType> types = new(StringComparer.Ordinal)
+            {
+                ["Gold coins"] = CityTopBarResourceType.Coins,
+                ["Population"] = CityTopBarResourceType.Population,
+                ["Wood"] = CityTopBarResourceType.Wood,
+                ["Stone"] = CityTopBarResourceType.Stone,
+                ["Metal"] = CityTopBarResourceType.Metal,
+                ["Research"] = CityTopBarResourceType.Research,
+                ["Focus"] = CityTopBarResourceType.Ideology,
+                ["Exotic resources"] = CityTopBarResourceType.Exotic
+            };
+
+            RectTransform[] fields = rects
+                .Where(rect => types.ContainsKey(rect.name))
+                .OrderBy(rect => rect.GetSiblingIndex())
+                .ToArray();
+
+            resourceViews = fields.Select(field =>
+            {
+                CityTopBarResourceView view = field.GetComponent<CityTopBarResourceView>()
+                    ?? field.gameObject.AddComponent<CityTopBarResourceView>();
+                Image icon = field.GetComponentsInChildren<Image>(true)
+                    .FirstOrDefault(image => image.name == "Icon");
+                TMP_Text[] labels = field.GetComponentsInChildren<TMP_Text>(true);
+                TMP_Text amount = labels.FirstOrDefault(label => label.name == "Text (TMP)");
+                TMP_Text production = labels.FirstOrDefault(label => label.name == "Text (TMP) (1)");
+                view.Configure(types[field.name], icon, amount, production);
+                return view;
+            }).ToArray();
+        }
+
         private void OnDisable()
         {
-            ResponsiveUiStateManager.UnregisterRoot(_rootVisualElement);
+            ResponsiveUiStateManager.LayoutChanged -= ApplyLayout;
+            SceneManager.activeSceneChanged -= HandleActiveSceneChanged;
 
             if (CityStateManager.Instance != null)
             {
@@ -154,51 +172,54 @@ namespace Project.Modules.UI
                 WorldPlayerStateManager.Instance.OnEconomyStateChanged -= HandleWorldPlayerEconomyStateChanged;
             }
 
-            HideExoticResourceTooltip();
-            CleanupExoticResourcesSection();
-            HideStandardResourceTooltip();
-            CleanupStandardResourceTooltips();
+            UnbindViewEvents();
+            CleanupCitySelector();
+            CleanupResourceTooltips();
+            CloseAllPopups();
 
-            if (_logoutButton != null)
+            if (_timeUpdateCoroutine != null)
             {
-                _logoutButton.clicked -= HandleLogoutRequested;
+                StopCoroutine(_timeUpdateCoroutine);
+                _timeUpdateCoroutine = null;
             }
-
-            if (_administrationButton != null)
-            {
-                _administrationButton.clicked -= HandleAdministrationRequested;
-            }
-
-            if (_timeUpdateCoroutine != null) StopCoroutine(_timeUpdateCoroutine);
         }
 
-        private void InitializeLogoutButton()
+        private void CacheResourceViews()
         {
-            _logoutButton = _rootVisualElement.Q<Button>("City-TopBar-LogoutButton");
-            if (_logoutButton == null)
-            {
-                return;
-            }
+            _resourceViewLookup.Clear();
+            if (resourceViews == null) return;
 
-            _logoutButton.clicked -= HandleLogoutRequested;
-            _logoutButton.clicked += HandleLogoutRequested;
+            foreach (CityTopBarResourceView view in resourceViews)
+            {
+                if (view != null) _resourceViewLookup[view.ResourceType] = view;
+            }
         }
 
-        private void InitializeAdministrationButton()
+        private void BindViewEvents()
         {
-            _administrationButton = _rootVisualElement.Q<Button>("City-TopBar-AdministrationButton");
-            if (_administrationButton == null) return;
-            _administrationButton.clicked -= HandleAdministrationRequested;
-            _administrationButton.clicked += HandleAdministrationRequested;
+            if (mapButton != null) mapButton.OnButtonActivatedClicked += HandleContextualNavigationRequested;
+            if (administrationButton != null) administrationButton.onClick.AddListener(HandleAdministrationRequested);
+            if (logoutButton != null) logoutButton.OnButtonActivatedClicked += HandleLogoutRequested;
+            if (popupBackdrop != null) popupBackdrop.onClick.AddListener(CloseAllPopups);
+        }
+
+        private void UnbindViewEvents()
+        {
+            if (mapButton != null) mapButton.OnButtonActivatedClicked -= HandleContextualNavigationRequested;
+            if (administrationButton != null) administrationButton.onClick.RemoveListener(HandleAdministrationRequested);
+            if (logoutButton != null) logoutButton.OnButtonActivatedClicked -= HandleLogoutRequested;
+            if (popupBackdrop != null) popupBackdrop.onClick.RemoveListener(CloseAllPopups);
         }
 
         private void HandleAdministrationRequested()
         {
+            CloseAllPopups();
             GlobalWindowManager.Instance?.OpenWindow(Assets.Scripts.Domain.Enums.WindowTypeEnum.Administration);
         }
 
-        private void HandleLogoutRequested()
+        private void HandleLogoutRequested(IconTextSidebarButton _)
         {
+            CloseAllPopups();
             CityStateManager.Instance?.ResetForLogout();
             WorldPlayerStateManager.Instance?.ResetForLogout();
             WorldMapStateManager.Instance?.ResetForLogout();
@@ -207,171 +228,123 @@ namespace Project.Modules.UI
             SceneManager.LoadScene(LoginSceneName);
         }
 
-        private void InitializeUserInterfaceResourceLabels()
+        private void HandleCityResourceStateChanged(CityResourceState state)
         {
-            _woodResourceAmountLabel = _rootVisualElement.Q<Label>("City-ResourceLabel-WoodAmount");
-            _stoneResourceAmountLabel = _rootVisualElement.Q<Label>("City-ResourceLabel-StoneAmount");
-            _metalResourceAmountLabel = _rootVisualElement.Q<Label>("City-ResourceLabel-MetalAmount");
-            _coinsResourceAmountLabel = _rootVisualElement.Q<Label>("City-ResourceLabel-CoinsAmount");
-            _populationAmountLabel = _rootVisualElement.Q<Label>("City-ResourceLabel-PopulationAmount");
-            _researchAmountLabel = _rootVisualElement.Q<Label>("City-ResourceLabel-ResearchAmount");
-            _ideologyFocusPointsAmountLabel = _rootVisualElement.Q<Label>("City-ResourceLabel-IdeologyAmount");
-
-            _serverTimeLabel = _rootVisualElement.Q<Label>("City-ServerTime-Label");
-        }
-
-        private void InitializeWarehouseCapacityPainters()
-        {
-            _woodWarehousePainter = new WarehouseCapacityProgressPainter(_rootVisualElement.Q<VisualElement>("City-WarehouseBar-Wood"));
-            _stoneWarehousePainter = new WarehouseCapacityProgressPainter(_rootVisualElement.Q<VisualElement>("City-WarehouseBar-Stone"));
-            _metalWarehousePainter = new WarehouseCapacityProgressPainter(_rootVisualElement.Q<VisualElement>("City-WarehouseBar-Metal"));
-            _populationUsagePainter = new WarehouseCapacityProgressPainter(_rootVisualElement.Q<VisualElement>("City-WarehouseBar-Population"));
-            _ideologyPainter = new WarehouseCapacityProgressPainter(_rootVisualElement.Q<VisualElement>("City-WarehouseBar-Ideology"));
-        }
-
-        private void HandleCityResourceStateChanged(CityResourceState currentResourceState)
-        {
-            UpdateCityUserInterfaceLabels(currentResourceState);
-            UpdateWarehouseVisuals(currentResourceState);
+            UpdateCityUserInterfaceLabels(state);
+            UpdateCapacityIndicators(state);
             RefreshExoticResourcesSection();
-            RefreshVisibleStandardResourceTooltip();
+            RefreshVisibleResourceTooltip();
         }
 
-        private void HandleCityNameChanged(string newCityName)
-        {
-            UpdateCitySelectorLabel(newCityName);
-        }
+        private void HandleCityNameChanged(string cityName) => UpdateCitySelectorLabel(cityName);
 
-        private void HandleWorldPlayerEconomyStateChanged(WorldPlayerState economyState)
+        private void HandleWorldPlayerEconomyStateChanged(WorldPlayerState state)
         {
-            UpdateWorldPlayerUserInterfaceLabels(economyState);
-            RefreshVisibleStandardResourceTooltip();
+            UpdateWorldPlayerUserInterfaceLabels(state);
+            RefreshVisibleResourceTooltip();
 
-            if (economyState.PlayerCities != null && !ReferenceEquals(_playerCities, economyState.PlayerCities))
-            {
-                _playerCities = economyState.PlayerCities;
-                PopulateCityDropdown();
-                UpdateNavigationButtonsState();
-            }
+            if (state.PlayerCities == null) return;
+
+            bool cityListChanged = !ReferenceEquals(_playerCities, state.PlayerCities);
+            _playerCities = state.PlayerCities;
+            if (cityListChanged) PopulateCitySelectorPopup();
+            UpdateNavigationButtonsState();
         }
 
         private void UpdateCityUserInterfaceLabels(CityResourceState state)
         {
-            if (_woodResourceAmountLabel != null)
-                _woodResourceAmountLabel.text = Math.Floor(state.WoodAmount).ToString("N0");
-
-            if (_stoneResourceAmountLabel != null)
-                _stoneResourceAmountLabel.text = Math.Floor(state.StoneAmount).ToString("N0");
-
-            if (_metalResourceAmountLabel != null)
-                _metalResourceAmountLabel.text = Math.Floor(state.MetalAmount).ToString("N0");
-
-            if (_populationAmountLabel != null)
-            {
-                _populationAmountLabel.text = state.RemainingPopulation.ToString("N0");
-                _populationAmountLabel.EnableInClassList("city-resource-label-amount--negative", state.RemainingPopulation <= 0);
-            }
+            SetResourceAmount(CityTopBarResourceType.Wood, Math.Floor(state.WoodAmount).ToString("N0"));
+            SetResourceProduction(CityTopBarResourceType.Wood, state.WoodProductionPerHour);
+            SetResourceAmount(CityTopBarResourceType.Stone, Math.Floor(state.StoneAmount).ToString("N0"));
+            SetResourceProduction(CityTopBarResourceType.Stone, state.StoneProductionPerHour);
+            SetResourceAmount(CityTopBarResourceType.Metal, Math.Floor(state.MetalAmount).ToString("N0"));
+            SetResourceProduction(CityTopBarResourceType.Metal, state.MetalProductionPerHour);
+            SetResourceAmount(CityTopBarResourceType.Population, state.RemainingPopulation.ToString("N0"), state.RemainingPopulation <= 0);
+            SetResourceDetail(
+                CityTopBarResourceType.Population,
+                $"{state.CurrentPopulationUsage:N0} / {state.MaxPopulationCapacity:N0}",
+                state.RemainingPopulation <= 0);
         }
 
         private void UpdateWorldPlayerUserInterfaceLabels(WorldPlayerState state)
         {
-            if (_coinsResourceAmountLabel != null)
-                _coinsResourceAmountLabel.text = Math.Floor(state.CoinsAmount).ToString("N0");
-
-            if (_researchAmountLabel != null)
-                _researchAmountLabel.text = Math.Floor(state.ResearchPointsAmount).ToString("N0");
-
-            if (_ideologyFocusPointsAmountLabel != null)
-                _ideologyFocusPointsAmountLabel.text = Math.Floor(state.IdeologyFocusPointsAmount).ToString("N0");
+            SetResourceAmount(CityTopBarResourceType.Coins, Math.Floor(state.CoinsAmount).ToString("N0"));
+            SetResourceProduction(CityTopBarResourceType.Coins, state.CoinsProductionPerHour);
+            SetResourceAmount(CityTopBarResourceType.Research, Math.Floor(state.ResearchPointsAmount).ToString("N0"));
+            SetResourceProduction(CityTopBarResourceType.Research, state.ResearchPointsProductionPerHour);
+            SetResourceAmount(CityTopBarResourceType.Ideology, Math.Floor(state.IdeologyFocusPointsAmount).ToString("N0"));
+            SetResourceProduction(CityTopBarResourceType.Ideology, state.IdeologyFocusPointsProductionPerHour);
         }
 
-        private void UpdateWarehouseVisuals(CityResourceState state)
+        private void SetResourceAmount(CityTopBarResourceType type, string value, bool isNegative = false)
         {
-            _woodWarehousePainter?.UpdateFillAmount(state.WoodFillPercentage);
-            _stoneWarehousePainter?.UpdateFillAmount(state.StoneFillPercentage);
-            _metalWarehousePainter?.UpdateFillAmount(state.MetalFillPercentage);
-
-            float populationFill = state.MaxPopulationCapacity > 0
-                ? (float)state.CurrentPopulationUsage / state.MaxPopulationCapacity
-                : 0f;
-            _populationUsagePainter?.UpdateFillAmount(populationFill);
-
-            _ideologyPainter?.UpdateFillAmount(0f);
+            if (_resourceViewLookup.TryGetValue(type, out CityTopBarResourceView view))
+            {
+                view.SetAmount(value, isNegative);
+            }
         }
 
-        // ===============================================
-        // SERVER TIME ROUTINE
-        // ===============================================
+        private void SetResourceProduction(CityTopBarResourceType type, double productionPerHour)
+        {
+            if (_resourceViewLookup.TryGetValue(type, out CityTopBarResourceView view))
+            {
+                view.SetProduction(productionPerHour);
+            }
+        }
+
+        private void SetResourceDetail(CityTopBarResourceType type, string value, bool isNegative = false)
+        {
+            if (_resourceViewLookup.TryGetValue(type, out CityTopBarResourceView view))
+            {
+                view.SetDetail(value, isNegative);
+            }
+        }
+
+        private void UpdateCapacityIndicators(CityResourceState state)
+        {
+            SetResourceFill(CityTopBarResourceType.Wood, state.WoodFillPercentage);
+            SetResourceFill(CityTopBarResourceType.Stone, state.StoneFillPercentage);
+            SetResourceFill(CityTopBarResourceType.Metal, state.MetalFillPercentage);
+            SetResourceFill(
+                CityTopBarResourceType.Population,
+                state.MaxPopulationCapacity > 0 ? (float)state.CurrentPopulationUsage / state.MaxPopulationCapacity : 0f);
+        }
+
+        private void SetResourceFill(CityTopBarResourceType type, float fill)
+        {
+            if (_resourceViewLookup.TryGetValue(type, out CityTopBarResourceView view))
+            {
+                view.SetCapacityFill(fill);
+            }
+        }
+
         private IEnumerator UpdateServerTimeRoutine()
         {
-            var waitInstruction = new WaitForSeconds(1f);
+            var waitInstruction = new WaitForSecondsRealtime(1f);
             while (true)
             {
-                if (_serverTimeLabel != null)
-                {
-                    // Formatterer tiden som DD.MM.YYYY HH:MM:SS
-                    _serverTimeLabel.text = DateTime.UtcNow.ToString("HH:mm:ss");
-                }
+                if (serverTimeLabel != null) serverTimeLabel.text = DateTime.UtcNow.ToString("HH:mm:ss");
                 yield return waitInstruction;
             }
         }
 
-        private class WarehouseCapacityProgressPainter
+        private void ApplyLayout(FrontendLayoutSnapshot snapshot)
         {
-            private readonly VisualElement _targetVisualElement;
-            private float _currentFillPercentage;
+            // The authored Top Section prefab owns all layout and scaling.
+        }
 
-            private readonly Color _colorBaseBeige = new Color(0.9f, 0.9f, 0.85f);
-            private readonly Color _colorWarningGold = new Color(1.0f, 0.8f, 0.2f);
-            private readonly Color _colorDangerRed = Color.red;
+        private void HandleActiveSceneChanged(Scene previous, Scene next) => CloseAllPopups();
 
-            private const float _dangerThresholdPercentage = 0.95f;
+        private void CloseAllPopups()
+        {
+            HideCitySelectorPopup();
+            HideResourceTooltips();
+            if (popupBackdrop != null) popupBackdrop.gameObject.SetActive(false);
+        }
 
-            public WarehouseCapacityProgressPainter(VisualElement targetElement)
-            {
-                _targetVisualElement = targetElement;
-                if (_targetVisualElement != null)
-                    _targetVisualElement.generateVisualContent += OnGenerateVisualContent;
-            }
-
-            public void UpdateFillAmount(float percentage)
-            {
-                _currentFillPercentage = Mathf.Clamp01(percentage);
-                _targetVisualElement?.MarkDirtyRepaint();
-            }
-
-            private void OnGenerateVisualContent(MeshGenerationContext context)
-            {
-                var painter2D = context.painter2D;
-                Vector2 arcCenterPoint = new Vector2(24f, 24f);
-                float arcRadius = 21f;
-
-                painter2D.lineWidth = 3.2f;
-                painter2D.lineCap = LineCap.Round;
-
-                painter2D.strokeColor = new Color(0.12f, 0.12f, 0.12f, 0.5f);
-                painter2D.BeginPath();
-                painter2D.Arc(arcCenterPoint, arcRadius, 135f, 405f, ArcDirection.Clockwise);
-                painter2D.Stroke();
-
-                Color progressStrokeColor;
-                if (_currentFillPercentage < _dangerThresholdPercentage)
-                {
-                    float normalizedGoldStep = _currentFillPercentage / _dangerThresholdPercentage;
-                    progressStrokeColor = Color.Lerp(_colorBaseBeige, _colorWarningGold, normalizedGoldStep);
-                }
-                else
-                {
-                    float normalizedRedStep = (_currentFillPercentage - _dangerThresholdPercentage) / (1.0f - _dangerThresholdPercentage);
-                    progressStrokeColor = Color.Lerp(_colorWarningGold, _colorDangerRed, normalizedRedStep);
-                }
-
-                painter2D.strokeColor = progressStrokeColor;
-                painter2D.BeginPath();
-                float calculateEndAngle = 135f + (270f * _currentFillPercentage);
-                painter2D.Arc(arcCenterPoint, arcRadius, 135f, calculateEndAngle, ArcDirection.Clockwise);
-                painter2D.Stroke();
-            }
+        private void SetBackdropVisible(bool visible)
+        {
+            if (popupBackdrop != null) popupBackdrop.gameObject.SetActive(visible);
         }
     }
 }

@@ -52,6 +52,8 @@ namespace Application.DTOs
         public double StoneProductionPerHour { get; set; }
         public double MetalProductionPerHour { get; set; }
         public double CoinsProductionPerHour { get; set; }
+        public double UnitUpkeepPerHour { get; set; }
+        public double BuildingUpkeepPerHour { get; set; }
         public double ResearchPointsPerHour { get; set; }
         public double IdeologyFocusPointsPerHour { get; set; }
 
@@ -140,7 +142,9 @@ namespace Application.DTOs
     double GlobalModifierMultiplier, // Procentvise bonusser fra Alliance/Research (fx 1.10 for +10%)
     double FinalValuePerHour,
     double Expenditure,
-    double GlobalUpkeepMultiplier
+    double GlobalUpkeepMultiplier,
+    double UnitUpkeepPerHour,
+    double BuildingUpkeepPerHour
 );
 
     public record PopulationBreakdownDTO(

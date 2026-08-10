@@ -19,7 +19,9 @@ namespace Project.Modules.UI.Windows.Implementations
         private Label _playerNameLabel;
         private Label _allianceNameLabel;
         private Button _messagePlayerButton;
+        private Button _inviteToAllianceButton;
         private VisualElement _actionRow;
+        private Label _actionStatusLabel;
         private Label _rankValueLabel;
         private Label _pointsValueLabel;
         private Label _citiesValueLabel;
@@ -38,6 +40,7 @@ namespace Project.Modules.UI.Windows.Implementations
         private Guid _displayedAllianceId;
         private int _requestVersion;
         private bool _saveDescriptionInFlight;
+        private bool _inviteInFlight;
         private bool _isEditingDescription;
         private string _currentDescriptionText = string.Empty;
 
@@ -46,6 +49,7 @@ namespace Project.Modules.UI.Windows.Implementations
             var version = BeginDeferredOpen();
             BindVisualElementReferences();
             BindButtons();
+            ResetInvitationAction();
 
             _currentWorldPlayerId = ResolveCurrentWorldPlayerId();
             _displayedWorldPlayerId = ResolveTargetPlayerId(dataPayload);
@@ -67,6 +71,7 @@ namespace Project.Modules.UI.Windows.Implementations
             InvalidateDeferredOpen();
             StopAllCoroutines();
             _saveDescriptionInFlight = false;
+            _inviteInFlight = false;
             _isEditingDescription = false;
             ResetDescriptionSaveButton();
         }
@@ -76,7 +81,9 @@ namespace Project.Modules.UI.Windows.Implementations
             _playerNameLabel = Root.Q<Label>("Lbl-PlayerName");
             _allianceNameLabel = Root.Q<Label>("Lbl-AllianceName");
             _messagePlayerButton = Root.Q<Button>("Btn-MessagePlayer");
+            _inviteToAllianceButton = Root.Q<Button>("Btn-InviteToAlliance");
             _actionRow = Root.Q<VisualElement>("Profile-ActionRow");
+            _actionStatusLabel = Root.Q<Label>("Lbl-ProfileActionStatus");
 
             _rankValueLabel = Root.Q<Label>("Lbl-RankValue");
             _pointsValueLabel = Root.Q<Label>("Lbl-PointsValue");
@@ -107,6 +114,7 @@ namespace Project.Modules.UI.Windows.Implementations
             }
 
             Bind(_messagePlayerButton, HandleMessagePlayerClicked);
+            Bind(_inviteToAllianceButton, HandleInviteToAllianceClicked);
             Bind(_editDescriptionButton, HandleEditDescriptionClicked);
             Bind(_saveDescriptionButton, HandleSaveDescriptionClicked);
             Bind(_cancelDescriptionButton, HandleCancelDescriptionClicked);
@@ -174,7 +182,14 @@ namespace Project.Modules.UI.Windows.Implementations
                 if (profileDto != null)
                 {
                     UpdateUserProfileInterface(profileDto);
-                    CompleteDeferredOpen(version);
+                    if (profileDto.WorldPlayerId == _currentWorldPlayerId)
+                    {
+                        CompleteDeferredOpen(version);
+                    }
+                    else
+                    {
+                        RefreshCurrentPlayerAllianceState(profileDto, version);
+                    }
                 }
                 else
                 {
@@ -183,6 +198,33 @@ namespace Project.Modules.UI.Windows.Implementations
                     CompleteDeferredOpen(version);
                 }
             }));
+        }
+
+        private void RefreshCurrentPlayerAllianceState(WorldPlayerProfileDTO targetProfile, int version)
+        {
+            StartCoroutine(NetworkManager.Instance.WorldPlayer.GetPlayerProfile(
+                _currentWorldPlayerId,
+                NetworkManager.Instance.JwtToken,
+                viewerProfile =>
+                {
+                    if (version != _requestVersion || !isActiveAndEnabled)
+                    {
+                        return;
+                    }
+
+                    var canInvite = viewerProfile != null &&
+                        viewerProfile.WorldId == targetProfile.WorldId &&
+                        viewerProfile.AllianceId != Guid.Empty &&
+                        viewerProfile.AllianceRole == AllianceRoleDTO.Founder &&
+                        targetProfile.AllianceId == Guid.Empty;
+
+                    if (_inviteToAllianceButton != null)
+                    {
+                        _inviteToAllianceButton.style.display = canInvite ? DisplayStyle.Flex : DisplayStyle.None;
+                    }
+
+                    CompleteDeferredOpen(version);
+                }));
         }
 
         private void UpdateUserProfileInterface(WorldPlayerProfileDTO data)
@@ -199,6 +241,7 @@ namespace Project.Modules.UI.Windows.Implementations
             var isSelfView = data.WorldPlayerId == _currentWorldPlayerId;
             if (_actionRow != null) _actionRow.style.display = isSelfView ? DisplayStyle.None : DisplayStyle.Flex;
             if (_messagePlayerButton != null) _messagePlayerButton.style.display = isSelfView ? DisplayStyle.None : DisplayStyle.Flex;
+            if (_inviteToAllianceButton != null) _inviteToAllianceButton.style.display = DisplayStyle.None;
             if (_editDescriptionButton != null) _editDescriptionButton.style.display = isSelfView ? DisplayStyle.Flex : DisplayStyle.None;
 
             if (!isSelfView)
@@ -428,6 +471,85 @@ namespace Project.Modules.UI.Windows.Implementations
             {
                 WindowNavigationHelper.OpenMessageToPlayer(_displayedWorldPlayerId);
             }
+        }
+
+        private void HandleInviteToAllianceClicked()
+        {
+            if (_inviteInFlight || NetworkManager.Instance == null ||
+                _currentWorldPlayerId == Guid.Empty || _displayedWorldPlayerId == Guid.Empty ||
+                _currentWorldPlayerId == _displayedWorldPlayerId)
+            {
+                return;
+            }
+
+            _inviteInFlight = true;
+            SetInvitationStatus("Sending invitation...");
+            SetInvitationButtonState(false, "SENDING...");
+            var requestedPlayerId = _displayedWorldPlayerId;
+            var version = _requestVersion;
+            var dto = new InviteToAllianceDTO
+            {
+                WorldPlayerIdInviter = _currentWorldPlayerId,
+                WorldPlayerIdInvited = requestedPlayerId
+            };
+
+            StartCoroutine(NetworkManager.Instance.Alliance.InviteToAlliance(
+                dto,
+                NetworkManager.Instance.JwtToken,
+                success =>
+                {
+                    if (version != _requestVersion || !isActiveAndEnabled || requestedPlayerId != _displayedWorldPlayerId)
+                    {
+                        return;
+                    }
+
+                    _inviteInFlight = false;
+                    if (success)
+                    {
+                        SetInvitationStatus("Alliance invitation sent.");
+                        SetInvitationButtonState(false, "INVITATION SENT");
+                    }
+                    else
+                    {
+                        SetInvitationStatus("Could not send alliance invitation.");
+                        SetInvitationButtonState(true, "INVITE TO ALLIANCE");
+                    }
+                }));
+        }
+
+        private void ResetInvitationAction()
+        {
+            _inviteInFlight = false;
+            if (_inviteToAllianceButton != null)
+            {
+                _inviteToAllianceButton.style.display = DisplayStyle.None;
+            }
+            SetInvitationButtonState(true, "INVITE TO ALLIANCE");
+            SetInvitationStatus(string.Empty);
+        }
+
+        private void SetInvitationButtonState(bool enabled, string text)
+        {
+            if (_inviteToAllianceButton == null)
+            {
+                return;
+            }
+
+            _inviteToAllianceButton.SetEnabled(enabled);
+            _inviteToAllianceButton.text = text;
+        }
+
+        private void SetInvitationStatus(string message)
+        {
+            if (_actionStatusLabel == null)
+            {
+                return;
+            }
+
+            _actionStatusLabel.text = message ?? string.Empty;
+            _actionStatusLabel.style.display = string.IsNullOrWhiteSpace(message)
+                ? DisplayStyle.None
+                : DisplayStyle.Flex;
         }
     }
 }

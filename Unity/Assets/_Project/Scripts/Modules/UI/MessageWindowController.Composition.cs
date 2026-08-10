@@ -275,6 +275,7 @@ namespace Project.Modules.UI
         private void StartNewMessageMode()
         {
             _state.StartComposing();
+            RemoveSelectedReport();
             ResetMessagePaging();
             ResetDeleteConfirmation();
             if (_deleteConversationButton != null) _deleteConversationButton.style.display = DisplayStyle.None;

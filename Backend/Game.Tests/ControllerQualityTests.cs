@@ -277,10 +277,10 @@ public class ControllerQualityTests
     {
         private readonly Exception _exception = exception;
 
-        public Task<ConversationDTO> StartConversationAsync(Guid senderId, IEnumerable<Guid> participantIds, string subject, string content) =>
+        public Task<ConversationDTO> StartConversationAsync(Guid senderId, IEnumerable<Guid> participantIds, string subject, string content, Guid? battleReportId = null) =>
             Task.FromException<ConversationDTO>(_exception);
 
-        public Task<MessageDTO> ReplyToConversationAsync(Guid requestorId, Guid conversationId, string content) =>
+        public Task<MessageDTO> ReplyToConversationAsync(Guid requestorId, Guid conversationId, string content, Guid? battleReportId = null) =>
             Task.FromException<MessageDTO>(_exception);
 
         public Task<List<ConversationDTO>> GetConversationsAsync(Guid worldPlayerId) =>
@@ -322,6 +322,9 @@ public class ControllerQualityTests
             Task.FromException(_exception);
 
         public Task DeleteBattleReportAsync(Guid worldPlayerId, Guid battleReportId) =>
+            Task.FromException(_exception);
+
+        public Task SetBattleReportPublicStatusAsync(Guid worldPlayerId, Guid battleReportId, bool isPublic) =>
             Task.FromException(_exception);
     }
 
