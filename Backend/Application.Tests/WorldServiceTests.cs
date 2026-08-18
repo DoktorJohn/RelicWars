@@ -259,6 +259,15 @@ public class WorldServiceTests
             WorldPlayer = owner
         };
         owner.Cities.Add(city);
+        owner.Cities.Add(new City
+        {
+            Id = Guid.NewGuid(),
+            Name = "Harbour",
+            Points = 155,
+            WorldId = worldId,
+            WorldPlayerId = owner.Id,
+            WorldPlayer = owner
+        });
 
         var service = CreateService(city, owner);
 
@@ -270,6 +279,7 @@ public class WorldServiceTests
         Assert.Equal(12, dto.X);
         Assert.Equal(-4, dto.Y);
         Assert.Equal(345, dto.Points);
+        Assert.Equal(500, dto.PlayerTotalPoints);
         Assert.Equal(owner.Id, dto.WorldPlayerId);
         Assert.Equal("CityOwner", dto.WorldPlayerName);
         Assert.Equal(alliance.Id, dto.AllianceId);
@@ -306,6 +316,7 @@ public class WorldServiceTests
 
         Assert.NotNull(dto);
         Assert.Null(dto!.WorldPlayerId);
+        Assert.Equal(17, dto.PlayerTotalPoints);
         Assert.Null(dto.WorldPlayerName);
         Assert.Null(dto.AllianceId);
         Assert.Null(dto.AllianceName);

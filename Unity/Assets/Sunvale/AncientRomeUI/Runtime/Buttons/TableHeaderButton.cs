@@ -102,8 +102,8 @@ namespace Sunvale.AncientRomeUI.Buttons
         {
             myBackgroundImage.material = new Material(myBackgroundImage.material);
 
-            baseSaturation = myBackgroundImage.material.GetFloat(HsvSaturation);
-            baseBrightness = myBackgroundImage.material.GetFloat(HsvBright);
+            //baseSaturation = myBackgroundImage.material.GetFloat(HsvSaturation);
+            //baseBrightness = myBackgroundImage.material.GetFloat(HsvBright);
 
             if (arrowUp != null)
             {

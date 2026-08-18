@@ -16,6 +16,8 @@ namespace Application.Interfaces.IServices
         Task<BuildingResult> QueueNPCUpgradeAsync(City city, BuildingTypeEnum type) =>
             QueueNPCUpgradeAsync(city.Id, type);
         Task<List<BuildingDTO>> GetBuildingQueueAsync(Guid cityId);
+        Task<List<BuildingDTO>> CancelQueuedUpgradeAsync(Guid cityId, Guid jobId) =>
+            throw new NotSupportedException();
         Task<BuildingResult> RepairAsync(Guid cityId, BuildingTypeEnum type);
 
     }

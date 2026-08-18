@@ -41,6 +41,13 @@ namespace Game.Controllers
             return Ok(queue);
         }
 
+        [HttpDelete("{cityId}/buildingQueue/{jobId}")]
+        public async Task<ActionResult<List<BuildingDTO>>> CancelQueuedUpgrade(Guid cityId, Guid jobId)
+        {
+            var queue = await _buildingService.CancelQueuedUpgradeAsync(cityId, jobId);
+            return Ok(queue);
+        }
+
         [HttpPost("{cityId}/repair/{type}")]
         public async Task<IActionResult> Repair(Guid cityId, BuildingTypeEnum type)
         {

@@ -1,5 +1,7 @@
 using System;
 using System.Collections;
+using System.Collections.Generic;
+using System.Linq;
 using Project.Network.Manager;
 using Project.Scripts.Domain.DTOs;
 using UnityEngine;
@@ -105,7 +107,7 @@ namespace Project.Modules.UI
 
                 SetLabel(row, "Dailies-Row-Level", objective.Slot.ToString());
                 SetLabel(row, "Dailies-Row-Objective", objective.Name);
-                SetLabel(row, "Dailies-Row-Reward", objective.RewardTier.ToString().ToUpperInvariant());
+                SetLabel(row, "Dailies-Row-Reward", FormatRewards(objective.Rewards));
                 if (objective.State == DailyObjectiveState.ComingSoon)
                 {
                     SetLabel(row, "Dailies-Row-Completion", objective.CompletionInfo);
@@ -132,6 +134,11 @@ namespace Project.Modules.UI
             Label label = row.Q<Label>(elementName);
             if (label != null) label.text = value;
         }
+
+        private static string FormatRewards(IReadOnlyCollection<DailyObjectiveRewardDTO> rewards) =>
+            rewards == null || rewards.Count == 0
+                ? "-"
+                : string.Join(", ", rewards.Select(reward => $"{reward.Amount:N0} {reward.Type}"));
 
         private void RestartResetTimer()
         {

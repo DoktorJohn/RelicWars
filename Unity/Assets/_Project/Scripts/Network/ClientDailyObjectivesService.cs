@@ -34,5 +34,28 @@ namespace Project.Network.Manager
                     });
             }
         }
+
+        public IEnumerator Collect(
+            Guid worldPlayerId,
+            int definitionId,
+            Guid cityId,
+            string jwtToken,
+            Action<DailyObjectivesDTO> callback,
+            Action<string> errorCallback = null)
+        {
+            string url = $"{_baseUrl}/{worldPlayerId}/{definitionId}/collect";
+            using (UnityWebRequest request = BackendRequestHelper.CreatePostRequest(url, new { CityId = cityId }, jwtToken))
+            {
+                yield return BackendRequestHelper.SendJson<DailyObjectivesDTO>(
+                    request,
+                    callback,
+                    "DailyObjectives",
+                    failedRequest =>
+                    {
+                        errorCallback?.Invoke(BackendRequestHelper.GetErrorMessage(failedRequest));
+                        return null;
+                    });
+            }
+        }
     }
 }

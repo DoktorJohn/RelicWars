@@ -20,6 +20,7 @@ namespace Project.Modules.City
     public class CityBuildingInteractionController : MonoBehaviour, IPointerClickHandler, IPointerEnterHandler, IPointerExitHandler
     {
         private CityControllerGetDetailedCityInformationBuildingDTO _associatedBuildingData;
+        private GameObject _uguiWindowPrefab;
         private SpriteRenderer[] _allChildSpriteRenderers;
         private readonly Dictionary<SpriteRenderer, Color> _originalRendererColors = new Dictionary<SpriteRenderer, Color>();
 
@@ -30,9 +31,12 @@ namespace Project.Modules.City
         [SerializeField] private Color _highlightColorTint = new Color(0.85f, 0.95f, 1.0f, 1.0f);
         [SerializeField] private bool _resetHighlightOnDisable = true;
 
-        public void InitializeBuildingInteractionData(CityControllerGetDetailedCityInformationBuildingDTO buildingData)
+        public void InitializeBuildingInteractionData(
+            CityControllerGetDetailedCityInformationBuildingDTO buildingData,
+            GameObject uguiWindowPrefab)
         {
             _associatedBuildingData = buildingData;
+            _uguiWindowPrefab = uguiWindowPrefab;
             _allChildSpriteRenderers = GetComponentsInChildren<SpriteRenderer>();
 
             if (_allChildSpriteRenderers != null && _allChildSpriteRenderers.Length > 0)
@@ -118,6 +122,16 @@ namespace Project.Modules.City
         {
             if (!_isControllerSuccessfullyInitialized) return;
 
+            // PhysicsRaycaster can still report the city building even when a uGUI
+            // window is visually above it. Block only when this exact click lies
+            // inside the active window rect; clicks elsewhere in the city remain valid.
+            if (UguiWindowHostController.Instance != null &&
+                UguiWindowHostController.Instance.ContainsScreenPoint(eventData.position))
+            {
+                ApplyHighlightEffect(false);
+                return;
+            }
+
             ApplyHighlightEffect(false);
             ExecuteInteractionLogic();
         }
@@ -150,7 +164,19 @@ namespace Project.Modules.City
             WindowTypeEnum targetWindowType = MapBuildingTypeToWindowType(_associatedBuildingData.BuildingType);
             if (targetWindowType != WindowTypeEnum.None)
             {
-                GlobalWindowManager.Instance.OpenWindow(targetWindowType, null);
+                if (_uguiWindowPrefab == null)
+                {
+                    Debug.LogError($"[CityBuildingInteractionController] {_associatedBuildingData.BuildingType} mangler sit uGUI-vindue.", this);
+                    return;
+                }
+
+                if (UguiWindowHostController.Instance == null)
+                {
+                    Debug.LogError("[CityBuildingInteractionController] TopBarHUD har ingen UguiWindowHostController.", this);
+                    return;
+                }
+
+                UguiWindowHostController.Instance.OpenWindow(targetWindowType, _uguiWindowPrefab);
             }
         }
 

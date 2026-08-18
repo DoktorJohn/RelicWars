@@ -19,7 +19,7 @@ namespace Application.DTOs
     List<AllianceMemberDTO> Members
 );
 
-    public record AllianceMemberDTO(Guid WorldPlayerId, string UserName, AllianceRoleEnum Role, int TotalPoints);
+    public record AllianceMemberDTO(Guid WorldPlayerId, string UserName, AllianceRoleEnum Role, int TotalPoints, int CityCount);
     public record AllianceInvitationDTO(Guid Id, Guid AllianceId, string AllianceName, string AllianceTag,
         Guid InvitedByWorldPlayerId, string InvitedByUserName, DateTime ExpiresAt);
     public record AllianceInvitedPlayerDTO(Guid InvitationId, Guid WorldPlayerId, string UserName,
@@ -35,7 +35,8 @@ namespace Application.DTOs
     public record UpdateAllianceDescriptionDTO(Guid WorldPlayerId, Guid AllianceId, string Description);
     public record AllianceSearchResultDTO(Guid Id, string Name, string Tag, string Description, int MemberCount);
     public record AllianceRelationDTO(Guid Id, Guid OtherAllianceId, string OtherAllianceName, string OtherAllianceTag,
-        AllianceRelationTypeEnum RelationType, AllianceRelationStatusEnum Status, bool IsIncoming, DateTime CreatedAt);
+        long OtherAllianceTotalPoints, AllianceRelationTypeEnum RelationType, AllianceRelationStatusEnum Status,
+        bool IsIncoming, DateTime CreatedAt);
     public record AllianceGeopoliticsDTO(List<AllianceRelationDTO> ActivePacts, List<AllianceRelationDTO> ActiveWars,
         List<AllianceRelationDTO> IncomingPactInvites, List<AllianceRelationDTO> OutgoingPactInvites);
     public record SendPactInviteDTO(Guid WorldPlayerId, Guid AllianceId, Guid TargetAllianceId);

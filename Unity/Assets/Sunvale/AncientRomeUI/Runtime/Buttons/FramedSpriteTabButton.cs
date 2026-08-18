@@ -128,8 +128,15 @@ namespace Sunvale.AncientRomeUI.Buttons
 
         private void Awake()
         {
+            EnsureLabelReference();
             EnsureIconMaterialInstance();
             ApplyVisualsInstant();
+        }
+
+        private void EnsureLabelReference()
+        {
+            if (tmpLabel == null)
+                tmpLabel = GetComponentInChildren<TextMeshProUGUI>(true);
         }
 
         private void OnDestroy()
@@ -305,6 +312,7 @@ namespace Sunvale.AncientRomeUI.Buttons
 
         private void ApplyVisualsInstant()
         {
+            EnsureLabelReference();
             UpdateBackgroundSprite();
 
             frameImage.color = GetTargetFrameColor();
@@ -320,6 +328,7 @@ namespace Sunvale.AncientRomeUI.Buttons
 
         private void SetupTransition(InteractionState targetStateOfMouseInteraction)
         {
+            EnsureLabelReference();
             myInnerState = targetStateOfMouseInteraction;
             elapsedTime = 0f;
 

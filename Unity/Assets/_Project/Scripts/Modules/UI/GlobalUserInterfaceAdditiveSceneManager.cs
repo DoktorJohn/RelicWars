@@ -15,6 +15,8 @@ namespace Project.Modules.UI
 
         private void Awake()
         {
+            EnsureAudioListenerAvailable();
+
             if (Instance == null)
             {
                 Instance = this;
@@ -34,6 +36,8 @@ namespace Project.Modules.UI
 
         private void OnSceneLoadedInternal(Scene scene, LoadSceneMode mode)
         {
+            EnsureAudioListenerAvailable();
+
             // Ignorer HUD scenerne selv
             if (IsSceneAHudComponent(scene.name)) return;
 
@@ -88,6 +92,19 @@ namespace Project.Modules.UI
             return sceneName == _topBarSceneName ||
                    sceneName == _leftBarSceneName ||
                    sceneName == _UnitStackIdeologySceneName;
+        }
+
+        private static void EnsureAudioListenerAvailable()
+        {
+            AudioListener[] listeners = FindObjectsByType<AudioListener>(
+                FindObjectsInactive.Include,
+                FindObjectsSortMode.None);
+
+            foreach (AudioListener listener in listeners)
+                if (listener != null && listener.enabled) return;
+
+            if (listeners.Length > 0 && listeners[0] != null)
+                listeners[0].enabled = true;
         }
     }
 }

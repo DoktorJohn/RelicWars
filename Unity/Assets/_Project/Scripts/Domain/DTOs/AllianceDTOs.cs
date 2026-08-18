@@ -22,7 +22,7 @@ namespace Project.Scripts.Domain.DTOs
     }
 
     [Serializable]
-    public class AllianceMemberDTO { public Guid WorldPlayerId; public string UserName; public AllianceRoleDTO Role; public int TotalPoints; }
+    public class AllianceMemberDTO { public Guid WorldPlayerId; public string UserName; public AllianceRoleDTO Role; public int TotalPoints; public int CityCount; }
 
     [Serializable]
     public class AllianceInvitationDTO
@@ -86,7 +86,8 @@ namespace Project.Scripts.Domain.DTOs
     public class AllianceRelationDTO
     {
         public Guid Id; public Guid OtherAllianceId; public string OtherAllianceName; public string OtherAllianceTag;
-        public AllianceRelationTypeDTO RelationType; public AllianceRelationStatusDTO Status; public bool IsIncoming; public DateTime CreatedAt;
+        public long OtherAllianceTotalPoints; public AllianceRelationTypeDTO RelationType; public AllianceRelationStatusDTO Status;
+        public bool IsIncoming; public DateTime CreatedAt;
     }
     [Serializable]
     public class AllianceGeopoliticsDTO

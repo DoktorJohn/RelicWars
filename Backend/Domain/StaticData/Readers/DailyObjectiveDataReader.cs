@@ -38,6 +38,15 @@ namespace Domain.StaticData.Readers
                 catalog.Selection.Weights.GetValueOrDefault(DailyObjectiveTierEnum.Rare) != 30 ||
                 catalog.Selection.Weights.GetValueOrDefault(DailyObjectiveTierEnum.Unique) != 5)
                 throw new InvalidOperationException("Daily objective weights must be Uncommon 65, Rare 30 and Unique 5.");
+            foreach (var definition in catalog.Definitions)
+            {
+                if (definition.Rewards.Count is < 1 or > 3 ||
+                    definition.Rewards.Any(reward => !Enum.IsDefined(reward.Type) || reward.Amount <= 0) ||
+                    definition.Rewards.Select(reward => reward.Type).Distinct().Count() != definition.Rewards.Count ||
+                    definition.Rewards.Sum(reward => reward.Amount) is < 250 or > 2000)
+                    throw new InvalidOperationException(
+                        $"Daily objective {definition.Id} must define 1-3 unique, positive resource rewards totalling 250-2000.");
+            }
             if (catalog.Definitions.Count(x => x.Tier != DailyObjectiveTierEnum.Fixed) < catalog.Selection.WeightedSlots)
                 throw new InvalidOperationException("Daily objective weighted pool is too small.");
         }

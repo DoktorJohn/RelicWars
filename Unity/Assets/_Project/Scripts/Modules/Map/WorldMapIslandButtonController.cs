@@ -16,6 +16,8 @@ namespace Project.Scripts.Modules.Map
         [SerializeField, Min(0.01f)] private float _iconButtonWorldSize = 1.75f;
         [SerializeField, Min(0f)] private float _layoutWorldTolerance = 0.001f;
         [SerializeField, Min(0f)] private float _orthographicSizeTolerance = 0.001f;
+        [SerializeField] private GameObject _islandWindowPrefab;
+        [SerializeField] private GameObject _exoticResourceWindowPrefab;
 
         private Button _button;
         private VisualElement _rootVisualElement;
@@ -116,18 +118,22 @@ namespace Project.Scripts.Modules.Map
 
         private void OpenIslandWindow()
         {
-            if (_island != null && GlobalWindowManager.Instance != null)
+            if (_island != null && UguiWindowHostController.Instance != null)
             {
-                GlobalWindowManager.Instance.OpenWindow(WindowTypeEnum.Island, _island.Id);
+                UguiWindowHostController.Instance.OpenWindow(
+                    WindowTypeEnum.Island,
+                    _islandWindowPrefab,
+                    _island.Id);
             }
         }
 
         private void OpenExoticResourceWindow()
         {
-            if (_island != null && GlobalWindowManager.Instance != null)
+            if (_island != null && UguiWindowHostController.Instance != null)
             {
-                GlobalWindowManager.Instance.OpenWindow(
+                UguiWindowHostController.Instance.OpenWindow(
                     WindowTypeEnum.ExoticResource,
+                    _exoticResourceWindowPrefab,
                     new ExoticResourceWindowPayload(_island.Id, _resourceSlotIndex));
             }
         }

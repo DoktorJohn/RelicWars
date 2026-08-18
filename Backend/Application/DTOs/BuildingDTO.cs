@@ -12,6 +12,7 @@ namespace Application.DTOs
     Guid Id,
     string Type,
     int Level,
+    DateTime? UpgradeStarted,
     DateTime? UpgradeFinished,
     bool IsUpgrading
 );

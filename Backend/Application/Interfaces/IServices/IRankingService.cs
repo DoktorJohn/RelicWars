@@ -10,6 +10,7 @@ namespace Application.Interfaces.IServices
     public interface IRankingService
     {
         Task<List<RankingEntryData>> GetRankings();
+        Task<List<RankingEntryData>> GetRankingsForWindow() => GetRankings();
         Task<RankingEntryData?> GetRankingById(Guid worldPlayerId);
     }
 }

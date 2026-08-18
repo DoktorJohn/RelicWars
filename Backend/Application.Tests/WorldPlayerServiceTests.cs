@@ -642,7 +642,7 @@ public class WorldPlayerServiceTests
                 new MemoryWorldPlayerRepository(viewer, target),
                 new NoOpPlayerProfileRepository(),
                 new NoOpCityRepository(),
-                new RankingService(rankingReader),
+                new RankingService(rankingReader, new NoOpCityRepository(), TestData.BuildingReader()),
                 new NoOpResourceService(),
                 new NoOpWorldRepository(),
                 new NoOpWorldMapObjectRepository(),

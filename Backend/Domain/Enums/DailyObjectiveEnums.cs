@@ -8,6 +8,14 @@ namespace Domain.Enums
         Unique
     }
 
+    public enum DailyObjectiveRewardTypeEnum
+    {
+        Coins,
+        Wood,
+        Stone,
+        Metal
+    }
+
     public enum DailyObjectiveProgressTypeEnum
     {
         ExoticResourcesProduced,
