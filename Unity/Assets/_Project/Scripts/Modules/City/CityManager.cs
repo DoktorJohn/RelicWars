@@ -20,6 +20,8 @@ namespace Project.Modules.City
         {
             public BuildingTypeEnum BygningsType;
             public GameObject BygningsObjektIScenene;
+            [Tooltip("Det nye uGUI-vindue, som åbnes ved klik på bygningen.")]
+            public GameObject UguiWindowPrefab;
             [Tooltip("Valgfrit: Et objekt der viser en byggeplads, hvis bygningen er i level 0.")]
             public GameObject KonstruktionsGhostObjekt;
         }
@@ -111,11 +113,33 @@ namespace Project.Modules.City
 
                 if (interactionController != null)
                 {
-                    interactionController.InitializeBuildingInteractionData(data);
+                    interactionController.InitializeBuildingInteractionData(data, kobling.UguiWindowPrefab);
                 }
                 else
                 {
-                    Debug.LogError($"<color=red>[CityManager ERROR]</color> Fant bygnings-objekt for {data.BuildingType}, men kunne ikke finde CityBuildingInteractionController p� det eller dets b�rn!");
+                    Debug.LogError($"<color=red>[CityManager ERROR]</color> Fant bygnings-objekt for {data.BuildingType}, men kunne ikke finde CityBuildingInteractionController på det eller dets børn!");
+                }
+            }
+        }
+
+        private void OnValidate()
+        {
+            foreach (var kobling in _identificeredeBygningsReferencer)
+            {
+                if (kobling.BygningsObjektIScenene == null)
+                {
+                    Debug.LogError($"[CityManager] {kobling.BygningsType} mangler sit sceneobjekt.", this);
+                    continue;
+                }
+
+                if (kobling.UguiWindowPrefab == null)
+                {
+                    Debug.LogError($"[CityManager] {kobling.BygningsType} mangler sit uGUI-vindue.", this);
+                }
+
+                if (kobling.BygningsObjektIScenene.GetComponentInChildren<CityBuildingInteractionController>(true) == null)
+                {
+                    Debug.LogError($"[CityManager] {kobling.BygningsType} mangler CityBuildingInteractionController.", kobling.BygningsObjektIScenene);
                 }
             }
         }

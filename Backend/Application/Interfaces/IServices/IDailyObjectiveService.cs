@@ -14,6 +14,7 @@ namespace Application.Interfaces.IServices
     public interface IDailyObjectiveService
     {
         Task<DailyObjectivesDTO> GetAsync(Guid worldPlayerId);
+        Task<DailyObjectivesDTO> CollectAsync(Guid worldPlayerId, int definitionId, Guid cityId);
         Task ApplyProgressAsync(Guid worldPlayerId, DailyObjectiveProgressEvent progressEvent);
         Task ApplyProductionAsync(Guid worldPlayerId, DateTime intervalStartUtc, DateTime intervalEndUtc,
             double coinsPerHour = 0, double exoticResourcesPerHour = 0);

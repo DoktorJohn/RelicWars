@@ -104,6 +104,7 @@ namespace Infrastructure.Repositories
             .OfType<BuildingJob>()
             .Where(j => j.CityId == cityId)
             .OrderBy(j => j.ExecutionTime)
+            .ThenBy(j => j.Id)
             .ToListAsync();
         }
 

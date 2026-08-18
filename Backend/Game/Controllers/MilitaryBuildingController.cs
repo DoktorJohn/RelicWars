@@ -203,6 +203,26 @@ namespace Game.Controllers
             }
         }
 
+        [HttpDelete("{cityId}/recruitment/{queueId}")]
+        public async Task<IActionResult> CancelRecruitment(Guid cityId, Guid queueId)
+        {
+            try
+            {
+                var result = await _recruitmentService.CancelRecruitmentAsync(cityId, queueId);
+                return result.Success
+                    ? Ok(result)
+                    : BadRequest(new ApiError("recruitment.cancel_failed", result.Message));
+            }
+            catch (KeyNotFoundException)
+            {
+                return NotFound();
+            }
+            catch (UnauthorizedAccessException)
+            {
+                return Forbid();
+            }
+        }
+
         [HttpPost("{cityId}/workshopRecruit")]
         public async Task<IActionResult> WorkshopRecruit(Guid cityId, [FromBody] RecruitUnitRequestDTO request)
         {

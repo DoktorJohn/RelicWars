@@ -250,6 +250,7 @@ GameObject:
   - component: {fileID: 3217887256179097900}
   - component: {fileID: 1444258056041406263}
   - component: {fileID: 5408110792609075304}
+  - component: {fileID: 800100000000000001}
   m_Layer: 5
   m_Name: IslandPlayerDataRow
   m_TagString: Untagged
@@ -257,6 +258,23 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
+--- !u!114 &800100000000000001
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2490118879452554655}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6420fc67b66b4685a417c0892ae807c9, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: Assembly-CSharp::Project.Modules.UI.UguiIslandPlayerDataRowView
+  playerText: {fileID: 2266819035333794380}
+  cityText: {fileID: 1643584993839901850}
+  allianceText: {fileID: 8756082519418948614}
+  coordinatesText: {fileID: 6233486352143650080}
+  pointsText: {fileID: 1117612441273125928}
 --- !u!224 &5712995949880795821
 RectTransform:
   m_ObjectHideFlags: 0

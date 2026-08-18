@@ -57,6 +57,7 @@ namespace Project.Network.Models
         public int X { get; set; }
         public int Y { get; set; }
         public int Points { get; set; }
+        public int? PlayerTotalPoints { get; set; }
         public Guid? WorldPlayerId { get; set; }
         public string WorldPlayerName { get; set; } = string.Empty;
         public Guid? AllianceId { get; set; }

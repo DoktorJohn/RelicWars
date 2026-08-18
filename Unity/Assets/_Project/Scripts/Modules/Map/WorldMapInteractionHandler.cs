@@ -18,6 +18,8 @@ namespace Project.Scripts.Modules.Map
     {
         public static WorldMapInteractionHandler Instance { get; private set; }
 
+        [SerializeField] private GameObject _cityInspectionWindowPrefab;
+
         private Tilemap _terrainTilemap;
         private Tilemap _highlightTilemap;
         private TileBase _selectionFrameTile;
@@ -49,6 +51,15 @@ namespace Project.Scripts.Modules.Map
         public void SetMouseOverUI(bool isMouseCurrentlyOverUserInterface)
         {
             IsMouseOverUI = isMouseCurrentlyOverUserInterface;
+        }
+
+        public void OpenCityInspection(CityInspectionPayload payload)
+        {
+            if (payload == null || payload.CityId == Guid.Empty) return;
+            UguiWindowHostController.Instance?.OpenWindow(
+                WindowTypeEnum.Hexagon,
+                _cityInspectionWindowPrefab,
+                payload);
         }
 
         public void AssignInteractionReferences(Tilemap terrain, Tilemap highlight, TileBase selectionTile, Camera mapCamera)
@@ -262,11 +273,6 @@ namespace Project.Scripts.Modules.Map
             var seed = WorldMapStateManager.Instance.CurrentWorldSeed ?? 0;
             var biome = WorldGenerationService.CalculateWorldMapBiomeVariant((short)coords.x, (short)coords.y, seed);
 
-            if (GlobalWindowManager.Instance == null)
-            {
-                return;
-            }
-
             CityInspectionPayload payload = new CityInspectionPayload
             {
                 CityId = city.Id,
@@ -274,7 +280,7 @@ namespace Project.Scripts.Modules.Map
                 TerrainName = biome.ToString(),
             };
 
-            GlobalWindowManager.Instance.OpenWindow(WindowTypeEnum.Hexagon, payload);
+            OpenCityInspection(payload);
         }
     }
 }

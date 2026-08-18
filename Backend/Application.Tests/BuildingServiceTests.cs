@@ -46,7 +46,7 @@ public class BuildingServiceTests
             new ImmediateTransactionManager());
 
         var queuedResults = new List<BuildingResult>();
-        for (int index = 0; index < 5; index++)
+        for (int index = 0; index < 7; index++)
         {
             queuedResults.Add(await service.QueueUpgradeAsync(city.Id, BuildingTypeEnum.TownHall));
         }
@@ -56,10 +56,33 @@ public class BuildingServiceTests
         Assert.All(queuedResults, result => Assert.True(result.Success, result.Message));
         Assert.False(queueFullResult.Success);
         Assert.Equal("Byggekøen er fuld.", queueFullResult.Message);
-        Assert.Equal([2, 3, 4, 5, 6], jobRepository.BuildingJobs.Select(job => job.TargetLevel));
+        Assert.Equal([2, 3, 4, 5, 6, 7, 8], jobRepository.BuildingJobs.Select(job => job.TargetLevel));
         Assert.All(
             jobRepository.BuildingJobs.Zip(jobRepository.BuildingJobs.Skip(1)),
             pair => Assert.True(pair.Second.ExecutionTime > pair.First.ExecutionTime));
+    }
+
+    [Fact]
+    public async Task CancelQueuedUpgradeAsync_OnlyRemovesLastFutureJob()
+    {
+        var player = new WorldPlayer { Id = Guid.NewGuid() };
+        var city = new City { Id = Guid.NewGuid(), WorldPlayerId = player.Id, WorldPlayer = player };
+        var first = new BuildingJob { Id = Guid.NewGuid(), CityId = city.Id, ExecutionTime = DateTime.UtcNow.AddHours(1), TargetLevel = 2 };
+        var last = new BuildingJob { Id = Guid.NewGuid(), CityId = city.Id, ExecutionTime = DateTime.UtcNow.AddHours(2), TargetLevel = 3 };
+        var jobs = new MemoryBuildingJobRepository();
+        jobs.BuildingJobs.AddRange([first, last]);
+        var modifierService = new PassThroughModifierService();
+        var service = new BuildingService(
+            modifierService, new MemoryCityRepository(city), jobs, new CurrentCityResourceService(),
+            TestData.BuildingReader(), new FixedCityStatService(), new ConstructionTimeCalculator(modifierService),
+            new TestPlayerAccessService(cities: [city]), new ImmediateTransactionManager());
+
+        await Assert.ThrowsAsync<InvalidOperationException>(() => service.CancelQueuedUpgradeAsync(city.Id, first.Id));
+        List<BuildingDTO> remaining = await service.CancelQueuedUpgradeAsync(city.Id, last.Id);
+
+        Assert.Single(remaining);
+        Assert.Equal(first.Id, remaining[0].Id);
+        Assert.Equal(first.Id, Assert.Single(jobs.BuildingJobs).Id);
     }
 
     [Fact]
@@ -148,7 +171,11 @@ public class BuildingServiceTests
         public Task<BaseJob?> GetByIdAsync(Guid id) => throw new NotSupportedException();
         public Task<List<BaseJob>> GetDueJobsAsync(DateTime now, int batchSize) => throw new NotSupportedException();
         public Task UpdateAsync(BaseJob job) => throw new NotSupportedException();
-        public Task DeleteAsync(Guid jobId) => throw new NotSupportedException();
+        public Task DeleteAsync(Guid jobId)
+        {
+            BuildingJobs.RemoveAll(job => job.Id == jobId);
+            return Task.CompletedTask;
+        }
         public Task<ResearchJob?> GetResearchJobAsync(Guid userId) => throw new NotSupportedException();
         public Task<List<RecruitmentJob>> GetRecruitmentJobsAsync(Guid cityId) => throw new NotSupportedException();
         public Task<List<ResearchJob>> GetResearchJobsByIdAsync(Guid id) => throw new NotSupportedException();

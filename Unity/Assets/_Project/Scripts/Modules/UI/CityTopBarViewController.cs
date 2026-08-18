@@ -18,8 +18,6 @@ namespace Project.Modules.UI
 {
     public partial class CityTopBarViewController : MonoBehaviour
     {
-        private const string WorldMapSceneName = "WorldMapScene";
-        private const string CityViewSceneName = "CityViewScene";
         private const string LoginSceneName = "LoginScene";
 
         [Header("Canvas and responsive roots")]
@@ -34,7 +32,6 @@ namespace Project.Modules.UI
         [SerializeField] private GameObject serverTimeSection;
 
         [Header("Actions")]
-        [SerializeField] private IconTextSidebarButton mapButton;
         [SerializeField] private Button inventoryButton;
         [SerializeField] private Button administrationButton;
         [SerializeField] private IconTextSidebarButton logoutButton;
@@ -106,8 +103,6 @@ namespace Project.Modules.UI
             safeAreaRoot ??= canvas != null ? canvas.transform as RectTransform : null;
             primaryRow ??= desktopRoot;
             resourceStrip ??= rects.FirstOrDefault(rect => rect.name == "Horizontal Box");
-            mapButton ??= canvas.GetComponentsInChildren<IconTextSidebarButton>(true)
-                .FirstOrDefault(button => button.name == "Worldmap");
             logoutButton ??= canvas.GetComponentsInChildren<IconTextSidebarButton>(true)
                 .FirstOrDefault(button => button.name == "Logout");
 
@@ -197,7 +192,6 @@ namespace Project.Modules.UI
 
         private void BindViewEvents()
         {
-            if (mapButton != null) mapButton.OnButtonActivatedClicked += HandleContextualNavigationRequested;
             if (administrationButton != null) administrationButton.onClick.AddListener(HandleAdministrationRequested);
             if (logoutButton != null) logoutButton.OnButtonActivatedClicked += HandleLogoutRequested;
             if (popupBackdrop != null) popupBackdrop.onClick.AddListener(CloseAllPopups);
@@ -205,7 +199,6 @@ namespace Project.Modules.UI
 
         private void UnbindViewEvents()
         {
-            if (mapButton != null) mapButton.OnButtonActivatedClicked -= HandleContextualNavigationRequested;
             if (administrationButton != null) administrationButton.onClick.RemoveListener(HandleAdministrationRequested);
             if (logoutButton != null) logoutButton.OnButtonActivatedClicked -= HandleLogoutRequested;
             if (popupBackdrop != null) popupBackdrop.onClick.RemoveListener(CloseAllPopups);

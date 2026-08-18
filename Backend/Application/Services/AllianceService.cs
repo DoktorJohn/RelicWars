@@ -323,7 +323,11 @@ namespace Application.Services
             var alliance = await _allianceRepo.GetByIdAsync(allianceId)
                 ?? throw new KeyNotFoundException("Alliance not found.");
             var relations = await _allianceRepo.GetRelationsAsync(allianceId);
-            AllianceRelationDTO Map(AllianceRelation relation) => MapRelation(relation, alliance.Id);
+            var pointsByAlliance = (await _rankingService.GetRankings())
+                .Where(entry => entry.AllianceId.HasValue)
+                .GroupBy(entry => entry.AllianceId!.Value)
+                .ToDictionary(group => group.Key, group => group.Sum(entry => (long)entry.TotalPoints));
+            AllianceRelationDTO Map(AllianceRelation relation) => MapRelation(relation, alliance.Id, pointsByAlliance);
             return new AllianceGeopoliticsDTO(
                 relations.Where(r => r.RelationType == AllianceRelationTypeEnum.Pact && r.Status == AllianceRelationStatusEnum.Active).Select(Map).ToList(),
                 relations.Where(r => r.RelationType == AllianceRelationTypeEnum.War && r.Status == AllianceRelationStatusEnum.Active).Select(Map).ToList(),
@@ -355,7 +359,7 @@ namespace Application.Services
             await _allianceRepo.AddRelationAsync(relation);
             relation.AllianceA = dto.AllianceId == allianceA ? await RequireAllianceAsync(dto.AllianceId) : target;
             relation.AllianceB = dto.AllianceId == allianceB ? await RequireAllianceAsync(dto.AllianceId) : target;
-            return MapRelation(relation, dto.AllianceId);
+            return await MapRelationAsync(relation, dto.AllianceId);
         }
 
         public async Task<AllianceRelationDTO> RespondToPactInvite(RespondToPactInviteDTO dto)
@@ -370,7 +374,7 @@ namespace Application.Services
             relation.RespondedAt = DateTime.UtcNow;
             relation.DateLastModified = DateTime.UtcNow;
             await _allianceRepo.UpdateRelationsAsync(new[] { relation });
-            return MapRelation(relation, relation.RespondingAllianceId);
+            return await MapRelationAsync(relation, relation.RespondingAllianceId);
         }
 
         public async Task<AllianceRelationDTO> DeclareWar(DeclareWarDTO dto)
@@ -407,7 +411,7 @@ namespace Application.Services
             });
             war.AllianceA = dto.AllianceId == allianceA ? await RequireAllianceAsync(dto.AllianceId) : target;
             war.AllianceB = dto.AllianceId == allianceB ? await RequireAllianceAsync(dto.AllianceId) : target;
-            return MapRelation(war, dto.AllianceId);
+            return await MapRelationAsync(war, dto.AllianceId);
         }
 
         private async Task<WorldPlayer> RequireDiplomacyActorAsync(Guid worldPlayerId, Guid allianceId)
@@ -432,11 +436,24 @@ namespace Application.Services
         private static (Guid A, Guid B) CanonicalPair(Guid first, Guid second) =>
             first.CompareTo(second) < 0 ? (first, second) : (second, first);
 
-        private static AllianceRelationDTO MapRelation(AllianceRelation relation, Guid viewerAllianceId)
+        private async Task<AllianceRelationDTO> MapRelationAsync(AllianceRelation relation, Guid viewerAllianceId)
+        {
+            var pointsByAlliance = (await _rankingService.GetRankings())
+                .Where(entry => entry.AllianceId.HasValue)
+                .GroupBy(entry => entry.AllianceId!.Value)
+                .ToDictionary(group => group.Key, group => group.Sum(entry => (long)entry.TotalPoints));
+            return MapRelation(relation, viewerAllianceId, pointsByAlliance);
+        }
+
+        private static AllianceRelationDTO MapRelation(
+            AllianceRelation relation,
+            Guid viewerAllianceId,
+            IReadOnlyDictionary<Guid, long> pointsByAlliance)
         {
             var other = relation.AllianceIdA == viewerAllianceId ? relation.AllianceB : relation.AllianceA;
-            return new AllianceRelationDTO(relation.Id, other.Id, other.Name, other.Tag, relation.RelationType,
-                relation.Status, relation.RespondingAllianceId == viewerAllianceId, relation.DateCreated);
+            return new AllianceRelationDTO(relation.Id, other.Id, other.Name, other.Tag,
+                pointsByAlliance.GetValueOrDefault(other.Id), relation.RelationType, relation.Status,
+                relation.RespondingAllianceId == viewerAllianceId, relation.DateCreated);
         }
 
         private async Task<AllianceInvitation> RequireInvitationAsync(RespondToAllianceInvitationDTO dto, WorldPlayer player)
@@ -458,7 +475,7 @@ namespace Application.Services
                 .OrderBy(m => m.AllianceRole)
                 .ThenBy(m => m.PlayerProfile?.UserName)
                 .Select(m => new AllianceMemberDTO(m.Id, m.PlayerProfile?.UserName ?? "Unknown", m.AllianceRole,
-                    pointsByPlayer.GetValueOrDefault(m.Id)))
+                    pointsByPlayer.GetValueOrDefault(m.Id), m.Cities?.Count ?? 0))
                 .ToList();
             return new AllianceDTO(alliance.Id, alliance.Name, alliance.Tag, alliance.Description, alliance.BannerImageUrl,
                 members.Sum(m => (long)m.TotalPoints), members.Count, alliance.MaxPlayers, members);

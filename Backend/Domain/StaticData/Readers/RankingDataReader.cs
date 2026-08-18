@@ -14,13 +14,15 @@ namespace Domain.StaticData.Readers
         private DateTime _lastUpdate = DateTime.MinValue;
         private readonly double _cacheMinutes = 1.0;
 
+        public string StoragePath => _storedPath;
+
         /// <summary>
         /// Sætter stien og loader data første gang.
         /// </summary>
         public void Load(string path)
         {
             _storedPath = path;
-            ForceReloadFromDisk();
+            ReloadFromDisk();
         }
 
         /// <summary>
@@ -31,13 +33,13 @@ namespace Domain.StaticData.Readers
             // Auto-refresh logik indbygget her
             if (IsCacheExpired())
             {
-                ForceReloadFromDisk();
+                ReloadFromDisk();
             }
 
             return _cachedRankings;
         }
 
-        private void ForceReloadFromDisk()
+        public void ReloadFromDisk()
         {
             if (string.IsNullOrEmpty(_storedPath) || !File.Exists(_storedPath))
             {

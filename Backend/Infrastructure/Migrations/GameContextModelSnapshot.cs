@@ -513,6 +513,9 @@ namespace Infrastructure.Migrations
                     b.Property<int>("DefinitionId")
                         .HasColumnType("int");
 
+                    b.Property<bool>("IsCollected")
+                        .HasColumnType("bit");
+
                     b.Property<bool>("IsComplete")
                         .HasColumnType("bit");
 

@@ -210,6 +210,9 @@ namespace Application.Services
                 city.X,
                 city.Y,
                 city.Points,
+                city.IsNPC
+                    ? city.Points
+                    : city.WorldPlayer?.Cities.Sum(ownedCity => ownedCity.Points),
                 city.WorldPlayerId,
                 city.WorldPlayer?.PlayerProfile?.UserName,
                 city.WorldPlayer?.AllianceId,

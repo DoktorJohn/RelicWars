@@ -7,7 +7,6 @@ using Sunvale.AncientRomeUI.Buttons;
 using TMPro;
 using UnityEngine;
 using UnityEngine.InputSystem;
-using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
 namespace Project.Modules.UI
@@ -180,11 +179,5 @@ namespace Project.Modules.UI
             if (nextCityButton != null) nextCityButton.interactable = hasMultipleCities;
         }
 
-        private void HandleContextualNavigationRequested(IconTextSidebarButton _)
-        {
-            CloseAllPopups();
-            string activeSceneName = SceneManager.GetActiveScene().name;
-            SceneManager.LoadScene(activeSceneName == WorldMapSceneName ? CityViewSceneName : WorldMapSceneName);
-        }
     }
 }

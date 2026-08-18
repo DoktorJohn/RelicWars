@@ -195,7 +195,7 @@ namespace Project.Scripts.Modules.UI
                 {
                     ConfigureButton("PLEASE WAIT", false, "btn-imperial-primary");
                 }
-                else if (currentQueueCount >= 5)
+                else if (currentQueueCount >= 7)
                 {
                     ConfigureButton("QUEUE FULL", false, "btn-imperial-danger");
                 }

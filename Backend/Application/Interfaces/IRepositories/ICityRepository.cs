@@ -28,5 +28,6 @@ namespace Application.Interfaces.IRepositories
         Task<List<City>> GetCitiesByWorldPlayerIdAsync(Guid worldPlayerId);
         Task<City?> GetForEdictAsync(Guid cityId) => GetByIdAsync(cityId);
         Task AcquireEdictPlayerLockAsync(Guid worldPlayerId) => Task.CompletedTask;
+        Task AcquireBuildingQueueLockAsync(Guid cityId) => Task.CompletedTask;
     }
 }

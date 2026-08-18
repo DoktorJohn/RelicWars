@@ -25,7 +25,7 @@ namespace Game.Controllers
         {
             try
             {
-                var result = await _rankingService.GetRankings();
+                var result = await _rankingService.GetRankingsForWindow();
                 return Ok(result);
             }
             catch (Exception exception)

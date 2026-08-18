@@ -177,7 +177,39 @@ public class RecruitmentServiceTests
         Assert.Equal(UnitTypeEnum.Militia, item.UnitType);
         Assert.Equal(4, item.Amount);
         Assert.Equal(150, item.TotalDurationSeconds);
+        Assert.Equal(30, item.SecondsPerUnit);
         Assert.InRange(item.TimeRemainingSeconds, 689, 691);
+    }
+
+    [Fact]
+    public async Task CancelRecruitmentAsync_OnlyDeletesLastQueueItem()
+    {
+        var setup = CreateSetup(100, 500, 500, 500);
+        var first = new RecruitmentJob { Id = Guid.NewGuid(), CityId = setup.City.Id, UnitType = UnitTypeEnum.Militia, ExecutionTime = DateTime.UtcNow.AddMinutes(1) };
+        var last = new RecruitmentJob { Id = Guid.NewGuid(), CityId = setup.City.Id, UnitType = UnitTypeEnum.Militia, ExecutionTime = DateTime.UtcNow.AddMinutes(2) };
+        setup.JobRepository.ActiveRecruitmentJobs.AddRange([first, last]);
+
+        var rejected = await setup.Service.CancelRecruitmentAsync(setup.City.Id, first.Id);
+        Assert.False(rejected.Success);
+        Assert.Equal(2, setup.JobRepository.ActiveRecruitmentJobs.Count);
+
+        var cancelled = await setup.Service.CancelRecruitmentAsync(setup.City.Id, last.Id);
+        Assert.True(cancelled.Success);
+        Assert.Single(setup.JobRepository.ActiveRecruitmentJobs);
+        Assert.Equal(first.Id, setup.JobRepository.ActiveRecruitmentJobs[0].Id);
+    }
+
+    [Fact]
+    public async Task CancelRecruitmentAsync_TreatsSiegeAndSupportAsOneWorkshopQueue()
+    {
+        var setup = CreateSetup(100, 500, 500, 500);
+        var siege = new RecruitmentJob { Id = Guid.NewGuid(), CityId = setup.City.Id, UnitType = UnitTypeEnum.Ballista, ExecutionTime = DateTime.UtcNow.AddMinutes(1) };
+        var support = new RecruitmentJob { Id = Guid.NewGuid(), CityId = setup.City.Id, UnitType = UnitTypeEnum.Engineers, ExecutionTime = DateTime.UtcNow.AddMinutes(2) };
+        setup.JobRepository.ActiveRecruitmentJobs.AddRange([siege, support]);
+
+        Assert.False((await setup.Service.CancelRecruitmentAsync(setup.City.Id, siege.Id)).Success);
+        Assert.True((await setup.Service.CancelRecruitmentAsync(setup.City.Id, support.Id)).Success);
+        Assert.Equal(siege.Id, Assert.Single(setup.JobRepository.ActiveRecruitmentJobs).Id);
     }
 
     private static Setup CreateSetup(int availablePopulation, double wood, double stone, double metal)

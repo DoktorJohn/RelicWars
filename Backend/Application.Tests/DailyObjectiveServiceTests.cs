@@ -27,6 +27,21 @@ public class DailyObjectiveServiceTests
 
         Assert.Equal(51, reader.Catalog.Definitions.Count);
         Assert.Equal(51, reader.Catalog.Definitions.Select(x => x.Id).Distinct().Count());
+        Assert.All(reader.Catalog.Definitions, definition =>
+        {
+            Assert.InRange(definition.Rewards.Count, 1, 3);
+            Assert.Equal(definition.Rewards.Count, definition.Rewards.Select(reward => reward.Type).Distinct().Count());
+            Assert.All(definition.Rewards, reward => Assert.True(reward.Amount > 0));
+            int expectedTotal = definition.Tier switch
+            {
+                DailyObjectiveTierEnum.Fixed => 500,
+                DailyObjectiveTierEnum.Uncommon => 1000,
+                DailyObjectiveTierEnum.Rare => 1500,
+                DailyObjectiveTierEnum.Unique => 2000,
+                _ => throw new ArgumentOutOfRangeException()
+            };
+            Assert.Equal(expectedTotal, definition.Rewards.Sum(reward => reward.Amount));
+        });
         Assert.Equal(new[] { 8, 9, 11, 12, 13, 18, 19, 21, 23, 24, 25, 26, 27, 28, 32, 39, 44, 45, 46, 47, 48, 50, 51 },
             reader.Catalog.Definitions.Where(x => !x.IsImplemented).Select(x => x.Id));
     }
@@ -123,7 +138,9 @@ public class DailyObjectiveServiceTests
             new CyclingRandom(),
             new MutableTimeProvider(new DateTimeOffset(2026, 7, 17, 12, 0, 0, TimeSpan.Zero)),
             new MemoryTransactionManager(),
-            unitReader);
+            unitReader,
+            new NoOpResourceService(),
+            new FixedCityStatService());
 
         await Assert.ThrowsAsync<UnauthorizedAccessException>(() => service.GetAsync(Guid.NewGuid()));
     }
@@ -162,6 +179,80 @@ public class DailyObjectiveServiceTests
 
         Assert.Equal(3, assignment.Progress);
         Assert.True(assignment.IsComplete);
+    }
+
+    [Fact]
+    public async Task Completed_objective_awards_resources_and_is_idempotent()
+    {
+        var repository = new MemoryDailyObjectiveRepository();
+        var access = new AllowPlayerAccessService();
+        var time = new MutableTimeProvider(new DateTimeOffset(2026, 7, 17, 12, 0, 0, TimeSpan.Zero));
+        var unitReader = new UnitDataReader();
+        unitReader.Load(RepositoryFile("Backend", "Game", "units.json"));
+        var service = new DailyObjectiveService(repository, access, CreateCatalogReader(), new CyclingRandom(), time,
+            new MemoryTransactionManager(), unitReader, new NoOpResourceService(), new FixedCityStatService());
+        Guid playerId = Guid.NewGuid();
+        await service.GetAsync(playerId);
+        var assignment = repository.Set!.Assignments[0];
+        assignment.DefinitionId = 1;
+        assignment.IsComplete = true;
+        assignment.Progress = assignment.Target;
+
+        var response = await service.CollectAsync(playerId, assignment.DefinitionId, playerId);
+        var repeated = await service.CollectAsync(playerId, assignment.DefinitionId, playerId);
+
+        Assert.True(assignment.IsCollected);
+        Assert.True(response.Rows.Single(x => x.DefinitionId == assignment.DefinitionId).IsCollected);
+        Assert.True(repeated.Rows.Single(x => x.DefinitionId == assignment.DefinitionId).IsCollected);
+        Assert.Equal(500, access.GetPlayer(playerId).Coins);
+    }
+
+    [Fact]
+    public async Task Local_daily_reward_is_capped_at_warehouse_capacity()
+    {
+        var repository = new MemoryDailyObjectiveRepository();
+        var access = new AllowPlayerAccessService();
+        var unitReader = new UnitDataReader();
+        unitReader.Load(RepositoryFile("Backend", "Game", "units.json"));
+        var service = new DailyObjectiveService(repository, access, CreateCatalogReader(), new CyclingRandom(),
+            new MutableTimeProvider(new DateTimeOffset(2026, 7, 17, 12, 0, 0, TimeSpan.Zero)),
+            new MemoryTransactionManager(), unitReader, new NoOpResourceService(), new FixedCityStatService());
+        Guid playerId = Guid.NewGuid();
+        await service.GetAsync(playerId);
+        var assignment = repository.Set!.Assignments[0];
+        foreach (var duplicate in repository.Set.Assignments.Skip(1).Where(candidate => candidate.DefinitionId == 2))
+            duplicate.DefinitionId = 51;
+        assignment.DefinitionId = 2;
+        assignment.IsComplete = true;
+        access.GetPlayer(playerId).Cities[0].Wood = 9_800;
+
+        await service.CollectAsync(playerId, assignment.DefinitionId, playerId);
+
+        Assert.Equal(10_000, access.GetPlayer(playerId).Cities[0].Wood);
+    }
+
+    [Fact]
+    public async Task Incomplete_daily_and_foreign_city_are_rejected_without_rewards()
+    {
+        var repository = new MemoryDailyObjectiveRepository();
+        var access = new AllowPlayerAccessService();
+        var unitReader = new UnitDataReader();
+        unitReader.Load(RepositoryFile("Backend", "Game", "units.json"));
+        var service = new DailyObjectiveService(repository, access, CreateCatalogReader(), new CyclingRandom(),
+            new MutableTimeProvider(new DateTimeOffset(2026, 7, 17, 12, 0, 0, TimeSpan.Zero)),
+            new MemoryTransactionManager(), unitReader, new NoOpResourceService(), new FixedCityStatService());
+        Guid playerId = Guid.NewGuid();
+        await service.GetAsync(playerId);
+        var assignment = repository.Set!.Assignments[0];
+
+        await Assert.ThrowsAsync<InvalidOperationException>(() =>
+            service.CollectAsync(playerId, assignment.DefinitionId, playerId));
+        assignment.IsComplete = true;
+        await Assert.ThrowsAsync<InvalidOperationException>(() =>
+            service.CollectAsync(playerId, assignment.DefinitionId, Guid.NewGuid()));
+
+        Assert.False(assignment.IsCollected);
+        Assert.Equal(0, access.GetPlayer(playerId).Coins);
     }
 
     [Fact]
@@ -264,7 +355,9 @@ public class DailyObjectiveServiceTests
             new CyclingRandom(),
             new MutableTimeProvider(new DateTimeOffset(2026, 7, 17, 12, 0, 0, TimeSpan.Zero)),
             transactionManager,
-            unitReader);
+            unitReader,
+            new NoOpResourceService(),
+            new FixedCityStatService());
 
         await service.ApplyProgressAsync(Guid.NewGuid(),
             new(DailyObjectiveProgressTypeEnum.BuildingsCompleted, 1,
@@ -289,7 +382,9 @@ public class DailyObjectiveServiceTests
             new CyclingRandom(),
             new MutableTimeProvider(new DateTimeOffset(2026, 7, 17, 12, 0, 0, TimeSpan.Zero)),
             transactionManager,
-            unitReader);
+            unitReader,
+            new NoOpResourceService(),
+            new FixedCityStatService());
 
         await Assert.ThrowsAsync<DbUpdateConcurrencyException>(() => service.ApplyProgressAsync(Guid.NewGuid(),
             new(DailyObjectiveProgressTypeEnum.BuildingsCompleted, 1,
@@ -314,7 +409,9 @@ public class DailyObjectiveServiceTests
             new CyclingRandom(),
             new MutableTimeProvider(new DateTimeOffset(2026, 7, 17, 12, 0, 0, TimeSpan.Zero)),
             transactionManager,
-            unitReader);
+            unitReader,
+            new NoOpResourceService(),
+            new FixedCityStatService());
 
         DailyObjectivesDTO response = await service.GetAsync(Guid.NewGuid());
 
@@ -371,7 +468,9 @@ public class DailyObjectiveServiceTests
             random,
             time,
             new MemoryTransactionManager(),
-            unitReader);
+            unitReader,
+            new NoOpResourceService(),
+            new FixedCityStatService());
     }
 
     private static DailyObjectiveService CreateTransactionAwareService(
@@ -388,7 +487,9 @@ public class DailyObjectiveServiceTests
             new CyclingRandom(),
             time ?? new MutableTimeProvider(new DateTimeOffset(2026, 7, 17, 12, 0, 0, TimeSpan.Zero)),
             transactionManager,
-            unitReader);
+            unitReader,
+            new NoOpResourceService(),
+            new FixedCityStatService());
     }
 
     private static DailyObjectiveDataReader CreateCatalogReader()
@@ -624,12 +725,44 @@ public class DailyObjectiveServiceTests
 
     private sealed class AllowPlayerAccessService : IPlayerAccessService
     {
+        private readonly Dictionary<Guid, WorldPlayer> _players = new();
         public Guid GetAuthenticatedProfileId() => Guid.NewGuid();
-        public Task<WorldPlayer> RequireOwnedWorldPlayerAsync(Guid worldPlayerId) => Task.FromResult(new WorldPlayer { Id = worldPlayerId });
+        public WorldPlayer GetPlayer(Guid worldPlayerId) => _players.GetValueOrDefault(worldPlayerId) ??
+            throw new KeyNotFoundException();
+        public Task<WorldPlayer> RequireOwnedWorldPlayerAsync(Guid worldPlayerId)
+        {
+            if (!_players.TryGetValue(worldPlayerId, out var player))
+            {
+                player = new WorldPlayer
+                {
+                    Id = worldPlayerId,
+                    Cities = new() { new City { Id = worldPlayerId, WorldPlayerId = worldPlayerId } }
+                };
+                _players[worldPlayerId] = player;
+            }
+            return Task.FromResult(player);
+        }
         public Task<WorldPlayer> RequireWorldMembershipAsync(Guid worldId) => throw new NotImplementedException();
         public Task<City> RequireOwnedCityAsync(Guid cityId) => throw new NotImplementedException();
         public Task<City> RequireOwnedCityForTownHallAsync(Guid cityId) => throw new NotImplementedException();
         public Task<UnitDeployment> RequireOwnedUnitDeploymentAsync(Guid unitDeploymentId) => throw new NotImplementedException();
+    }
+
+    private sealed class NoOpResourceService : IResourceService
+    {
+        public CityResourceSnapshot CalculateCityResources(City city, DateTime now) =>
+            new(city.Wood, city.Stone, city.Metal, 0, 0, 0, now);
+        public CityProductionSnapshot CalculateCityProduction(WorldPlayer player, City city) => new(0, 0, 0);
+        public GlobalResourceSnapshot CalculateGlobalResources(WorldPlayer player, DateTime now) =>
+            new(player.Coins, player.ResearchPoints, player.IdeologyFocusPoints, 0, 0, 0, now);
+    }
+
+    private sealed class FixedCityStatService : ICityStatService
+    {
+        public double GetWarehouseCapacity(City city) => 10_000;
+        public int GetMaxPopulation(City city) => 0;
+        public int GetCurrentPopulationUsage(City city, IEnumerable<Domain.Workers.Abstraction.BaseJob> activeJobs) => 0;
+        public int GetAvailablePopulation(City city, IEnumerable<Domain.Workers.Abstraction.BaseJob> activeJobs) => 0;
     }
 
     private sealed class DenyPlayerAccessService : IPlayerAccessService

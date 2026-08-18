@@ -16,6 +16,7 @@ namespace Project.Scripts.Domain.DTOs
         public int Amount;
         public double TimeRemainingSeconds;
         public int TotalDurationSeconds;
+        public double SecondsPerUnit;
     }
 
     [Serializable]

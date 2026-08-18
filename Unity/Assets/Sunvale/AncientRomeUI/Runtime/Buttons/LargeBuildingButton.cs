@@ -109,17 +109,18 @@ namespace Sunvale.AncientRomeUI.Buttons
 
         private void Awake()
         {
-            iconImage.material = new Material(iconImage.material);
-            backgroundImage.material = new Material(backgroundImage.material);
+            PrepareAnimatedImage(iconImage, ref baseIconSaturation, ref baseIconBrightness);
+            PrepareAnimatedImage(backgroundImage, ref baseBackgroundSaturation, ref baseBackgroundBrightness);
 
-            baseIconSaturation = iconImage.material.GetFloat(HsvSaturation);
-            baseIconBrightness = iconImage.material.GetFloat(HsvBright);
-
-            baseBackgroundSaturation = backgroundImage.material.GetFloat(HsvSaturation);
-            baseBackgroundBrightness = backgroundImage.material.GetFloat(HsvBright);
-
-            baseFramePixelsPerUnitMultiplier = frameImage.pixelsPerUnitMultiplier;
-            baseFrameColor = frameImage.color;
+            if (frameImage != null)
+            {
+                baseFramePixelsPerUnitMultiplier = frameImage.pixelsPerUnitMultiplier;
+                baseFrameColor = frameImage.color;
+            }
+            else
+            {
+                baseFrameColor = Color.white;
+            }
 
             baseScale = transform.localScale;
         }
@@ -134,14 +135,16 @@ namespace Sunvale.AncientRomeUI.Buttons
             myInnerState = targetState;
             elapsedTime = 0f;
 
-            startIconSaturation = iconImage.material.GetFloat(HsvSaturation);
-            startIconBrightness = iconImage.material.GetFloat(HsvBright);
+            startIconSaturation = GetMaterialValue(iconImage, HsvSaturation, baseIconSaturation);
+            startIconBrightness = GetMaterialValue(iconImage, HsvBright, baseIconBrightness);
 
-            startBackgroundSaturation = backgroundImage.material.GetFloat(HsvSaturation);
-            startBackgroundBrightness = backgroundImage.material.GetFloat(HsvBright);
+            startBackgroundSaturation = GetMaterialValue(backgroundImage, HsvSaturation, baseBackgroundSaturation);
+            startBackgroundBrightness = GetMaterialValue(backgroundImage, HsvBright, baseBackgroundBrightness);
 
-            startFramePixelsPerUnitMultiplier = frameImage.pixelsPerUnitMultiplier;
-            startFrameColor = frameImage.color;
+            startFramePixelsPerUnitMultiplier = frameImage != null
+                ? frameImage.pixelsPerUnitMultiplier
+                : baseFramePixelsPerUnitMultiplier;
+            startFrameColor = frameImage != null ? frameImage.color : baseFrameColor;
 
             startScale = transform.localScale;
 
@@ -296,15 +299,18 @@ namespace Sunvale.AncientRomeUI.Buttons
             Color currentFrameColor = Color.Lerp(startFrameColor, targetFrameColor, tEased);
             Vector3 currentScale = Vector3.Lerp(startScale, targetScale, tEased);
 
-            iconImage.material.SetFloat(HsvSaturation, currentIconSaturation);
-            iconImage.material.SetFloat(HsvBright, currentIconBrightness);
+            SetMaterialValue(iconImage, HsvSaturation, currentIconSaturation);
+            SetMaterialValue(iconImage, HsvBright, currentIconBrightness);
 
-            backgroundImage.material.SetFloat(HsvSaturation, currentBackgroundSaturation);
-            backgroundImage.material.SetFloat(HsvBright, currentBackgroundBrightness);
+            SetMaterialValue(backgroundImage, HsvSaturation, currentBackgroundSaturation);
+            SetMaterialValue(backgroundImage, HsvBright, currentBackgroundBrightness);
 
-            frameImage.pixelsPerUnitMultiplier = currentFramePixelsPerUnitMultiplier;
-            frameImage.color = currentFrameColor;
-            frameImage.SetVerticesDirty();
+            if (frameImage != null)
+            {
+                frameImage.pixelsPerUnitMultiplier = currentFramePixelsPerUnitMultiplier;
+                frameImage.color = currentFrameColor;
+                frameImage.SetVerticesDirty();
+            }
 
             transform.localScale = currentScale;
 
@@ -358,10 +364,36 @@ namespace Sunvale.AncientRomeUI.Buttons
 
         public void SetText(string buildingName, string secondary, int cost, int turnCount)
         {
-            nameTMP.SetText(buildingName);
-            secondaryTMP.SetText(secondary);
-            costTMP.SetText(cost.ToString("N0").Replace(",", " "));
-            turnCountTMP.SetText(turnCount.ToString());
+            nameTMP?.SetText(buildingName);
+            secondaryTMP?.SetText(secondary);
+            costTMP?.SetText(cost.ToString("N0").Replace(",", " "));
+            turnCountTMP?.SetText(turnCount.ToString());
+        }
+
+        private static void PrepareAnimatedImage(Image image, ref float saturation, ref float brightness)
+        {
+            if (image == null || image.material == null) return;
+
+            image.material = new Material(image.material);
+            saturation = GetMaterialValue(image, HsvSaturation, saturation);
+            brightness = GetMaterialValue(image, HsvBright, brightness);
+        }
+
+        private static float GetMaterialValue(Image image, int propertyId, float fallback)
+        {
+            Material material = image != null ? image.material : null;
+            return material != null && material.HasProperty(propertyId)
+                ? material.GetFloat(propertyId)
+                : fallback;
+        }
+
+        private static void SetMaterialValue(Image image, int propertyId, float value)
+        {
+            Material material = image != null ? image.material : null;
+            if (material != null && material.HasProperty(propertyId))
+            {
+                material.SetFloat(propertyId, value);
+            }
         }
 
         public void SetIndexNumber(int number)

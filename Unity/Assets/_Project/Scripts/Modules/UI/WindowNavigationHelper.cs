@@ -42,14 +42,12 @@ namespace Project.Modules.UI
                 checked((short)y),
                 seed);
 
-            OpenWindow(
-                WindowTypeEnum.Hexagon,
-                new CityInspectionPayload
-                {
-                    CityId = cityId,
-                    Coordinates = coordinates,
-                    TerrainName = biome.ToString()
-                });
+            WorldMapInteractionHandler.Instance?.OpenCityInspection(new CityInspectionPayload
+            {
+                CityId = cityId,
+                Coordinates = coordinates,
+                TerrainName = biome.ToString()
+            });
         }
 
         public static void OpenMessageToPlayer(Guid worldPlayerId) => OpenWindow(WindowTypeEnum.Message, worldPlayerId);

@@ -133,6 +133,7 @@ namespace Application.DTOs
         public int Amount { get; set; }
         public double TimeRemainingSeconds { get; set; }
         public int TotalDurationSeconds { get; set; }
+        public double SecondsPerUnit { get; set; }
     }
 
     public class GetRecruitmentQueueItemsDTO

@@ -20,6 +20,7 @@ namespace Infrastructure.Repositories
         {
             return await _context.Alliances
                 .Include(x => x.Members).ThenInclude(m => m.PlayerProfile)
+                .Include(x => x.Members).ThenInclude(m => m.Cities)
                 .FirstOrDefaultAsync(a => a.Id == id);
         }
 
@@ -52,6 +53,7 @@ namespace Infrastructure.Repositories
         {
             return await _context.Alliances
                 .Include(a => a.Members).ThenInclude(m => m.PlayerProfile)
+                .Include(a => a.Members).ThenInclude(m => m.Cities)
                 .FirstOrDefaultAsync(a => a.Id == id);
         }
 

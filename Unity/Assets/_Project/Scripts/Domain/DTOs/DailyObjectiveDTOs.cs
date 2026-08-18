@@ -18,6 +18,14 @@ namespace Project.Scripts.Domain.DTOs
         ComingSoon
     }
 
+    public enum DailyObjectiveRewardType
+    {
+        Coins,
+        Wood,
+        Stone,
+        Metal
+    }
+
     [Serializable]
     public class DailyObjectivesDTO
     {
@@ -34,8 +42,19 @@ namespace Project.Scripts.Domain.DTOs
         public string Name;
         public string CompletionInfo;
         public DailyObjectiveTier RewardTier;
+        public List<DailyObjectiveRewardDTO> Rewards = new();
         public double Progress;
         public double Target;
+        public bool IsCompleted;
+        public bool IsCollected;
         public DailyObjectiveState State;
+    }
+
+
+    [Serializable]
+    public class DailyObjectiveRewardDTO
+    {
+        public DailyObjectiveRewardType Type;
+        public int Amount;
     }
 }

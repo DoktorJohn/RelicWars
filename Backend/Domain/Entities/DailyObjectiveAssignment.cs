@@ -10,6 +10,7 @@ namespace Domain.Entities
         public double Target { get; set; }
         public double Progress { get; set; }
         public bool IsComplete { get; set; }
+        public bool IsCollected { get; set; }
         public byte[] RowVersion { get; set; } = Array.Empty<byte>();
 
         public DailyObjectiveSet DailyObjectiveSet { get; set; } = null!;
