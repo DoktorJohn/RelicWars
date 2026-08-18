@@ -76,5 +76,18 @@ namespace Project.Network
                     });
             }
         }
+
+        public IEnumerator CancelRecruitment(Guid cityId, Guid queueId, string token, Action<RecruitmentResult> callback)
+        {
+            string url = $"{_baseUrl}/militarybuilding/{cityId}/recruitment/{queueId}";
+            using (UnityWebRequest request = BackendRequestHelper.CreateDeleteRequest(url, token))
+            {
+                yield return BackendRequestHelper.SendJson(
+                    request,
+                    response => callback?.Invoke(response ?? new RecruitmentResult { Success = false, Message = "Empty server response." }),
+                    "StableService",
+                    errorRequest => new RecruitmentResult { Success = false, Message = BackendRequestHelper.GetErrorMessage(errorRequest) });
+            }
+        }
     }
 }

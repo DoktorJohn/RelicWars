@@ -5,6 +5,7 @@ using Assets.Scripts.Domain.Enums;
 using Project.Network.Helper;
 using Project.Scripts.Domain.DTOs;
 using UnityEngine.Networking;
+using Newtonsoft.Json;
 
 namespace Project.Network
 {
@@ -52,6 +53,45 @@ namespace Project.Network
                     callback,
                     "ClientBuildingService",
                     _ => null);
+            }
+        }
+
+        public IEnumerator CancelBuildingUpgrade(
+            Guid cityId,
+            Guid jobId,
+            string token,
+            Action<bool, List<BuildingDTO>, string> callback)
+        {
+            string url = $"{_baseUrl}/building/{cityId}/buildingQueue/{jobId}";
+            using (var request = new UnityWebRequest(url, UnityWebRequest.kHttpVerbDELETE))
+            {
+                request.downloadHandler = new DownloadHandlerBuffer();
+                request.SetRequestHeader("Accept", "application/json");
+                request.SetRequestHeader("Authorization", $"Bearer {token}");
+                yield return request.SendWebRequest();
+
+                bool success = request.result == UnityWebRequest.Result.Success;
+                List<BuildingDTO> queue = null;
+                string error = null;
+                if (success)
+                {
+                    try
+                    {
+                        queue = JsonConvert.DeserializeObject<List<BuildingDTO>>(request.downloadHandler.text)
+                            ?? new List<BuildingDTO>();
+                    }
+                    catch (JsonException exception)
+                    {
+                        success = false;
+                        error = $"Invalid building queue response: {exception.Message}";
+                    }
+                }
+                else
+                {
+                    error = BackendRequestHelper.GetErrorMessage(request);
+                }
+
+                callback?.Invoke(success, queue, error);
             }
         }
 

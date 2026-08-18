@@ -13,6 +13,7 @@ namespace Project.Scripts.Domain.DTOs
         public Guid Id;
         public string Type;
         public int Level;
+        public DateTime? UpgradeStarted;
         public DateTime? UpgradeFinished;
         public bool IsUpgrading;
     }

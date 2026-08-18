@@ -17,7 +17,9 @@ public class DailyObjectivesControllerTests
         var expected = new DailyObjectivesDTO(day, day.AddDays(1), new()
         {
             new(1, 29, "Last Stand", "Successfully defend against 1 enemy attack",
-                DailyObjectiveTierEnum.Fixed, 0, 1, DailyObjectiveStateEnum.InProgress)
+                DailyObjectiveTierEnum.Fixed,
+                new() { new DailyObjectiveRewardDTO(DailyObjectiveRewardTypeEnum.Coins, 500) },
+                0, 1, false, false, DailyObjectiveStateEnum.InProgress)
         });
         var service = new StubDailyObjectiveService(expected);
         var controller = new DailyObjectivesController(service);
@@ -41,6 +43,8 @@ public class DailyObjectivesControllerTests
             RequestedWorldPlayerId = worldPlayerId;
             return Task.FromResult(_response);
         }
+        public Task<DailyObjectivesDTO> CollectAsync(Guid worldPlayerId, int definitionId, Guid cityId) =>
+            Task.FromResult(_response);
         public Task ApplyProgressAsync(Guid worldPlayerId, DailyObjectiveProgressEvent progressEvent) => Task.CompletedTask;
         public Task ApplyProductionAsync(Guid worldPlayerId, DateTime intervalStartUtc, DateTime intervalEndUtc,
             double coinsPerHour = 0, double exoticResourcesPerHour = 0) => Task.CompletedTask;

@@ -695,8 +695,9 @@ GameObject:
   - component: {fileID: 4482609377530898028}
   - component: {fileID: 4482609377530898029}
   - component: {fileID: 4482609377530898026}
+  - component: {fileID: 910000000000000101}
   m_Layer: 5
-  m_Name: TownHall Building Card
+  m_Name: TownHallBuildingCard
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -835,6 +836,27 @@ MonoBehaviour:
   buttonActivatedClicked:
     m_PersistentCalls:
       m_Calls: []
+--- !u!114 &910000000000000101
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4482609377530898024}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 44e1d99e09ca49c1863aa6ecbce804c4, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Project.Modules.UI.UguiTownHallBuildingCardView
+  buildingType: 0
+  buildingButton: {fileID: 4482609377530898026}
+  buildingNameText: {fileID: 4482609377508842003}
+  levelText: {fileID: 4482609377939719944}
+  constructionTimeText: {fileID: 7670861062931989741}
+  woodCostText: {fileID: 4482609378434806279}
+  stoneCostText: {fileID: 7270422065702107224}
+  metalCostText: {fileID: 53211087236757095}
+  unaffordableCostColor: {r: 0.75, g: 0.08, b: 0.08, a: 1}
 --- !u!1 &4482609377926193157
 GameObject:
   m_ObjectHideFlags: 0
@@ -2459,4 +2481,3 @@ MonoBehaviour:
   m_hasFontAssetChanged: 0
   m_baseMaterial: {fileID: 0}
   m_maskOffset: {x: 0, y: 0, z: 0, w: 0}
-

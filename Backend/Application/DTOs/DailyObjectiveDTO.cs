@@ -13,7 +13,14 @@ namespace Application.DTOs
         string Name,
         string CompletionInfo,
         DailyObjectiveTierEnum RewardTier,
+        List<DailyObjectiveRewardDTO> Rewards,
         double Progress,
         double Target,
+        bool IsCompleted,
+        bool IsCollected,
         DailyObjectiveStateEnum State);
+
+    public sealed record DailyObjectiveRewardDTO(
+        DailyObjectiveRewardTypeEnum Type,
+        int Amount);
 }

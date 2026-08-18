@@ -1,9 +1,142 @@
 # Changelog
 
+| `CityView UI audio listener` | Den additive UI-manager aktiverer scenens AudioListener, når ingen listener er aktiv, så BottomNavigation og øvrige uGUI hover/click-lyde kan høres i CityView ligesom i WorldMap. | 2026-08-18 |
+
+| `Unity recruitment window defaults and remaining amounts` | Barracks, Stable, Harbour og Workshop starter på én recruitable unit og queue-kort tæller live ned i units, der mangler, via queue-DTO'ens seconds-per-unit. | 2026-08-18 |
+
+| `Unity uGUI CityInspectionWindow` | Erstatter world maps UI Toolkit-city inspection med det authorede uGUI-vindue, binder city/player/alliance/terrain/location samt separate city- og player-total-points og flytter map-center-handlingen til InspectCityBtn; øvrige paneler forbliver statiske. | 2026-08-18 |
+
+| `Unity uGUI ExoticResourceWindow` | Åbner det authorede uGUI-vindue fra world-map resource slots og binder tabs, tier/output, progress, investeringstal, inputs samt serverautoriseret Invest-flow med fælles X/drag-chrome. | 2026-08-17 |
+
+| `Unity uGUI IslandWindow` | Åbner det nye uGUI-island overview fra øens centrum på world map, bevarer tabelheaderen, kloner og binder serverens byer fra IslandPlayerDataRow samt bruger fælles X/drag-window chrome. | 2026-08-17 |
+
+| `Unity uGUI shared window chrome og recruitment controls` | Standardiserer Stable, Harbour og Workshop på `AmountContent` og retter den fælles TownHall-style window chrome-kontrakt, så alle authored X-knapper lukkes via samme transform-baserede handler uden krav om en CarvedPressButton. | 2026-08-17 |
+
+| `Unity uGUI WorkshopWindow` | Spejler Barracks/Stable-wiringen til det authorede Workshop-vindue med siege/support-tabs, stats, costs, amount-input, recruitment og serverautoriseret last-item queue-cancel via UnitQueueCard. | 2026-08-17 |
+
+| `Unity uGUI HarbourWindow` | Spejler Barracks/Stable-wiringen til det authorede Harbour-vindue med naval tabs, stats, costs, amount-input, recruitment og serverautoriseret last-item queue-cancel via UnitQueueCard. | 2026-08-17 |
+
+| `Unity uGUI StableWindow` | Spejler Barracks-wiringen til det authorede Stable-vindue med cavalry-tabs, stats, costs, amount-input, recruitment og serverautoriseret last-item queue-cancel via UnitQueueCard. | 2026-08-17 |
+
+| `Unity uGUI BarracksWindow og recruitment cancel` | Binder det authorede Barracks-vindue til overview, ressourcer, recruit-command og live recruitment queue; spawner skjulte UnitQueueCard-templates og tilføjer serverautoriseret annullering af kun køens sidste job. | 2026-08-17 |
+
+| `Unity uGUI UniversityWindow` | Binder det authorede University-vindue til backendens levelprojektion, kloner den skjulte BuildingLevelDataRow-template og viser level samt researchproduktion for alle returnerede niveauer. | 2026-08-17 |
+
+| `Unity uGUI WarehouseWindow` | Binder det authorede Warehouse-vindue til backendens levelprojektion, kloner den skjulte BuildingLevelDataRow-template og viser level samt capacity for alle returnerede niveauer. | 2026-08-17 |
+
+| `Unity uGUI AllianceWindow navigation` | Kobler de fire authored nav-tabs til Overview, Members, Politics og Congress og synkroniserer selected-state med det synlige content. | 2026-08-12 |
+
 Lokal, Git-ignoreret arbejdslog.
+
+| `Main Bottom Panel map navigation` | Erstatter MapButtons generiske Sunvale RPGSkillButton med en projekt-ejet scene-navigation, der åbner WorldMapScene fra city view og CityViewScene fra world map med let hover/press-feedback. | 2026-08-17 |
+
+| `TownHall building card authored titles` | Bevarer den authorede Name Label på TownHall-building cards i stedet for at overskrive titlen med backendens BuildingName; øvrige card-data bindes fortsat dynamisk. | 2026-08-17 |
+
+| `Unity uGUI WarehouseWindow final wiring` | Opdaterer Warehouse til den authorede WarehouseBuildingLevelDataRow-template og CapacityText, skjuler dummy-rækken og giver headeren fælles close/drag-chrome. | 2026-08-17 |
+
+| `Unity uGUI WallWindow` | Binder det authorede Wall-vindue til backendens levelprojektion, kloner den skjulte WallBuildingLevelDataRow-template og viser level samt defence-bonus med fælles close/drag-chrome. | 2026-08-17 |
+
+| `Unity uGUI UniversityWindow row template` | Opdaterer University-wiringen til den authorede UniversityBuildingLevelDataRow-template; dummy-rækken skjules, backendens levelrækker klones, og vinduet bruger fælles close/drag-chrome. | 2026-08-17 |
+
+| `Unity uGUI TimberCampWindow` | Binder det authorede Timber Camp-vindue til backendens resourceprojektion, kloner den skjulte TimberCampBuildingLevelDataRow-template og viser level samt træproduktion med fælles close/drag-chrome. | 2026-08-17 |
+
+| `Unity uGUI StoneQuarryWindow` | Binder det authorede Stone Quarry-vindue til backendens resourceprojektion, kloner den skjulte StoneQuarryBuildingLevelDataRow-template og viser level samt stenproduktion med fælles close/drag-chrome. | 2026-08-17 |
+
+| `Unity uGUI MetalMineWindow` | Binder det authorede Metal Mine-vindue til backendens resourceprojektion, kloner den skjulte MetalMineBuildingLevelDataRow-template og viser level samt metalproduktion med fælles close/drag-chrome. | 2026-08-17 |
+
+| `Unity uGUI MarketPlaceWindow` | Binder det authorede Marketplace-vindue til backendens levelprojektion, kloner den skjulte MarketPlaceBuildingLevelDataRow-template og viser level samt coin-bonus med fælles close/drag-chrome. | 2026-08-17 |
+
+| `Unity uGUI HousingWindow` | Binder det authorede Housing-vindue til backendens levelprojektion, kloner den skjulte HousingBuildingLevelDataRow-template og viser level samt population med fælles close/drag-chrome. | 2026-08-17 |
+
+| `uGUI TownHallWindow and building queue` | Binder authored building cards og queue template til autoritativ state, udvider player-kÃ¸en til syv og tilfÃ¸jer transaktionslÃ¥st annullering af kun sidste job uden refundering. | 2026-08-13 |
 
 | Filnavn | Ændring resume | Dato |
 |---|---|---|
+| `AllianceWindow uGUI wiring completion` | Binder authored overview-, bulletin-, member-, invite-, relation- og alliance-search-UI til eksisterende alliance-endpoints og udvider relationer med modstanderalliancens totalpoint. | 2026-08-13 |
+| `AllianceWindow uGUI content` | Binder overview, description auto-save, member rows med city count og kick, alliance-invite search samt aktive friendly/hostile relationer til eksisterende alliance-API. | 2026-08-12 |
+| `Unity BottomNavigationFooter alliance navigation` | Slår den aktuelle spillers autoritative AllianceId op og åbner AllianceWindow for medlemmer eller CreateAllianceWindow for alliancefri spillere. | 2026-08-12 |
+| `Unity uGUI ProfileWindow` | Binder profil, alliance, stats og authored city-row-prefab til den eksisterende profilkontrakt samt gemmer description automatisk ved focus loss. | 2026-08-12 |
+| `Unity uGUI ProfileWindow` | Viser tom alliance ved intet medlemskab og udskyder biography-inputfokus til efter EditBtn-eventet, så feltet forbliver redigerbart. | 2026-08-12 |
+| `Unity uGUI ProfileWindow` | Filtrerer backendens tekstlige no-alliance-værdi og gør DescriptionContent til korrekt TMP input-root med DescriptionText som child text-component. | 2026-08-12 |
+| `Unity uGUI ProfileWindow` | Bruger read-only view-mode frem for disabled input-state, så biography-teksten beholder sin authored farve efter redigering. | 2026-08-12 |
+| `Unity uGUI ProfileWindow` | Binder rankdata til det nye authored `RankValue/RankText`-felt. | 2026-08-12 |
+| `Unity uGUI MessageWindow recipient search` | Kloner den nye `RecipientSearchRow.prefab` direkte ind i dropdownen, binder kun dens `PlayerNameLabel` til fundne spillernavne og bevarer authored preview/layout urørt. | 2026-08-11 |
+| `Unity uGUI MessageWindow` | Adskiller recipient-søgningens ene-navns række fra samtalerækken: dropdownen har nu sin egen authored, klikbar `RecipientSuggestionRow` uden subject eller timestamp. | 2026-08-11 |
+| `Unity uGUI MessageWindow` | Flytter den authored `MessageDataRow` til recipient-dropdownens `Rows`, så den er direkte synlig og redigerbar i Scene Editor; runtime bevarer den som inaktiv template og rydder kun klonede søgeresultater. | 2026-08-11 |
+| `Unity/Assets/UI/Windows/Shared/MessageWindow.prefab` | Gør den authored message-visning med conversation-row og begge bubble-templates til prefab-default i editoren; runtime-controlleren skifter fortsat til composer ved åbning. | 2026-08-11 |
+| `Unity uGUI MessageWindow` | Binder Shared MessageWindow til messaging-servicen med inboxsøgning, separat recipient-dropdown, recipient-composition, subject, conversation/chat, participant-scoped delete, read-state, pagination, horisontal recipientvisning, drag og authorede row-/bubble-templates; composerens dekorative frame blokerer ikke inputfelternes raycasts. | 2026-08-11 |
+| `Unity dailies reward-row UI` | Fremhæver collect-klare rewards, viser Collected i progressfeltet og tilpasser placeringen dynamisk til ét, to eller tre rewards. | 2026-08-11 |
+| `Unity/Assets/UI/Windows/Shared/DailiesDataRow.prefab` | Omlægger runtime-rækken til to kolonner, klonbar reward-template, resourceikoner og transparent collect-område uden legacy toggle. | 2026-08-11 |
+| `Unity/Assets/_Project/Scripts/Modules/UI/UguiDailyRewardsCollectArea.cs` | Håndterer rewardkolonnens hoverlyd, enkeltklik og in-flight-lås for completed, endnu ikke collected objectives. | 2026-08-11 |
+| `Unity/Assets/_Project/Scripts/Modules/UI/UguiDailyRewardItemView.cs` | Binder hvert reward-item til korrekt resourceikon og formatteret heltalsbeløb. | 2026-08-11 |
+| `Unity/Assets/_Project/Scripts/Modules/UI/UguiDailiesDataRowView.cs` | Renderer én til tre rewards, beregner progress lokalt og greyer kun autoritativt collected rækker. | 2026-08-11 |
+| `Unity/Assets/_Project/Scripts/Modules/UI/UguiDailiesWindowController.cs` | Sender aktiv by ved collect og refresher straks både city-resources og WorldPlayer-økonomi efter succes. | 2026-08-11 |
+| `Unity/Assets/_Project/Scripts/Modules/UI/DailiesWindowController.cs` | Tilpasser legacy UI Toolkit-visningen til den nye listebaserede rewardkontrakt. | 2026-08-11 |
+| `Unity/Assets/_Project/Scripts/Network/ClientDailyObjectivesService.cs` | Sender collect-requestens obligatoriske CityId til det autoritative daily-endpoint. | 2026-08-11 |
+| `Unity/Assets/_Project/Scripts/Domain/DTOs/DailyObjectiveDTOs.cs` | Spejler backendens rewardliste og Coins, Wood, Stone samt Metal i Unity-kontrakten. | 2026-08-11 |
+| `Backend/Game/daily-objectives-complete.json` | Flytter rewards til alle 51 definitions med deterministisk roterede resourcetyper og aftalte tier-totaler. | 2026-08-11 |
+| `Backend/Game/Controllers/DailyObjectivesController.cs` | Modtager CityId i collect-body og videresender byen til daily-servicen. | 2026-08-11 |
+| `Backend/Game.Tests/DailyObjectivesControllerTests.cs` | Opdaterer controllerkontrakttesten til rewardlister og city-baseret collect-signatur. | 2026-08-11 |
+| `Backend/Domain/StaticData/Readers/DailyObjectiveDataReader.cs` | Validerer rewardantal, typer, heltalsbeløb, dubletter og samlet værdi ved startup. | 2026-08-11 |
+| `Backend/Domain/StaticData/Data/DailyObjectiveData.cs` | Flytter statiske rewardlister fra selection tiers til hver daily-definition. | 2026-08-11 |
+| `Backend/Domain/Enums/DailyObjectiveEnums.cs` | Erstatter ideology rewardtypen med Coins, Wood, Stone og Metal. | 2026-08-11 |
+| `Backend/Application/Services/DailyObjectiveService.cs` | Synkroniserer økonomi, uddeler alle rewards atomisk, capper lokale ressourcer og persisterer collected-state idempotent. | 2026-08-11 |
+| `Backend/Application/Interfaces/IServices/IDailyObjectiveService.cs` | Kræver destination city ved collect af en completed daily. | 2026-08-11 |
+| `Backend/Application/DTOs/DailyObjectiveDTO.cs` | Erstatter singular reward med en liste af heltalsbaserede resource rewards. | 2026-08-11 |
+| `Backend/Application.Tests/DailyObjectiveServiceTests.cs` | Verificerer alle katalogrewards, tier-totaler og idempotent collect gennem den nye kontrakt. | 2026-08-11 |
+| `Unity/Assets/UI/Windows/Shared/DailiesDataRow.prefab` | Nulstiller min/preferred width med høj layout-prioritet på alle tre row-kolonner, så indholdets preferred sizes ikke forvrider 2.25:1:1-forholdet. | 2026-08-11 |
+| `Unity/Assets/UI/Windows/Shared/DailiesDataRow.prefab` | Gør row-layoutet til præcis tre kolonner (2.25:1:1) og samler begge statusknapper som overlappende børn i én Status-kolonne. | 2026-08-11 |
+| `Unity/Assets/UI/Windows/Shared/DailiesWindow.prefab` | Matcher rowens Child Control Width med headeren og fjerner lokale duplikerede LayoutElement-overrides. | 2026-08-11 |
+| `Unity/Assets/UI/Windows/Shared/DailiesWindow.prefab` | Fjerner en fejlagtig World Space Canvas og GraphicRaycaster fra rows-containeren, som kollapsede row-indholdets koordinatsystem. | 2026-08-11 |
+| `Unity/Assets/UI/Windows/Shared/DailiesDataRow.prefab` | Låser row-rooten til vandret stretch, så bredden ikke kollapser ved efterfølgende layout-rebuilds. | 2026-08-11 |
+| `Unity/Assets/_Project/Scripts/Modules/UI/UguiDailiesWindowController.cs` | Normaliserer hver runtime-rækkes vandrette anchors ved instansiering som ekstra beskyttelse mod 0 px bredde. | 2026-08-11 |
+| `Unity/Assets/_Project/Scripts/Modules/UI/UguiDailiesDataRowView.cs` | Beregner fillbar-normalisering lokalt fra Progress/Target og nedtoner hele rækken ved completion. | 2026-08-11 |
+| `Unity/Assets/UI/Windows/Shared/DailiesDataRow.prefab` | Matcher objective/reward/status med headerproportionerne 2.25:1:1, centrerer reward og statusknapper samt skjuler række-frame. | 2026-08-11 |
+| `Unity/Assets/UI/Windows/Shared/DailiesWindow.prefab` | Retter rowPrefab-reference til den aktuelle DailiesDataRow-asset efter headergenindførelsen. | 2026-08-11 |
+| `Unity/Assets/_Project/Scripts/Modules/UI/UguiDailiesDataRowView.cs` | Gør den nye daily-række robust mod tomme Inspector-referencer, toggler locked/collect-state og wirer CarvedPressButton til collect-kaldet. | 2026-08-11 |
+| `Unity/Assets/_Project/Scripts/Modules/UI/UguiDailiesWindowController.cs` | Sikrer at collect kun startes, når daily-netværksservicen er initialiseret. | 2026-08-11 |
+| `Unity/Assets/UI/Windows/Shared/DailiesWindow.prefab` | Peger runtime-controllerens rowPrefab på det færdige DailiesDataRow 1-design i stedet for den gamle række-prefab. | 2026-08-11 |
+| `Unity/Assets/UI/Windows/Shared/DailiesWindow.prefab` | Gør det indlejrede NotCompletedBtn tydeligt låst via dæmpet CanvasGroup, deaktiveret input og teksten Locked. | 2026-08-11 |
+| `Unity/Assets/UI/Windows/Shared/DailiesWindow.prefab` | Justerer det indlejrede DailiesDataRow-layout med overlappende rammebaggrund og faste zoner til objective/progress, reward og collect-knap. | 2026-08-11 |
+| `Unity/Assets/_Project/Scripts/Modules/UI/UguiDailiesDataRowView.cs` | Udleder completion fra både nyt booleanfelt og eksisterende state, så CollectBtn vises kompatibelt. | 2026-08-11 |
+| `Backend/Domain/Entities/DailyObjectiveAssignment.cs` | Persisterer om en completed daily objective er blevet collected. | 2026-08-11 |
+| `Backend/Application/DTOs/DailyObjectiveDTO.cs` | Eksponerer eksplicit completed- og collected-state på daily-rækker. | 2026-08-11 |
+| `Backend/Application/Interfaces/IServices/IDailyObjectiveService.cs` | Tilføjer autoritativ collect-operation uden rewardudbetaling til daily-servicekontrakten. | 2026-08-11 |
+| `Backend/Application/Services/DailyObjectiveService.cs` | Validerer completion og persisterer collected-state under eksisterende spillerlås. | 2026-08-11 |
+| `Backend/Game/Controllers/DailyObjectivesController.cs` | Eksponerer spillerautoriseret collect-endpoint for en tildelt daily definition. | 2026-08-11 |
+| `Backend/Infrastructure/Migrations/20260810224824_AddDailyObjectiveCollectedState.cs` | Tilføjer IsCollected-bitkolonnen med false som sikker eksisterende standard. | 2026-08-11 |
+| `Backend/Infrastructure/Migrations/20260810224824_AddDailyObjectiveCollectedState.Designer.cs` | Registrerer EF-targetmodellen for daily collected-state-migrationen. | 2026-08-11 |
+| `Backend/Infrastructure/Migrations/GameContextModelSnapshot.cs` | Synkroniserer EF-snapshot med DailyObjectiveAssignments.IsCollected. | 2026-08-11 |
+| `Backend/Application.Tests/DailyObjectiveServiceTests.cs` | Verificerer persistent collect af completed objective uden rewardudbetaling. | 2026-08-11 |
+| `Backend/Application.Tests/ExoticResourceMigrationTests.cs` | Opdaterer forventet seneste migration efter collected-state-schemaet. | 2026-08-11 |
+| `Backend/Game.Tests/DailyObjectivesControllerTests.cs` | Tilpasser daily endpoint-testdouble og DTO-fixture til collect-kontrakten. | 2026-08-11 |
+| `Unity/Assets/_Project/Scripts/Domain/DTOs/DailyObjectiveDTOs.cs` | Spejler eksplicit IsCompleted og IsCollected fra backendresponsen. | 2026-08-11 |
+| `Unity/Assets/_Project/Scripts/Network/ClientDailyObjectivesService.cs` | Sender collect-command og parser den opdaterede autoritative daily-liste. | 2026-08-11 |
+| `Unity/Assets/_Project/Scripts/Modules/UI/UguiDailiesWindowController.cs` | Håndterer collect-klik, serverrefresh og visuel rollback ved requestfejl. | 2026-08-11 |
+| `Unity/Assets/_Project/Scripts/Modules/UI/UguiDailiesDataRowView.cs` | Viser completed skær, collected række og lifecycle for collectbtn uden rewardlogik. | 2026-08-11 |
+| `Unity/Assets/UI/Windows/Shared/DailiesDataRow 1.prefab` | Binder CollectBtn, row-image og highlight-image direkte til daily-rækkens statevisning. | 2026-08-11 |
+| `Unity/Assets/UI/Windows/Shared/DailiesWindow.prefab` | Skifter runtime-listen til den nye daily-row med CollectBtn. | 2026-08-11 |
+| `Unity/Assets/_Project/Scripts/Modules/UI/UguiDailiesDataRowView.cs` | Fjerner forældet statusbinding og viser coming-soon-state sikkert i trekolonnelayoutets progressfelt. | 2026-08-11 |
+| `Unity/Assets/UI/Windows/Shared/DailiesDataRow.prefab` | Fjerner den tomme serialiserede statusreference fra den nye trekolonnede daily-række. | 2026-08-11 |
+| `Backend/Domain/Enums/DailyObjectiveEnums.cs` | Tilføjer typed ideology-point rewardtype til daily-katalogets fremtidssikrede visningskontrakt. | 2026-08-11 |
+| `Backend/Domain/StaticData/Data/DailyObjectiveData.cs` | Udvider daily-selectiondata med tierbaserede typed rewards uden udbetalingslogik. | 2026-08-11 |
+| `Backend/Domain/StaticData/Readers/DailyObjectiveDataReader.cs` | Validerer at alle daily-tiers har positiv og kendt reward-visningsdata. | 2026-08-11 |
+| `Backend/Application/DTOs/DailyObjectiveDTO.cs` | Eksponerer rewardtype og beløb additivt på hver daily objective-række. | 2026-08-11 |
+| `Backend/Application/Services/DailyObjectiveService.cs` | Mapper tierens katalogreward til daily-responsen uden at tildele spilleren reward. | 2026-08-11 |
+| `Backend/Game/daily-objectives-complete.json` | Definerer ideology-point visningsrewards på 24, 48, 96 og 192 efter tier. | 2026-08-11 |
+| `Backend/Application.Tests/DailyObjectiveServiceTests.cs` | Verificerer katalogets fire typed rewards og deres konkrete tierbeløb. | 2026-08-11 |
+| `Backend/Game.Tests/DailyObjectivesControllerTests.cs` | Opdaterer endpointkontrakttesten med rewardtype og rewardbeløb. | 2026-08-11 |
+| `Unity/Assets/_Project/Scripts/Domain/DTOs/DailyObjectiveDTOs.cs` | Spejler backendens additive typed rewardkontrakt i Unity-klienten. | 2026-08-11 |
+| `Unity/Assets/_Project/Scripts/Modules/UI/DailiesWindowController.cs` | Viser det nye rewardbeløb i det eksisterende UI Toolkit-vindue. | 2026-08-11 |
+| `Unity/Assets/_Project/Scripts/Modules/UI/UguiDailiesDataRowView.cs` | Binder nyt objective-, progress- og rewardformat til Shared uGUI-rækken. | 2026-08-11 |
+| `Unity/Assets/_Project/Scripts/Modules/UI/UguiDailiesWindowController.cs` | Henter autoritative daily objectives, renderer serverrækker og genindlæser automatisk efter nedtælling til UTC-reset. | 2026-08-10 |
+| `Unity/Assets/_Project/Scripts/Modules/UI/UguiDailiesDataRowView.cs` | Binder objective, kombineret completion-progress, reward-tier og status fra den eksisterende daily DTO. | 2026-08-10 |
+| `Unity/Assets/UI/Windows/Shared/DailiesWindow.prefab` | Forbinder UTC-ur, tabelheader, rækkecontainer og daily-rækkeprefab til den databundne uGUI-controller. | 2026-08-10 |
+| `Unity/Assets/UI/Windows/Shared/DailiesDataRow.prefab` | Tilføjer serialiseret uGUI-row-view med referencer til de fire synlige datakolonner. | 2026-08-10 |
+| `Unity/Assets/_Project/Scripts/Modules/UI/UguiWindowChromeController.cs` | Tilføjer genbrugelig uGUI-headerdragging og lifecycle-sikker lukning gennem Shared-vinduers eksisterende Sunvale-lukkeknap. | 2026-08-10 |
+| `Unity/Assets/UI/Windows/Shared/DailiesWindow.prefab` | Binder Dailies-headeren og X-knappen til den nye uGUI-window-chrome-controller. | 2026-08-10 |
+| `Unity/Assets/_Project/Scripts/Modules/UI/BottomNavigationFooterController.cs` | Åbner footerens Shared uGUI-prefabs direkte med enkeltvindue-policy, toggle-lukning og oprydning af gamle UI Toolkit-vinduer. | 2026-08-10 |
+| `Unity/Assets/_Project/Scenes/TopBarHUD.unity` | Binder footercontrollerens navigationstyper til de tilsvarende nye Shared uGUI-window-prefabs. | 2026-08-10 |
 | `Unity/Assets/Sunvale/AncientRomeUI/Runtime/SkillTree/SkillTreeConnectionGraphic.cs` | Tilføjer diagonal forbindelsestype med direkte linjepunkter og en pil, der følger linjens faktiske retning. | 2026-08-10 |
 | `Unity/Assets/Sunvale/AncientRomeUI/Editor/SkillTree/SkillTreeConnectionBuilderEditor.cs` | Opdaterer inspectorbeskrivelsen, så den nye diagonale forbindelsestype fremgår sammen med de eksisterende typer. | 2026-08-10 |
 | `Unity/Assets/UI/Windows/Shared/MessageWindow.prefab` | Tilføjer centreret native uGUI-pagination med forrige-, sideindikator- og næste-kontrol uden eksterne grafikassets. | 2026-08-08 |
@@ -13,6 +146,8 @@ Lokal, Git-ignoreret arbejdslog.
 | `Unity/Assets/UI/Windows/Shared/BugReportWindow.prefab` | Genopbygger fejlformularen med native TMP-input, callbackfri knap og asset-fri neutral styling. | 2026-07-26 |
 | `Unity/Assets/UI/Windows/Shared/ExoticResourceWindow.prefab` | Genopbygger ressourcevinduets tabs, progression og contribution-felter med rene native controls. | 2026-07-26 |
 | `Unity/Assets/UI/Windows/Shared/CityOverviewWindow.prefab` | Genopbygger cityoversigtens kort, slots og panelsplit som asset-frit layoutstyret uGUI. | 2026-07-26 |
+| `Unity/Assets/_Project/Scripts/Modules/UI/UguiCityOverviewWindowController.cs`, `Unity/Assets/UI/Windows/Shared/CityOverviewWindow.prefab` | Wirer det authored uGUI-cityoverview til eksisterende økonomi-, population- og queue-state samt fælles close/drag-chrome. | 2026-08-12 |
+| `Unity/Assets/_Project/Scripts/Modules/UI/UguiCityOverviewWindowController.cs` | Bevarer prefabens authored tekstfarve på available population, så den populerede værdi er tydeligt synlig. | 2026-08-12 |
 | `Unity/Assets/UI/Windows/Shared/AdministrationWindow.prefab` | Genopbygger administrationstabeller, tabs og states med native ScrollRect, masker og scrollbars. | 2026-07-26 |
 | `Unity/Assets/UI/Windows/Shared/DailiesWindow.prefab` | Genopbygger objectiveoversigten som lyst native tabel-layout med bevarede states og scrollkontrakt. | 2026-07-26 |
 | `Unity/Assets/UI/Windows/Shared/IslandWindow.prefab` | Genopbygger island city-tabellen med spritefri flader, native scrolling og stabile feltnavne. | 2026-07-26 |
@@ -400,3 +535,9 @@ Unity/Assets/UI/Windows/Shared/TownHallBuildingCard.prefab | Opretter genanvende
 Backend/Application/Services/DailyObjectiveService.cs | Detacher allerede tracket daily-state under spillerlåsen før genindlæsning og opdatering. | 2026-07-20
 Backend/Application.Tests/DailyObjectiveServiceTests.cs | Verificerer lock-detach-load-rækkefølge og tilpasser retry-forventninger til sikker genindlæsning. | 2026-07-20
 Unity/Assets/UI/Windows/Shared/TownHallWindow.prefab | Centrerer topsektionen og fordeler tre omkostningsfelter præcist inden for bygningens 250 pixels | 2026-07-22
+# 2026-08-11
+
+- Kept the Dailies table header fixed above the scrolling objective rows.
+- Hid both Dailies status buttons once an objective is completed or collected.
+- Showed the new completed status button exclusively on completed, greyed-out daily rows.
+| 2026-08-12 | Alliance uGUI | Added membership-aware navigation, shared draggable/closable window chrome, alliance creation, invitation loading, and invitation acceptance. |

@@ -5345,6 +5345,7 @@ GameObject:
   - component: {fileID: 9122991063042247955}
   - component: {fileID: 9122991063042247965}
   - component: {fileID: 9122991063042247954}
+  - component: {fileID: 904861239001000001}
   m_Layer: 5
   m_Name: CreateAllianceWindow
   m_TagString: Untagged
@@ -5414,6 +5415,27 @@ MonoBehaviour:
   m_FillOrigin: 0
   m_UseSpriteMesh: 0
   m_PixelsPerUnitMultiplier: 1
+--- !u!114 &904861239001000001
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 9122991063042247952}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c830891ff8584b7a90caaf94611c803a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  allianceWindowPrefab: {fileID: 7614058205912178497, guid: 8dc70b6137be6364cb850474449942ae, type: 3}
+  allianceNameInput: {fileID: 0}
+  allianceTagInput: {fileID: 0}
+  statusText: {fileID: 0}
+  createButton: {fileID: 0}
+  invitationRows: {fileID: 0}
+  invitationRowTemplate: {fileID: 0}
+  loadingState: {fileID: 0}
+  errorState: {fileID: 0}
 --- !u!1 &9122991063156423322
 GameObject:
   m_ObjectHideFlags: 0
@@ -5425,6 +5447,7 @@ GameObject:
   - component: {fileID: 9122991063156423301}
   - component: {fileID: 9122991063156423303}
   - component: {fileID: 9122991063156423300}
+  - component: {fileID: 904861239001000002}
   m_Layer: 5
   m_Name: Header
   m_TagString: Untagged
@@ -5494,6 +5517,20 @@ MonoBehaviour:
   m_FillOrigin: 0
   m_UseSpriteMesh: 0
   m_PixelsPerUnitMultiplier: 2.85
+--- !u!114 &904861239001000002
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 9122991063156423322}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 22b9e26c10cb4e0c9ee8717090702725, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  windowRoot: {fileID: 9122991063042247955}
+  closeButton: {fileID: 0}
 --- !u!1 &9122991063393134338
 GameObject:
   m_ObjectHideFlags: 0

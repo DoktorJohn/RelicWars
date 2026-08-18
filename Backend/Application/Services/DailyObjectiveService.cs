@@ -6,6 +6,7 @@ using Domain.Entities;
 using Domain.Enums;
 using Domain.StaticData.Data;
 using Domain.StaticData.Readers;
+using Domain.User;
 using Microsoft.EntityFrameworkCore;
 
 namespace Application.Services
@@ -19,6 +20,8 @@ namespace Application.Services
         private readonly TimeProvider _timeProvider;
         private readonly ITransactionManager _transactionManager;
         private readonly UnitDataReader _unitDataReader;
+        private readonly IResourceService _resourceService;
+        private readonly ICityStatService _cityStatService;
 
         public DailyObjectiveService(
             IDailyObjectiveRepository repository,
@@ -27,7 +30,9 @@ namespace Application.Services
             IRandomService random,
             TimeProvider timeProvider,
             ITransactionManager transactionManager,
-            UnitDataReader unitDataReader)
+            UnitDataReader unitDataReader,
+            IResourceService resourceService,
+            ICityStatService cityStatService)
         {
             _repository = repository;
             _playerAccessService = playerAccessService;
@@ -36,6 +41,8 @@ namespace Application.Services
             _timeProvider = timeProvider;
             _transactionManager = transactionManager;
             _unitDataReader = unitDataReader;
+            _resourceService = resourceService;
+            _cityStatService = cityStatService;
         }
 
         public async Task<DailyObjectivesDTO> GetAsync(Guid worldPlayerId)
@@ -43,6 +50,31 @@ namespace Application.Services
             await _playerAccessService.RequireOwnedWorldPlayerAsync(worldPlayerId);
             var set = await GetOrCreateTodayAsync(worldPlayerId);
             return Map(set);
+        }
+
+        public async Task<DailyObjectivesDTO> CollectAsync(Guid worldPlayerId, int definitionId, Guid cityId)
+        {
+            var player = await _playerAccessService.RequireOwnedWorldPlayerAsync(worldPlayerId);
+            return await _transactionManager.ExecuteAsync(async () =>
+            {
+                var set = await EnsureTodayInCurrentTransactionAsync(worldPlayerId);
+                var assignment = set.Assignments.SingleOrDefault(x => x.DefinitionId == definitionId)
+                    ?? throw new KeyNotFoundException($"Daily objective {definitionId} is not assigned today.");
+                if (assignment.IsCollected) return Map(set);
+                if (!assignment.IsComplete)
+                    throw new InvalidOperationException("Only completed daily objectives can be collected.");
+
+                var city = player.Cities.SingleOrDefault(candidate =>
+                    candidate.Id == cityId && candidate.WorldPlayerId == worldPlayerId)
+                    ?? throw new InvalidOperationException("The selected city does not belong to this world player.");
+                DateTime now = _timeProvider.GetUtcNow().UtcDateTime;
+                SynchronizeResources(player, city, now);
+                AwardRewards(player, city, _reader.GetDefinition(definitionId).Rewards);
+                assignment.IsCollected = true;
+                assignment.DateLastModified = now;
+                await _transactionManager.SaveChangesAsync();
+                return Map(set);
+            });
         }
 
         public async Task ApplyProgressAsync(Guid worldPlayerId, DailyObjectiveProgressEvent progressEvent)
@@ -201,10 +233,57 @@ namespace Application.Services
                     definition.Name,
                     definition.CompletionInfo,
                     definition.Tier,
+                    definition.Rewards.Select(reward =>
+                        new DailyObjectiveRewardDTO(reward.Type, reward.Amount)).ToList(),
                     assignment.Progress,
                     assignment.Target,
+                    assignment.IsComplete,
+                    assignment.IsCollected,
                     state);
             }).ToList());
+
+        private void SynchronizeResources(WorldPlayer player, City city, DateTime now)
+        {
+            var global = _resourceService.CalculateGlobalResources(player, now);
+            player.Coins = global.CoinsAmount;
+            player.ResearchPoints = global.ResearchPoints;
+            player.IdeologyFocusPoints = global.IdeologyFocusPoints;
+            player.LastResourceUpdate = global.Timestamp;
+
+            var local = _resourceService.CalculateCityResources(city, now);
+            city.Wood = local.Wood;
+            city.Stone = local.Stone;
+            city.Metal = local.Metal;
+            city.LastResourceUpdate = local.Timestamp;
+        }
+
+        private void AwardRewards(
+            WorldPlayer player,
+            City city,
+            IReadOnlyCollection<DailyObjectiveRewardData> rewards)
+        {
+            double capacity = _cityStatService.GetWarehouseCapacity(city);
+            foreach (var reward in rewards)
+            {
+                switch (reward.Type)
+                {
+                    case DailyObjectiveRewardTypeEnum.Coins:
+                        player.Coins += reward.Amount;
+                        break;
+                    case DailyObjectiveRewardTypeEnum.Wood:
+                        city.Wood = Math.Min(capacity, city.Wood + reward.Amount);
+                        break;
+                    case DailyObjectiveRewardTypeEnum.Stone:
+                        city.Stone = Math.Min(capacity, city.Stone + reward.Amount);
+                        break;
+                    case DailyObjectiveRewardTypeEnum.Metal:
+                        city.Metal = Math.Min(capacity, city.Metal + reward.Amount);
+                        break;
+                    default:
+                        throw new InvalidOperationException($"Unsupported daily reward type {reward.Type}.");
+                }
+            }
+        }
 
         private bool Matches(DailyObjectiveDefinitionData definition, DailyObjectiveProgressEvent progressEvent)
         {

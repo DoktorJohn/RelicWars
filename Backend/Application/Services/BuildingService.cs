@@ -55,24 +55,48 @@ namespace Application.Services
             await _playerAccessService.RequireOwnedCityAsync(cityId);
             var activeJobsInCity = await _jobRepo.GetBuildingJobsAsync(cityId);
 
-            return activeJobsInCity
+            var orderedJobs = activeJobsInCity
                 .OfType<BuildingJob>()
                 .OrderBy(job => job.ExecutionTime)
-                .Select(job => new BuildingDTO(
-                    job.Id,
-                    job.BuildingType.ToString(),
-                    job.TargetLevel,
-                    job.ExecutionTime,
-                    true
-                ))
+                .ThenBy(job => job.Id)
                 .ToList();
+
+            return MapBuildingQueue(orderedJobs);
         }
 
         public async Task<BuildingResult> QueueUpgradeAsync(Guid cityId, BuildingTypeEnum type)
         {
-            var city = await _playerAccessService.RequireOwnedCityAsync(cityId);
+            return await _transactionManager.ExecuteAsync(async () =>
+            {
+                await _cityRepo.AcquireBuildingQueueLockAsync(cityId);
+                var city = await _playerAccessService.RequireOwnedCityAsync(cityId);
+                return await QueueUpgradeForCityAsync(city, type, transactionOwned: true);
+            });
+        }
 
-            return await QueueUpgradeForCityAsync(city, type);
+        public async Task<List<BuildingDTO>> CancelQueuedUpgradeAsync(Guid cityId, Guid jobId)
+        {
+            return await _transactionManager.ExecuteAsync(async () =>
+            {
+                await _cityRepo.AcquireBuildingQueueLockAsync(cityId);
+                await _playerAccessService.RequireOwnedCityAsync(cityId);
+
+                var jobs = (await _jobRepo.GetBuildingJobsAsync(cityId))
+                    .OrderBy(job => job.ExecutionTime)
+                    .ThenBy(job => job.Id)
+                    .ToList();
+                var requested = jobs.FirstOrDefault(job => job.Id == jobId)
+                    ?? throw new KeyNotFoundException("Building queue job was not found.");
+
+                if (requested.ExecutionTime <= DateTime.UtcNow)
+                    throw new InvalidOperationException("A due building job cannot be cancelled.");
+                if (jobs[^1].Id != requested.Id)
+                    throw new InvalidOperationException("Only the last building queue job can be cancelled.");
+
+                await _jobRepo.DeleteAsync(requested.Id);
+                jobs.Remove(requested);
+                return MapBuildingQueue(jobs);
+            });
         }
 
         public async Task<BuildingResult> QueueNPCUpgradeAsync(Guid cityId, BuildingTypeEnum type)
@@ -95,14 +119,15 @@ namespace Application.Services
         private async Task<BuildingResult> QueueUpgradeForCityAsync(
             City city,
             BuildingTypeEnum type,
-            IReadOnlyCollection<BuildingJob>? knownBuildingJobs = null)
+            IReadOnlyCollection<BuildingJob>? knownBuildingJobs = null,
+            bool transactionOwned = false)
         {
             Guid cityId = city.Id;
 
             var buildingJobs = knownBuildingJobs?.ToList()
                 ?? await _jobRepo.GetBuildingJobsAsync(cityId);
 
-            int maximumQueueSize = city.IsNPC ? 1 : 5;
+            int maximumQueueSize = city.IsNPC ? 1 : 7;
             if (buildingJobs.Count >= maximumQueueSize)
                 return new BuildingResult(false, "Byggekøen er fuld.");
 
@@ -171,13 +196,40 @@ namespace Application.Services
                 ExecutionTime = startTime.Add(finalBuildTime)
             };
 
-            await _transactionManager.ExecuteAsync(async () =>
+            async Task PersistAsync()
             {
                 await _cityRepo.UpdateAsync(city);
                 await _jobRepo.AddAsync(buildingJob);
-            });
+            }
+
+            if (transactionOwned)
+                await PersistAsync();
+            else
+                await _transactionManager.ExecuteAsync(PersistAsync);
 
             return new BuildingResult(true, $"{type} lvl {nextLevel} i kø.");
+        }
+
+        private static List<BuildingDTO> MapBuildingQueue(IEnumerable<BuildingJob> jobs)
+        {
+            List<BuildingJob> orderedJobs = jobs
+                .OrderBy(job => job.ExecutionTime)
+                .ThenBy(job => job.Id)
+                .ToList();
+
+            var result = new List<BuildingDTO>(orderedJobs.Count);
+            foreach (BuildingJob job in orderedJobs)
+            {
+                result.Add(new BuildingDTO(
+                    job.Id,
+                    job.BuildingType.ToString(),
+                    job.TargetLevel,
+                    job.DateCreated,
+                    job.ExecutionTime,
+                    true));
+            }
+
+            return result;
         }
 
         public async Task<BuildingResult> RepairAsync(Guid cityId, BuildingTypeEnum type)

@@ -272,6 +272,23 @@ namespace Infrastructure.Repositories
             if (Convert.ToInt32(await command.ExecuteScalarAsync()) < 0) throw new DbUpdateConcurrencyException("Could not acquire the player edict lock.");
         }
 
+        public async Task AcquireBuildingQueueLockAsync(Guid cityId)
+        {
+            var transaction = _context.Database.CurrentTransaction
+                ?? throw new InvalidOperationException("Building queue lock requires an active transaction.");
+            var connection = _context.Database.GetDbConnection();
+            await using var command = connection.CreateCommand();
+            command.Transaction = transaction.GetDbTransaction();
+            command.CommandText = "DECLARE @result int; EXEC @result = sys.sp_getapplock @Resource=@resource, @LockMode='Exclusive', @LockOwner='Transaction', @LockTimeout=15000; SELECT @result;";
+            var resource = command.CreateParameter();
+            resource.ParameterName = "@resource";
+            resource.DbType = DbType.String;
+            resource.Value = $"RelicWars:BuildingQueue:{cityId:D}";
+            command.Parameters.Add(resource);
+            if (Convert.ToInt32(await command.ExecuteScalarAsync()) < 0)
+                throw new DbUpdateConcurrencyException("Could not acquire the city building queue lock.");
+        }
+
         public async Task<Guid?> GetWorldPlayerIdByCityIdAsync(Guid cityId)
         {
             var city = await _context.Cities

@@ -170,12 +170,58 @@ namespace Application.Services
                     UnitType = recruitmentJob.UnitType,
                     Amount = remainingUnitsInJob,
                     TimeRemainingSeconds = totalRemainingTimeInSeconds,
-                    TotalDurationSeconds = (int)(recruitmentJob.TotalQuantity * recruitmentJob.SecondsPerUnit)
+                    TotalDurationSeconds = (int)(recruitmentJob.TotalQuantity * recruitmentJob.SecondsPerUnit),
+                    SecondsPerUnit = recruitmentJob.SecondsPerUnit
                 });
             }
 
             return queueItemDTO;
 
+        }
+
+        public async Task<RecruitmentResult> CancelRecruitmentAsync(Guid cityId, Guid queueId)
+        {
+            await _playerAccessService.RequireOwnedCityAsync(cityId);
+
+            return await _transactionManager.ExecuteAsync(async () =>
+            {
+                var allJobs = (await _jobRepository.GetRecruitmentJobsAsync(cityId))
+                    .Where(job => !job.IsCompleted)
+                    .ToList();
+                var requestedJob = allJobs.FirstOrDefault(job => job.Id == queueId);
+                if (requestedJob == null)
+                {
+                    return new RecruitmentResult(false, "Recruitment queue item was not found.");
+                }
+
+                UnitCategoryEnum requestedCategory = _unitDataReader.GetUnit(requestedJob.UnitType).Category;
+                var jobs = allJobs
+                    .Where(job => IsSameRecruitmentBuilding(
+                        requestedCategory,
+                        _unitDataReader.GetUnit(job.UnitType).Category))
+                    .OrderBy(job => job.ExecutionTime)
+                    .ThenBy(job => job.Id)
+                    .ToList();
+
+                if (jobs[^1].Id != queueId)
+                {
+                    return new RecruitmentResult(false, "Only the last recruitment queue item can be cancelled.");
+                }
+
+                await _jobRepository.DeleteAsync(queueId);
+                return new RecruitmentResult(true, "Recruitment cancelled.");
+            });
+        }
+
+        private static bool IsSameRecruitmentBuilding(UnitCategoryEnum first, UnitCategoryEnum second)
+        {
+            bool firstIsBarracks = first is UnitCategoryEnum.Infantry or UnitCategoryEnum.Ranged;
+            bool secondIsBarracks = second is UnitCategoryEnum.Infantry or UnitCategoryEnum.Ranged;
+            if (firstIsBarracks) return secondIsBarracks;
+
+            bool firstIsWorkshop = first is UnitCategoryEnum.Siege or UnitCategoryEnum.Support;
+            bool secondIsWorkshop = second is UnitCategoryEnum.Siege or UnitCategoryEnum.Support;
+            return firstIsWorkshop ? secondIsWorkshop : first == second;
         }
     }
 }

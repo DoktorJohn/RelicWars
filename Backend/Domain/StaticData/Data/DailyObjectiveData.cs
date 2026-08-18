@@ -15,6 +15,12 @@ namespace Domain.StaticData.Data
         public Dictionary<DailyObjectiveTierEnum, int> Weights { get; set; } = new();
     }
 
+    public sealed class DailyObjectiveRewardData
+    {
+        public DailyObjectiveRewardTypeEnum Type { get; set; }
+        public int Amount { get; set; }
+    }
+
     public sealed class DailyObjectiveDefinitionData
     {
         public int Id { get; set; }
@@ -28,5 +34,6 @@ namespace Domain.StaticData.Data
         public UnitCategoryEnum? UnitCategory { get; set; }
         public bool RequiresElite { get; set; }
         public bool IsImplemented { get; set; }
+        public List<DailyObjectiveRewardData> Rewards { get; set; } = new();
     }
 }

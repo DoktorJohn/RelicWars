@@ -67,6 +67,14 @@ namespace Project.Network.Helper
             return request;
         }
 
+        public static UnityWebRequest CreateDeleteRequest(string url, string jwtToken = null)
+        {
+            var request = UnityWebRequest.Delete(url);
+            request.downloadHandler = new DownloadHandlerBuffer();
+            SetStandardHeaders(request, jwtToken);
+            return request;
+        }
+
         public static IEnumerator SendJson<TResponse>(
             UnityWebRequest request,
             Action<TResponse> callback,

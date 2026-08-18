@@ -23,6 +23,7 @@ namespace Application.DTOs
         int X,
         int Y,
         int Points,
+        int? PlayerTotalPoints,
         Guid? WorldPlayerId,
         string? WorldPlayerName,
         Guid? AllianceId,

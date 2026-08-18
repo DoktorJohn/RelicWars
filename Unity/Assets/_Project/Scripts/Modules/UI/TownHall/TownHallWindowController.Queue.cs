@@ -29,7 +29,7 @@ namespace Project.Scripts.Modules.UI
             _queueTimerBindings.Clear();
 
             if (_queueHeaderLabel != null)
-                _queueHeaderLabel.text = $"CONSTRUCTION QUEUE ({_currentQueueCount}/5)";
+                _queueHeaderLabel.text = $"CONSTRUCTION QUEUE ({_currentQueueCount}/7)";
 
             RefreshBuildingGridStates();
 

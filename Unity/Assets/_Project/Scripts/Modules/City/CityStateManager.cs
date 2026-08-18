@@ -424,6 +424,11 @@ namespace Project.Modules.City
             OnBuildingQueueChanged?.Invoke(_currentBuildingQueue);
         }
 
+        public void UpdateBuildingQueue(List<BuildingDTO> queue)
+        {
+            ApplyBuildingQueue(queue ?? new List<BuildingDTO>());
+        }
+
         private void HandleDetailedCityInformationResponseAndMapToState(CityControllerGetDetailedCityInformationDTO detailedInformationDto)
         {
             try

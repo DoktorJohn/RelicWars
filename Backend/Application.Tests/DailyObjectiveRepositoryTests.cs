@@ -92,7 +92,9 @@ public class DailyObjectiveRepositoryTests
             new FixedRandomService(),
             new FixedTimeProvider(now),
             transactionManager,
-            unitReader);
+            unitReader,
+            null!,
+            null!);
     }
 
     private static async Task<(Guid PlayerId, HashSet<Guid> AssignmentIds)> SeedPreviousDayAsync(
