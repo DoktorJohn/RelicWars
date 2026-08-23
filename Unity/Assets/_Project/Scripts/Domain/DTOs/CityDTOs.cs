@@ -77,7 +77,7 @@ namespace Project.Network.Models
         public ResourceOverviewDTO Stone;
         public ResourceOverviewDTO Metal;
         public CoinsBreakdownDTO CoinsProduction;
-        public ProductionBreakdownDTO ResearchProduction;
+        public ResearchPowerBreakdownDTO ResearchPower;
         public ProductionBreakdownDTO IdeologyProduction;
         public PopulationBreakdownDTO Population;
         public double Resistance;
@@ -111,6 +111,15 @@ namespace Project.Network.Models
         public double BuildingBonus;
         public double GlobalModifierMultiplier;
         public double FinalValuePerHour;
+    }
+
+    [Serializable]
+    public class ResearchPowerBreakdownDTO
+    {
+        public double BaseResearchPower;
+        public double FlatBonus;
+        public double PercentageBonus;
+        public double EffectiveResearchPower;
     }
 
     [Serializable]
@@ -167,7 +176,6 @@ namespace Project.Network.Models
         public double CurrentStoneAmount;
         public double CurrentMetalAmount;
         public double CurrentCoinsAmount;
-        public double CurrentResearchPoints;
         public double CurrentIdeologyFocusPoints;
 
         public double MaxWoodCapacity; 
@@ -180,7 +188,7 @@ namespace Project.Network.Models
         public double CoinsProductionPerHour;
         public double UnitUpkeepPerHour;
         public double BuildingUpkeepPerHour;
-        public double ResearchPointsPerHour;
+        public double ResearchPower;
         public double IdeologyFocusPointsPerHour;
 
         public int CurrentPopulationUsage;

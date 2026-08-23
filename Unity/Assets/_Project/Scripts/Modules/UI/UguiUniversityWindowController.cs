@@ -2,6 +2,7 @@ using Project.Network.Manager;
 using Project.Scripts.Domain.DTOs;
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using TMPro;
 using UnityEngine;
@@ -89,12 +90,12 @@ namespace Project.Modules.UI
         private static void BindRow(Transform row, UniversityInfoDTO level)
         {
             TMP_Text levelText = FindComponent<TMP_Text>(row, "LevelText");
-            TMP_Text bonusText = FindComponent<TMP_Text>(row, "BonusText");
+            TMP_Text researchPowerText = FindComponent<TMP_Text>(row, "ResearchPowerText");
             SetText(levelText, level.Level.ToString("N0"));
-            SetText(bonusText, $"+{level.ProductionPerHour:N0}");
+            SetText(researchPowerText, level.ResearchPower.ToString("F2", CultureInfo.InvariantCulture));
 
             SetBold(levelText, level.IsCurrentLevel);
-            SetBold(bonusText, level.IsCurrentLevel);
+            SetBold(researchPowerText, level.IsCurrentLevel);
             SetActive(FindTransform(row, "Background Highlit")?.gameObject, level.IsCurrentLevel);
         }
 

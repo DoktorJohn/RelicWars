@@ -1,10 +1,12 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using Assets.Scripts.Domain.Enums;
 using Assets.Scripts.Domain.State;
 using Project.Modules.City;
 using Project.Modules.WorldPlayer;
+using Project.Network.Manager;
 using Project.Network.Models;
 using TMPro;
 using UnityEngine;
@@ -79,6 +81,12 @@ namespace Project.Modules.UI
         [SerializeField] private ExoticTooltipBinding[] exoticTooltipBindings;
 
         private CityTopBarResourceType? _visibleResourceType;
+        private CoinsBreakdownDTO _coinsBreakdown;
+        private Guid _coinsBreakdownCityId;
+        private Guid _coinsBreakdownRequestCityId;
+        private Coroutine _coinsBreakdownRequestCoroutine;
+        private int _coinsBreakdownRequestVersion;
+        private bool _coinsBreakdownRequestInFlight;
 
         private void InitializeResourceTooltips()
         {
@@ -100,6 +108,7 @@ namespace Project.Modules.UI
 
         private void CleanupResourceTooltips()
         {
+            InvalidateCoinsBreakdownRequest();
             if (resourceViews == null) return;
 
             foreach (CityTopBarResourceView view in resourceViews)
@@ -117,6 +126,10 @@ namespace Project.Modules.UI
             if (ResponsiveUiStateManager.IsPhoneLayout) return;
 
             _visibleResourceType = view.ResourceType;
+            if (view.ResourceType == CityTopBarResourceType.Coins)
+            {
+                RefreshCoinsBreakdownForActiveCity();
+            }
             RefreshVisibleResourceTooltip();
         }
 
@@ -149,6 +162,10 @@ namespace Project.Modules.UI
             HideCitySelectorPopup();
             HideResourceTooltips();
             _visibleResourceType = view.ResourceType;
+            if (view.ResourceType == CityTopBarResourceType.Coins)
+            {
+                RefreshCoinsBreakdownForActiveCity();
+            }
             RefreshVisibleResourceTooltip();
 
             RectTransform tooltip = GetVisibleTooltip();
@@ -191,14 +208,29 @@ namespace Project.Modules.UI
                 return;
             }
 
+            if (_visibleResourceType == CityTopBarResourceType.Research)
+            {
+                double basePower = playerState?.BaseResearchPower ?? 0d;
+                double effectivePower = playerState?.EffectiveResearchPower ?? 0d;
+                double speed = playerState?.ResearchSpeedMultiplier ?? 0d;
+                SetText(researchProductionInCityLabel, $"<b>RESEARCH POWER FROM CITY</b>\n{cityState.ResearchPower:F2}");
+                SetText(researchEmpireProductionLabel, $"<b>BASE EMPIRE RESEARCH POWER</b>\n{basePower:F2}");
+                SetText(researchEmpireStockpileLabel, $"<b>EFFECTIVE EMPIRE RESEARCH POWER</b>\n{effectivePower:F2} ({speed:F2}x)");
+                return;
+            }
+
+            if (_visibleResourceType == CityTopBarResourceType.Coins)
+            {
+                RenderCoinsTooltip(playerState);
+                return;
+            }
+
             (string name, double amount, double capacity, double cityProduction, double totalProduction, double playerTotal, bool stored) =
                 _visibleResourceType.Value switch
                 {
                     CityTopBarResourceType.Wood => ("WOOD", cityState.WoodAmount, cityState.WoodMaxCapacity, cityState.WoodProductionPerHour, cityState.WoodProductionPerHour, playerState?.TotalWoodAmount ?? 0d, true),
                     CityTopBarResourceType.Stone => ("STONE", cityState.StoneAmount, cityState.StoneMaxCapacity, cityState.StoneProductionPerHour, cityState.StoneProductionPerHour, playerState?.TotalStoneAmount ?? 0d, true),
                     CityTopBarResourceType.Metal => ("METAL", cityState.MetalAmount, cityState.MetalMaxCapacity, cityState.MetalProductionPerHour, cityState.MetalProductionPerHour, playerState?.TotalMetalAmount ?? 0d, true),
-                    CityTopBarResourceType.Coins => ("GOLD", 0d, 0d, cityState.CoinsProductionPerHour, playerState?.CoinsProductionPerHour ?? 0d, playerState?.CoinsAmount ?? 0d, false),
-                    CityTopBarResourceType.Research => ("RESEARCH", 0d, 0d, cityState.ResearchPointsPerHour, playerState?.ResearchPointsProductionPerHour ?? 0d, playerState?.ResearchPointsAmount ?? 0d, false),
                     _ => ("IDEOLOGY", 0d, 0d, cityState.IdeologyFocusPointsPerHour, playerState?.IdeologyFocusPointsProductionPerHour ?? 0d, playerState?.IdeologyFocusPointsAmount ?? 0d, false)
                 };
 
@@ -229,25 +261,6 @@ namespace Project.Modules.UI
                 return;
             }
 
-            if (_visibleResourceType == CityTopBarResourceType.Coins)
-            {
-                double expenditure = cityState.UnitUpkeepPerHour + cityState.BuildingUpkeepPerHour;
-                SetText(coinsProductionInCityLabel, $"<b>PRODUCTION / HOUR IN CITY</b>\n{FormatProductionValue(cityProduction)}/hr");
-                SetText(coinsExpenditureInCityLabel, $"<b>EXPENDITURE / HOUR IN CITY</b>\n-{expenditure:N1}/hr");
-                SetText(coinsNetInCityLabel, $"<b>NET / HOUR IN CITY</b>\n{FormatProductionValue(cityProduction)}/hr");
-                SetText(coinsEmpireNetLabel, $"<b>TOTAL EMPIRE NET / HOUR</b>\n{FormatProductionValue(totalProduction)}/hr");
-                SetText(coinsEmpireStockpileLabel, $"<b>TOTAL EMPIRE STOCKPILE</b>\n{Math.Floor(playerTotal):N0}");
-                return;
-            }
-
-            if (_visibleResourceType == CityTopBarResourceType.Research)
-            {
-                SetText(researchProductionInCityLabel, $"<b>PRODUCTION / HOUR FROM CITY</b>\n{FormatProductionValue(cityProduction)}/hr");
-                SetText(researchEmpireProductionLabel, $"<b>EMPIRE PRODUCTION / HOUR</b>\n{FormatProductionValue(totalProduction)}/hr");
-                SetText(researchEmpireStockpileLabel, $"<b>TOTAL EMPIRE STOCKPILE</b>\n{Math.Floor(playerTotal):N0}");
-                return;
-            }
-
             if (_visibleResourceType == CityTopBarResourceType.Ideology)
             {
                 SetText(ideologyProductionInCityLabel, $"<b>PRODUCTION / HOUR FROM CITY</b>\n{FormatProductionValue(cityProduction)}/hr");
@@ -268,6 +281,116 @@ namespace Project.Modules.UI
             SetText(standardResourceTimeToCapacityLabel, FormatTimeToCapacity(amount, capacity, cityProduction));
             SetText(standardResourcePlayerTotalLabel, Math.Floor(playerTotal).ToString("N0"));
             if (standardResourceCapacityRow != null) standardResourceCapacityRow.SetActive(stored);
+        }
+
+        private void RefreshCoinsBreakdownForActiveCity()
+        {
+            NetworkManager network = NetworkManager.Instance;
+            Guid cityId = network?.ActiveCityId ?? Guid.Empty;
+            if (network?.City == null || cityId == Guid.Empty)
+            {
+                InvalidateCoinsBreakdownRequest();
+                _coinsBreakdown = null;
+                _coinsBreakdownCityId = Guid.Empty;
+                return;
+            }
+
+            if (_coinsBreakdownCityId != cityId)
+            {
+                _coinsBreakdown = null;
+                _coinsBreakdownCityId = Guid.Empty;
+            }
+
+            if (_coinsBreakdownRequestInFlight && _coinsBreakdownRequestCityId == cityId)
+            {
+                return;
+            }
+
+            InvalidateCoinsBreakdownRequest();
+            int version = _coinsBreakdownRequestVersion;
+            _coinsBreakdownRequestInFlight = true;
+            _coinsBreakdownRequestCityId = cityId;
+            _coinsBreakdownRequestCoroutine = StartCoroutine(
+                ExecuteCoinsBreakdownRequest(network, cityId, version));
+        }
+
+        private IEnumerator ExecuteCoinsBreakdownRequest(NetworkManager network, Guid cityId, int version)
+        {
+            CityOverviewHUDDTO overview = null;
+            yield return StartCoroutine(network.City.GetCityOverviewHUD(
+                cityId,
+                network.JwtToken,
+                response => overview = response));
+
+            if (version != _coinsBreakdownRequestVersion)
+            {
+                yield break;
+            }
+
+            _coinsBreakdownRequestCoroutine = null;
+            _coinsBreakdownRequestInFlight = false;
+            _coinsBreakdownRequestCityId = Guid.Empty;
+
+            if (!isActiveAndEnabled || (NetworkManager.Instance?.ActiveCityId ?? Guid.Empty) != cityId)
+            {
+                RefreshVisibleResourceTooltip();
+                yield break;
+            }
+
+            if (overview?.CoinsProduction != null)
+            {
+                _coinsBreakdown = overview.CoinsProduction;
+                _coinsBreakdownCityId = cityId;
+            }
+
+            RefreshVisibleResourceTooltip();
+        }
+
+        private void InvalidateCoinsBreakdownRequest()
+        {
+            _coinsBreakdownRequestVersion++;
+            if (_coinsBreakdownRequestCoroutine != null)
+            {
+                StopCoroutine(_coinsBreakdownRequestCoroutine);
+                _coinsBreakdownRequestCoroutine = null;
+            }
+
+            _coinsBreakdownRequestInFlight = false;
+            _coinsBreakdownRequestCityId = Guid.Empty;
+        }
+
+        private void RenderCoinsTooltip(WorldPlayerState playerState)
+        {
+            Guid activeCityId = NetworkManager.Instance?.ActiveCityId ?? Guid.Empty;
+            bool hasCurrentBreakdown = activeCityId != Guid.Empty &&
+                                       _coinsBreakdownCityId == activeCityId &&
+                                       _coinsBreakdown != null;
+
+            if (hasCurrentBreakdown)
+            {
+                double production = _coinsBreakdown.FinalValuePerHour;
+                double expenditure = _coinsBreakdown.Expenditure;
+                double net = production - expenditure;
+                SetText(coinsProductionInCityLabel, $"<b>PRODUCTION / HOUR IN CITY</b>\n{FormatProductionValue(production)}/hr");
+                SetText(coinsExpenditureInCityLabel, $"<b>EXPENDITURE / HOUR IN CITY</b>\n-{Math.Abs(expenditure):N1}/hr");
+                SetText(coinsNetInCityLabel, $"<b>NET / HOUR IN CITY</b>\n{FormatProductionValue(net)}/hr");
+            }
+            else
+            {
+                string state = _coinsBreakdownRequestInFlight && _coinsBreakdownRequestCityId == activeCityId
+                    ? "Loading..."
+                    : "Unavailable";
+                SetText(coinsProductionInCityLabel, $"<b>PRODUCTION / HOUR IN CITY</b>\n{state}");
+                SetText(coinsExpenditureInCityLabel, $"<b>EXPENDITURE / HOUR IN CITY</b>\n{state}");
+                SetText(coinsNetInCityLabel, $"<b>NET / HOUR IN CITY</b>\n{state}");
+            }
+
+            SetText(
+                coinsEmpireNetLabel,
+                $"<b>TOTAL EMPIRE NET / HOUR</b>\n{FormatProductionValue(playerState?.CoinsProductionPerHour ?? 0d)}/hr");
+            SetText(
+                coinsEmpireStockpileLabel,
+                $"<b>TOTAL EMPIRE STOCKPILE</b>\n{Math.Floor(playerState?.CoinsAmount ?? 0d):N0}");
         }
 
         private void RefreshExoticResourcesSection()

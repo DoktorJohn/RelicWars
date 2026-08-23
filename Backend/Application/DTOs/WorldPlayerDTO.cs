@@ -27,10 +27,9 @@ namespace Application.DTOs
     {
         public Guid WorldPlayerId { get; set; }
         public double CurrentCoinsAmount { get; set; }
-        public double CurrentResearchPoints { get; set; }
         public double CurrentIdeologyFocusPoints { get; set; }
         public double CoinsProductionPerHour { get; set; }
-        public double ResearchPointsPerHour { get; set; }
+        public ResearchRateDTO ResearchRate { get; set; } = new(0, 0, 0);
         public double IdeologyFocusPointsPerHour { get; set; }
         public double TotalWoodAmount { get; set; }
         public double TotalStoneAmount { get; set; }

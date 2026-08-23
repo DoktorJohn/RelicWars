@@ -33,7 +33,7 @@ RectTransform:
   m_Father: {fileID: 5071793223320979915}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
-  m_AnchorMax: {x: 1, y: 1}
+  m_AnchorMax: {x: 0, y: 0}
   m_AnchoredPosition: {x: 0, y: -0.269989}
   m_SizeDelta: {x: 20, y: 16.34}
   m_Pivot: {x: 0.5, y: 0.5}
@@ -4760,7 +4760,6 @@ GameObject:
   - component: {fileID: 5802042993849042633}
   - component: {fileID: 6354927668077118190}
   - component: {fileID: 1385657981975572534}
-  - component: {fileID: 3703198842163209544}
   - component: {fileID: 848741459142212435}
   - component: {fileID: 6107203029279372300}
   - component: {fileID: 1501627653315306597}
@@ -4770,7 +4769,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &5802042993849042633
 RectTransform:
   m_ObjectHideFlags: 0
@@ -4830,32 +4829,6 @@ MonoBehaviour:
   m_ChildScaleWidth: 0
   m_ChildScaleHeight: 0
   m_ReverseArrangement: 0
---- !u!114 &3703198842163209544
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 4414355831391912443}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: ba263e39e0d0436ca745cf0d0ab95f59, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  myHighlightButton: {fileID: 7212673150714711010}
-  cityNameTMP: {fileID: 0}
-  provinceNameTMP: {fileID: 649489253561272574}
-  populationTMP: {fileID: 0}
-  growthTMP: {fileID: 0}
-  taxTMP: {fileID: 0}
-  taxCapitaTMP: {fileID: 0}
-  moodTMP: {fileID: 0}
-  cityPictureImage: {fileID: 0}
-  moodSmileyImage: {fileID: 0}
-  defaultTextColor: {r: 0.03773582, g: 0.036845826, b: 0.036845826, a: 1}
-  greenPositiveTextColor: {r: 0.1764706, g: 0.5372549, b: 0.043137256, a: 1}
-  redNegativeColor: {r: 0.69803923, g: 0.09411765, b: 0.101960786, a: 1}
-  monoSpaceSpacingForNumbers: 0.5
 --- !u!114 &848741459142212435
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -5724,7 +5697,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!224 &8016660426973891768
 RectTransform:
   m_ObjectHideFlags: 0
@@ -8056,6 +8029,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 5349453082841285097}
+  - component: {fileID: 9012345678901234001}
   m_Layer: 0
   m_Name: PremiumOverview
   m_TagString: Untagged
@@ -8087,6 +8061,22 @@ RectTransform:
   m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 1300, y: 900}
   m_Pivot: {x: 0.5, y: 0.5}
+--- !u!114 &9012345678901234001
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7155187061749930122}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f5457b3a6033433590d1300df0409c9c, type: 3}
+  m_Name:
+  m_EditorClassIdentifier:
+  miniUnitCardPrefab: {fileID: 1886878386489301569, guid: a1874f2e75f5954448e55012bf6ef2bb, type: 3}
+  unitIconCatalog: {fileID: 11400000, guid: 3b4c4f6caab646b1919ae0f62ecbc7ec, type: 2}
+  attackCommandSprite: {fileID: 21300000, guid: 234c6210bf22c1744a7fe101dd8b97e6, type: 3}
+  supportCommandSprite: {fileID: 21300000, guid: 1c1590ca1ec5dc94aa3dbcea4924cfa7, type: 3}
 --- !u!1 &7326219081078963487
 GameObject:
   m_ObjectHideFlags: 0

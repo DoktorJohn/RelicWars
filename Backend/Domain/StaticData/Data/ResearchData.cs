@@ -9,16 +9,18 @@ using System.Threading.Tasks;
 
 namespace Domain.StaticData.Data
 {
-    public enum ResearchEffectType
+    public enum ResearchPrerequisiteRule
     {
-        UnitRecruitment,
-        Subjugation
+        Start,
+        RequiresAll,
+        RequiresAny
     }
 
-    public class ResearchEffectData
+    public enum ResearchNodeKind
     {
-        public ResearchEffectType Type { get; set; }
-        public UnitTypeEnum? UnitType { get; set; }
+        Origin,
+        Notable,
+        Keystone
     }
 
     public class ResearchData : IModifierProvider
@@ -31,12 +33,16 @@ namespace Domain.StaticData.Data
         // Lænken: Hvilken research skal være færdig før denne kan startes?
         public string? ParentId { get; set; }
 
-        // Global cost paid from the WorldPlayer's research-point balance.
-        public double ResearchPointCost { get; set; }
+        // The authored tree may contain more than one prerequisite. ParentId remains
+        // as a compatibility field for the existing single-parent research flow.
+        public List<string> PrerequisiteIds { get; set; } = new();
+        public ResearchPrerequisiteRule PrerequisiteRule { get; set; } = ResearchPrerequisiteRule.Start;
+        public int Tier { get; set; }
+        public ResearchNodeKind NodeKind { get; set; } = ResearchNodeKind.Notable;
+        public bool IsResearchable { get; set; } = true;
 
+        // Work required to complete the research at a 1.00x speed multiplier.
         public int ResearchTimeInSeconds { get; set; }
-
-        public List<ResearchEffectData> Effects { get; set; } = new();
 
         // Bonussen (Dette skal din motor læse når den beregner produktion/kamp)
         public List<Modifier> ModifiersInternal { get; set; } = new();

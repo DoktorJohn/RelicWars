@@ -23,4 +23,9 @@
     <PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
   </ItemGroup>
 
+  <ItemGroup>
+    <EmbeddedResource Include="StaticData\Defaults\research.json"
+                      LogicalName="Domain.StaticData.Defaults.research.json" />
+  </ItemGroup>
+
 </Project>

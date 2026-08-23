@@ -165,6 +165,20 @@ namespace Infrastructure.Repositories
                 .ToListAsync();
         }
 
+        public Task<List<City>> GetForRankingSnapshotAsync(CancellationToken cancellationToken = default)
+        {
+            return _context.Cities
+                .AsNoTracking()
+                .AsSplitQuery()
+                .Where(city => city.WorldPlayer != null)
+                .Include(city => city.Buildings)
+                .Include(city => city.WorldPlayer)
+                    .ThenInclude(worldPlayer => worldPlayer!.PlayerProfile)
+                .Include(city => city.WorldPlayer)
+                    .ThenInclude(worldPlayer => worldPlayer!.Alliance)
+                .ToListAsync(cancellationToken);
+        }
+
         public Task<List<City>> GetNPCsForBuildingAutomationAsync()
         {
             return _context.Cities

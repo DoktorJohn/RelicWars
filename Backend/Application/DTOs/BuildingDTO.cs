@@ -34,7 +34,7 @@ namespace Application.DTOs
     public class UniversityInfoDTO
     {
         public int Level { get; set; }
-        public int ProductionPerHour { get; set; }
+        public double ResearchPower { get; set; }
         public bool IsCurrentLevel { get; set; }
     }
 

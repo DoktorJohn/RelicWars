@@ -30,7 +30,7 @@ namespace Project.Scripts.Domain.DTOs
     public class UniversityInfoDTO
     {
         public int Level;
-        public int ProductionPerHour;
+        public double ResearchPower;
         public bool IsCurrentLevel;
     }
 

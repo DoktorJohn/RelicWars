@@ -186,7 +186,7 @@ public class BuildingServiceTests
         public CityResourceSnapshot CalculateCityResources(City city, DateTime currentDateTime) =>
             new(city.Wood, city.Stone, city.Metal, 0, 0, 0, currentDateTime);
 
-        public CityProductionSnapshot CalculateCityProduction(WorldPlayer player, City city) => new(0, 0, 0);
+        public CityProductionSnapshot CalculateCityProduction(WorldPlayer player, City city) => new(0, 0);
 
         public GlobalResourceSnapshot CalculateGlobalResources(WorldPlayer player, DateTime currentDateTime) =>
             throw new NotSupportedException();

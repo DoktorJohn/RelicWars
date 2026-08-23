@@ -10,7 +10,6 @@ namespace Assets._Project.Scripts.Domain.Enums
     {
         Economy,
         War,
-        Utility,
-        Unlocks,
+        Utility
     }
 }

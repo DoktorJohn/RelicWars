@@ -22,7 +22,7 @@ namespace Assets._Project.Scripts.Modules.UI
 
             if (WorldPlayerStateManager.Instance != null)
             {
-                WorldPlayerStateManager.Instance.DeductResourcesLocally(0, 0, pointCost);
+                WorldPlayerStateManager.Instance.DeductResourcesLocally(0, pointCost);
             }
 
             var requestDto = new IdeologyFocusRequestDTO
@@ -60,7 +60,7 @@ namespace Assets._Project.Scripts.Modules.UI
                 {
                     if (WorldPlayerStateManager.Instance != null)
                     {
-                        WorldPlayerStateManager.Instance.DeductResourcesLocally(0, 0, -pointCost);
+                        WorldPlayerStateManager.Instance.DeductResourcesLocally(0, -pointCost);
                     }
 
                     Debug.LogError($"[IdeologyWindow] Enact failed: {result?.Message}");

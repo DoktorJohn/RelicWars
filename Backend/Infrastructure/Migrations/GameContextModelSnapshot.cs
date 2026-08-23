@@ -1169,9 +1169,6 @@ namespace Infrastructure.Migrations
                     b.Property<Guid>("PlayerProfileId")
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<double>("ResearchPoints")
-                        .HasColumnType("float");
-
                     b.Property<Guid>("WorldId")
                         .HasColumnType("uniqueidentifier");
 
@@ -1346,9 +1343,21 @@ namespace Infrastructure.Migrations
                 {
                     b.HasBaseType("Domain.Workers.Abstraction.BaseJob");
 
+                    b.Property<double>("AppliedSpeedMultiplier")
+                        .HasColumnType("float");
+
+                    b.Property<DateTime>("LastProgressAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<double>("RemainingWorkSeconds")
+                        .HasColumnType("float");
+
                     b.Property<string>("ResearchId")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
+
+                    b.Property<double>("TotalWorkSeconds")
+                        .HasColumnType("float");
 
                     b.HasDiscriminator().HasValue("Research");
                 });

@@ -69,6 +69,12 @@ internal static class TestData
         return new ModifierService(NullLogger<ModifierService>.Instance, collector);
     }
 
+    public static ResearchRateCalculator ResearchRateCalculator()
+    {
+        var modifierService = ModifierService(out var collector);
+        return new ResearchRateCalculator(BuildingReader(), FocusReader(), collector, modifierService);
+    }
+
     public static City CityWithFocus(IdeologyFocusNameEnum focusName)
     {
         var player = new WorldPlayer

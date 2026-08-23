@@ -423,8 +423,7 @@ namespace Domain.StaticData.Generators
                     MetalCost = data.metal,
                     UpkeepCost = data.upkeep, // Upkeep tilføjet her
 
-                    // Basal forskningsproduktion pr. niveau
-                    ProductionPerHour = currentLvl * 2
+                    ResearchPower = 1d + (0.06d * (currentLvl - 1))
                 };
 
                 // University påvirker forskningshastighed og låser op for teknologier

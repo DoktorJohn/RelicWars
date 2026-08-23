@@ -115,6 +115,34 @@ public class JobServiceReportTests
         Assert.Empty(setup.Reports.AddedReports);
     }
 
+    [Fact]
+    public async Task ProcessAsync_ResearchCompletionIsPersistedOnlyOnce()
+    {
+        var setup = CreateSetup();
+        setup.City.Buildings.Add(new Building
+        {
+            Type = BuildingTypeEnum.University,
+            Level = 1,
+            City = setup.City,
+            CityId = setup.City.Id
+        });
+        var progress = new ResearchProgressService(TestData.ResearchRateCalculator());
+        var job = new ResearchJob
+        {
+            Id = Guid.NewGuid(),
+            WorldPlayerId = setup.Player.Id,
+            ResearchId = "MIL_n1002"
+        };
+        progress.Initialize(job, setup.Player, 60d, TestData.Now.AddSeconds(-60));
+
+        await setup.Service.ProcessAsync(job);
+        await setup.Service.ProcessAsync(job);
+
+        Research completed = Assert.Single(setup.Player.CompletedResearches);
+        Assert.Equal(job.ResearchId, completed.ResearchId);
+        Assert.Equal(TestData.Now, completed.CompletedAt);
+    }
+
     private static Setup CreateSetup()
     {
         var player = new WorldPlayer
@@ -141,9 +169,12 @@ public class JobServiceReportTests
             new NoOpResourceService(),
             new MemoryCityRepository(city),
             NullLogger<JobService>.Instance,
-            new NoOpWorldPlayerRepository(),
+            new MemoryWorldPlayerRepository(player),
             new NoOpWorldPlayerService(),
-            new CityPointCalculator(TestData.BuildingReader()));
+            new CityPointCalculator(TestData.BuildingReader()),
+            new EmptyJobRepository(),
+            new ResearchProgressService(TestData.ResearchRateCalculator()),
+            new FixedTimeProvider(TestData.Now));
 
         return new Setup(service, reports, player, city);
     }
@@ -196,9 +227,9 @@ public class JobServiceReportTests
         public CityResourceSnapshot CalculateCityResources(City cityEntity, DateTime currentDateTime) =>
             new CityResourceSnapshot(cityEntity.Wood, cityEntity.Stone, cityEntity.Metal, 0, 0, 0, currentDateTime);
 
-        public CityProductionSnapshot CalculateCityProduction(WorldPlayer playerEntity, City cityEntity) => new(0, 0, 0);
+        public CityProductionSnapshot CalculateCityProduction(WorldPlayer playerEntity, City cityEntity) => new(0, 0);
 
         public GlobalResourceSnapshot CalculateGlobalResources(WorldPlayer playerEntity, DateTime currentDateTime) =>
-            new GlobalResourceSnapshot(0, 0, 0, 0, 0, 0, currentDateTime);
+            new GlobalResourceSnapshot(0, 0, 0, 0, currentDateTime);
     }
 }

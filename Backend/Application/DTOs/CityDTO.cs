@@ -55,7 +55,7 @@ namespace Application.DTOs
         public double CoinsProductionPerHour { get; set; }
         public double UnitUpkeepPerHour { get; set; }
         public double BuildingUpkeepPerHour { get; set; }
-        public double ResearchPointsPerHour { get; set; }
+        public double ResearchPower { get; set; }
         public double IdeologyFocusPointsPerHour { get; set; }
 
         public int CurrentPopulationUsage { get; set; }
@@ -103,7 +103,7 @@ namespace Application.DTOs
 
         // 3. Produktions-detaljer (Hvor kommer tallene fra?)
         CoinsBreakdownDTO CoinsProduction,
-        ProductionBreakdownDTO ResearchProduction,
+        ResearchPowerBreakdownDTO ResearchPower,
         ProductionBreakdownDTO IdeologyProduction,
 
         // 4. Befolknings-detaljer
@@ -135,6 +135,13 @@ namespace Application.DTOs
         double BuildingBonus,          // Flade bonusser fra andre bygninger
         double GlobalModifierMultiplier, // Procentvise bonusser fra Alliance/Research (fx 1.10 for +10%)
         double FinalValuePerHour       // Det endelige tal efter alle beregninger
+    );
+
+    public record ResearchPowerBreakdownDTO(
+        double BaseResearchPower,
+        double FlatBonus,
+        double PercentageBonus,
+        double EffectiveResearchPower
     );
 
     public record CoinsBreakdownDTO(

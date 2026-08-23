@@ -41,7 +41,7 @@ namespace Domain.StaticData.Generators
                         AllianceName = city.WorldPlayer.Alliance?.Name ?? "",
                         Ideology = city.WorldPlayer.Ideology.ToString(),
                         TotalPoints = pointsCalculatedFromCity,
-                        CityCount = city.WorldPlayer.Cities.Count,
+                        CityCount = 1,
                         LastUpdated = DateTime.UtcNow
                     };
                 }

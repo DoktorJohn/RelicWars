@@ -9,29 +9,37 @@ using System.Threading.Tasks;
 
 namespace Project.Scripts.Domain.DTOs
 {
-    public enum ResearchEffectType
-    {
-        UnitRecruitment,
-        Subjugation
-    }
-
-    [Serializable]
-    public class ResearchEffectDTO
-    {
-        [JsonConverter(typeof(StringEnumConverter))]
-        public ResearchEffectType Type;
-        [JsonConverter(typeof(StringEnumConverter))]
-        public Assets.Scripts.Domain.Enums.UnitTypeEnum? UnitType;
-    }
-
     [Serializable]
     public class ResearchTreeDTO
     {
         public List<ResearchNodeDTO> Nodes;
         public ActiveResearchJobDTO ActiveJob;
-        public double CurrentResearchPoints;
+        public ResearchRateDTO ResearchRate;
+        public DateTime ServerTimeUtc;
         public bool CanStartResearch;
         public List<string> UnmetRequirements;
+    }
+
+    [Serializable]
+    public class ResearchRateDTO
+    {
+        public double BaseResearchPower;
+        public double EffectiveResearchPower;
+        public double SpeedMultiplier;
+    }
+
+    public enum ResearchPrerequisiteRule
+    {
+        Start,
+        RequiresAll,
+        RequiresAny
+    }
+
+    public enum ResearchNodeKind
+    {
+        Origin,
+        Notable,
+        Keystone
     }
 
     [Serializable]
@@ -43,13 +51,18 @@ namespace Project.Scripts.Domain.DTOs
         [JsonConverter(typeof(StringEnumConverter))]
         public ResearchTypeEnum ResearchType;
         public string ParentId;
-        public double ResearchPointCost;
+        public List<string> PrerequisiteIds;
+        [JsonConverter(typeof(StringEnumConverter))]
+        public ResearchPrerequisiteRule PrerequisiteRule;
+        public int Tier;
+        [JsonConverter(typeof(StringEnumConverter))]
+        public ResearchNodeKind NodeKind;
+        public bool IsResearchable;
         public int ResearchTimeInSeconds;
         public bool IsCompleted;
         public bool IsResearching;
         public bool IsLocked;
-        public bool CanAfford;
-        public List<ResearchEffectDTO> Effects;
+        public bool CanStart;
     }
 
     [Serializable]
@@ -57,7 +70,7 @@ namespace Project.Scripts.Domain.DTOs
     {
         public Guid JobId;
         public string ResearchId;
-        public DateTime ExpectedCompletionTime;
+        public DateTime? ExpectedCompletionTime;
         public double ProgressPercentage;
     }
 }

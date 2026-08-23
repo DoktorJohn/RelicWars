@@ -67,7 +67,7 @@ public sealed class EdictService : IEdictService
     {
         var player = city.WorldPlayer ?? throw new KeyNotFoundException("City owner was not found.");
         var global = _resources.CalculateGlobalResources(player, now);
-        player.Coins = global.CoinsAmount; player.ResearchPoints = global.ResearchPoints; player.IdeologyFocusPoints = global.IdeologyFocusPoints; player.LastResourceUpdate = now;
+        player.Coins = global.CoinsAmount; player.IdeologyFocusPoints = global.IdeologyFocusPoints; player.LastResourceUpdate = now;
         var local = _resources.CalculateCityResources(city, now);
         city.Wood = local.Wood; city.Stone = local.Stone; city.Metal = local.Metal; city.LastResourceUpdate = now;
         await _exotics.SyncCityExoticResourcesAsync(city, now);

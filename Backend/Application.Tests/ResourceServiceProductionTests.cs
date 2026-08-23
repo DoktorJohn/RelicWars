@@ -39,7 +39,7 @@ public class ResourceServiceProductionTests
     }
 
     [Fact]
-    public void CityProductionContributions_SumToGlobalProductionForAllGlobalResources()
+    public void CityProductionContributions_SumToGlobalEconomicProduction()
     {
         var player = new WorldPlayer { Id = Guid.NewGuid(), Cities = new List<City>(), LastResourceUpdate = TestData.Now };
         for (int index = 0; index < 3; index++)
@@ -53,13 +53,11 @@ public class ResourceServiceProductionTests
         var global = service.CalculateGlobalResources(player, TestData.Now);
 
         Assert.Equal(global.CoinsProductionPerHour, contributions.Sum(item => item.CoinsProductionPerHour));
-        Assert.Equal(global.ResearchPointsPerHour, contributions.Sum(item => item.ResearchPointsPerHour));
         Assert.Equal(global.IdeologyFocusPointsPerHour, contributions.Sum(item => item.IdeologyFocusPointsPerHour));
     }
 
     private static ResourceService CreateService(IModifierService modifierService) => new(
         TestData.BuildingReader(),
-        TestData.ResearchReader(),
         TestData.IdeologyReader(),
         new FixedProductionCityStatService(),
         modifierService,

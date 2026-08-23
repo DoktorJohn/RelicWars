@@ -63,13 +63,12 @@ public class RecruitmentServiceTests
             new SnapshotResourceService(),
             new NoOpWorldPlayerService(),
             new TestPlayerAccessService([setup.Player], [setup.City]),
-            new NoOpResearchService(),
             setup.UnitReader,
             TestData.BuildingReader(),
             cityStats,
             new RecruitmentTimeCalculationService(new NoOpModifierService()),
             new ImmediateTransactionManager(),
-            new UnitAvailabilityEvaluator(new UnitUnlockCatalog(setup.UnitReader, TestData.ResearchReader())));
+            new UnitAvailabilityEvaluator());
 
         var result = await service.QueueRecruitmentAsync(
             setup.Player.Id,
@@ -111,7 +110,7 @@ public class RecruitmentServiceTests
     }
 
     [Fact]
-    public async Task QueueRecruitmentAsync_RejectsLockedUnitBeforeMutation_ThenSucceedsWithBothPrerequisites()
+    public async Task QueueRecruitmentAsync_RejectsLockedUnitBeforeMutation_ThenSucceedsAtRequiredBuildingLevel()
     {
         var setup = CreateSetup(availablePopulation: 100, wood: 500, stone: 500, metal: 500);
         var initialWood = setup.City.Wood;
@@ -120,12 +119,10 @@ public class RecruitmentServiceTests
 
         Assert.False(lockedResult.Success);
         Assert.Contains("Barracks level 2", lockedResult.Message);
-        Assert.Contains("Requires Bowmen research.", lockedResult.Message);
         Assert.Equal(initialWood, setup.City.Wood);
         Assert.Empty(setup.JobRepository.AddedJobs);
 
         setup.City.Buildings.Single(building => building.Type == BuildingTypeEnum.Barracks).Level = 2;
-        setup.Player.CompletedResearches.Add(new Research { ResearchId = "UNLOCK_UNIT_BOWMEN" });
 
         var unlockedResult = await setup.Service.QueueRecruitmentAsync(setup.Player.Id, setup.City.Id, UnitTypeEnum.Bowmen, 1);
 
@@ -249,13 +246,12 @@ public class RecruitmentServiceTests
             new SnapshotResourceService(),
             new NoOpWorldPlayerService(),
             new TestPlayerAccessService([player], [city]),
-            new NoOpResearchService(),
             unitReader,
             TestData.BuildingReader(),
             cityStatService,
             new RecruitmentTimeCalculationService(new NoOpModifierService()),
             new ImmediateTransactionManager(),
-            new UnitAvailabilityEvaluator(new UnitUnlockCatalog(unitReader, TestData.ResearchReader())));
+            new UnitAvailabilityEvaluator());
 
         return new Setup(player, city, unitReader, jobRepository, cityStatService, service);
     }
@@ -307,10 +303,10 @@ public class RecruitmentServiceTests
         public CityResourceSnapshot CalculateCityResources(City cityEntity, DateTime currentDateTime) =>
             new(cityEntity.Wood, cityEntity.Stone, cityEntity.Metal, 0, 0, 0, currentDateTime);
 
-        public CityProductionSnapshot CalculateCityProduction(WorldPlayer playerEntity, City cityEntity) => new(0, 0, 0);
+        public CityProductionSnapshot CalculateCityProduction(WorldPlayer playerEntity, City cityEntity) => new(0, 0);
 
         public GlobalResourceSnapshot CalculateGlobalResources(WorldPlayer playerEntity, DateTime currentDateTime) =>
-            new(playerEntity.Coins, playerEntity.ResearchPoints, playerEntity.IdeologyFocusPoints, 0, 0, 0, currentDateTime);
+            new(playerEntity.Coins, playerEntity.IdeologyFocusPoints, 0, 0, currentDateTime);
     }
 
     private sealed class NoOpWorldPlayerService : IWorldPlayerService
@@ -322,14 +318,6 @@ public class RecruitmentServiceTests
         public Task<List<PlayerSearchResultDTO>> SearchPlayersAsync(Guid worldId, string query) => throw new NotImplementedException();
         public void SyncGlobalResources(WorldPlayer player, DateTime currentDateTime) { }
         public Task<WorldPlayerSelectIdeologyResponse> SelectIdeology(SelectIdeologyRequest request) => throw new NotImplementedException();
-    }
-
-    private sealed class NoOpResearchService : IResearchService
-    {
-        public Task<BuildingResult> QueueResearchAsync(Guid userId, string researchId) => throw new NotImplementedException();
-        public Task<BuildingResult> CancelResearchAsync(Guid userId, Guid jobId) => throw new NotImplementedException();
-        public Task<List<Modifier>> GetUserResearchModifiersAsync(Guid userId) => Task.FromResult(new List<Modifier>());
-        public Task<ResearchTreeDTO> GetResearchTreeAsync(Guid userId) => throw new NotImplementedException();
     }
 
     private sealed class NoOpModifierService : IModifierService

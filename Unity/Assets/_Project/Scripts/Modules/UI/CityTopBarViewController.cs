@@ -1,7 +1,6 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Linq;
 using Assets.Scripts.Domain.State;
 using Project.Modules.City;
 using Project.Modules.WorldPlayer;
@@ -34,6 +33,8 @@ namespace Project.Modules.UI
         [Header("Actions")]
         [SerializeField] private Button inventoryButton;
         [SerializeField] private Button administrationButton;
+        [SerializeField] private Button premiumButton;
+        [SerializeField] private GameObject premiumOverviewPrefab;
         [SerializeField] private IconTextSidebarButton logoutButton;
 
         [Header("Status")]
@@ -42,12 +43,10 @@ namespace Project.Modules.UI
 
         private readonly Dictionary<CityTopBarResourceType, CityTopBarResourceView> _resourceViewLookup = new();
         private Coroutine _timeUpdateCoroutine;
+        private Coroutine _stateManagerBindingCoroutine;
         private List<CityDTO> _playerCities = new();
-
-        private void Awake()
-        {
-            BindAuthoredTopSection();
-        }
+        private CityStateManager _boundCityStateManager;
+        private WorldPlayerStateManager _boundWorldPlayerStateManager;
 
         private void OnEnable()
         {
@@ -60,95 +59,69 @@ namespace Project.Modules.UI
             SceneManager.activeSceneChanged += HandleActiveSceneChanged;
             ApplyLayout(ResponsiveUiStateManager.CurrentSnapshot);
 
-            if (CityStateManager.Instance != null)
-            {
-                CityStateManager.Instance.OnResourceStateChanged += HandleCityResourceStateChanged;
-                CityStateManager.Instance.OnCityNameChanged += HandleCityNameChanged;
-                UpdateCityUserInterfaceLabels(CityStateManager.Instance.CurrentResources);
-                UpdateCapacityIndicators(CityStateManager.Instance.CurrentResources);
-
-                if (!string.IsNullOrEmpty(CityStateManager.Instance.CurrentCityName))
-                {
-                    UpdateCitySelectorLabel(CityStateManager.Instance.CurrentCityName);
-                }
-            }
-
-            if (WorldPlayerStateManager.Instance != null)
-            {
-                WorldPlayerStateManager.Instance.OnEconomyStateChanged += HandleWorldPlayerEconomyStateChanged;
-                if (WorldPlayerStateManager.Instance.CurrentEconomy != null)
-                {
-                    HandleWorldPlayerEconomyStateChanged(WorldPlayerStateManager.Instance.CurrentEconomy);
-                }
-            }
+            RefreshStateManagerBindings();
+            _stateManagerBindingCoroutine = StartCoroutine(MonitorStateManagerBindings());
 
             if (_timeUpdateCoroutine != null) StopCoroutine(_timeUpdateCoroutine);
             _timeUpdateCoroutine = StartCoroutine(UpdateServerTimeRoutine());
         }
 
-        private void BindAuthoredTopSection()
+        private IEnumerator MonitorStateManagerBindings()
         {
-            canvas ??= GetComponentInParent<Canvas>();
-            if (canvas == null)
+            var waitInstruction = new WaitForSecondsRealtime(0.25f);
+            while (true)
             {
-                canvas = gameObject.scene.GetRootGameObjects()
-                    .SelectMany(root => root.GetComponentsInChildren<Canvas>(true))
-                    .FirstOrDefault();
-            }
-
-            if (canvas == null) return;
-
-            RectTransform[] rects = canvas.GetComponentsInChildren<RectTransform>(true);
-            desktopRoot ??= rects.FirstOrDefault(rect => rect.name == "Top Section");
-            safeAreaRoot ??= canvas != null ? canvas.transform as RectTransform : null;
-            primaryRow ??= desktopRoot;
-            resourceStrip ??= rects.FirstOrDefault(rect => rect.name == "Horizontal Box");
-            logoutButton ??= canvas.GetComponentsInChildren<IconTextSidebarButton>(true)
-                .FirstOrDefault(button => button.name == "Logout");
-
-            if (serverTimeLabel == null)
-            {
-                serverTimeLabel = GetComponentsInChildren<TMP_Text>(true)
-                    .FirstOrDefault(label => label.name == "Turn TMP");
-            }
-
-            if (resourceViews == null || resourceViews.Length == 0)
-            {
-                BindAuthoredResourceViews(rects);
+                RefreshStateManagerBindings();
+                yield return waitInstruction;
             }
         }
 
-        private void BindAuthoredResourceViews(IEnumerable<RectTransform> rects)
+        private void RefreshStateManagerBindings()
         {
-            Dictionary<string, CityTopBarResourceType> types = new(StringComparer.Ordinal)
+            CityStateManager cityStateManager = CityStateManager.Instance;
+            if (_boundCityStateManager != cityStateManager)
             {
-                ["Gold coins"] = CityTopBarResourceType.Coins,
-                ["Population"] = CityTopBarResourceType.Population,
-                ["Wood"] = CityTopBarResourceType.Wood,
-                ["Stone"] = CityTopBarResourceType.Stone,
-                ["Metal"] = CityTopBarResourceType.Metal,
-                ["Research"] = CityTopBarResourceType.Research,
-                ["Focus"] = CityTopBarResourceType.Ideology,
-                ["Exotic resources"] = CityTopBarResourceType.Exotic
-            };
+                if (_boundCityStateManager != null)
+                {
+                    _boundCityStateManager.OnResourceStateChanged -= HandleCityResourceStateChanged;
+                    _boundCityStateManager.OnCityNameChanged -= HandleCityNameChanged;
+                }
 
-            RectTransform[] fields = rects
-                .Where(rect => types.ContainsKey(rect.name))
-                .OrderBy(rect => rect.GetSiblingIndex())
-                .ToArray();
+                _boundCityStateManager = cityStateManager;
 
-            resourceViews = fields.Select(field =>
+                if (_boundCityStateManager != null)
+                {
+                    _boundCityStateManager.OnResourceStateChanged += HandleCityResourceStateChanged;
+                    _boundCityStateManager.OnCityNameChanged += HandleCityNameChanged;
+                    UpdateCityUserInterfaceLabels(_boundCityStateManager.CurrentResources);
+                    UpdateCapacityIndicators(_boundCityStateManager.CurrentResources);
+
+                    if (!string.IsNullOrEmpty(_boundCityStateManager.CurrentCityName))
+                    {
+                        UpdateCitySelectorLabel(_boundCityStateManager.CurrentCityName);
+                    }
+                }
+            }
+
+            WorldPlayerStateManager worldPlayerStateManager = WorldPlayerStateManager.Instance;
+            if (_boundWorldPlayerStateManager != worldPlayerStateManager)
             {
-                CityTopBarResourceView view = field.GetComponent<CityTopBarResourceView>()
-                    ?? field.gameObject.AddComponent<CityTopBarResourceView>();
-                Image icon = field.GetComponentsInChildren<Image>(true)
-                    .FirstOrDefault(image => image.name == "Icon");
-                TMP_Text[] labels = field.GetComponentsInChildren<TMP_Text>(true);
-                TMP_Text amount = labels.FirstOrDefault(label => label.name == "Text (TMP)");
-                TMP_Text production = labels.FirstOrDefault(label => label.name == "Text (TMP) (1)");
-                view.Configure(types[field.name], icon, amount, production);
-                return view;
-            }).ToArray();
+                if (_boundWorldPlayerStateManager != null)
+                {
+                    _boundWorldPlayerStateManager.OnEconomyStateChanged -= HandleWorldPlayerEconomyStateChanged;
+                }
+
+                _boundWorldPlayerStateManager = worldPlayerStateManager;
+
+                if (_boundWorldPlayerStateManager != null)
+                {
+                    _boundWorldPlayerStateManager.OnEconomyStateChanged += HandleWorldPlayerEconomyStateChanged;
+                    if (_boundWorldPlayerStateManager.CurrentEconomy != null)
+                    {
+                        HandleWorldPlayerEconomyStateChanged(_boundWorldPlayerStateManager.CurrentEconomy);
+                    }
+                }
+            }
         }
 
         private void OnDisable()
@@ -156,21 +129,29 @@ namespace Project.Modules.UI
             ResponsiveUiStateManager.LayoutChanged -= ApplyLayout;
             SceneManager.activeSceneChanged -= HandleActiveSceneChanged;
 
-            if (CityStateManager.Instance != null)
+            if (_boundCityStateManager != null)
             {
-                CityStateManager.Instance.OnResourceStateChanged -= HandleCityResourceStateChanged;
-                CityStateManager.Instance.OnCityNameChanged -= HandleCityNameChanged;
+                _boundCityStateManager.OnResourceStateChanged -= HandleCityResourceStateChanged;
+                _boundCityStateManager.OnCityNameChanged -= HandleCityNameChanged;
+                _boundCityStateManager = null;
             }
 
-            if (WorldPlayerStateManager.Instance != null)
+            if (_boundWorldPlayerStateManager != null)
             {
-                WorldPlayerStateManager.Instance.OnEconomyStateChanged -= HandleWorldPlayerEconomyStateChanged;
+                _boundWorldPlayerStateManager.OnEconomyStateChanged -= HandleWorldPlayerEconomyStateChanged;
+                _boundWorldPlayerStateManager = null;
             }
 
             UnbindViewEvents();
             CleanupCitySelector();
             CleanupResourceTooltips();
             CloseAllPopups();
+
+            if (_stateManagerBindingCoroutine != null)
+            {
+                StopCoroutine(_stateManagerBindingCoroutine);
+                _stateManagerBindingCoroutine = null;
+            }
 
             if (_timeUpdateCoroutine != null)
             {
@@ -193,6 +174,7 @@ namespace Project.Modules.UI
         private void BindViewEvents()
         {
             if (administrationButton != null) administrationButton.onClick.AddListener(HandleAdministrationRequested);
+            if (premiumButton != null) premiumButton.onClick.AddListener(HandlePremiumRequested);
             if (logoutButton != null) logoutButton.OnButtonActivatedClicked += HandleLogoutRequested;
             if (popupBackdrop != null) popupBackdrop.onClick.AddListener(CloseAllPopups);
         }
@@ -200,6 +182,7 @@ namespace Project.Modules.UI
         private void UnbindViewEvents()
         {
             if (administrationButton != null) administrationButton.onClick.RemoveListener(HandleAdministrationRequested);
+            if (premiumButton != null) premiumButton.onClick.RemoveListener(HandlePremiumRequested);
             if (logoutButton != null) logoutButton.OnButtonActivatedClicked -= HandleLogoutRequested;
             if (popupBackdrop != null) popupBackdrop.onClick.RemoveListener(CloseAllPopups);
         }
@@ -208,6 +191,14 @@ namespace Project.Modules.UI
         {
             CloseAllPopups();
             GlobalWindowManager.Instance?.OpenWindow(Assets.Scripts.Domain.Enums.WindowTypeEnum.Administration);
+        }
+
+        private void HandlePremiumRequested()
+        {
+            CloseAllPopups();
+            UguiWindowHostController.Instance?.OpenWindow(
+                Assets.Scripts.Domain.Enums.WindowTypeEnum.PremiumOverview,
+                premiumOverviewPrefab);
         }
 
         private void HandleLogoutRequested(IconTextSidebarButton _)
@@ -263,8 +254,8 @@ namespace Project.Modules.UI
         {
             SetResourceAmount(CityTopBarResourceType.Coins, Math.Floor(state.CoinsAmount).ToString("N0"));
             SetResourceProduction(CityTopBarResourceType.Coins, state.CoinsProductionPerHour);
-            SetResourceAmount(CityTopBarResourceType.Research, Math.Floor(state.ResearchPointsAmount).ToString("N0"));
-            SetResourceProduction(CityTopBarResourceType.Research, state.ResearchPointsProductionPerHour);
+            SetResourceAmount(CityTopBarResourceType.Research, state.EffectiveResearchPower.ToString("F2"));
+            SetResourceDetail(CityTopBarResourceType.Research, $"{state.ResearchSpeedMultiplier:F2}x");
             SetResourceAmount(CityTopBarResourceType.Ideology, Math.Floor(state.IdeologyFocusPointsAmount).ToString("N0"));
             SetResourceProduction(CityTopBarResourceType.Ideology, state.IdeologyFocusPointsProductionPerHour);
         }

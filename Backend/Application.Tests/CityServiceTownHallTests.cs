@@ -47,7 +47,8 @@ public class CityServiceTownHallTests
             new EmptyJobRepository(),
             NullLogger<CityService>.Instance,
             new ConstructionTimeCalculator(modifierService),
-            new NoOpResistanceService());
+            new NoOpResistanceService(),
+            TestData.ResearchRateCalculator());
 
         var result = await service.GetCityOverviewHUD(city.Id);
 
@@ -103,7 +104,8 @@ public class CityServiceTownHallTests
             new RecruitmentJobRepository(recruitmentJob),
             NullLogger<CityService>.Instance,
             new ConstructionTimeCalculator(populationModifiers),
-            new NoOpResistanceService());
+            new NoOpResistanceService(),
+            TestData.ResearchRateCalculator());
 
         var result = await service.GetDetailedCityInformationByCityIdentifierAsync(city.Id);
 
@@ -112,7 +114,7 @@ public class CityServiceTownHallTests
         int militiaPopulation = TestData.UnitReader().GetUnit(UnitTypeEnum.Militia).PopulationCost;
         int expectedUsage = (10 + 45) * militiaPopulation;
         Assert.Equal(11, result.CoinsProductionPerHour);
-        Assert.Equal(22, result.ResearchPointsPerHour);
+        Assert.Equal(0, result.ResearchPower);
         Assert.Equal(33, result.IdeologyFocusPointsPerHour);
         Assert.Equal(housing, result.Population.HousingCapacity);
         Assert.Equal(25, result.Population.ModifierBonus);
@@ -168,7 +170,8 @@ public class CityServiceTownHallTests
             new EmptyJobRepository(),
             NullLogger<CityService>.Instance,
             new ConstructionTimeCalculator(new NoOpModifierService()),
-            new NoOpResistanceService());
+            new NoOpResistanceService(),
+            TestData.ResearchRateCalculator());
 
         var result = await service.GetAvailableBuildingsForTownHallAsync(city.Id);
 
@@ -195,10 +198,10 @@ public class CityServiceTownHallTests
         public CityResourceSnapshot CalculateCityResources(City cityEntity, DateTime currentDateTime) =>
             new(cityEntity.Wood, cityEntity.Stone, cityEntity.Metal, 0, 0, 0, currentDateTime);
 
-        public CityProductionSnapshot CalculateCityProduction(WorldPlayer playerEntity, City cityEntity) => new(11, 22, 33);
+        public CityProductionSnapshot CalculateCityProduction(WorldPlayer playerEntity, City cityEntity) => new(11, 33);
 
         public GlobalResourceSnapshot CalculateGlobalResources(WorldPlayer playerEntity, DateTime currentDateTime) =>
-            new(0, 0, 0, 0, 0, 0, currentDateTime);
+            new(0, 0, 0, 0, currentDateTime);
     }
 
     private sealed class NoOpModifierService : IModifierService

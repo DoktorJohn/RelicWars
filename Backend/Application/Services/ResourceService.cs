@@ -24,15 +24,12 @@ namespace Application.Services
 
     public record CityProductionSnapshot(
         double CoinsProductionPerHour,
-        double ResearchPointsPerHour,
         double IdeologyFocusPointsPerHour);
 
     public record GlobalResourceSnapshot(
         double CoinsAmount,
-        double ResearchPoints,
         double IdeologyFocusPoints,
         double CoinsProductionPerHour,
-        double ResearchPointsPerHour,
         double IdeologyFocusPointsPerHour,
         DateTime Timestamp)
     {
@@ -42,7 +39,6 @@ namespace Application.Services
     public class ResourceService : IResourceService
     {
         private readonly BuildingDataReader _buildingData;
-        private readonly ResearchDataReader _researchData;
         private readonly IdeologyDataReader _ideologyData;
         private readonly ICityStatService _statService;
         private readonly IModifierService _modifierService;
@@ -50,14 +46,12 @@ namespace Application.Services
 
         public ResourceService(
             BuildingDataReader buildingData,
-            ResearchDataReader researchData,
             IdeologyDataReader ideologyData,
             ICityStatService statService,
             IModifierService modifierService,
             ILogger<ResourceService> logger)
         {
             _buildingData = buildingData;
-            _researchData = researchData;
             _ideologyData = ideologyData;
             _statService = statService;
             _modifierService = modifierService;
@@ -92,7 +86,6 @@ namespace Application.Services
                 playerEntity.Id, hoursPassed, playerEntity.LastResourceUpdate, currentDateTime);
 
             double totalCoinsRate = 0;
-            double totalResearchRate = 0;
             int totalAvailablePopulation = 0;
 
             double totalIdeologyRate = CalculateTotalIdeologyProduction(playerEntity);
@@ -102,13 +95,11 @@ namespace Application.Services
                 var production = CalculateCityProduction(playerEntity, city, totalIdeologyRate, cityIndex);
 
                 totalCoinsRate += production.CoinsProductionPerHour;
-                totalResearchRate += production.ResearchPointsPerHour;
                 totalAvailablePopulation += Math.Max(0, _statService.GetAvailablePopulation(city, Array.Empty<Domain.Workers.Abstraction.BaseJob>()));
             }
 
             // Globale ressourcer
             double newCoinsAmount = playerEntity.Coins + (totalCoinsRate * hoursPassed);
-            double newResearchAmount = playerEntity.ResearchPoints + (totalResearchRate * hoursPassed);
             double newIdeologyAmount = playerEntity.IdeologyFocusPoints + (totalIdeologyRate * hoursPassed);
 
             _logger.LogInformation("[ResourceService] Global Calc Result: Total Coins Rate: {TotalCoinsRate}, Old Coins: {OldCoins}, New Coins: {NewCoins}", 
@@ -116,10 +107,8 @@ namespace Application.Services
 
             return new GlobalResourceSnapshot(
                 newCoinsAmount,
-                newResearchAmount,
                 newIdeologyAmount,
                 totalCoinsRate,
-                totalResearchRate,
                 totalIdeologyRate,
                 currentDateTime
             )
@@ -157,7 +146,6 @@ namespace Application.Services
 
             return new CityProductionSnapshot(
                 GetCoinsProductionResult(cityEntity),
-                GetProductionResult(cityEntity, BuildingTypeEnum.University, new[] { ModifierTagEnum.Research }).FinalValue,
                 ideologyContribution);
         }
 
@@ -227,7 +215,6 @@ namespace Application.Services
                 BuildingTypeEnum.TimberCamp => _buildingData.GetConfig<TimberCampLevelData>(buildingType, building.Level).ProductionPerHour,
                 BuildingTypeEnum.StoneQuarry => _buildingData.GetConfig<StoneQuarryLevelData>(buildingType, building.Level).ProductionPerHour,
                 BuildingTypeEnum.MetalMine => _buildingData.GetConfig<MetalMineLevelData>(buildingType, building.Level).ProductionPerHour,
-                BuildingTypeEnum.University => _buildingData.GetConfig<UniversityLevelData>(buildingType, building.Level).ProductionPerHour,
                 _ => 0.0
             };
         }

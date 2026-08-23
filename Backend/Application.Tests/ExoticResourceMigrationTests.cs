@@ -12,7 +12,7 @@ public class ExoticResourceMigrationTests
 {
     private const string MigrationBeforeRepair = "20260717191714_AddDailyObjectives";
     private const string RepairMigration = "20260717195246_RepairCityExoticResourceBalances";
-    private const string LatestMigration = "20260810224824_AddDailyObjectiveCollectedState";
+    private const string LatestMigration = "20260823150859_ReplaceResearchPointsWithResearchRate";
 
     [Fact]
     public async Task RepairMigration_BackfillsMissingBalancesAndRepositoryLoadsAllTypes()
@@ -84,30 +84,37 @@ public class ExoticResourceMigrationTests
             Height = 100,
             MapSeed = 1234
         };
-        var city = new City
-        {
-            Id = Guid.NewGuid(),
-            Name = "Incomplete NPC",
-            IsNPC = true,
-            World = world,
-            WorldId = world.Id,
-            X = 1,
-            Y = 1,
-            ExoticResources = Enum.GetValues<ExoticResourceTypeEnum>()
-                .Where(type => type is not ExoticResourceTypeEnum.Silver and not ExoticResourceTypeEnum.Sulphur)
-                .Select(type => new CityExoticResource
-                {
-                    Id = Guid.NewGuid(),
-                    ResourceType = type,
-                    Amount = type == ExoticResourceTypeEnum.Cloth ? 10.5
-                        : type == ExoticResourceTypeEnum.Gold ? 17.5
-                        : (int)type + 1
-                })
-                .ToList()
-        };
-
-        context.Cities.Add(city);
+        Guid cityId = Guid.NewGuid();
+        DateTime now = DateTime.UtcNow;
+        context.World.Add(world);
         await context.SaveChangesAsync();
-        return city.Id;
+
+        // Seed against the historical schema without asking the current EF model to
+        // write columns that did not exist yet at this migration boundary.
+        await context.Database.ExecuteSqlInterpolatedAsync($"""
+            INSERT INTO [dbo].[Cities]
+                ([Id], [Name], [Points], [Wood], [Stone], [Metal], [Population], [Resistance], [ResistanceTarget],
+                 [LastResistanceUpdate], [LastResourceUpdate], [LastExoticResourceUpdate], [IsNPC], [X], [Y],
+                 [WorldId], [WorldPlayerId], [ModifiersThatAffectsThis], [DateCreated], [DateLastModified], [IsDeleted])
+            VALUES
+                ({cityId}, {"Incomplete NPC"}, {0}, {0d}, {0d}, {0d}, {0}, {100d}, {100d},
+                 {now}, {now}, {now}, {true}, {1}, {1}, {world.Id}, {null}, {"[]"}, {now}, {now}, {false})
+            """);
+
+        foreach (ExoticResourceTypeEnum type in Enum.GetValues<ExoticResourceTypeEnum>()
+                     .Where(type => type is not ExoticResourceTypeEnum.Silver and not ExoticResourceTypeEnum.Sulphur))
+        {
+            double amount = type == ExoticResourceTypeEnum.Cloth ? 10.5
+                : type == ExoticResourceTypeEnum.Gold ? 17.5
+                : (int)type + 1;
+            await context.Database.ExecuteSqlInterpolatedAsync($"""
+                INSERT INTO [dbo].[CityExoticResources]
+                    ([Id], [CityId], [ResourceType], [Amount], [DateCreated], [DateLastModified], [IsDeleted])
+                VALUES
+                    ({Guid.NewGuid()}, {cityId}, {(int)type}, {amount}, {now}, {now}, {false})
+                """);
+        }
+
+        return cityId;
     }
 }

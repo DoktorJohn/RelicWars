@@ -3,6 +3,8 @@ using Project.Modules.UI.Windows.Implementations;
 using Project.Network.Manager;
 using Project.Network.Models;
 using Project.Scripts.Modules.Map;
+using Assets.Scripts.Domain.Enums;
+using Sunvale.AncientRomeUI.Buttons;
 using TMPro;
 using UnityEngine;
 using UnityEngine.EventSystems;
@@ -11,6 +13,8 @@ namespace Project.Modules.UI
 {
     public sealed class UguiCityInspectionWindowController : MonoBehaviour, IUguiWindowPayloadReceiver
     {
+        [SerializeField] private GameObject deploymentWindowPrefab;
+
         private TMP_Text _cityNameLabel;
         private TMP_Text _cityPointsLabel;
         private TMP_Text _playerNameLabel;
@@ -19,6 +23,7 @@ namespace Project.Modules.UI
         private TMP_Text _terrainLabel;
         private TMP_Text _locationLabel;
         private Transform _inspectCityButton;
+        private CarvedPressButton _marchButton;
         private EventTrigger.Entry _inspectCityReleaseEntry;
         private CityInspectionDTO _inspection;
         private CityInspectionPayload _payload;
@@ -34,11 +39,14 @@ namespace Project.Modules.UI
             _terrainLabel = FindDescendant(transform, "TerrainLabel")?.GetComponent<TMP_Text>();
             _locationLabel = FindDescendant(transform, "LocationLabel")?.GetComponent<TMP_Text>();
             _inspectCityButton = FindDescendant(transform, "InspectCityBtn");
+            _marchButton = FindDescendant(transform, "March")?.GetComponent<CarvedPressButton>();
+            SetButtonEnabled(_marchButton, false);
         }
 
         private void OnEnable()
         {
             BindInspectCityButton();
+            if (_marchButton != null) _marchButton.OnButtonActivatedClicked += OpenDeployment;
         }
 
         private void OnDisable()
@@ -46,6 +54,7 @@ namespace Project.Modules.UI
             _requestVersion++;
             StopAllCoroutines();
             UnbindInspectCityButton();
+            if (_marchButton != null) _marchButton.OnButtonActivatedClicked -= OpenDeployment;
         }
 
         public void OnOpen(object payload)
@@ -58,6 +67,7 @@ namespace Project.Modules.UI
 
             _payload = cityPayload;
             _inspection = null;
+            SetButtonEnabled(_marchButton, false);
             RenderPayloadPreview();
             LoadInspection();
         }
@@ -92,6 +102,29 @@ namespace Project.Modules.UI
             SetText(_terrainLabel, FormatTerrain(_payload.TerrainName));
         }
 
+        private void OpenDeployment(CarvedPressButton _)
+        {
+            if (_inspection == null || (!_inspection.CanAttack && !_inspection.CanSupport)) return;
+            if (deploymentWindowPrefab == null)
+            {
+                Debug.LogError("[UguiCityInspectionWindowController] DeploymentWindow prefab is not assigned.", this);
+                return;
+            }
+
+            UguiWindowHostController.Instance?.OpenWindow(
+                WindowTypeEnum.UnitDeployment,
+                deploymentWindowPrefab,
+                new CityDeploymentPayload
+                {
+                    TargetCityId = _inspection.CityId,
+                    TargetCityName = _inspection.CityName,
+                    TargetCoordinates = new Vector2Int(_inspection.X, _inspection.Y),
+                    TerrainName = _payload?.TerrainName,
+                    CanAttack = _inspection.CanAttack,
+                    CanSupport = _inspection.CanSupport
+                });
+        }
+
         private void RenderInspection(CityInspectionDTO inspection)
         {
             SetText(_cityNameLabel, ValueOrDash(inspection.CityName));
@@ -110,6 +143,7 @@ namespace Project.Modules.UI
                 : "-");
             SetText(_locationLabel, $"{inspection.X}, {inspection.Y}");
             SetText(_terrainLabel, FormatTerrain(_payload.TerrainName));
+            SetButtonEnabled(_marchButton, inspection.CanAttack || inspection.CanSupport);
         }
 
         private void BindInspectCityButton()
@@ -147,6 +181,17 @@ namespace Project.Modules.UI
         private static void SetText(TMP_Text label, string value)
         {
             if (label != null) label.text = value;
+        }
+
+        private static void SetButtonEnabled(CarvedPressButton button, bool enabled)
+        {
+            if (button == null) return;
+            button.enabled = enabled;
+            CanvasGroup group = button.GetComponent<CanvasGroup>();
+            if (group == null) group = button.gameObject.AddComponent<CanvasGroup>();
+            group.alpha = enabled ? 1f : 0.5f;
+            group.interactable = enabled;
+            group.blocksRaycasts = enabled;
         }
 
         private static Transform FindDescendant(Transform root, string objectName)

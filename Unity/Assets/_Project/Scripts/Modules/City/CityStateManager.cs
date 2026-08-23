@@ -460,7 +460,7 @@ namespace Project.Modules.City
                 _currentResourceState.CoinsProductionPerHour = detailedInformationDto.CoinsProductionPerHour;
                 _currentResourceState.UnitUpkeepPerHour = detailedInformationDto.UnitUpkeepPerHour;
                 _currentResourceState.BuildingUpkeepPerHour = detailedInformationDto.BuildingUpkeepPerHour;
-                _currentResourceState.ResearchPointsPerHour = detailedInformationDto.ResearchPointsPerHour;
+                _currentResourceState.ResearchPower = detailedInformationDto.ResearchPower;
                 _currentResourceState.IdeologyFocusPointsPerHour = detailedInformationDto.IdeologyFocusPointsPerHour;
 
                 // Befolknings-mapping

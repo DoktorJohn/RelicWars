@@ -752,9 +752,9 @@ public class DailyObjectiveServiceTests
     {
         public CityResourceSnapshot CalculateCityResources(City city, DateTime now) =>
             new(city.Wood, city.Stone, city.Metal, 0, 0, 0, now);
-        public CityProductionSnapshot CalculateCityProduction(WorldPlayer player, City city) => new(0, 0, 0);
+        public CityProductionSnapshot CalculateCityProduction(WorldPlayer player, City city) => new(0, 0);
         public GlobalResourceSnapshot CalculateGlobalResources(WorldPlayer player, DateTime now) =>
-            new(player.Coins, player.ResearchPoints, player.IdeologyFocusPoints, 0, 0, 0, now);
+            new(player.Coins, player.IdeologyFocusPoints, 0, 0, now);
     }
 
     private sealed class FixedCityStatService : ICityStatService

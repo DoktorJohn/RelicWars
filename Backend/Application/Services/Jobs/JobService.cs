@@ -18,6 +18,7 @@ namespace Application.Services.Jobs
     {
         private readonly IBattleReportRepository _battleReportRepository;
         private readonly IResourceService _resourceService;
+        private readonly IJobRepository _jobRepository;
         private readonly ICityRepository _cityRepo;
         private readonly IWorldPlayerService _worldPlayerService;
         private readonly IWorldPlayerRepository _worldPlayerRepo;
@@ -25,6 +26,8 @@ namespace Application.Services.Jobs
         private readonly ILogger<JobService> _logger;
         private readonly IDailyObjectiveService? _dailyObjectiveService;
         private readonly ICityStatService? _cityStatService;
+        private readonly ResearchProgressService _researchProgressService;
+        private readonly TimeProvider _timeProvider;
 
         public JobService(
             IBattleReportRepository battleReportRepository,
@@ -34,16 +37,22 @@ namespace Application.Services.Jobs
             IWorldPlayerRepository userRepo,
             IWorldPlayerService worldPlayerService,
             CityPointCalculator cityPointCalculator,
+            IJobRepository jobRepository,
+            ResearchProgressService researchProgressService,
+            TimeProvider timeProvider,
             IDailyObjectiveService? dailyObjectiveService = null,
             ICityStatService? cityStatService = null)
         {
             _battleReportRepository = battleReportRepository;
             _resourceService = resourceService;
+            _jobRepository = jobRepository;
             _cityRepo = cityRepo;
             _logger = logger;
             _worldPlayerRepo = userRepo;
             _worldPlayerService = worldPlayerService;
             _cityPointCalculator = cityPointCalculator;
+            _researchProgressService = researchProgressService;
+            _timeProvider = timeProvider;
             _dailyObjectiveService = dailyObjectiveService;
             _cityStatService = cityStatService;
         }
@@ -80,8 +89,28 @@ namespace Application.Services.Jobs
             // 1. Synkroniser ressourcer til jobbets afslutningstidspunkt
             await SyncResourcesToJobCompletion(city, job.ExecutionTime);
 
+            ResearchJob? activeResearch = null;
+            if (job is BuildingJob { BuildingType: BuildingTypeEnum.University } && city.WorldPlayer != null)
+            {
+                activeResearch = await _jobRepository.GetResearchJobAsync(job.WorldPlayerId);
+                if (activeResearch != null)
+                {
+                    _researchProgressService.AdvanceTo(activeResearch, city.WorldPlayer, job.ExecutionTime);
+                    if (activeResearch.IsCompleted)
+                    {
+                        await CompleteResearchAsync(activeResearch, city.WorldPlayer);
+                        _jobRepository.DeletePending(activeResearch);
+                    }
+                }
+            }
+
             // 2. Kør den specifikke logik (Bygning eller Rekruttering)
             handler(city, job);
+
+            if (activeResearch is { IsCompleted: false } && city.WorldPlayer != null)
+            {
+                _researchProgressService.RefreshRateAndSchedule(activeResearch, city.WorldPlayer, job.ExecutionTime);
+            }
 
             if (_dailyObjectiveService != null && city.WorldPlayerId.HasValue)
             {
@@ -113,23 +142,35 @@ namespace Application.Services.Jobs
 
         private async Task ProcessResearchJob(ResearchJob job)
         {
-            var player = await _worldPlayerRepo.GetByIdWithResearchAsync(job.WorldPlayerId);
+            var player = await _worldPlayerRepo.GetByIdAsync(job.WorldPlayerId);
             if (player == null) return;
 
+            _researchProgressService.AdvanceTo(job, player, _timeProvider.GetUtcNow().UtcDateTime);
+            if (!job.IsCompleted)
+            {
+                return;
+            }
+
+            await CompleteResearchAsync(job, player);
+        }
+
+        private async Task CompleteResearchAsync(ResearchJob job, WorldPlayer player)
+        {
+            bool newlyCompleted = false;
             if (!player.CompletedResearches.Any(research => research.ResearchId == job.ResearchId))
             {
                 player.CompletedResearches.Add(new Research
                 {
                     WorldPlayerId = player.Id,
                     ResearchId = job.ResearchId,
-                    CompletedAt = DateTime.UtcNow
+                    CompletedAt = job.LastProgressAt
                 });
+                newlyCompleted = true;
             }
 
-            job.IsCompleted = true;
-            if (_dailyObjectiveService != null)
+            if (newlyCompleted && _dailyObjectiveService != null)
                 await _dailyObjectiveService.ApplyProgressAsync(job.WorldPlayerId,
-                    new(DailyObjectiveProgressTypeEnum.ResearchCompleted, 1, job.ExecutionTime));
+                    new(DailyObjectiveProgressTypeEnum.ResearchCompleted, 1, job.LastProgressAt));
         }
 
         private void HandleBuildingJob(City city, BuildingJob job)

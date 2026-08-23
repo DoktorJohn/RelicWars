@@ -11,9 +11,16 @@ namespace Application.DTOs
     public record ResearchTreeDTO(
         List<ResearchNodeDTO> Nodes,
         ActiveResearchJobDTO? ActiveJob,
-        double CurrentResearchPoints,
+        ResearchRateDTO ResearchRate,
+        DateTime ServerTimeUtc,
         bool CanStartResearch,
         List<string> UnmetRequirements
+    );
+
+    public record ResearchRateDTO(
+        double BaseResearchPower,
+        double EffectiveResearchPower,
+        double SpeedMultiplier
     );
 
     public record ResearchNodeDTO(
@@ -22,21 +29,22 @@ namespace Application.DTOs
         string Description,
         ResearchTypeEnum ResearchType,
         string? ParentId,
-        double ResearchPointCost,
+        List<string> PrerequisiteIds,
+        ResearchPrerequisiteRule PrerequisiteRule,
+        int Tier,
+        ResearchNodeKind NodeKind,
+        bool IsResearchable,
         int ResearchTimeInSeconds,
         bool IsCompleted,
         bool IsResearching,
         bool IsLocked,
-        bool CanAfford,
-        List<ResearchEffectDTO> Effects
+        bool CanStart
     );
-
-    public record ResearchEffectDTO(ResearchEffectType Type, UnitTypeEnum? UnitType);
 
     public record ActiveResearchJobDTO(
         Guid JobId,
         string ResearchId,
-        DateTime ExpectedCompletionTime,
+        DateTime? ExpectedCompletionTime,
         double ProgressPercentage
     );
 }

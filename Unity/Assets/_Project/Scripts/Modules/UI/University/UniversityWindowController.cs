@@ -2,6 +2,7 @@ using UnityEngine;
 using UnityEngine.UIElements;
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using Assets.Scripts.Domain.Enums;
 using Project.Modules.UI;
 using Project.Network.Manager;
@@ -114,8 +115,8 @@ namespace Project.Modules.UI.Windows.Implementations
             if (item.IsCurrentLevel) lvlLabel.style.unityFontStyleAndWeight = FontStyle.Bold;
             row.Add(lvlLabel);
 
-            // 2. Production Cell (Research Points)
-            Label prodLabel = new Label($"+{item.ProductionPerHour:N0}");
+            // 2. Research power contributed by this University level.
+            Label prodLabel = new Label(item.ResearchPower.ToString("F2", CultureInfo.InvariantCulture));
             prodLabel.AddToClassList("row-label");
 
             // COLOR: Science Cyan (#64D2FF)

@@ -7,6 +7,8 @@ using Domain.Enums;
 using Application.Utility;
 using Microsoft.Extensions.Logging.Abstractions;
 using Domain.User;
+using Domain.Workers;
+using Domain.Workers.Abstraction;
 
 namespace Application.Tests;
 
@@ -62,6 +64,31 @@ public class IdeologyFocusGameplayTests
     }
 
     [Fact]
+    public async Task CivicInitiative_RebasesActiveResearchAtEnactmentTime()
+    {
+        var city = TestData.CityWithFocus(IdeologyFocusNameEnum.CivicInitiative);
+        city.ActiveFocuses.Clear();
+        city.Buildings.Add(new Building { Type = BuildingTypeEnum.University, Level = 1, City = city, CityId = city.Id });
+        city.WorldPlayer!.Ideology = IdeologyTypeEnum.Democracy;
+        city.WorldPlayer.IdeologyFocusPoints = 100;
+
+        var progress = new ResearchProgressService(TestData.ResearchRateCalculator());
+        var job = new ResearchJob { WorldPlayerId = city.WorldPlayer.Id, ResearchId = "TEST" };
+        progress.Initialize(job, city.WorldPlayer, 600d, TestData.Now.AddSeconds(-100));
+        double expectedRemainingWork = 600d - 100d * job.AppliedSpeedMultiplier;
+        var jobs = new SingleResearchJobRepository(job);
+        var service = CreateEnactmentService(city, new RecordingBattleReportRepository(), jobs);
+
+        var result = await service.EnactIdeologyFocus(new(IdeologyFocusNameEnum.CivicInitiative, city.Id));
+
+        Assert.NotNull(result);
+        Assert.True(result.Success);
+        Assert.Equal(expectedRemainingWork, job.RemainingWorkSeconds, 6);
+        Assert.True(job.AppliedSpeedMultiplier > 1d);
+        Assert.Equal(1, jobs.UpdateCount);
+    }
+
+    [Fact]
     public void NobleClemencyIncreasesElapsedResistanceRecovery()
     {
         var modifiers = TestData.ModifierService(out _);
@@ -111,7 +138,7 @@ public class IdeologyFocusGameplayTests
     {
         var modifiers = TestData.ModifierService(out _);
         var stats = new FixedCityStatService { Available = 100 };
-        ResourceService CreateService() => new(TestData.BuildingReader(), TestData.ResearchReader(),
+        ResourceService CreateService() => new(TestData.BuildingReader(),
             TestData.IdeologyReader(), stats, modifiers, NullLogger<ResourceService>.Instance);
 
         var city = TestData.CityWithFocus(focus);
@@ -120,11 +147,13 @@ public class IdeologyFocusGameplayTests
         city.Buildings.Add(new Building { Type = BuildingTypeEnum.TownHall, Level = 1, City = city, CityId = city.Id });
         city.UnitStacks.Add(new UnitStack { Type = UnitTypeEnum.Militia, Quantity = 10 });
         var withFocus = CreateService().CalculateGlobalResources(city.WorldPlayer, TestData.Now);
+        var researchWithFocus = TestData.ResearchRateCalculator().Calculate(city.WorldPlayer, TestData.Now);
         city.ActiveFocuses.Clear();
         var baseline = CreateService().CalculateGlobalResources(city.WorldPlayer, TestData.Now);
+        var baselineResearch = TestData.ResearchRateCalculator().Calculate(city.WorldPlayer, TestData.Now);
 
         if (focus == IdeologyFocusNameEnum.CivicInitiative)
-            Assert.True(withFocus.ResearchPointsPerHour > baseline.ResearchPointsPerHour);
+            Assert.True(researchWithFocus.EffectiveResearchPower > baselineResearch.EffectiveResearchPower);
         else
             Assert.NotEqual(withFocus.CoinsProductionPerHour, baseline.CoinsProductionPerHour);
     }
@@ -193,7 +222,7 @@ public class IdeologyFocusGameplayTests
         int snapshot = calculator.CalculateMobilitySnapshot(city, 100);
         Assert.Equal(108, snapshot);
         city.ActiveFocuses.Clear();
-        Assert.Equal(7200.0 / 108, calculator.CalculateSecondsPerHex(snapshot), 6);
+        Assert.Equal(720.0 / 108, calculator.CalculateSecondsPerHex(snapshot), 6);
     }
 
     [Fact]
@@ -255,10 +284,11 @@ public class IdeologyFocusGameplayTests
 
     private static IdeologyFocusService CreateEnactmentService(
         City city,
-        RecordingBattleReportRepository reports)
+        RecordingBattleReportRepository reports,
+        IJobRepository? jobRepository = null)
     {
         var cityRepository = new MemoryCityRepository(city);
-        var jobs = new EmptyJobRepository();
+        var jobs = jobRepository ?? new EmptyJobRepository();
         var stats = new FixedCityStatService { Available = 100 };
         var units = TestData.UnitReader();
         var instantUtility = new InstantUtility(cityRepository, jobs, stats, units);
@@ -280,7 +310,25 @@ public class IdeologyFocusGameplayTests
             new FixedTimeProvider(TestData.Now),
             new InstantFocusGrantService(instantUtility, stats, jobs, units, new FixedRandomService()),
             new FocusEnactmentPolicy(),
-            reports);
+            reports,
+            new ImmediateTransactionManager(),
+            new ResearchProgressService(TestData.ResearchRateCalculator()));
+    }
+
+    private sealed class SingleResearchJobRepository(ResearchJob job) : IJobRepository
+    {
+        public int UpdateCount { get; private set; }
+        public Task<BaseJob?> GetByIdAsync(Guid id) => Task.FromResult<BaseJob?>(job.Id == id ? job : null);
+        public Task<List<BuildingJob>> GetBuildingJobsAsync(Guid cityId) => Task.FromResult(new List<BuildingJob>());
+        public Task AddAsync(BaseJob newJob) => Task.CompletedTask;
+        public Task UpdateAsync(BaseJob updatedJob) { UpdateCount++; return Task.CompletedTask; }
+        public Task DeleteAsync(Guid jobId) => Task.CompletedTask;
+        public void DeletePending(BaseJob deletedJob) => throw new InvalidOperationException("Research should not complete in this test.");
+        public Task<ResearchJob?> GetResearchJobAsync(Guid userId) =>
+            Task.FromResult<ResearchJob?>(job.WorldPlayerId == userId && !job.IsCompleted ? job : null);
+        public Task<List<RecruitmentJob>> GetRecruitmentJobsAsync(Guid cityId) => Task.FromResult(new List<RecruitmentJob>());
+        public Task<List<ResearchJob>> GetResearchJobsByIdAsync(Guid id) =>
+            Task.FromResult(job.WorldPlayerId == id ? new List<ResearchJob> { job } : new List<ResearchJob>());
     }
 
     private sealed class RecordingBattleReportRepository : IBattleReportRepository

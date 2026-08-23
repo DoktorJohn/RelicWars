@@ -12,6 +12,7 @@ namespace Application.Interfaces.IServices
     public interface IModifierCollectorService
     {
         List<IModifierProvider> CollectAllProvidersForCity(City cityEntity);
+        List<IModifierProvider> CollectAllProvidersForCity(City cityEntity, WorldPlayer playerEntity, DateTime asOfUtc);
         List<IModifierProvider> CollectAllProvidersForPlayer(WorldPlayer playerEntity);
     }
 }

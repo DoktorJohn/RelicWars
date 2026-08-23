@@ -318,7 +318,7 @@ namespace Project.Modules.UI
 
             _details.ExoticResources = response.IslandExoticResources;
             CityStateManager.Instance?.DeductResourcesLocally(wood, stone, metal);
-            WorldPlayerStateManager.Instance?.DeductResourcesLocally(coins, 0, 0);
+            WorldPlayerStateManager.Instance?.DeductResourcesLocally(coins, 0);
             if (NetworkManager.Instance.ActiveCityId.HasValue)
             {
                 CityStateManager.Instance?.RequestImmediateRefresh(NetworkManager.Instance.ActiveCityId.Value);

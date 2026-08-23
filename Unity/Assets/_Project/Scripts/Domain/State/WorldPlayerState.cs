@@ -9,8 +9,9 @@ namespace Assets.Scripts.Domain.State
         public double CoinsAmount;
         public double CoinsProductionPerHour;
 
-        public double ResearchPointsAmount;
-        public double ResearchPointsProductionPerHour;
+        public double BaseResearchPower;
+        public double EffectiveResearchPower;
+        public double ResearchSpeedMultiplier;
 
         public double IdeologyFocusPointsAmount;
         public double IdeologyFocusPointsProductionPerHour;

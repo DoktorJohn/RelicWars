@@ -15,14 +15,13 @@
                 <ui:Button name="Tab-Economy" text="ECONOMY" class="research-tab-button" />
                 <ui:Button name="Tab-War" text="WAR" class="research-tab-button" />
                 <ui:Button name="Tab-Utility" text="UTILITY" class="research-tab-button" />
-                <ui:Button name="Tab-Unlocks" text="UNLOCKS" class="research-tab-button" />
             </ui:VisualElement>
 
             <ui:VisualElement class="research-stats-bar">
                 <ui:VisualElement class="points-display">
                     <ui:VisualElement class="side-bar-icon-base icon-research" style="width: 24px; height: 24px;" />
-                    <ui:Label text="RESEARCH POINTS:" class="points-prefix" />
-                    <ui:Label name="Research-Points-Amount" text="" class="points-value" />
+                    <ui:Label text="RESEARCH POWER:" class="points-prefix" />
+                    <ui:Label name="Research-Power-Amount" text="" class="points-value" />
                 </ui:VisualElement>
             </ui:VisualElement>
 

@@ -223,7 +223,6 @@ public class ExoticResourceServiceTests
             Id = Guid.NewGuid(),
             WorldId = world.Id,
             Coins = 200_000,
-            ResearchPoints = 0,
             IdeologyFocusPoints = 0,
             Ideology = IdeologyTypeEnum.Feudalism,
             Cities = new List<City>(),
@@ -279,7 +278,6 @@ public class ExoticResourceServiceTests
         var modifierService = TestData.ModifierService(out _);
         var resourceService = new ResourceService(
             TestData.BuildingReader(),
-            TestData.ResearchReader(),
             TestData.IdeologyReader(),
             new LargeCapacityCityStatService(),
             modifierService,

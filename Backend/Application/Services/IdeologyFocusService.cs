@@ -1,10 +1,12 @@
 ﻿using Application.DTOs;
 using Application.Interfaces.IRepositories;
 using Application.Interfaces.IServices;
+using Application.Interfaces;
 using Application.Utility;
 using Domain.Entities;
 using Domain.Enums;
 using Domain.StaticData.Readers;
+using Domain.Workers;
 using Domain.Workers.Abstraction;
 using System;
 using System.Collections.Generic;
@@ -35,6 +37,8 @@ namespace Application.Services
         private readonly FocusEnactmentPolicy _enactmentPolicy;
         private readonly IBattleReportRepository _battleReportRepository;
         private readonly IDailyObjectiveService? _dailyObjectiveService;
+        private readonly ITransactionManager _transactionManager;
+        private readonly ResearchProgressService _researchProgressService;
 
         public IdeologyFocusService(
             IWorldPlayerRepository worldPlayerRepo,
@@ -54,6 +58,8 @@ namespace Application.Services
             InstantFocusGrantService instantGrantService,
             FocusEnactmentPolicy enactmentPolicy,
             IBattleReportRepository battleReportRepository,
+            ITransactionManager transactionManager,
+            ResearchProgressService researchProgressService,
             IDailyObjectiveService? dailyObjectiveService = null)
         {
             _worldPlayerRepo = worldPlayerRepo;
@@ -73,6 +79,8 @@ namespace Application.Services
             _instantGrantService = instantGrantService;
             _enactmentPolicy = enactmentPolicy;
             _battleReportRepository = battleReportRepository;
+            _transactionManager = transactionManager;
+            _researchProgressService = researchProgressService;
             _dailyObjectiveService = dailyObjectiveService;
         }
 
@@ -99,71 +107,110 @@ namespace Application.Services
                 return new IdeologyFocusAnswerDTO(ideologyFocusData.Name, city.Id, "Insufficient Ideology Points", false);
             }
 
-            IdeologyFocusEffectResultDTO? effectResult = null;
-            if (ideologyFocusData.EffectKind == IdeologyFocusEffectKindEnum.Instant)
+            return await _transactionManager.ExecuteAsync(async () =>
             {
-                effectResult = await HandleInstantFocus(ideologyFocusData.Name, city);
-                if (effectResult.GrantedQuantity <= 0)
+                bool affectsResearch = ideologyFocusData.ModifiersInternal.Any(modifier =>
+                    modifier.Tag == ModifierTagEnum.Research);
+                ResearchJob? activeResearch = affectsResearch
+                    ? await _jobRepository.GetResearchJobAsync(worldPlayer.Id)
+                    : null;
+                bool researchCompletedDuringRebase = false;
+                if (activeResearch != null)
                 {
-                    return new IdeologyFocusAnswerDTO(
-                        ideologyFocusData.Name,
-                        city.Id,
-                        effectResult.Summary,
-                        false,
-                        effectResult);
+                    _researchProgressService.AdvanceTo(activeResearch, worldPlayer, now);
+                    if (activeResearch.IsCompleted)
+                    {
+                        researchCompletedDuringRebase = !worldPlayer.CompletedResearches.Any(research =>
+                            research.ResearchId == activeResearch.ResearchId);
+                        if (researchCompletedDuringRebase)
+                        {
+                            worldPlayer.CompletedResearches.Add(new Research
+                            {
+                                WorldPlayerId = worldPlayer.Id,
+                                ResearchId = activeResearch.ResearchId,
+                                CompletedAt = activeResearch.LastProgressAt
+                            });
+                        }
+                        _jobRepository.DeletePending(activeResearch);
+                    }
                 }
-            }
 
-            await _worldPlayerService.SyncGlobalResourcesAsync(worldPlayer, now);
-            worldPlayer.IdeologyFocusPoints -= ideologyFocusData.IdeologyFocusPointCost;
-            await _worldPlayerRepo.UpdateAsync(worldPlayer);
-
-            bool shouldPersistFocus = _enactmentPolicy.ShouldPersist(ideologyFocusData);
-
-            if (shouldPersistFocus)
-            {
-                IdeologyFocus ideologyFocusEntity = new()
+                IdeologyFocusEffectResultDTO? effectResult = null;
+                if (ideologyFocusData.EffectKind == IdeologyFocusEffectKindEnum.Instant)
                 {
-                    Name = ideologyFocusDTO.IdeologyFocusName,
-                    DateCreated = now,
-                    DateLastModified = now,
-                    CityId = city.Id,
-                    TimeOfIdeologyStarted = now,
-                    TimeOfIdeologyFinished = ideologyFocusData.TimeActive.HasValue
-                        ? now.Add(ideologyFocusData.TimeActive.Value)
-                        : null
-                };
+                    effectResult = await HandleInstantFocus(ideologyFocusData.Name, city);
+                    if (effectResult.GrantedQuantity <= 0)
+                    {
+                        return new IdeologyFocusAnswerDTO(
+                            ideologyFocusData.Name,
+                            city.Id,
+                            effectResult.Summary,
+                            false,
+                            effectResult);
+                    }
+                }
 
-                await _ideologyFocusRepository.AddAsync(ideologyFocusEntity);
-            }
+                await _worldPlayerService.SyncGlobalResourcesAsync(worldPlayer, now);
+                worldPlayer.IdeologyFocusPoints -= ideologyFocusData.IdeologyFocusPointCost;
+                await _worldPlayerRepo.UpdateAsync(worldPlayer);
 
-            await _cityRepo.UpdateAsync(city);
+                bool shouldPersistFocus = _enactmentPolicy.ShouldPersist(ideologyFocusData);
 
-            await _battleReportRepository.AddAsync(CreateEnactmentReport(
-                ideologyFocusData.Name,
-                ideologyFocusData.IdeologyFocusPointCost,
-                city,
-                worldPlayer.Id,
-                now,
-                ideologyFocusData.TimeActive,
-                effectResult));
-
-            if (_dailyObjectiveService != null)
-            {
-                await _dailyObjectiveService.ApplyProgressAsync(worldPlayer.Id,
-                    new(DailyObjectiveProgressTypeEnum.FocusesEnacted, 1, now));
-                if (effectResult?.GrantedUnits != null)
+                if (shouldPersistFocus)
                 {
-                    foreach (var grantedUnit in effectResult.GrantedUnits)
+                    IdeologyFocus ideologyFocusEntity = new()
+                    {
+                        Name = ideologyFocusDTO.IdeologyFocusName,
+                        DateCreated = now,
+                        DateLastModified = now,
+                        CityId = city.Id,
+                        City = city,
+                        TimeOfIdeologyStarted = now,
+                        TimeOfIdeologyFinished = ideologyFocusData.TimeActive.HasValue
+                            ? now.Add(ideologyFocusData.TimeActive.Value)
+                            : null
+                    };
+
+                    await _ideologyFocusRepository.AddAsync(ideologyFocusEntity);
+                }
+
+                if (activeResearch is { IsCompleted: false })
+                {
+                    _researchProgressService.RefreshRateAndSchedule(activeResearch, worldPlayer, now);
+                    await _jobRepository.UpdateAsync(activeResearch);
+                }
+
+                await _cityRepo.UpdateAsync(city);
+
+                await _battleReportRepository.AddAsync(CreateEnactmentReport(
+                    ideologyFocusData.Name,
+                    ideologyFocusData.IdeologyFocusPointCost,
+                    city,
+                    worldPlayer.Id,
+                    now,
+                    ideologyFocusData.TimeActive,
+                    effectResult));
+
+                if (_dailyObjectiveService != null)
+                {
+                    if (researchCompletedDuringRebase)
                         await _dailyObjectiveService.ApplyProgressAsync(worldPlayer.Id,
-                            new(DailyObjectiveProgressTypeEnum.UnitsRecruited, grantedUnit.Quantity, now, grantedUnit.Type));
+                            new(DailyObjectiveProgressTypeEnum.ResearchCompleted, 1, activeResearch!.LastProgressAt));
+                    await _dailyObjectiveService.ApplyProgressAsync(worldPlayer.Id,
+                        new(DailyObjectiveProgressTypeEnum.FocusesEnacted, 1, now));
+                    if (effectResult?.GrantedUnits != null)
+                    {
+                        foreach (var grantedUnit in effectResult.GrantedUnits)
+                            await _dailyObjectiveService.ApplyProgressAsync(worldPlayer.Id,
+                                new(DailyObjectiveProgressTypeEnum.UnitsRecruited, grantedUnit.Quantity, now, grantedUnit.Type));
+                    }
                 }
-            }
 
-            var successMessage = ideologyFocusData.EffectKind == IdeologyFocusEffectKindEnum.Instant
-                ? effectResult!.Summary
-                : $"{ideologyFocusData.Name} enacted successfully";
-            return new IdeologyFocusAnswerDTO(ideologyFocusData.Name, city.Id, successMessage, true, effectResult);
+                var successMessage = ideologyFocusData.EffectKind == IdeologyFocusEffectKindEnum.Instant
+                    ? effectResult!.Summary
+                    : $"{ideologyFocusData.Name} enacted successfully";
+                return new IdeologyFocusAnswerDTO(ideologyFocusData.Name, city.Id, successMessage, true, effectResult);
+            });
         }
 
         private static BattleReport CreateEnactmentReport(

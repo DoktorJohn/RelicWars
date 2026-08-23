@@ -8,6 +8,7 @@ using Domain.Enums;
 using Domain.StaticData.Generators;
 using Domain.StaticData.Readers;
 using Domain.User;
+using Domain.Workers;
 using Microsoft.Extensions.Logging;
 using Microsoft.EntityFrameworkCore;
 using System;
@@ -27,11 +28,15 @@ namespace Application.Services
         private readonly IPlayerAccessService _playerAccessService;
         private readonly IRankingService _rankingService;
         private readonly IResourceService _resourceService;
+        private readonly IResearchRateCalculator _researchRateCalculator;
         private readonly IWorldRepository _worldRepo;
         private readonly CityPointCalculator _cityPointCalculator;
         private readonly ILogger<WorldPlayerService> _logger;
         private readonly IDailyObjectiveService? _dailyObjectiveService;
         private readonly ITransactionManager _transactionManager;
+        private readonly IJobRepository? _jobRepository;
+        private readonly ResearchProgressService? _researchProgressService;
+        private readonly TimeProvider _timeProvider;
 
         public WorldPlayerService(
             IWorldPlayerRepository worldPlayerRepository,
@@ -46,13 +51,18 @@ namespace Application.Services
             ILogger<WorldPlayerService> logger,
             CityPointCalculator cityPointCalculator,
             ITransactionManager transactionManager,
-            IDailyObjectiveService? dailyObjectiveService = null)
+            IResearchRateCalculator researchRateCalculator,
+            IDailyObjectiveService? dailyObjectiveService = null,
+            IJobRepository? jobRepository = null,
+            ResearchProgressService? researchProgressService = null,
+            TimeProvider? timeProvider = null)
         {
             _worldPlayerRepository = worldPlayerRepository;
             _profileRepository = profileRepository;
             _cityRepository = cityRepository;
             _rankingService = rankingService;
             _resourceService = resourceService;
+            _researchRateCalculator = researchRateCalculator;
             _worldRepo = worldRepo;
             _logger = logger;
             _worldMapObjectRepository = worldMapObjectRepository;
@@ -61,6 +71,9 @@ namespace Application.Services
             _cityPointCalculator = cityPointCalculator;
             _transactionManager = transactionManager;
             _dailyObjectiveService = dailyObjectiveService;
+            _jobRepository = jobRepository;
+            _researchProgressService = researchProgressService;
+            _timeProvider = timeProvider ?? TimeProvider.System;
         }
 
         public void SyncGlobalResources(WorldPlayer player, DateTime currentDateTime)
@@ -69,7 +82,6 @@ namespace Application.Services
             var globalSnapshot = _resourceService.CalculateGlobalResources(player, currentDateTime);
 
             player.Coins = globalSnapshot.CoinsAmount;
-            player.ResearchPoints = globalSnapshot.ResearchPoints;
             player.IdeologyFocusPoints = globalSnapshot.IdeologyFocusPoints;
             player.LastResourceUpdate = currentDateTime;
 
@@ -94,11 +106,12 @@ namespace Application.Services
             _logger.LogInformation("[WorldPlayerService] GetWorldPlayerEconomyAsync called for Player {PlayerId}", worldPlayerId);
             var player = await _playerAccessService.RequireOwnedWorldPlayerAsync(worldPlayerId);
 
-            var currentDateTime = DateTime.UtcNow;
+            var currentDateTime = _timeProvider.GetUtcNow().UtcDateTime;
             await SyncGlobalResourcesAsync(player, currentDateTime);
             await _worldPlayerRepository.UpdateAsync(player); // Persist the updated resources
 
             var globalSnapshot = _resourceService.CalculateGlobalResources(player, currentDateTime);
+            var researchRate = _researchRateCalculator.Calculate(player, currentDateTime);
             
             _logger.LogInformation("[WorldPlayerService] Returning economy DTO for {PlayerId}. Coins: {Coins}, Rate: {Rate}", player.Id, player.Coins, globalSnapshot.CoinsProductionPerHour);
 
@@ -113,10 +126,12 @@ namespace Application.Services
             {
                 WorldPlayerId = player.Id,
                 CurrentCoinsAmount = Math.Floor(player.Coins),
-                CurrentResearchPoints = Math.Floor(player.ResearchPoints),
                 CurrentIdeologyFocusPoints = Math.Floor(player.IdeologyFocusPoints),
                 CoinsProductionPerHour = globalSnapshot.CoinsProductionPerHour,
-                ResearchPointsPerHour = globalSnapshot.ResearchPointsPerHour,
+                ResearchRate = new ResearchRateDTO(
+                    researchRate.BaseResearchPower,
+                    researchRate.EffectiveResearchPower,
+                    researchRate.SpeedMultiplier),
                 IdeologyFocusPointsPerHour = globalSnapshot.IdeologyFocusPointsPerHour,
                 TotalWoodAmount = cityResourceSnapshots.Sum(snapshot => snapshot.Wood),
                 TotalStoneAmount = cityResourceSnapshots.Sum(snapshot => snapshot.Stone),
@@ -248,7 +263,6 @@ namespace Application.Services
                         PlayerProfileId = playerProfileId,
                         WorldId = targetWorldId,
                         Coins = 1000,
-                        ResearchPoints = 10,
                         IdeologyFocusPoints = 100,
                         Ideology = IdeologyTypeEnum.None,
                         LastResourceUpdate = DateTime.UtcNow,
@@ -322,9 +336,48 @@ namespace Application.Services
             if (worldPlayer.Ideology != IdeologyTypeEnum.None)
                 return new WorldPlayerSelectIdeologyResponse(false, "Ideology already selected.");
 
-            worldPlayer.Ideology = request.Ideology;
+            await _transactionManager.ExecuteAsync(async () =>
+            {
+                DateTime now = _timeProvider.GetUtcNow().UtcDateTime;
+                ResearchJob? activeResearch = _jobRepository != null
+                    ? await _jobRepository.GetResearchJobAsync(worldPlayer.Id)
+                    : null;
+                bool researchCompletedDuringRebase = false;
 
-            await _worldPlayerRepository.UpdateAsync(worldPlayer);
+                if (activeResearch != null && _researchProgressService != null)
+                {
+                    _researchProgressService.AdvanceTo(activeResearch, worldPlayer, now);
+                    if (activeResearch.IsCompleted)
+                    {
+                        researchCompletedDuringRebase = !worldPlayer.CompletedResearches.Any(research =>
+                            research.ResearchId == activeResearch.ResearchId);
+                        if (researchCompletedDuringRebase)
+                        {
+                            worldPlayer.CompletedResearches.Add(new Research
+                            {
+                                WorldPlayerId = worldPlayer.Id,
+                                ResearchId = activeResearch.ResearchId,
+                                CompletedAt = activeResearch.LastProgressAt
+                            });
+                        }
+                        _jobRepository!.DeletePending(activeResearch);
+                    }
+                }
+
+                worldPlayer.Ideology = request.Ideology;
+
+                if (activeResearch is { IsCompleted: false } && _researchProgressService != null)
+                {
+                    _researchProgressService.RefreshRateAndSchedule(activeResearch, worldPlayer, now);
+                    await _jobRepository!.UpdateAsync(activeResearch);
+                }
+
+                await _worldPlayerRepository.UpdateAsync(worldPlayer);
+
+                if (researchCompletedDuringRebase && _dailyObjectiveService != null)
+                    await _dailyObjectiveService.ApplyProgressAsync(worldPlayer.Id,
+                        new(DailyObjectiveProgressTypeEnum.ResearchCompleted, 1, activeResearch!.LastProgressAt));
+            });
 
             _logger.LogInformation("Player {Id} selected ideology: {Ideology}", worldPlayer.Id, request.Ideology);
 

@@ -66,4 +66,49 @@ public class RankingGeneratorTests
             }
         }
     }
+
+    [Fact]
+    public void GenerateRankingSnapshotCountsEachCityExactlyOnce()
+    {
+        var player = new WorldPlayer
+        {
+            Id = Guid.NewGuid(),
+            PlayerProfile = new PlayerProfile { Id = Guid.NewGuid(), UserName = "Player" }
+        };
+        var cities = new List<City>
+        {
+            new()
+            {
+                Id = Guid.NewGuid(),
+                WorldPlayer = player,
+                WorldPlayerId = player.Id,
+                Buildings = [new Building { Type = BuildingTypeEnum.TownHall, Level = 1 }]
+            },
+            new()
+            {
+                Id = Guid.NewGuid(),
+                WorldPlayer = player,
+                WorldPlayerId = player.Id,
+                Buildings = [new Building { Type = BuildingTypeEnum.TimberCamp, Level = 1 }]
+            }
+        };
+
+        var tempPath = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid():N}.json");
+        try
+        {
+            RankingGenerator.GenerateRankingSnapshot(tempPath, cities, TestData.BuildingReader());
+
+            var data = JsonSerializer.Deserialize<List<RankingEntryData>>(File.ReadAllText(tempPath));
+
+            var entry = Assert.Single(Assert.IsType<List<RankingEntryData>>(data));
+            Assert.Equal(2, entry.CityCount);
+        }
+        finally
+        {
+            if (File.Exists(tempPath))
+            {
+                File.Delete(tempPath);
+            }
+        }
+    }
 }

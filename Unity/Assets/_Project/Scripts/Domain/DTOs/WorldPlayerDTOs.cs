@@ -13,10 +13,9 @@ namespace Project.Scripts.Domain.DTOs
     {
         public Guid WorldPlayerId;
         public double CurrentCoinsAmount;
-        public double CurrentResearchPoints;
         public double CurrentIdeologyFocusPoints;
         public double CoinsProductionPerHour;
-        public double ResearchPointsPerHour;
+        public ResearchRateDTO ResearchRate;
         public double IdeologyFocusPointsPerHour;
         public double TotalWoodAmount;
         public double TotalStoneAmount;

@@ -10,5 +10,9 @@ namespace Domain.Workers
     public class ResearchJob : BaseJob
     {
         public string ResearchId { get; set; } = string.Empty;
+        public double TotalWorkSeconds { get; set; }
+        public double RemainingWorkSeconds { get; set; }
+        public DateTime LastProgressAt { get; set; }
+        public double AppliedSpeedMultiplier { get; set; }
     }
 }

@@ -23,7 +23,6 @@ namespace Application.Services
         private readonly IResourceService _resourceService;
         private readonly IWorldPlayerService _worldPlayerService;
         private readonly IPlayerAccessService _playerAccessService;
-        private readonly IResearchService _researchService;
         private readonly ICityStatService _cityStatService;
         private readonly UnitDataReader _unitDataReader;
         private readonly BuildingDataReader _buildingDataReader;
@@ -37,7 +36,6 @@ namespace Application.Services
             IResourceService resourceService,
             IWorldPlayerService worldPlayerService,
             IPlayerAccessService playerAccessService,
-            IResearchService researchService,
             UnitDataReader unitDataReader,
             BuildingDataReader buildingDataReader,
             ICityStatService cityStatService,
@@ -50,7 +48,6 @@ namespace Application.Services
             _resourceService = resourceService;
             _worldPlayerService = worldPlayerService;
             _playerAccessService = playerAccessService;
-            _researchService = researchService;
             _unitDataReader = unitDataReader;
             _buildingDataReader = buildingDataReader;
             _cityStatService = cityStatService;

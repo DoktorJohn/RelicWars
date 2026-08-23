@@ -246,7 +246,6 @@ namespace Application.Services
         {
             var global = _resourceService.CalculateGlobalResources(player, now);
             player.Coins = global.CoinsAmount;
-            player.ResearchPoints = global.ResearchPoints;
             player.IdeologyFocusPoints = global.IdeologyFocusPoints;
             player.LastResourceUpdate = global.Timestamp;
 

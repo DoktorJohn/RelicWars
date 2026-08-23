@@ -34,6 +34,7 @@
         Harbor = 26,
         CombatSimulator = 27,
         Dailies = 28,
-        Administration = 29
+        Administration = 29,
+        PremiumOverview = 30
     }
 }

@@ -74,6 +74,14 @@ public class ResearchLegacyColumnMigrationTests
         await using var context = new GameContext(options);
         await context.GetService<IMigrator>().MigrateAsync(MigrationBeforeRepair);
 
+        // The current model no longer maps ResearchPoints, while this historical
+        // schema still requires it. A temporary default keeps this migration fixture
+        // writable and is removed automatically when the column is later dropped.
+        await context.Database.ExecuteSqlRawAsync("""
+            ALTER TABLE [dbo].[WorldPlayers]
+            ADD CONSTRAINT [DF_Test_WorldPlayers_ResearchPoints] DEFAULT (0.0) FOR [ResearchPoints]
+            """);
+
         var profile = new PlayerProfile
         {
             Id = Guid.NewGuid(),

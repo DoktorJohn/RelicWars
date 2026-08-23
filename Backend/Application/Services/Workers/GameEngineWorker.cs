@@ -9,6 +9,8 @@ namespace Application.Services.Workers
     {
         private static readonly TimeSpan IdleDelay = TimeSpan.FromSeconds(1);
         private static readonly TimeSpan NPCReconciliationInterval = TimeSpan.FromSeconds(30);
+        private static readonly TimeSpan RankingSnapshotInterval = TimeSpan.FromMinutes(15);
+        private static readonly TimeSpan RankingSnapshotFailureDelay = TimeSpan.FromMinutes(1);
 
         private readonly IServiceProvider _services;
         private readonly ILogger<GameEngineWorker> _logger;
@@ -28,7 +30,8 @@ namespace Application.Services.Workers
                 RunJobLoopAsync("player jobs", cityWorker.ProcessPlayerJobsBatchAsync, stoppingToken),
                 RunJobLoopAsync("NPC building completions", cityWorker.ProcessNPCBuildingJobsBatchAsync, stoppingToken),
                 RunNPCReconciliationLoopAsync(stoppingToken),
-                RunDeploymentLoopAsync(stoppingToken));
+                RunDeploymentLoopAsync(stoppingToken),
+                RunRankingSnapshotLoopAsync(stoppingToken));
         }
 
         private async Task RunJobLoopAsync(
@@ -103,6 +106,33 @@ namespace Application.Services.Workers
                 }
 
                 await DelayAsync(IdleDelay, cancellationToken);
+            }
+        }
+
+        private async Task RunRankingSnapshotLoopAsync(CancellationToken cancellationToken)
+        {
+            while (!cancellationToken.IsCancellationRequested)
+            {
+                TimeSpan nextDelay = RankingSnapshotInterval;
+
+                try
+                {
+                    await using var scope = _services.CreateAsyncScope();
+                    await scope.ServiceProvider
+                        .GetRequiredService<RankingSnapshotWorker>()
+                        .RefreshSnapshotAsync(cancellationToken);
+                }
+                catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+                {
+                    return;
+                }
+                catch (Exception exception)
+                {
+                    _logger.LogError(exception, "Game engine ranking snapshot refresh failed.");
+                    nextDelay = RankingSnapshotFailureDelay;
+                }
+
+                await DelayAsync(nextDelay, cancellationToken);
             }
         }
 

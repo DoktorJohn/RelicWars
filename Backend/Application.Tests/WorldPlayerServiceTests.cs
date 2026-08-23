@@ -10,6 +10,7 @@ using Domain.StaticData.Generators;
 using Domain.StaticData.Readers;
 using Domain.User;
 using Domain.Workers;
+using Domain.Workers.Abstraction;
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.EntityFrameworkCore;
 using Infrastructure.Context;
@@ -22,6 +23,50 @@ namespace Application.Tests;
 
 public class WorldPlayerServiceTests
 {
+    [Fact]
+    public async Task SelectIdeology_RebasesActiveResearchAtSelectionTime()
+    {
+        var player = new WorldPlayer { Id = Guid.NewGuid(), WorldId = Guid.NewGuid(), Ideology = IdeologyTypeEnum.None };
+        var city = new City
+        {
+            Id = Guid.NewGuid(),
+            WorldPlayer = player,
+            WorldPlayerId = player.Id,
+            Buildings = [new Building { Type = BuildingTypeEnum.University, Level = 1 }]
+        };
+        player.Cities = [city];
+        var progress = new ResearchProgressService(TestData.ResearchRateCalculator());
+        var job = new ResearchJob { WorldPlayerId = player.Id, ResearchId = "TEST" };
+        progress.Initialize(job, player, 600d, TestData.Now.AddSeconds(-100));
+        var jobs = new SingleResearchJobRepository(job);
+
+        var service = new WorldPlayerService(
+            new MemoryWorldPlayerRepository(player),
+            new NoOpPlayerProfileRepository(),
+            new NoOpCityRepository(),
+            new NoOpRankingService(),
+            new NoOpResourceService(),
+            new NoOpWorldRepository(),
+            new NoOpWorldMapObjectRepository(),
+            new NoOpWorldMapObjectService(),
+            new TestPlayerAccessService([player]),
+            NullLogger<WorldPlayerService>.Instance,
+            new CityPointCalculator(TestData.BuildingReader()),
+            new ImmediateTransactionManager(),
+            TestData.ResearchRateCalculator(),
+            null,
+            jobs,
+            progress,
+            new FixedTimeProvider(TestData.Now));
+
+        var result = await service.SelectIdeology(new(player.Id, IdeologyTypeEnum.Democracy));
+
+        Assert.True(result.ConnectionSuccessful);
+        Assert.Equal(500d, job.RemainingWorkSeconds, 6);
+        Assert.True(job.AppliedSpeedMultiplier > 1d);
+        Assert.Equal(1, jobs.UpdateCount);
+    }
+
     [Fact]
     public async Task GetWorldPlayerEconomyAsync_ReturnsResourceTotalsAcrossOwnedCities()
     {
@@ -48,7 +93,8 @@ public class WorldPlayerServiceTests
             new TestPlayerAccessService([player]),
             NullLogger<WorldPlayerService>.Instance,
             new CityPointCalculator(TestData.BuildingReader()),
-            new ImmediateTransactionManager());
+            new ImmediateTransactionManager(),
+            TestData.ResearchRateCalculator());
 
         var result = await service.GetWorldPlayerEconomyAsync(player.Id);
 
@@ -89,7 +135,8 @@ public class WorldPlayerServiceTests
             new TestPlayerAccessService([authenticatedPlayer]),
             NullLogger<WorldPlayerService>.Instance,
             new CityPointCalculator(TestData.BuildingReader()),
-            new ImmediateTransactionManager());
+            new ImmediateTransactionManager(),
+            TestData.ResearchRateCalculator());
 
         var response = await service.AssignPlayerToGameWorldAsync(world.Id);
 
@@ -129,7 +176,8 @@ public class WorldPlayerServiceTests
             new TestPlayerAccessService([authenticatedPlayer]),
             NullLogger<WorldPlayerService>.Instance,
             new CityPointCalculator(TestData.BuildingReader()),
-            new ImmediateTransactionManager());
+            new ImmediateTransactionManager(),
+            TestData.ResearchRateCalculator());
 
         var response = await service.AssignPlayerToGameWorldAsync(world.Id);
 
@@ -175,7 +223,8 @@ public class WorldPlayerServiceTests
             new TestPlayerAccessService([authenticatedPlayer]),
             NullLogger<WorldPlayerService>.Instance,
             new CityPointCalculator(TestData.BuildingReader()),
-            new SerializingTransactionManager());
+            new SerializingTransactionManager(),
+            TestData.ResearchRateCalculator());
 
         var responses = await Task.WhenAll(
             service.AssignPlayerToGameWorldAsync(world.Id),
@@ -222,7 +271,8 @@ public class WorldPlayerServiceTests
             new TestPlayerAccessService([new WorldPlayer { PlayerProfileId = profileId, WorldId = world.Id }]),
             NullLogger<WorldPlayerService>.Instance,
             new CityPointCalculator(TestData.BuildingReader()),
-            new TransactionManager(context));
+            new TransactionManager(context),
+            TestData.ResearchRateCalculator());
 
         await Assert.ThrowsAsync<InvalidOperationException>(() => service.AssignPlayerToGameWorldAsync(world.Id));
 
@@ -256,7 +306,8 @@ public class WorldPlayerServiceTests
             new TestPlayerAccessService([winner]),
             NullLogger<WorldPlayerService>.Instance,
             new CityPointCalculator(TestData.BuildingReader()),
-            new ThrowingDbUpdateTransactionManager());
+            new ThrowingDbUpdateTransactionManager(),
+            TestData.ResearchRateCalculator());
 
         var response = await service.AssignPlayerToGameWorldAsync(world.Id);
 
@@ -401,7 +452,8 @@ public class WorldPlayerServiceTests
                 new TestPlayerAccessService([authenticatedPlayer]),
                 NullLogger<WorldPlayerService>.Instance,
                 new CityPointCalculator(TestData.BuildingReader()),
-                new ImmediateTransactionManager());
+                new ImmediateTransactionManager(),
+            TestData.ResearchRateCalculator());
 
             var response = await service.AssignPlayerToGameWorldAsync(world.Id);
 
@@ -493,7 +545,8 @@ public class WorldPlayerServiceTests
             new TestPlayerAccessService([authenticatedPlayer]),
             NullLogger<WorldPlayerService>.Instance,
             new CityPointCalculator(TestData.BuildingReader()),
-            new ImmediateTransactionManager());
+            new ImmediateTransactionManager(),
+            TestData.ResearchRateCalculator());
 
         var response = await service.AssignPlayerToGameWorldAsync(world.Id);
 
@@ -571,7 +624,8 @@ public class WorldPlayerServiceTests
             new TestPlayerAccessService([viewer]),
             NullLogger<WorldPlayerService>.Instance,
             new CityPointCalculator(TestData.BuildingReader()),
-            new ImmediateTransactionManager());
+            new ImmediateTransactionManager(),
+            TestData.ResearchRateCalculator());
 
         var profile = await service.GetWorldPlayerProfileAsync(target.Id);
 
@@ -642,7 +696,7 @@ public class WorldPlayerServiceTests
                 new MemoryWorldPlayerRepository(viewer, target),
                 new NoOpPlayerProfileRepository(),
                 new NoOpCityRepository(),
-                new RankingService(rankingReader, new NoOpCityRepository(), TestData.BuildingReader()),
+                new RankingService(rankingReader),
                 new NoOpResourceService(),
                 new NoOpWorldRepository(),
                 new NoOpWorldMapObjectRepository(),
@@ -650,7 +704,8 @@ public class WorldPlayerServiceTests
                 new TestPlayerAccessService([viewer]),
                 NullLogger<WorldPlayerService>.Instance,
                 new CityPointCalculator(TestData.BuildingReader()),
-                new ImmediateTransactionManager());
+                new ImmediateTransactionManager(),
+            TestData.ResearchRateCalculator());
 
             var profile = await service.GetWorldPlayerProfileAsync(target.Id);
 
@@ -705,7 +760,8 @@ public class WorldPlayerServiceTests
             new TestPlayerAccessService([target]),
             NullLogger<WorldPlayerService>.Instance,
             new CityPointCalculator(TestData.BuildingReader()),
-            new ImmediateTransactionManager());
+            new ImmediateTransactionManager(),
+            TestData.ResearchRateCalculator());
 
         var result = await service.UpdateWorldPlayerDescriptionAsync(target.Id, "A new description");
 
@@ -771,6 +827,22 @@ public class WorldPlayerServiceTests
             Task.FromResult(_players.Where(player => player.AllianceId == allianceId).ToList());
         public Task<List<WorldPlayer>> SearchPlayersByUsernameAsync(Guid worldId, string usernameQuery) =>
             Task.FromResult(new List<WorldPlayer>());
+    }
+
+    private sealed class SingleResearchJobRepository(ResearchJob job) : IJobRepository
+    {
+        public int UpdateCount { get; private set; }
+        public Task<BaseJob?> GetByIdAsync(Guid id) => Task.FromResult<BaseJob?>(job.Id == id ? job : null);
+        public Task<List<BuildingJob>> GetBuildingJobsAsync(Guid cityId) => Task.FromResult(new List<BuildingJob>());
+        public Task AddAsync(BaseJob newJob) => Task.CompletedTask;
+        public Task UpdateAsync(BaseJob updatedJob) { UpdateCount++; return Task.CompletedTask; }
+        public Task DeleteAsync(Guid jobId) => Task.CompletedTask;
+        public void DeletePending(BaseJob deletedJob) => throw new InvalidOperationException("Research should not complete in this test.");
+        public Task<ResearchJob?> GetResearchJobAsync(Guid userId) =>
+            Task.FromResult<ResearchJob?>(job.WorldPlayerId == userId && !job.IsCompleted ? job : null);
+        public Task<List<RecruitmentJob>> GetRecruitmentJobsAsync(Guid cityId) => Task.FromResult(new List<RecruitmentJob>());
+        public Task<List<ResearchJob>> GetResearchJobsByIdAsync(Guid id) =>
+            Task.FromResult(job.WorldPlayerId == id ? new List<ResearchJob> { job } : new List<ResearchJob>());
     }
 
     private sealed class SerializingTransactionManager : ITransactionManager
@@ -908,10 +980,10 @@ public class WorldPlayerServiceTests
         public CityResourceSnapshot CalculateCityResources(City cityEntity, DateTime currentDateTime) =>
             new(0, 0, 0, 0, 0, 0, currentDateTime);
 
-        public CityProductionSnapshot CalculateCityProduction(WorldPlayer playerEntity, City cityEntity) => new(0, 0, 0);
+        public CityProductionSnapshot CalculateCityProduction(WorldPlayer playerEntity, City cityEntity) => new(0, 0);
 
         public GlobalResourceSnapshot CalculateGlobalResources(WorldPlayer playerEntity, DateTime currentDateTime) =>
-            new(0, 0, 0, 0, 0, 0, currentDateTime);
+            new(0, 0, 0, 0, currentDateTime);
     }
 
     private sealed class StoredCityResourceService : IResourceService
@@ -919,10 +991,10 @@ public class WorldPlayerServiceTests
         public CityResourceSnapshot CalculateCityResources(City cityEntity, DateTime currentDateTime) =>
             new(cityEntity.Wood, cityEntity.Stone, cityEntity.Metal, 0, 0, 0, currentDateTime);
 
-        public CityProductionSnapshot CalculateCityProduction(WorldPlayer playerEntity, City cityEntity) => new(0, 0, 0);
+        public CityProductionSnapshot CalculateCityProduction(WorldPlayer playerEntity, City cityEntity) => new(0, 0);
 
         public GlobalResourceSnapshot CalculateGlobalResources(WorldPlayer playerEntity, DateTime currentDateTime) =>
-            new(playerEntity.Coins, playerEntity.ResearchPoints, playerEntity.IdeologyFocusPoints, 0, 0, 0, currentDateTime)
+            new(playerEntity.Coins, playerEntity.IdeologyFocusPoints, 0, 0, currentDateTime)
             {
                 TotalAvailablePopulation = 240
             };

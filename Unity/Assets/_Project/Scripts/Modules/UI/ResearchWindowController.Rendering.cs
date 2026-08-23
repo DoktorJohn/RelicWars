@@ -10,9 +10,12 @@ namespace Project.Scripts.Modules.UI
 {
     public partial class ResearchWindowController
     {
-        private void UpdateResearchPointsDisplay(double currentPoints)
+        private void UpdateResearchPowerDisplay(ResearchRateDTO rate)
         {
-            if (_researchPointsLabel != null) _researchPointsLabel.text = currentPoints.ToString("N0");
+            if (_researchPowerLabel != null)
+                _researchPowerLabel.text = rate == null
+                    ? "0.00"
+                    : $"{rate.EffectiveResearchPower:F2} ({rate.SpeedMultiplier:F2}x)";
         }
 
         private void UpdateResearchAvailability(bool canStartResearch, List<string> unmetRequirements)
@@ -72,19 +75,19 @@ namespace Project.Scripts.Modules.UI
             desc.AddToClassList("node-description");
             nodeCard.Add(desc);
 
-            VisualElement costRow = new VisualElement();
-            costRow.AddToClassList("node-cost-row");
+            VisualElement detailsRow = new VisualElement();
+            detailsRow.AddToClassList("node-cost-row");
 
-            Label costLabel = new Label($"{nodeData.ResearchPointCost:N0} RP");
-            costLabel.AddToClassList("node-cost-label");
-            costRow.Add(costLabel);
+            Label durationLabel = new Label($"BASE TIME: {FormatResearchDuration(nodeData.ResearchTimeInSeconds)}");
+            durationLabel.AddToClassList("node-cost-label");
+            detailsRow.Add(durationLabel);
 
             if (nodeData.IsCompleted)
             {
                 nodeCard.AddToClassList("node-completed");
                 Label completedLabel = new Label("DONE");
                 completedLabel.AddToClassList("node-status-text-done");
-                costRow.Add(completedLabel);
+                detailsRow.Add(completedLabel);
             }
             else if (nodeData.IsLocked)
             {
@@ -101,7 +104,7 @@ namespace Project.Scripts.Modules.UI
                 lockedBtn.style.height = 24;
                 lockedBtn.style.fontSize = 10;
                 lockedBtn.style.marginTop = 0;
-                costRow.Add(lockedBtn);
+                detailsRow.Add(lockedBtn);
             }
             else if (nodeData.IsResearching)
             {
@@ -115,7 +118,7 @@ namespace Project.Scripts.Modules.UI
                 researchingBtn.style.height = 24;
                 researchingBtn.style.fontSize = 10;
                 researchingBtn.style.marginTop = 0;
-                costRow.Add(researchingBtn);
+                detailsRow.Add(researchingBtn);
             }
             else
             {
@@ -129,11 +132,11 @@ namespace Project.Scripts.Modules.UI
                 researchBtn.style.fontSize = 10;
                 researchBtn.style.marginTop = 0;
 
-                researchBtn.SetEnabled(_canStartResearch && nodeData.CanAfford && _activeResearchJob == null);
-                costRow.Add(researchBtn);
+                researchBtn.SetEnabled(nodeData.CanStart);
+                detailsRow.Add(researchBtn);
             }
 
-            nodeCard.Add(costRow);
+            nodeCard.Add(detailsRow);
             _researchTreeContainer.Add(nodeCard);
         }
 
@@ -172,7 +175,10 @@ namespace Project.Scripts.Modules.UI
                     _cancelResearchButton.style.display = DisplayStyle.Flex;
                 }
 
-                _activeTimerCoroutine = StartCoroutine(ExecuteActiveResearchCountdownTimer(activeJob.ExpectedCompletionTime));
+                if (activeJob.ExpectedCompletionTime.HasValue)
+                    _activeTimerCoroutine = StartCoroutine(ExecuteActiveResearchCountdownTimer(activeJob.ExpectedCompletionTime.Value));
+                else if (_activeResearchTimerLabel != null)
+                    _activeResearchTimerLabel.text = "--:--:--";
             }
         }
 
@@ -262,6 +268,14 @@ namespace Project.Scripts.Modules.UI
         private static float GetResolvedDimension(float resolvedDimension, float fallback)
         {
             return float.IsNaN(resolvedDimension) || resolvedDimension <= 0f ? fallback : resolvedDimension;
+        }
+
+        private static string FormatResearchDuration(int seconds)
+        {
+            TimeSpan duration = TimeSpan.FromSeconds(Math.Max(0, seconds));
+            if (duration.TotalDays >= 1d) return $"{duration.TotalDays:0.#}d";
+            if (duration.TotalHours >= 1d) return $"{duration.TotalHours:0.#}h";
+            return $"{duration.TotalMinutes:0.#}m";
         }
 
         private string BuildLockedResearchTooltipText(ResearchNodeDTO nodeData)

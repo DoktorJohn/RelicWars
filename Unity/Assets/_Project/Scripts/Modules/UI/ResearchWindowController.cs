@@ -8,7 +8,6 @@ using Project.Scripts.Domain.DTOs;
 using System.Collections.Generic;
 using System.Linq;
 using Assets._Project.Scripts.Domain.Enums;
-using Project.Modules.WorldPlayer;
 
 namespace Project.Scripts.Modules.UI
 {
@@ -18,7 +17,7 @@ namespace Project.Scripts.Modules.UI
         protected override string VisualContainerName => "Research-Window-MainContainer";
         protected override string HeaderName => "Research-Window-Header";
 
-        private Label _researchPointsLabel;
+        private Label _researchPowerLabel;
         private VisualElement _researchRequirementNotice;
         private Label _researchRequirementNoticeLabel;
         private VisualElement _researchTreeContainer;
@@ -32,7 +31,6 @@ namespace Project.Scripts.Modules.UI
         private Button _tabButtonEconomy;
         private Button _tabButtonWar;
         private Button _tabButtonUtility;
-        private Button _tabButtonUnlocks;
         private Button _closeButton;
         private ResearchTypeEnum _currentSelectedCategory = ResearchTypeEnum.Economy;
 
@@ -108,16 +106,11 @@ namespace Project.Scripts.Modules.UI
             {
                 _tabButtonUtility.clicked -= HandleUtilityTabClicked;
             }
-
-            if (_tabButtonUnlocks != null)
-            {
-                _tabButtonUnlocks.clicked -= HandleUnlocksTabClicked;
-            }
         }
 
         private void InitializeUserInterfaceReferences()
         {
-            _researchPointsLabel = Root.Q<Label>("Research-Points-Amount");
+            _researchPowerLabel = Root.Q<Label>("Research-Power-Amount");
             _researchRequirementNotice = Root.Q<VisualElement>("Research-Requirement-Notice");
             _researchRequirementNoticeLabel = Root.Q<Label>("Research-Requirement-Notice-Label");
             _researchTreeContainer = Root.Q<VisualElement>("Research-Tree-Container");
@@ -159,7 +152,6 @@ namespace Project.Scripts.Modules.UI
             _tabButtonEconomy = Root.Q<Button>("Tab-Economy");
             _tabButtonWar = Root.Q<Button>("Tab-War");
             _tabButtonUtility = Root.Q<Button>("Tab-Utility");
-            _tabButtonUnlocks = Root.Q<Button>("Tab-Unlocks");
 
             if (_tabButtonEconomy != null)
             {
@@ -179,19 +171,12 @@ namespace Project.Scripts.Modules.UI
                 _tabButtonUtility.clicked += HandleUtilityTabClicked;
             }
 
-            if (_tabButtonUnlocks != null)
-            {
-                _tabButtonUnlocks.clicked -= HandleUnlocksTabClicked;
-                _tabButtonUnlocks.clicked += HandleUnlocksTabClicked;
-            }
-
             UpdateTabButtonVisualStates();
         }
 
         private void HandleEconomyTabClicked() => SwitchResearchCategoryTab(ResearchTypeEnum.Economy);
         private void HandleWarTabClicked() => SwitchResearchCategoryTab(ResearchTypeEnum.War);
         private void HandleUtilityTabClicked() => SwitchResearchCategoryTab(ResearchTypeEnum.Utility);
-        private void HandleUnlocksTabClicked() => SwitchResearchCategoryTab(ResearchTypeEnum.Unlocks);
 
         private void SwitchResearchCategoryTab(ResearchTypeEnum selectedCategory)
         {
@@ -205,7 +190,6 @@ namespace Project.Scripts.Modules.UI
             _tabButtonEconomy.EnableInClassList("research-tab-button-active", _currentSelectedCategory == ResearchTypeEnum.Economy);
             _tabButtonWar.EnableInClassList("research-tab-button-active", _currentSelectedCategory == ResearchTypeEnum.War);
             _tabButtonUtility.EnableInClassList("research-tab-button-active", _currentSelectedCategory == ResearchTypeEnum.Utility);
-            _tabButtonUnlocks.EnableInClassList("research-tab-button-active", _currentSelectedCategory == ResearchTypeEnum.Unlocks);
         }
 
         private void RefreshResearchWindowState(int version)
@@ -227,7 +211,7 @@ namespace Project.Scripts.Modules.UI
                         "Could not load research tree.",
                         () => RefreshResearchWindowState(version));
                     _isCommandInFlight = false;
-                    WindowAsyncStateHelper.SetButtonsEnabled(new[] { _cancelResearchButton, _tabButtonEconomy, _tabButtonWar, _tabButtonUtility, _tabButtonUnlocks }, true);
+                    WindowAsyncStateHelper.SetButtonsEnabled(new[] { _cancelResearchButton, _tabButtonEconomy, _tabButtonWar, _tabButtonUtility }, true);
                     CompleteDeferredOpen(version);
                     return;
                 }
@@ -235,7 +219,7 @@ namespace Project.Scripts.Modules.UI
                 _cachedResearchNodes = researchTreeData.Nodes;
                 _activeResearchJob = researchTreeData.ActiveJob;
                 _canStartResearch = researchTreeData.CanStartResearch;
-                UpdateResearchPointsDisplay(researchTreeData.CurrentResearchPoints);
+                UpdateResearchPowerDisplay(researchTreeData.ResearchRate);
                 UpdateResearchAvailability(researchTreeData.CanStartResearch, researchTreeData.UnmetRequirements);
                 if (_cachedResearchNodes == null || _cachedResearchNodes.Count == 0)
                 {
@@ -247,7 +231,7 @@ namespace Project.Scripts.Modules.UI
                 }
                 HandleActiveResearchJobDisplay(_activeResearchJob);
                 _isCommandInFlight = false;
-                WindowAsyncStateHelper.SetButtonsEnabled(new[] { _cancelResearchButton, _tabButtonEconomy, _tabButtonWar, _tabButtonUtility, _tabButtonUnlocks }, true);
+                WindowAsyncStateHelper.SetButtonsEnabled(new[] { _cancelResearchButton, _tabButtonEconomy, _tabButtonWar, _tabButtonUtility }, true);
                 CompleteDeferredOpen(version);
             }));
         }
@@ -264,24 +248,20 @@ namespace Project.Scripts.Modules.UI
                 return;
             }
 
+            if (!selectedResearch.CanStart) return;
+
             string jwtToken = NetworkManager.Instance.JwtToken;
             _isCommandInFlight = true;
-            WindowAsyncStateHelper.SetButtonsEnabled(new[] { _cancelResearchButton, _tabButtonEconomy, _tabButtonWar, _tabButtonUtility, _tabButtonUnlocks }, false);
-            WorldPlayerStateManager.Instance?.DeductResourcesLocally(0, selectedResearch.ResearchPointCost, 0);
+            WindowAsyncStateHelper.SetButtonsEnabled(new[] { _cancelResearchButton, _tabButtonEconomy, _tabButtonWar, _tabButtonUtility }, false);
             StartCoroutine(NetworkManager.Instance.Research.StartResearchProcess(_worldPlayerId, researchId, jwtToken, (success, message) =>
             {
-                if (!success)
-                {
-                    WorldPlayerStateManager.Instance?.DeductResourcesLocally(0, -selectedResearch.ResearchPointCost, 0);
-                }
-
                 if (!isActiveAndEnabled) return;
                 if (success) RefreshResearchWindowState(_requestVersion);
                 else
                 {
                     _isCommandInFlight = false;
                     ShowResearchNotice(message);
-                    WindowAsyncStateHelper.SetButtonsEnabled(new[] { _cancelResearchButton, _tabButtonEconomy, _tabButtonWar, _tabButtonUtility, _tabButtonUnlocks }, true);
+                    WindowAsyncStateHelper.SetButtonsEnabled(new[] { _cancelResearchButton, _tabButtonEconomy, _tabButtonWar, _tabButtonUtility }, true);
                 }
             }));
         }
@@ -298,7 +278,7 @@ namespace Project.Scripts.Modules.UI
 
             string jwtToken = NetworkManager.Instance.JwtToken;
             _isCommandInFlight = true;
-            WindowAsyncStateHelper.SetButtonsEnabled(new[] { _cancelResearchButton, _tabButtonEconomy, _tabButtonWar, _tabButtonUtility, _tabButtonUnlocks }, false);
+            WindowAsyncStateHelper.SetButtonsEnabled(new[] { _cancelResearchButton, _tabButtonEconomy, _tabButtonWar, _tabButtonUtility }, false);
             StartCoroutine(NetworkManager.Instance.Research.CancelActiveResearch(_worldPlayerId, jobId, jwtToken, (success, message) =>
             {
                 if (!isActiveAndEnabled) return;
@@ -306,7 +286,7 @@ namespace Project.Scripts.Modules.UI
                 else
                 {
                     _isCommandInFlight = false;
-                    WindowAsyncStateHelper.SetButtonsEnabled(new[] { _cancelResearchButton, _tabButtonEconomy, _tabButtonWar, _tabButtonUtility, _tabButtonUnlocks }, true);
+                    WindowAsyncStateHelper.SetButtonsEnabled(new[] { _cancelResearchButton, _tabButtonEconomy, _tabButtonWar, _tabButtonUtility }, true);
                 }
             }));
         }

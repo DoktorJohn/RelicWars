@@ -15,21 +15,18 @@ namespace Application.Services.Buildings
 {
     public class UniversityService : IUniversityService
     {
-        private readonly ICityRepository _cityRepository;
-        private readonly BuildingDataReader _buildingDataReader;
-        private readonly IModifierService _modifierService;
+        private readonly IResearchRateCalculator _researchRateCalculator;
         private readonly IPlayerAccessService _playerAccessService;
+        private readonly TimeProvider _timeProvider;
 
         public UniversityService(
-            ICityRepository cityRepository,
-            BuildingDataReader buildingDataReader,
-            IModifierService modifierService,
-            IPlayerAccessService playerAccessService)
+            IResearchRateCalculator researchRateCalculator,
+            IPlayerAccessService playerAccessService,
+            TimeProvider timeProvider)
         {
-            _cityRepository = cityRepository;
-            _buildingDataReader = buildingDataReader;
-            _modifierService = modifierService;
+            _researchRateCalculator = researchRateCalculator;
             _playerAccessService = playerAccessService;
+            _timeProvider = timeProvider;
         }
 
         public async Task<List<UniversityInfoDTO>> GetUniversityInfoAsync(Guid cityId)
@@ -42,37 +39,27 @@ namespace Application.Services.Buildings
 
             var projectionList = new List<UniversityInfoDTO>();
 
-            // Vi looper: Nuværende level + de næste 5 (Max level 20 / index 19)
+            var player = cityEntity.WorldPlayer
+                ?? throw new InvalidOperationException("Byens ejer blev ikke fundet.");
+            DateTime now = _timeProvider.GetUtcNow().UtcDateTime;
+
+            // Vi looper: Nuværende level + de næste 5 (max level 20)
             for (int i = 0; i < 5; i++)
             {
                 int levelToCheck = currentBuildingLevel + i;
 
-                if (levelToCheck > 19) break;
+                if (levelToCheck > 20) break;
 
-                double baseResearchProduction = 0;
-
-                if (levelToCheck > 0)
-                {
-                    var levelConfiguration = _buildingDataReader.GetConfig<UniversityLevelData>(BuildingTypeEnum.University, levelToCheck);
-
-                    if (levelConfiguration == null) break;
-
-                    baseResearchProduction = levelConfiguration.ProductionPerHour;
-                }
-
-                // Anvend modifiers på basis-research-produktionen (f.eks. +20% Research Speed fra en ideologi)
-                var modifierCalculationResult = _modifierService.CalculateCityValue(
+                var power = _researchRateCalculator.CalculateCityPower(
+                    player,
                     cityEntity,
-                    baseResearchProduction,
-                    ModifierTagEnum.Research);
-
-                // Konverterer resultatet til int, da vi ikke ønsker halve forskningspoint i UI'et
-                int finalCalculatedProduction = (int)Math.Floor(modifierCalculationResult.FinalValue);
+                    levelToCheck,
+                    now);
 
                 projectionList.Add(new UniversityInfoDTO
                 {
                     Level = levelToCheck,
-                    ProductionPerHour = finalCalculatedProduction,
+                    ResearchPower = power.EffectiveResearchPower,
                     IsCurrentLevel = (levelToCheck == currentBuildingLevel)
                 });
             }

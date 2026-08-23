@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace Application.Interfaces.IRepositories
@@ -15,6 +16,7 @@ namespace Application.Interfaces.IRepositories
         Task<City?> GetForJobProcessingAsync(Guid cityId, bool includeWorldPlayer) => GetByIdAsync(cityId);
         Task UpdateAsync(City city);
         Task<List<City>> GetAllAsync();
+        Task<List<City>> GetForRankingSnapshotAsync(CancellationToken cancellationToken = default) => GetAllAsync();
         async Task<List<City>> GetNPCsForBuildingAutomationAsync() =>
             (await GetAllAsync()).Where(city => city.IsNPC && city.WorldPlayerId == null && city.Points < 2500).ToList();
         Task<List<City>> GetCitiesForNPCBackfillAsync() => GetAllAsync();

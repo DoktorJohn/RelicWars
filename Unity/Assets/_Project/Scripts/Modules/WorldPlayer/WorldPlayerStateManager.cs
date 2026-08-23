@@ -19,6 +19,7 @@ namespace Project.Modules.WorldPlayer
 
         private WorldPlayerState _currentEconomyState = new WorldPlayerState();
         public WorldPlayerState CurrentEconomy => _currentEconomyState;
+        public bool HasEconomyState { get; private set; }
 
         private bool _isRequestInProgress = false;
         private Coroutine _activePollingCoroutine;
@@ -50,7 +51,6 @@ namespace Project.Modules.WorldPlayer
             if (_currentEconomyState == null) return;
 
             _currentEconomyState.CoinsAmount += _currentEconomyState.CoinsProductionPerHour * hoursPassedThisFrame;
-            _currentEconomyState.ResearchPointsAmount += _currentEconomyState.ResearchPointsProductionPerHour * hoursPassedThisFrame;
             _currentEconomyState.IdeologyFocusPointsAmount += _currentEconomyState.IdeologyFocusPointsProductionPerHour * hoursPassedThisFrame;
 
             // Debug.Log($"[WorldPlayerStateManager] Extrapolating: Coins={_currentEconomyState.CoinsAmount:F2} (+{_currentEconomyState.CoinsProductionPerHour:F2}/h)");
@@ -70,6 +70,7 @@ namespace Project.Modules.WorldPlayer
             _activePollingCoroutine = null;
             _isRequestInProgress = false;
             _currentEconomyState = new WorldPlayerState();
+            HasEconomyState = false;
         }
 
         private IEnumerator ExecuteEconomyPollingCycleCoroutine(Guid worldPlayerId)
@@ -116,8 +117,9 @@ namespace Project.Modules.WorldPlayer
             _currentEconomyState.CoinsAmount = dto.CurrentCoinsAmount;
             _currentEconomyState.CoinsProductionPerHour = dto.CoinsProductionPerHour;
 
-            _currentEconomyState.ResearchPointsAmount = dto.CurrentResearchPoints;
-            _currentEconomyState.ResearchPointsProductionPerHour = dto.ResearchPointsPerHour;
+            _currentEconomyState.BaseResearchPower = dto.ResearchRate?.BaseResearchPower ?? 0d;
+            _currentEconomyState.EffectiveResearchPower = dto.ResearchRate?.EffectiveResearchPower ?? 0d;
+            _currentEconomyState.ResearchSpeedMultiplier = dto.ResearchRate?.SpeedMultiplier ?? 0d;
 
             _currentEconomyState.IdeologyFocusPointsAmount = dto.CurrentIdeologyFocusPoints;
             _currentEconomyState.IdeologyFocusPointsProductionPerHour = dto.IdeologyFocusPointsPerHour;
@@ -127,14 +129,14 @@ namespace Project.Modules.WorldPlayer
             _currentEconomyState.TotalPopulationAmount = dto.TotalPopulationAmount;
             _currentEconomyState.PlayerCities = dto.PlayerCities ?? new System.Collections.Generic.List<CityDTO>();
 
+            HasEconomyState = true;
             OnEconomyStateChanged?.Invoke(_currentEconomyState);
-            Debug.Log($"[WorldPlayerStateManager] Economy state synchronized. Coins: {dto.CurrentCoinsAmount}, Research: {dto.CurrentResearchPoints}");
+            Debug.Log($"[WorldPlayerStateManager] Economy state synchronized. Coins: {dto.CurrentCoinsAmount}, Research power: {_currentEconomyState.EffectiveResearchPower:F2}");
         }
 
-        public void DeductResourcesLocally(double coins, double research, double ideology)
+        public void DeductResourcesLocally(double coins, double ideology)
         {
             _currentEconomyState.CoinsAmount -= coins;
-            _currentEconomyState.ResearchPointsAmount -= research;
             _currentEconomyState.IdeologyFocusPointsAmount -= ideology;
 
             OnEconomyStateChanged?.Invoke(_currentEconomyState);

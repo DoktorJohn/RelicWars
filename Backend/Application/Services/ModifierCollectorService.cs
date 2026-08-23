@@ -59,20 +59,42 @@ namespace Application.Services
             }
 
             // 4. Ideologi (Core)
-            var ideology = _ideologyDataReader.GetIdeology(playerEntity.Ideology);
-            if (ideology != null) providers.Add(ideology);
+            if (playerEntity.Ideology != Domain.Enums.IdeologyTypeEnum.None)
+            {
+                var ideology = _ideologyDataReader.GetIdeology(playerEntity.Ideology);
+                if (ideology != null) providers.Add(ideology);
+            }
 
             return providers;
         }
 
         public List<IModifierProvider> CollectAllProvidersForCity(City cityEntity)
         {
+            DateTime now = _timeProvider.GetUtcNow().UtcDateTime;
+            return cityEntity.WorldPlayer == null
+                ? CollectCityProviders(cityEntity, null, now)
+                : CollectAllProvidersForCity(cityEntity, cityEntity.WorldPlayer, now);
+        }
+
+        public List<IModifierProvider> CollectAllProvidersForCity(
+            City cityEntity,
+            WorldPlayer playerEntity,
+            DateTime asOfUtc)
+        {
+            return CollectCityProviders(cityEntity, playerEntity, asOfUtc);
+        }
+
+        private List<IModifierProvider> CollectCityProviders(
+            City cityEntity,
+            WorldPlayer? playerEntity,
+            DateTime asOfUtc)
+        {
             var providers = new List<IModifierProvider>();
             if (cityEntity == null) return providers;
 
-            if (cityEntity.WorldPlayer != null)
+            if (playerEntity != null)
             {
-                providers.AddRange(CollectAllProvidersForPlayer(cityEntity.WorldPlayer));
+                providers.AddRange(CollectAllProvidersForPlayer(playerEntity));
             }
 
             providers.Add(cityEntity);
@@ -86,9 +108,9 @@ namespace Application.Services
                 if (levelConfig != null) providers.Add(levelConfig);
             }
 
-            var now = _timeProvider.GetUtcNow().UtcDateTime;
             foreach (var ideologyFocus in cityEntity.ActiveFocuses.Where(f =>
-                f.TimeOfIdeologyStarted <= now && (!f.TimeOfIdeologyFinished.HasValue || f.TimeOfIdeologyFinished > now)))
+                f.TimeOfIdeologyStarted <= asOfUtc &&
+                (!f.TimeOfIdeologyFinished.HasValue || f.TimeOfIdeologyFinished > asOfUtc)))
             {
                 var focusData = _ideologyFocusDataReader.GetIdeology(ideologyFocus.Name);
                 if (focusData != null) providers.Add(focusData);

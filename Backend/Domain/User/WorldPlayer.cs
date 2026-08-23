@@ -13,7 +13,6 @@ namespace Domain.User
     {
         public double Coins { get; set; }
         public double IdeologyFocusPoints { get; set; }
-        public double ResearchPoints { get; set; }
         public IdeologyTypeEnum Ideology { get; set; }
         public DateTime LastResourceUpdate { get; set; } = DateTime.UtcNow;
         public AllianceRoleEnum AllianceRole { get; set; } = AllianceRoleEnum.None;

@@ -73,7 +73,7 @@ namespace Domain.StaticData.Data
 
     public class UniversityLevelData : BuildingLevelData
     {
-        public int ProductionPerHour { get; set; }
+        public double ResearchPower { get; set; }
     }
 
     public class WarehouseLevelData : BuildingLevelData

@@ -43,6 +43,8 @@ namespace Infrastructure.Repositories
                 .Include(wp => wp.Cities)
                     .ThenInclude(c => c.ExoticResources)
                 .Include(wp => wp.Cities)
+                    .ThenInclude(c => c.ActiveFocuses)
+                .Include(wp => wp.Cities)
                     .ThenInclude(c => c.OriginUnitDeployments)
                         .ThenInclude(d => d.UnitStacks)
                 .FirstOrDefaultAsync(x => x.Id == id);

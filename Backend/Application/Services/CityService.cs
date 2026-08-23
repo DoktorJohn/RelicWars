@@ -25,6 +25,7 @@ namespace Application.Services
         private readonly ICityRepository _cityRepository;
         private readonly IJobRepository _jobRepository;
         private readonly IResourceService _resourceService;
+        private readonly IResearchRateCalculator _researchRateCalculator;
         private readonly IWorldPlayerService _worldPlayerService;
         private readonly IPlayerAccessService _playerAccessService;
         private readonly IModifierService _modifierService;
@@ -47,10 +48,12 @@ namespace Application.Services
             IJobRepository jobRepository,
             ILogger<CityService> logger,
             ConstructionTimeCalculator constructionTimeCalculator,
-            IResistanceService resistanceService)
+            IResistanceService resistanceService,
+            IResearchRateCalculator researchRateCalculator)
         {
             _cityRepository = cityRepository;
             _resourceService = resourceService;
+            _researchRateCalculator = researchRateCalculator;
             _worldPlayerService = worldPlayerService;
             _playerAccessService = playerAccessService;
             _cityStatService = cityStatService;
@@ -90,7 +93,7 @@ namespace Application.Services
                 CreateResourceOverview(cityEntity, BuildingTypeEnum.StoneQuarry, ModifierTagEnum.Stone, ModifierTagEnum.ResourceProduction),
                 CreateResourceOverview(cityEntity, BuildingTypeEnum.MetalMine, ModifierTagEnum.Metal, ModifierTagEnum.ResourceProduction),
                 CreateCoinsProductionBreakdown(cityEntity),
-                CreateProductionBreakdown(cityEntity, BuildingTypeEnum.University, ModifierTagEnum.Research),
+                CreateResearchPowerBreakdown(playerEntity, cityEntity, currentDateTime),
                 CreateIdeologyProductionBreakdown(playerEntity),
                 CreatePopulationBreakdown(cityEntity, activeRecruitmentJobs),
                 cityEntity.Resistance,
@@ -154,7 +157,13 @@ namespace Application.Services
                 CoinsProductionPerHour = cityProduction.CoinsProductionPerHour,
                 UnitUpkeepPerHour = coinsBreakdown.UnitUpkeepPerHour,
                 BuildingUpkeepPerHour = coinsBreakdown.BuildingUpkeepPerHour,
-                ResearchPointsPerHour = cityProduction.ResearchPointsPerHour,
+                ResearchPower = _researchRateCalculator
+                    .CalculateCityPower(
+                        playerEntity,
+                        cityEntity,
+                        cityEntity.Buildings.FirstOrDefault(building => building.Type == BuildingTypeEnum.University)?.Level ?? 0,
+                        currentDateTime)
+                    .EffectiveResearchPower,
                 IdeologyFocusPointsPerHour = cityProduction.IdeologyFocusPointsPerHour,
 
                 CurrentPopulationUsage = population.InUse,
@@ -376,6 +385,21 @@ namespace Application.Services
             );
         }
 
+        private ResearchPowerBreakdownDTO CreateResearchPowerBreakdown(
+            WorldPlayer player,
+            City city,
+            DateTime asOfUtc)
+        {
+            int level = city.Buildings
+                .FirstOrDefault(building => building.Type == BuildingTypeEnum.University)?.Level ?? 0;
+            var result = _researchRateCalculator.CalculateCityPower(player, city, level, asOfUtc);
+            return new ResearchPowerBreakdownDTO(
+                result.BaseResearchPower,
+                result.FlatBonus,
+                result.PercentageBonus,
+                result.EffectiveResearchPower);
+        }
+
 
         private double ExtractBaseValueFromLevelData(City cityEntity, BuildingTypeEnum buildingType, int level)
         {
@@ -386,7 +410,6 @@ namespace Application.Services
                 BuildingTypeEnum.TimberCamp => _buildingDataReader.GetConfig<TimberCampLevelData>(buildingType, level)?.ProductionPerHour ?? 0,
                 BuildingTypeEnum.StoneQuarry => _buildingDataReader.GetConfig<StoneQuarryLevelData>(buildingType, level)?.ProductionPerHour ?? 0,
                 BuildingTypeEnum.MetalMine => _buildingDataReader.GetConfig<MetalMineLevelData>(buildingType, level)?.ProductionPerHour ?? 0,
-                BuildingTypeEnum.University => _buildingDataReader.GetConfig<UniversityLevelData>(buildingType, level)?.ProductionPerHour ?? 0,
                 _ => 0
             };
         }
